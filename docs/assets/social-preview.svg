@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0d1117"/>
+      <stop offset="100%" stop-color="#161b22"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="640" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1280" height="6" fill="#f97316"/>
+
+  <!-- Phosphor: shield-check (256 viewBox, 0.28 => 72px) -->
+  <g transform="translate(84,72) scale(0.28)" fill="#f97316">
+    <path d="M208,40H48A16,16,0,0,0,32,56v58.78c0,89.61,75.82,119.34,91,124.39a15.53,15.53,0,0,0,10,0c15.2-5.05,91-34.78,91-124.39V56A16,16,0,0,0,208,40Zm0,74.79c0,78.42-66.35,104.62-80,109.18-13.53-4.51-80-30.69-80-109.18V56H208ZM82.34,141.66a8,8,0,0,1,11.32-11.32L112,148.68l50.34-50.34a8,8,0,0,1,11.32,11.32l-56,56a8,8,0,0,1-11.32,0Z"/>
+  </g>
+  <text x="172" y="126" fill="#e6edf3" font-size="46" font-weight="700" letter-spacing="-0.5">agents-scaffold</text>
+
+  <text x="84" y="238" fill="#f0883e" font-size="44" font-weight="700">AI coding agents break your rules.</text>
+  <text x="84" y="296" fill="#e6edf3" font-size="44" font-weight="700">This blocks the commit instead of asking nicely.</text>
+
+  <text x="84" y="360" fill="#8b949e" font-size="26">One command drops a .claude/ setup and a pre-commit gate into your repo.</text>
+  <text x="84" y="398" fill="#8b949e" font-size="26">No framework, no runtime — plain files you own outright.</text>
+
+  <rect x="84" y="436" width="1112" height="112" rx="10" fill="#010409" stroke="#30363d"/>
+  <text x="112" y="480" fill="#7ee787" font-size="24" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">$ git add .env &amp;&amp; git commit -m "feat: add config"</text>
+  <text x="112" y="520" fill="#ff7b72" font-size="24" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">Blocked: a .env-type file is staged. Commit is not allowed.</text>
+
+  <text x="84" y="600" fill="#6e7681" font-size="22">P0 / P1 / P2 tiers  ·  10 stack presets</text>
+  <text x="1196" y="600" fill="#6e7681" font-size="22" text-anchor="end">github.com/LeeYudok/agents-scaffold  ·  MIT</text>
+</svg>

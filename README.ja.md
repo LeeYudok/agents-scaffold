@@ -1,8 +1,10 @@
 # agents-scaffold
 
-[한국어](README.md) | [English](README.en.md) | [简体中文](README.zh.md) | 日本語
+[English](README.md) | [한국어](README.ko.md) | [简体中文](README.zh.md) | 日本語
 
 [![tests](https://github.com/leeyudok/agents-scaffold/actions/workflows/test.yml/badge.svg)](https://github.com/leeyudok/agents-scaffold/actions/workflows/test.yml)
+**[leeyudok.github.io/agents-scaffold](https://leeyudok.github.io/agents-scaffold/)**
+
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 **AI コーディングエージェントはルールを破ります。お願いするのではなく、コミットを止めます。**

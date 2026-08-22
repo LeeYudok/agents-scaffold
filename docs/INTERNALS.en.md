@@ -1,6 +1,6 @@
 # agents-scaffold — internals
 
-The generated `.claude/` tree and the design patterns behind it. Start at the [README](../README.en.md).
+The generated `.claude/` tree and the design patterns behind it. Start at the [README](../README.md).
 
 ## What's inside
 

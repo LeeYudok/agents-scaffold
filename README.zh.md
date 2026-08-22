@@ -1,8 +1,10 @@
 # agents-scaffold
 
-[한국어](README.md) | [English](README.en.md) | 简体中文 | [日本語](README.ja.md)
+[English](README.md) | [한국어](README.ko.md) | 简体中文 | [日本語](README.ja.md)
 
 [![tests](https://github.com/leeyudok/agents-scaffold/actions/workflows/test.yml/badge.svg)](https://github.com/leeyudok/agents-scaffold/actions/workflows/test.yml)
+**[leeyudok.github.io/agents-scaffold](https://leeyudok.github.io/agents-scaffold/)**
+
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 **AI 编码代理不守规则。这个工具不是好言相劝，而是直接拦下提交。**

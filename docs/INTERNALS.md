@@ -1,6 +1,6 @@
 # agents-scaffold — 내부 구조
 
-생성되는 `.claude/` 트리와 설계 패턴. 개요는 [README](../README.md) 참조.
+생성되는 `.claude/` 트리와 설계 패턴. 개요는 [README](../README.ko.md) 참조.
 
 ## 무엇이 들어있나
 

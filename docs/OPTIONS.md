@@ -1,6 +1,6 @@
 # agents-scaffold — 전체 옵션
 
-`bin/agents-scaffold.sh` 의 모든 옵션. 개요는 [README](../README.md) 참조.
+`bin/agents-scaffold.sh` 의 모든 옵션. 개요는 [README](../README.ko.md) 참조.
 
 ## 스택 프리셋
 

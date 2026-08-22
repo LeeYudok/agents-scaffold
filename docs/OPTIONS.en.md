@@ -1,6 +1,6 @@
 # agents-scaffold — all options
 
-Every option of `bin/agents-scaffold.sh`. Start at the [README](../README.en.md).
+Every option of `bin/agents-scaffold.sh`. Start at the [README](../README.md).
 
 ## Stack presets
 
