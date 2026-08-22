@@ -63,7 +63,7 @@ the section below and the issues labeled
    A preset without a meaningful automated gate (e.g. `ops`) may omit the
    partial entirely.
 3. Add the English rule file at `presets/lang-en/stacks/<stack>/.claude/rules/<stack>.md`.
-4. Add a row to the stack preset table in `README.md` and `README.en.md`
+4. Add a row to the stack preset table in `docs/OPTIONS.md` and `docs/OPTIONS.en.md`
    (rule file + pre-commit gate description).
 5. Bootstrap a scratch repo with `bin/agents-scaffold.sh /tmp/scratch --stack
    <your-stack> --name scratch` and confirm:
@@ -79,8 +79,8 @@ the section below and the issues labeled
 
 ## Style
 
-- Documentation is written in standard, professional Korean (`README.md` and
-  the Korean originals) or English (`README.en.md` and `presets/lang-en/`) —
+- Documentation is written in standard, professional Korean (`README.ko.md` and
+  the Korean originals) or English (`README.md` and `presets/lang-en/`) —
   no emoji as icons or decoration, per this project's visual conventions.
   Contributing in English only is fine — maintainers will help with the
   Korean side if you can't.

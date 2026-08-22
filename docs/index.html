@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>agents-scaffold — enforce AI coding agent rules with a pre-commit gate</title>
+<meta name="description" content="Fork-and-fill bootstrap for AI coding agents. One command drops a .claude/ setup, tiered rules (P0/P1/P2), stack presets and an enforced pre-commit gate into your repo. Claude Code first, Codex and other AGENTS.md harnesses supported.">
+<link rel="canonical" href="https://leeyudok.github.io/agents-scaffold/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="agents-scaffold — enforce AI coding agent rules with a pre-commit gate">
+<meta property="og:description" content="AI coding agents break your rules. This blocks the commit instead of asking nicely.">
+<meta property="og:url" content="https://leeyudok.github.io/agents-scaffold/">
+<meta property="og:image" content="https://leeyudok.github.io/agents-scaffold/assets/social-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+  :root {
+    --bg:#ffffff; --fg:#1f2328; --muted:#59636e; --line:#d1d9e0;
+    --accent:#bc4c00; --code-bg:#f6f8fa; --term-bg:#0d1117; --term-fg:#e6edf3;
+    --green:#1a7f37; --red:#cf222e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0d1117; --fg:#e6edf3; --muted:#9198a1; --line:#3d444d;
+            --accent:#f0883e; --code-bg:#161b22; --term-bg:#010409; --term-fg:#e6edf3;
+            --green:#7ee787; --red:#ff7b72; }
+  }
+  * { box-sizing:border-box }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; }
+  .wrap { max-width:820px; margin:0 auto; padding:0 20px 96px }
+  header { border-top:6px solid var(--accent); padding:56px 0 8px }
+  h1 { font-size:2rem; margin:0 0 4px; letter-spacing:-.02em }
+  .lede { font-size:1.5rem; font-weight:700; line-height:1.35; margin:28px 0 8px }
+  .lede em { color:var(--accent); font-style:normal }
+  p.sub { color:var(--muted); font-size:1.05rem; margin:0 0 28px }
+  pre { background:var(--code-bg); border:1px solid var(--line); border-radius:8px; padding:14px 16px; overflow-x:auto; font-size:.9rem }
+  .term { background:var(--term-bg); color:var(--term-fg); border-color:#30363d }
+  .term .in { color:var(--green) } .term .out { color:var(--red) }
+  code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace }
+  h2 { font-size:1.25rem; margin:44px 0 12px; padding-bottom:6px; border-bottom:1px solid var(--line) }
+  ul { padding-left:20px } li { margin:8px 0 }
+  table { border-collapse:collapse; width:100%; font-size:.95rem; display:block; overflow-x:auto }
+  th,td { border:1px solid var(--line); padding:8px 12px; text-align:left }
+  th { background:var(--code-bg) }
+  a { color:var(--accent) }
+  .cta { display:inline-block; margin:8px 12px 0 0; padding:10px 18px; border:1px solid var(--line); border-radius:8px; text-decoration:none; font-weight:600 }
+  footer { margin-top:56px; padding-top:20px; border-top:1px solid var(--line); color:var(--muted); font-size:.9rem }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>agents-scaffold</h1>
+  <p class="sub">Fork-and-fill bootstrap for AI coding agents — MIT</p>
+</header>
+
+<p class="lede"><em>AI coding agents break your rules.</em><br>This blocks the commit instead of asking nicely.</p>
+<p class="sub">One command drops a <code>.claude/</code> setup and a pre-commit gate into your repo.
+No framework, no runtime, no registry to install from — what you get is plain files you own outright.</p>
+
+<a class="cta" href="https://github.com/LeeYudok/agents-scaffold">View on GitHub</a>
+<a class="cta" href="https://github.com/LeeYudok/agents-scaffold#quickstart">Quickstart</a>
+
+<h2>You want this if</h2>
+<ul>
+  <li>You re-explain the same rules every session — what you told the agent yesterday is gone today.</li>
+  <li>An agent staged your <code>.env</code>, or produced a commit with type errors still in it.</li>
+  <li>Every teammate has a different <code>CLAUDE.md</code>, so results depend on whose session it was.</li>
+</ul>
+<p>Rules that live only in a document get ignored eventually. This scaffold turns them into a gate
+that blocks the commit, and plants it in the repo.</p>
+
+<h2>Install</h2>
+<pre><code>curl -fsSL https://raw.githubusercontent.com/leeyudok/agents-scaffold/main/bin/agents-scaffold.sh \
+  | bash -s -- --stack nextjs --yes</code></pre>
+
+<h2>What happens the moment it's installed</h2>
+<pre class="term"><code><span class="in">$ echo 'DB_PASSWORD=hunter2' &gt; .env
+$ git add -f .env app.py &amp;&amp; git commit -m "feat: add config"</span>
+<span class="out">Blocked: a .env-type file is staged. Commit is not allowed.</span></code></pre>
+<p>This is not the same as writing “don't commit secrets” in a doc. <code>.git/hooks/pre-commit</code> is
+what stops it, so it holds whichever AI tool you use, and it holds when a human commits by hand.</p>
+
+<h2>Harness support</h2>
+<table>
+  <tr><th>Harness</th><th>Measured</th><th>baseline</th><th>full</th></tr>
+  <tr><td>Claude Code</td><td>2.1.239</td><td>holds</td><td>rules, skills, subagents, hooks</td></tr>
+  <tr><td>Codex</td><td>codex-cli 0.149.0</td><td>holds</td><td>skills not discovered</td></tr>
+  <tr><td>Antigravity</td><td>agy 1.1.18</td><td>holds</td><td>experimental</td></tr>
+</table>
+<p><strong>baseline</strong> means the <code>AGENTS.md</code> policy body plus a real
+<code>.git/hooks/pre-commit</code> gate and CI — it holds on every harness, and it holds when a
+human commits from the terminal. <strong>full</strong> adds that harness's native layers. Support
+status is tracked in a machine-readable
+<a href="https://github.com/LeeYudok/agents-scaffold/blob/main/docs/harness-matrix.json">manifest</a>
+that CI fails when a claim goes 90 days without re-measurement.</p>
+
+<h2>What's in the box</h2>
+<ul>
+  <li><strong>Tiered rules</strong> — P0 (stop work), P1 (blocks the PR), P2 (review note), wired into hooks rather than prose.</li>
+  <li><strong>Path-scoped rules</strong> — a rule loads only when Claude reads a matching file, so context stays cheap.</li>
+  <li><strong>10 stack presets</strong> — Next.js, Bun, Python, Go, Rust, Spring Boot, Java Web, Android, Flutter, Ops — composed into one pre-commit gate.</li>
+  <li><strong>Subagents and skills</strong> — code review, security audit, DB migration safety, SDLC role split, self-improving skill/agent definitions.</li>
+  <li><strong>Project memory</strong> — learnings accumulate under <code>.claude/memory/</code> and load next session.</li>
+</ul>
+
+<h2>Docs</h2>
+<ul>
+  <li><a href="https://github.com/LeeYudok/agents-scaffold#readme">README</a> —
+      <a href="https://github.com/LeeYudok/agents-scaffold/blob/main/README.ko.md">한국어</a> ·
+      <a href="https://github.com/LeeYudok/agents-scaffold/blob/main/README.zh.md">简体中文</a> ·
+      <a href="https://github.com/LeeYudok/agents-scaffold/blob/main/README.ja.md">日本語</a></li>
+  <li><a href="https://github.com/LeeYudok/agents-scaffold/blob/main/docs/OPTIONS.en.md">All options</a> — stack presets, <code>--forge</code>, <code>--harness</code>, <code>--lang</code></li>
+  <li><a href="https://github.com/LeeYudok/agents-scaffold/blob/main/docs/INTERNALS.en.md">Internals</a> — the generated tree and design patterns</li>
+</ul>
+
+<footer>
+  MIT licensed · <a href="https://github.com/LeeYudok/agents-scaffold">github.com/LeeYudok/agents-scaffold</a>
+</footer>
+</div>
+</body>
+</html>

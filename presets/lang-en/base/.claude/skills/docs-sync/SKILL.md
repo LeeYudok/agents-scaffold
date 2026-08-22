@@ -63,8 +63,8 @@ ls README*.md                       # every language README
 ls presets/lang-en/ 2>/dev/null     # is there a language overlay?
 ```
 
-- Touching `README.md` means touching `README.en.md`, `README.zh.md`, `README.ja.md` in the
-  **same commit**.
+- Touching one README means touching every language edition in the **same commit** — in this
+  repository that is `README.md` (English), `README.ko.md`, `README.zh.md`, `README.ja.md`.
 - Touching a `.claude/**` base file means touching its `presets/lang-en/` counterpart too.
 - These are not translations but **per-language editions of the same facts** — numbers, versions,
   paths, and table structure stay identical.

@@ -22,7 +22,7 @@ presets/<stack>/
 
 자동화할 게이트가 없는 프리셋(예: 대부분 lint/scan 툴링이라 보편적으로 설치돼
 있지 않은 `ops`)은 룰 파일만 제공하고 `pre-commit.partial.sh` 를 아예 생략해도
-된다. `README.md`/`README.en.md` 는 이를 pre-commit 게이트 열에 `—` 로 표기한다.
+된다. `docs/OPTIONS.md`/`docs/OPTIONS.en.md` 는 이를 pre-commit 게이트 열에 `—` 로 표기한다.
 
 ## 룰 파일(`<stack>.md`) 요구사항
 
@@ -164,7 +164,7 @@ presets/lang-en/
       없음).
 - [ ] 파셜은 자신의 툴체인이 설치돼 있지 않을 때 깔끔하게 통과한다
       (stderr 에 경고, 막지 않음, 조기 exit 하지 않음).
-- [ ] `README.md` 와 `README.en.md` 양쪽의 스택 프리셋 표에 행이
+- [ ] `docs/OPTIONS.md` 와 `docs/OPTIONS.en.md` 양쪽의 스택 프리셋 표에 행이
       추가됐다(룰 파일 설명 + 게이트 열, 게이트가 없으면 `—`).
 - [ ] `presets/<stack>/.claude/rules/<stack>.md` 의 영어 대응물로
       `presets/lang-en/stacks/<stack>/.claude/rules/<stack>.md` 가

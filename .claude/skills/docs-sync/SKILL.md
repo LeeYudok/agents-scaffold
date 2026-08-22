@@ -62,7 +62,8 @@ ls README*.md                       # 다국어 README 전량
 ls presets/lang-en/ 2>/dev/null     # 언어 오버레이 존재 여부
 ```
 
-- `README.md` 를 고쳤으면 `README.en.md`·`README.zh.md`·`README.ja.md` 를 **같은 커밋**에서.
+- README 를 고쳤으면 존재하는 언어판 전부를 **같은 커밋**에서. 이 저장소 기준
+  `README.md`(영문) · `README.ko.md` · `README.zh.md` · `README.ja.md` 4종이다.
 - `.claude/**` 베이스 파일을 고쳤으면 `presets/lang-en/` 의 대응 파일도 같은 커밋에서.
 - 번역이 아니라 **같은 사실의 각 언어판** — 수치·버전·경로·표 구조는 동일하게 유지한다.
 - 언어별로 원문이 달라 일괄 치환이 깨진다. 파일마다 `grep -n` 으로 교체 대상을 먼저 확인한다.
