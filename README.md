@@ -105,7 +105,7 @@ result is plain files under version control like any other code in the repo.
 
 | Doc | What's in it |
 |---|---|
-| [docs/OPTIONS.en.md](docs/OPTIONS.en.md) | Every option — 10 stack presets, `--forge`, `--harness`, `--lang`, usage, placeholder substitution, picking a requirements-hardening tool |
+| [docs/OPTIONS.en.md](docs/OPTIONS.en.md) | Every option — 11 stack presets, `--forge`, `--harness`, `--lang`, usage, placeholder substitution, picking a requirements-hardening tool |
 | [docs/INTERNALS.en.md](docs/INTERNALS.en.md) | Internals — the full generated `.claude/` tree, key patterns |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Contribution guide |
 

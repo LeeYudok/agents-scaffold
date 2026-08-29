@@ -100,7 +100,7 @@ placeholder 를 채우고 안 쓰는 걸 지우면, 결과는 레포의 다른 �
 
 | 문서 | 내용 |
 |---|---|
-| [docs/OPTIONS.md](docs/OPTIONS.md) | 전체 옵션 — 스택 프리셋 10종, `--forge`, `--harness`, `--lang`, 사용법, 치환 플레이스홀더, 요구사항 다지기 도구 선택 |
+| [docs/OPTIONS.md](docs/OPTIONS.md) | 전체 옵션 — 스택 프리셋 11종, `--forge`, `--harness`, `--lang`, 사용법, 치환 플레이스홀더, 요구사항 다지기 도구 선택 |
 | [docs/INTERNALS.md](docs/INTERNALS.md) | 내부 구조 — 생성되는 `.claude/` 전체 트리, 주요 패턴 |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | 기여 가이드 |
 
