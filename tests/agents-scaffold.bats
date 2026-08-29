@@ -715,3 +715,60 @@ JSP
   [ -f "$BATS_TEST_TMPDIR/.claude/rules/ruby-rails.md" ]
   [ -f "$BATS_TEST_TMPDIR/.claude/rules/bun.md" ]
 }
+
+# --- 20) dotnet 프리셋 (#7) ---
+
+@test "dotnet stack merges rules and splices partial after marker" {
+  run "$SCRIPT" "$BATS_TEST_TMPDIR" --stack dotnet --yes
+  [ "$status" -eq 0 ]
+  grep -q '.NET' "$BATS_TEST_TMPDIR/.claude/rules/dotnet.md"
+  grep -q '^## P0' "$BATS_TEST_TMPDIR/.claude/rules/dotnet.md"
+  marker_line="$(grep -n 'STACK CHECKS' "$BATS_TEST_TMPDIR/.claude/hooks/pre-commit.sh" | head -1 | cut -d: -f1)"
+  gate_line="$(grep -n 'dotnet: secrets' "$BATS_TEST_TMPDIR/.claude/hooks/pre-commit.sh" | head -1 | cut -d: -f1)"
+  [ "$gate_line" -gt "$marker_line" ]
+  # 스택 P0 가 AGENTS.md 본문에 인라인됐는지 (#21)
+  grep -q 'dotnet' "$BATS_TEST_TMPDIR/AGENTS.md"
+}
+
+@test "dotnet gate blocks a staged secrets.json (#7)" {
+  target="$BATS_TEST_TMPDIR/dotnetgate"
+  mkdir -p "$target"
+  run "$SCRIPT" "$target" --stack dotnet --yes
+  [ "$status" -eq 0 ]
+
+  cd "$target"
+  git init -q -b main
+  git config user.name t; git config user.email t@e.c
+  # csproj 가 추적돼야 게이트가 켜진다.
+  printf '<Project Sdk="Microsoft.NET.Sdk"></Project>\n' > App.csproj
+  git add App.csproj
+  printf '{"ConnectionStrings":{"Default":"x"}}\n' > secrets.json
+  git add -f secrets.json
+  run bash .claude/hooks/pre-commit.sh
+  [ "$status" -eq 2 ]
+  [[ "$output" == *"secrets.json"* ]]
+}
+
+@test "dotnet gate is a no-op without a project file (#7)" {
+  target="$BATS_TEST_TMPDIR/dotnetnoop"
+  mkdir -p "$target"
+  run "$SCRIPT" "$target" --stack dotnet --yes
+  [ "$status" -eq 0 ]
+
+  cd "$target"
+  git init -q -b main
+  git config user.name t; git config user.email t@e.c
+  printf 'hello\n' > README.md
+  git add README.md
+  run bash .claude/hooks/pre-commit.sh
+  [ "$status" -eq 0 ]
+}
+
+@test "dotnet combined with another stack: both gates run (#6 regression class)" {
+  run "$SCRIPT" "$BATS_TEST_TMPDIR" --stack dotnet,bun --yes
+  [ "$status" -eq 0 ]
+  grep -q 'dotnet: secrets' "$BATS_TEST_TMPDIR/.claude/hooks/pre-commit.sh"
+  grep -q 'tsc' "$BATS_TEST_TMPDIR/.claude/hooks/pre-commit.sh"
+  [ -f "$BATS_TEST_TMPDIR/.claude/rules/dotnet.md" ]
+  [ -f "$BATS_TEST_TMPDIR/.claude/rules/bun.md" ]
+}
