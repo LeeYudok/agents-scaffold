@@ -253,7 +253,7 @@ case "$LANG_OPT" in
 esac
 
 # 스택 미지정 + 대화형이면 묻는다
-AVAILABLE_STACKS="nextjs, springboot, javaweb, bun, python, go, rust, ruby-rails, android, flutter, ops"
+AVAILABLE_STACKS="nextjs, springboot, javaweb, bun, python, go, rust, ruby-rails, dotnet, android, flutter, ops"
 if [ -z "$STACKS" ] && [ "$ASSUME_YES" -eq 0 ] && [ -t 0 ]; then
   echo "Select stack presets (comma-separated, blank=common only): $AVAILABLE_STACKS" >&2
   printf "stack> " >&2
