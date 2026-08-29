@@ -104,7 +104,7 @@ Blocked: a .env-type file is staged. Commit is not allowed.
 
 | ドキュメント | 内容 |
 |---|---|
-| [docs/OPTIONS.ja.md](docs/OPTIONS.ja.md) | 全オプション — スタックプリセット 10 種、`--forge`、`--harness`、`--lang`、使い方、プレースホルダー置換、要件を鍛えるツールの選び方 |
+| [docs/OPTIONS.ja.md](docs/OPTIONS.ja.md) | 全オプション — スタックプリセット 11 種、`--forge`、`--harness`、`--lang`、使い方、プレースホルダー置換、要件を鍛えるツールの選び方 |
 | [docs/INTERNALS.ja.md](docs/INTERNALS.ja.md) | 内部構造 — 生成される `.claude/` の全ツリー、主要パターン |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | コントリビュートガイド |
 

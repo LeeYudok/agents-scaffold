@@ -668,3 +668,50 @@ JSP
     grep -q '^## P0' "$erf" || { echo "missing en ## P0: $erf"; return 1; }
   done
 }
+
+# --- 19) ruby-rails 프리셋 (#9) ---
+
+@test "ruby-rails stack merges rules and splices partial after marker" {
+  run "$SCRIPT" "$BATS_TEST_TMPDIR" --stack ruby-rails --yes
+  [ "$status" -eq 0 ]
+  grep -q 'Ruby on Rails' "$BATS_TEST_TMPDIR/.claude/rules/ruby-rails.md"
+  grep -q '^## P0' "$BATS_TEST_TMPDIR/.claude/rules/ruby-rails.md"
+  marker_line="$(grep -n 'STACK CHECKS' "$BATS_TEST_TMPDIR/.claude/hooks/pre-commit.sh" | head -1 | cut -d: -f1)"
+  gate_line="$(grep -n 'ruby-rails: master.key' "$BATS_TEST_TMPDIR/.claude/hooks/pre-commit.sh" | head -1 | cut -d: -f1)"
+  [ "$gate_line" -gt "$marker_line" ]
+  # 스택 P0 가 AGENTS.md 본문에 인라인됐는지 (#21)
+  grep -q 'ruby-rails' "$BATS_TEST_TMPDIR/AGENTS.md"
+}
+
+@test "ruby-rails gate blocks a staged master.key, passes without one (#9)" {
+  target="$BATS_TEST_TMPDIR/railsgate"
+  mkdir -p "$target"
+  run "$SCRIPT" "$target" --stack ruby-rails --yes
+  [ "$status" -eq 0 ]
+
+  cd "$target"
+  git init -q -b main
+  git config user.name t; git config user.email t@e.c
+  # Gemfile 이 있어야 게이트가 켜진다. rubocop/rspec 은 미설치 → 통과해야 함.
+  printf "source 'https://rubygems.org'\n" > Gemfile
+  mkdir -p app/models config
+  printf "class User < ApplicationRecord\nend\n" > app/models/user.rb
+  git add Gemfile app/models/user.rb
+  run bash .claude/hooks/pre-commit.sh
+  [ "$status" -eq 0 ]
+
+  printf 'deadbeef\n' > config/master.key
+  git add -f config/master.key
+  run bash .claude/hooks/pre-commit.sh
+  [ "$status" -eq 2 ]
+  [[ "$output" == *"master.key"* ]]
+}
+
+@test "ruby-rails combined with another stack: both gates run (#6 regression class)" {
+  run "$SCRIPT" "$BATS_TEST_TMPDIR" --stack ruby-rails,bun --yes
+  [ "$status" -eq 0 ]
+  grep -q 'ruby-rails: master.key' "$BATS_TEST_TMPDIR/.claude/hooks/pre-commit.sh"
+  grep -q 'tsc' "$BATS_TEST_TMPDIR/.claude/hooks/pre-commit.sh"
+  [ -f "$BATS_TEST_TMPDIR/.claude/rules/ruby-rails.md" ]
+  [ -f "$BATS_TEST_TMPDIR/.claude/rules/bun.md" ]
+}
