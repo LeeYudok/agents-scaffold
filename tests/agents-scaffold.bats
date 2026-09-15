@@ -562,21 +562,26 @@ JSP
 
 # --- 9) harness (#16) ---
 
-@test "harness codex drops Claude-only layers, keeps neutral ones, wires git hook" {
+@test "harness codex installs native skills, drops Claude-only layers, wires git hook (#50)" {
   t="$BATS_TEST_TMPDIR/codex"
   mkdir -p "$t"
   git -C "$t" init -q
+  mkdir -p "$t/.agents/skills/status"
+  echo 'user-owned codex skill' > "$t/.agents/skills/status/SKILL.md"
   run bash "$SCRIPT" "$t" --forge github --stack go --harness codex --name codex-app --yes
   [ "$status" -eq 0 ]
-  # kept: harness-neutral layers
+  # kept: shared layers + Codex-native repository skills
   [ -f "$t/AGENTS.md" ]
   [ -f "$t/.claude/rules/go.md" ]
-  [ -d "$t/.claude/skills" ]
+  [ -f "$t/.agents/skills/review/SKILL.md" ]
+  grep -q 'user-owned codex skill' "$t/.agents/skills/status/SKILL.md"
   [ -f "$t/.claude/hooks/pre-commit.sh" ]
   # dropped: Claude Code-only layers
   [ ! -e "$t/.claude/settings.json" ]
   [ ! -d "$t/.claude/agents" ]
   [ ! -d "$t/.claude/commands" ]
+  # canonical cross-harness skill sources remain available; Codex registers the projection above
+  [ -f "$t/.claude/skills/review/SKILL.md" ]
   [ ! -d "$t/.claude/workflows" ]
   [ ! -e "$t/CLAUDE.md" ]
   [ ! -e "$t/GEMINI.md" ]
@@ -598,6 +603,8 @@ JSP
   run bash "$SCRIPT" "$t" --forge github --harness all --name all-app --yes
   [ "$status" -eq 0 ]
   [ -f "$t/.claude/settings.json" ]
+  [ -f "$t/.claude/skills/review/SKILL.md" ]
+  [ -f "$t/.agents/skills/review/SKILL.md" ]
   [ -f "$t/CLAUDE.md" ]
   [ -x "$t/.git/hooks/pre-commit" ]
 

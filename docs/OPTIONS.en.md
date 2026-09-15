@@ -61,8 +61,8 @@ just costs more. None of them fire automatically, even with all three installed;
 | Value | Target | What it does |
 |---|---|---|
 | `claude` (default) | Claude Code | Full install — settings.json hook bindings, subagents, slash commands, workflows |
-| `codex` | Codex and other AGENTS.md harnesses | Installs only the harness-neutral layers (AGENTS.md, rules, skills, hooks, memory) and drops the Claude-only layers |
-| `all` | Mixed teams | Full install |
+| `codex` | Codex | Installs `AGENTS.md`, native `.agents/skills`, and shared rules/hooks/memory; drops Claude-only layers |
+| `all` | Mixed teams | Installs both `.claude/skills` and Codex-native `.agents/skills` |
 
 **Support comes in two tiers (#21)** — not a binary "supported / unsupported".
 
@@ -75,26 +75,27 @@ The git hook is **always wired, regardless of harness** (#21). Claude Code's `Pr
 
 The selected stack's P0 rules are **inlined into the `AGENTS.md` body**, so they do not depend on a `.claude/rules/` reference link and stay reachable on harnesses that never load `.claude/`. Stacks you did not select are not inlined (Codex caps combined instructions at 32KiB by default — this avoids context flooding).
 
-### Verified (2026-08-22)
+### Verified (2026-09-15)
 
 | Harness | Measured version | baseline | What is / isn't confirmed on the full tier |
 |---|---|---|---|
 | Claude Code | 2.1.239 | holds | `paths:`-scoped loading of `.claude/rules/*.md`, subagents, skills, `settings.json` hooks — all confirmed against the [official docs](https://code.claude.com/docs/en/memory.md) |
-| Codex | codex-cli 0.149.0 | holds | `AGENTS.md` auto-load and a P0-cited `.env` refusal were measured. **Skills are not discovered** (see below) |
+| Codex | codex-cli 0.154.0 / GPT-6 Astra | holds | `AGENTS.md`, inlined stack P0, `.agents/skills`, and the `.env` gate were measured |
 | Antigravity | agy **1.1.18** (not re-measured) | holds | On 1.1.17, **headless (`-p`) measurably did not load rules** — root cause unknown. Neither 1.1.18 nor interactive mode has been re-measured |
 
-Codex (codex-cli 0.149.0) auto-loads the `codex`-mode AGENTS.md, answered the rule tiers
-correctly, and **refused an instruction to commit a `.env`, citing the P0 rule** (first line of
-defense). If a model tries anyway, the git hook blocks it with exit 2 (second line, test-covered).
+Codex (codex-cli 0.154.0, `gpt-6-astra`) auto-loads the `codex`-mode AGENTS.md and its
+inlined stack P0, and discovers repository skills under `.agents/skills`. It does not discover
+`.claude/skills`. If a model misses a rule, the git hook still blocks a staged `.env` with exit 2.
 
 The single source of truth for support status is [`docs/harness-matrix.json`](harness-matrix.json).
 This table is checked against that manifest by `scripts/check-harness-matrix.py` in CI — if a `full`
 tier has gone 90 days without re-measurement, or a verdict carries no evidence, **the build fails**.
 Re-measure with `scripts/spike-codex-contract.sh --dynamic`.
 
-**Known gap — Codex skills are not auto-discovered.** Codex discovers repository skills under
-`.agents/skills`, but `--harness codex` currently leaves them in `.claude/skills`. The rules layer
-(`AGENTS.md`) works; the skills layer does not — that is baseline, not full.
+`--harness codex` installs repository skills in Codex's native `.agents/skills` path.
+`--harness all` keeps `.claude/skills` for Claude/Antigravity and also emits `.agents/skills`
+for Codex. Codex subagents, path-scoped rules, and lifecycle hooks remain unverified, so its
+overall tier remains baseline.
 
 Two further Codex constraints shape the design:
 

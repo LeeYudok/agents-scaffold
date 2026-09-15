@@ -56,8 +56,8 @@
 | 値 | 対象 | 動作 |
 |---|---|---|
 | `claude`（デフォルト） | Claude Code | フルインストール — settings.json のフックバインディング・サブエージェント・スラッシュコマンド・workflows を含む |
-| `codex` | Codex ほか AGENTS.md 対応ハーネス | ハーネス中立の層（AGENTS.md・rules・skills・hooks・memory）のみ導入し、Claude 専用層を除去 |
-| `all` | 混在チーム | フルインストール |
+| `codex` | Codex | `AGENTS.md`、ネイティブ `.agents/skills`、共有 rules/hooks/memory を導入し、Claude 専用層を除去 |
+| `all` | 混在チーム | `.claude/skills` と Codex ネイティブ `.agents/skills` を両方導入 |
 
 **保証レベルは 2 段階です（#21）** — 「対応している/していない」の二分法ではありません。
 
@@ -70,19 +70,19 @@ git フックは**ハーネスに関係なく常に配線されます**（#21）
 
 選択したスタックの P0 は **`AGENTS.md` 本文に直接挿入**されます。`.claude/rules/` の参照リンクに依存しないため、`.claude/` を読み込まないハーネスでも到達可能です。選択していないスタックは挿入されません（Codex の指示合計はデフォルト 32KiB 上限 — context flooding を防ぐため）。
 
-### 実測検証（2026-08-22）
+### 実測検証（2026-09-15）
 
 | ハーネス | 実測バージョン | baseline | full 層で確認できたこと / できていないこと |
 |---|---|---|---|
 | Claude Code | 2.1.239 | 成立 | `.claude/rules/*.md` の `paths:` 条件付きロード、サブエージェント、skills、`settings.json` フック — いずれも[公式ドキュメント](https://code.claude.com/docs/en/memory.md)で確認 |
-| Codex | codex-cli 0.149.0 | 成立 | `AGENTS.md` の自動ロードと P0 を根拠にした `.env` 拒否を実測。**skills は発見されない**（下記） |
+| Codex | codex-cli 0.154.0 / GPT-6 Astra | 成立 | `AGENTS.md`、インラインのスタック P0、`.agents/skills`、`.env` ゲートを実測 |
 | Antigravity | agy **1.1.18**（再測定なし） | 成立 | 1.1.17 で **headless（`-p`）がルールを読み込まない**ことを実測 — 原因は未解明。1.1.18 もインタラクティブモードも未検証 |
 
-Codex（codex-cli 0.149.0）は `codex` モード成果物の AGENTS.md を自動で読み込み、ルール階層を正しく回答し、`.env` をコミットせよという指示を **P0 ルールを根拠に自ら拒否**しました（第一の防衛線）。モデルが強行しても git フックが exit 2 でブロックします（第二の防衛線、テスト済み）。
+Codex（codex-cli 0.154.0、`gpt-6-astra`）は `codex` モード成果物の AGENTS.md とインラインのスタック P0 を自動で読み込み、`.agents/skills` のリポジトリ skills を発見しました。`.claude/skills` は発見されません。モデルがルールを見落としても git フックが staged `.env` を exit 2 でブロックします。
 
 サポート状況の単一の真実の源は [`docs/harness-matrix.json`](harness-matrix.json) です。この表はその manifest と突き合わされ、CI では `scripts/check-harness-matrix.py` が検査します — `full` 等級が 90 日以上再実測されていない、あるいは判定に根拠がない場合、**ビルドは失敗します**。再実測は `scripts/spike-codex-contract.sh --dynamic` で行います。
 
-**既知のギャップ — Codex の skills は自動発見されません。** Codex がリポジトリの skills を探す場所は `.agents/skills` ですが、現在の `--harness codex` は `.claude/skills` に残します。ルール層（`AGENTS.md`）は機能しますが skills 層は機能しません — これは full ではなく baseline です。
+`--harness codex` はリポジトリ skills を Codex ネイティブの `.agents/skills` に配置します。`--harness all` は Claude/Antigravity 用の `.claude/skills` と Codex 用の `.agents/skills` を両方生成します。Codex のサブエージェント、パス条件付きルール、lifecycle フックは未検証のため、全体の等級は引き続き baseline です。
 
 Codex 側の制約がもう 2 点、設計に効いてきます。
 

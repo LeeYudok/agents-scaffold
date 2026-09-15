@@ -18,11 +18,11 @@ Usage:
                  English base, after base copy + forge merge + stack merge.
   --name         {{PROJECT_NAME}} substitution value. Default = target directory name.
   --harness      Target agent harness: claude (default), codex, or all.
-                 codex keeps AGENTS.md + rules/skills/hooks/memory (harness-neutral),
-                 drops Claude Code-only layers (settings.json, agents/, commands/,
-                 workflows/, CLAUDE.md/GEMINI.md pointers), and wires the pre-commit
-                 gate as a real .git/hooks/pre-commit. all installs everything and
-                 also wires the git hook.
+                 codex installs AGENTS.md + .agents/skills (Codex-native) and keeps
+                 shared rules/hooks/memory, drops Claude Code-only layers
+                 (settings.json, agents/, commands/, workflows/, CLAUDE.md/GEMINI.md),
+                 and wires the pre-commit gate as a real .git/hooks/pre-commit.
+                 all installs both the Claude and Codex skill discovery paths.
   --yes          Skip interactive prompts (non-interactive mode).
   --update       Refresh the base .claude/·AGENTS.md etc. of an already-bootstrapped project.
                  .claude/hooks/pre-commit.sh has stack partials inserted, so it is skipped
@@ -419,9 +419,21 @@ done
 chmod +x "$TARGET/.claude/hooks/"*.sh 2>/dev/null || true
 
 # 4.5) 하네스 조정 (#16)
-#   codex: Claude Code 전용 계층 제거 — AGENTS.md 는 Codex 가 네이티브로 읽고,
-#          rules/skills/hooks/memory 는 하네스 중립 문서·스크립트라 유지한다.
+#   codex/all: Codex 네이티브 저장소 스킬 경로(.agents/skills)를 생성한다.
+#   codex: Claude Code 전용 계층을 제거하되 공통 자료와 git gate 는 유지한다.
 #   전 하네스 공통: pre-commit 게이트를 진짜 git hook 으로 배선 (#21).
+if [ "$HARNESS" = "codex" ] || [ "$HARNESS" = "all" ]; then
+  if [ -d "$TARGET/.claude/skills" ]; then
+    mkdir -p "$TARGET/.agents/skills"
+    while IFS= read -r skill_file; do
+      skill_rel="${skill_file#"$TARGET/.claude/skills/"}"
+      [ -e "$TARGET/.agents/skills/$skill_rel" ] && continue
+      mkdir -p "$TARGET/.agents/skills/$(dirname "$skill_rel")"
+      cp "$skill_file" "$TARGET/.agents/skills/$skill_rel"
+    done < <(find "$TARGET/.claude/skills" -type f)
+    echo "== Codex repository skills installed at .agents/skills ==" >&2
+  fi
+fi
 if [ "$HARNESS" = "codex" ]; then
   echo "== harness=codex: removing Claude Code-only layers ==" >&2
   rm -rf "$TARGET/.claude/agents" "$TARGET/.claude/commands" "$TARGET/.claude/workflows"
