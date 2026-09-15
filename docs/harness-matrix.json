@@ -64,8 +64,8 @@
     {
       "id": "codex",
       "name": "Codex",
-      "cli_version": "codex-cli 0.149.0",
-      "last_measured": "2026-08-22",
+      "cli_version": "codex-cli 0.154.0",
+      "last_measured": "2026-09-15",
       "tier": "baseline",
       "trust_model": "project trust required for .codex/ layer",
       "instruction_budget_bytes": 32768,
@@ -82,10 +82,10 @@
           "evidence": "spike: 인라인된 python 스택 P0 를 응답에 포함. 산출물 AGENTS.md 6,612 B / 32,768 B"
         },
         "repo_skills": {
-          "verdict": "fail",
+          "verdict": "pass",
           "target": ".agents/skills/<name>/SKILL.md",
-          "evidence": "통제실험 1회 완주: 동일 저장소의 .agents/skills 프로브만 등록 스킬로 응답, .claude/skills 프로브는 미응답. 현재 --harness codex 산출물은 .claude/skills 이므로 미발견.",
-          "reproducibility": "완주 1회 / 시도 3회 — 나머지 2회는 codex 호출 타임아웃으로 inconclusive. 재측정 시 CODEX_TIMEOUT 을 늘릴 것."
+          "evidence": "gpt-6-astra 명시 통제실험: --harness codex 산출물의 .agents/skills 프로브는 등록 스킬로 응답하고 .claude/skills 프로브는 미응답 (#50).",
+          "reproducibility": "codex-cli 0.154.0, gpt-6-astra, 완주 1회 / 시도 1회"
         },
         "subagents": {
           "verdict": "unverified",

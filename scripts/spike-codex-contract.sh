@@ -78,7 +78,7 @@ if [ "$DYNAMIC" -eq 1 ] && [ "$CODEX_VERSION" != "not-installed" ]; then
   if [ ! -s "$out2" ]; then
     skill_answer="inconclusive"; skill_note="codex 응답 없음(타임아웃 또는 빈 출력) — 미측정으로 취급"
   elif [ "$agents_seen" -gt 0 ] && [ "$claude_seen" -eq 0 ]; then
-    skill_answer="pass"; skill_note=".agents/skills 만 등록됨 — .claude/skills 는 Codex 탐색 경로가 아님(통제 실험 확정)"
+    skill_answer="pass"; skill_note="산출된 .agents/skills 가 등록되고 .claude/skills 는 미등록(통제 실험 확정)"
   elif [ "$agents_seen" -gt 0 ] && [ "$claude_seen" -gt 0 ]; then
     skill_answer="partial"; skill_note="양쪽 경로 모두 등록됨"
   elif [ "$claude_seen" -gt 0 ]; then

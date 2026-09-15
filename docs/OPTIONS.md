@@ -57,8 +57,8 @@
 | 값 | 대상 | 하는 일 |
 |---|---|---|
 | `claude` (기본) | Claude Code | 전체 설치 — settings.json 훅 바인딩·서브에이전트·슬래시 커맨드·workflows 포함 |
-| `codex` | Codex 등 AGENTS.md 하네스 | 하네스 중립 계층(AGENTS.md·rules·skills·hooks·memory)만 설치, Claude 전용 계층 제거 |
-| `all` | 혼용 팀 | 전체 설치 |
+| `codex` | Codex | `AGENTS.md`·`.agents/skills`와 공통 rules/hooks/memory 설치, Claude 전용 계층 제거 |
+| `all` | 혼용 팀 | Claude용 `.claude/skills`와 Codex용 `.agents/skills`를 함께 설치 |
 
 **보장 수준은 2단이다 (#21)** — "지원한다/안 한다" 이분법이 아니다.
 
@@ -75,26 +75,27 @@ Bash 툴로 커밋할 때만 발동하므로 조기 피드백 계층이지 강�
 않으므로 `.claude/` 를 로드하지 않는 하네스에서도 도달 가능하다. 선택하지 않은 스택은 삽입되지
 않는다(Codex instruction 합산 기본 한도 32KiB — context flooding 방지).
 
-### 실측 검증 (2026-08-22)
+### 실측 검증 (2026-09-15)
 
 | 하네스 | 실측 버전 | baseline | full 쪽 확인된 것 / 확인 안 된 것 |
 |---|---|---|---|
 | Claude Code | 2.1.239 | 성립 | `.claude/rules/*.md` 의 `paths:` 조건부 로딩, 서브에이전트, skills, `settings.json` 훅 — 전부 [공식 문서](https://code.claude.com/docs/en/memory.md)로 확인 |
-| Codex | codex-cli 0.149.0 | 성립 | `AGENTS.md` 자동 로드·P0 근거 `.env` 거부까지 실측. **스킬은 발견되지 않는다**(아래) |
+| Codex | codex-cli 0.154.0 / GPT-6 Astra | 성립 | `AGENTS.md`·스택 P0 자동 로드와 `.agents/skills` 발견, `.env` 게이트를 실측 |
 | Antigravity | agy **1.1.18** (미재검증) | 성립 | 1.1.17 에서 **headless(`-p`) 규칙 미로드** 실측 — 원인 미규명. 1.1.18 재검증·인터랙티브 모드 모두 미실시 |
 
-Codex(codex-cli 0.149.0)는 `codex` 모드 산출물의 AGENTS.md 를 자동 로드해 룰 티어를 정확히
-답했고, `.env` 커밋 지시를 **P0 규칙을 근거로 스스로 거부**했다(1차 방어). 모델이 시도해도
-git hook 이 exit 2 로 차단한다(2차 방어, 테스트 커버).
+Codex(codex-cli 0.154.0, `gpt-6-astra`)는 `codex` 모드 산출물의 AGENTS.md 와 인라인된
+스택 P0를 자동 로드하고 `.agents/skills`의 저장소 스킬만 발견했다. `.claude/skills`는
+Codex 발견 경로가 아니다. 모델이 규칙을 놓쳐도 git hook이 exit 2로 차단한다.
 
 지원 상태의 단일 진실원천은 [`docs/harness-matrix.json`](harness-matrix.json) 이다. 이 표는
 그 manifest 와 대조되며, `scripts/check-harness-matrix.py` 가 CI 에서 검사한다 — `full` 등급이
 90일 넘게 재측정되지 않았거나 판정에 근거가 없으면 **빌드가 실패한다**. 재측정은
 `scripts/spike-codex-contract.sh --dynamic` 으로 수행한다.
 
-**알려진 갭 — Codex 스킬은 자동 발견되지 않는다.** Codex 의 저장소 스킬 발견 경로는
-`.agents/skills` 인데 현재 `--harness codex` 는 `.claude/skills` 를 남긴다. 규칙 계층
-(`AGENTS.md`)은 동작하지만 스킬은 그렇지 않다 — full 이 아니라 baseline 이다.
+`--harness codex`는 저장소 스킬을 네이티브 경로인 `.agents/skills`에 설치한다.
+`--harness all`은 Claude·Antigravity 호환용 `.claude/skills`와 Codex용 `.agents/skills`를
+함께 둔다. Codex 서브에이전트·경로 조건부 룰·lifecycle hook은 아직 미검증이므로 전체
+등급은 계속 baseline이다.
 
 Codex 쪽 추가 제약 두 가지도 설계에 영향을 준다.
 
