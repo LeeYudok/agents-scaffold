@@ -39,14 +39,14 @@ The generated `.claude/` tree and the design patterns behind it. Start at the [R
     memory-factcheck/         memory fact-check — verify claims against code/DB/issues, correct stale
     security-precheck/        pre-audit security sweep → issues → parallel fixes
     docs-sync/                doc currency — claim-by-claim verification + parallel-language sync
+    handoff/                  session handoff — resumable state via HANDOFF.md / an issue
   workflows/             (not auto-loaded — invoked explicitly)
     rules-audit.js           stored Workflow example — scan/verify/repair with human merge gate
   scripts/               (not auto-loaded — invoked explicitly)
     knowledge_graph.py       .claude ecosystem graph + --check broken-link gate
   settings.json               hook wiring + default deny rules
 AGENTS.md                 project brain — rule SSOT (P0/P1/P2 + workflow)
-CLAUDE.md                 @AGENTS.md + memory-index import (Claude Code)
-GEMINI.md                 @AGENTS.md + memory-index import (Gemini CLI)
+.gemini/settings.json     points Gemini CLI at AGENTS.md via context.fileName
 presets/                  preset fragments (copy-overwrite model)
   forge-github/           GitHub forge — gh, PRs, `Closes #N` auto-close
   forge-gitlab/           GitLab forge — glab, MRs, `Closes #N` auto-close (verify after merge)

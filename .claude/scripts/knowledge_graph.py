@@ -31,7 +31,7 @@ SCAN_DIRS = [
     (".claude/commands", "command"),
     (".claude/workflows", "workflow"),
 ]
-ROOT_DOCS = [("AGENTS.md", "root"), ("CLAUDE.md", "root")]
+ROOT_DOCS = [("AGENTS.md", "root")]
 
 MD_LINK = re.compile(r"\[([^\]]*)\]\(([^)\s]+)\)")
 WIKI_LINK = re.compile(r"\[\[([a-z0-9-]+)\]\]")

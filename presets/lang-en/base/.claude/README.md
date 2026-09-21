@@ -1,6 +1,6 @@
 # `.claude/` — Claude Code collaboration assets
 
-Works together with the root `AGENTS.md` (the project brain; `CLAUDE.md` imports it).
+Works together with the root `AGENTS.md` (the project brain, loaded natively by the harness).
 
 ```
 .claude/

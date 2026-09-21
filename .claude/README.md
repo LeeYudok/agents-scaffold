@@ -1,6 +1,6 @@
 # `.claude/` — Claude Code 협업 자산
 
-루트 `AGENTS.md`(프로젝트 브레인, `CLAUDE.md` 가 import)와 함께 동작한다.
+루트 `AGENTS.md`(프로젝트 브레인 — 하네스가 네이티브로 로드)와 함께 동작한다.
 
 ```
 .claude/

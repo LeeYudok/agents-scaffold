@@ -106,8 +106,7 @@ presets/<stack>/
 ## 플레이스홀더
 
 `presets/<stack>/.claude/` 하위 모든 파일은 다음 토큰을 쓸 수 있다. 이들은
-프리셋 머지 이후 레포 전역(베이스 `.claude/`, `AGENTS.md`, `CLAUDE.md`,
-`GEMINI.md` 에도)에서 치환된다:
+프리셋 머지 이후 레포 전역(베이스 `.claude/`, `AGENTS.md` 에도)에서 치환된다:
 
 | 토큰 | 치환 값 |
 |---|---|
@@ -128,7 +127,7 @@ presets/<stack>/
 ```
 presets/lang-en/
   base/.claude/...                      # base .claude/ 트리를 미러
-  base/AGENTS.md, CLAUDE.md, GEMINI.md  # 루트 파일, 직접 복사(.claude/ 하위 아님)
+  base/AGENTS.md  # 루트 파일, 직접 복사(.claude/ 하위 아님)
   forge-github/.claude/...              # presets/forge-github/.claude/ 를 미러
   forge-gitlab/.claude/...              # presets/forge-gitlab/.claude/ 를 미러
   stacks/<stack>/.claude/rules/<stack>.md  # presets/<stack>/.claude/rules/<stack>.md 를 미러

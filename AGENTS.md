@@ -1,11 +1,16 @@
 # AGENTS.md — {{PROJECT_NAME}}
 
 이 파일은 이 저장소에서 작업할 때 AI 에이전트(Claude Code·Gemini CLI·Codex 등)가 따르는
-**단일 진실원천(SSOT)** 이다. 프로젝트 브레인. `CLAUDE.md`·`GEMINI.md` 는 이 파일을 참조한다.
+**단일 진실원천(SSOT)** 이다. 프로젝트 브레인. 별도의 `CLAUDE.md`·`GEMINI.md` 포인터 파일은 두지 않는다 —
+Claude Code(v2.1.277+)·Codex 는 이 파일을 네이티브로 읽고, Gemini CLI 는 `.gemini/settings.json` 의
+`context.fileName` 으로 이 파일을 가리킨다.
 
 이 파일은 **자체 완결**이어야 한다 — 아래 P0/P1 은 다른 파일 로딩 없이 여기서 읽힌다.
-`@` import 는 Claude Code 전용 문법이라 하네스 중립 파일인 여기에 두지 않는다
-(메모리 인덱스 자동 로드는 `CLAUDE.md`·`GEMINI.md` 가 담당).
+`@` import 는 메모리 인덱스 한 줄만 허용한다(아래 "메모리 경로 오버라이드") — import 를 확장하는
+하네스에서는 인덱스가 자동 로드되고, 확장하지 않는 하네스에는 경로 포인터로 읽힌다.
+
+> `CLAUDE.md`(또는 `CLAUDE.local.md`)를 새로 만들면 Claude Code 는 이 파일을 **더 이상 읽지 않는다**
+> (병합이 아니라 폴백). 꼭 필요하면 그 파일 첫 줄에 `@AGENTS.md` 를 넣을 것.
 
 ## 메모리 경로 오버라이드
 
@@ -14,6 +19,10 @@
 - 모든 메모리 읽기/쓰기는 `.claude/memory/` 하위에서 수행한다.
 - `MEMORY.md` 가 인덱스(단일), 타입접두 `project_`/`feedback_`/`reference_`/`user_`.
 - `user_*.md` 만 개인(gitignore), 그 외는 팀 공유.
+
+메모리 인덱스:
+
+@.claude/memory/MEMORY.md
 
 ## .claude/ 인프라
 
@@ -27,7 +36,7 @@
 | `hooks/` | 강제 게이트 — pre-commit, 자동 포맷, observe-lite, 메모리 리마인드 | [README](.claude/hooks/README.md) |
 | `memory/` | 프로젝트 메모리 SSOT — MEMORY.md 인덱스 + 타입접두 파일 | [README](.claude/memory/README.md) |
 | `rules/` | 맥락 인지 룰 — `paths:` 스코프 조건부 로드 | [README](.claude/rules/README.md) |
-| `skills/` | 상황별 절차 — review, status, search-first, memory-factcheck, security-precheck, docs-sync, grill-me 등 | [README](.claude/skills/README.md) |
+| `skills/` | 상황별 절차 — review, status, search-first, memory-factcheck, security-precheck, docs-sync, grill-me, handoff 등 | [README](.claude/skills/README.md) |
 | `workflows/` | 저장형 Workflow 오케스트레이션 스크립트(`*.js`) — rules-audit 예제 | [README](.claude/workflows/README.md) |
 | `scripts/` | 레포 로컬 헬퍼 — knowledge_graph.py(문서 그래프 + 링크 체커) | [README](.claude/scripts/README.md) |
 

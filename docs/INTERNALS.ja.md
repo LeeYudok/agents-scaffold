@@ -39,14 +39,14 @@
     memory-factcheck/         メモリのファクトチェック — 主張をコード/DB/イシューと照合し、古いものを修正
     security-precheck/        監査前セキュリティスイープ → イシュー化 → 並列修正
     docs-sync/                ドキュメント現行化 — 主張ごとの事実照合 + 多言語ペアの同時更新
+    handoff/                  セッション引き継ぎ — 再開可能な状態を HANDOFF.md / Issue で渡す
   workflows/             （自動ロードされない — 明示的に呼び出す）
     rules-audit.js           保存型 Workflow の例 — scan/verify/repair、マージは人間ゲート
   scripts/               （自動ロードされない — 明示的に呼び出す）
     knowledge_graph.py       .claude エコシステムグラフ + --check リンク切れゲート
   settings.json               フック配線 + デフォルト deny ルール
 AGENTS.md                 プロジェクトの頭脳 — ルール SSOT(P0/P1/P2 + ワークフロー)
-CLAUDE.md                 @AGENTS.md + メモリインデックスの import (Claude Code)
-GEMINI.md                 @AGENTS.md + メモリインデックスの import (Gemini CLI)
+.gemini/settings.json     Gemini CLI が AGENTS.md を読むよう context.fileName を指定
 presets/                  プリセット断片(コピー上書きモデル)
   forge-github/           GitHub forge — gh、PR、`Closes #N` 自動クローズ
   forge-gitlab/           GitLab forge — glab、MR、`Closes #N` 自動クローズ(マージ後に確認)

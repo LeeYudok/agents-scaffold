@@ -19,6 +19,7 @@ move long source texts, tables, and examples into `resources/` files read only w
 Included: `example-skill/`, `review/`, `status/`, `search-first/`, `skill-evolve/`,
 `memory-factcheck/` (memory fact-check vs code/DB/issues), `security-precheck/` (pre-audit security sweep),
 `docs-sync/` (doc currency — claim-by-claim verification and parallel-language sync),
+`handoff/` (session handoff — pass resumable state through `HANDOFF.md` / an issue and pick it up),
 `grill-me/` (adversarial requirements interrogation — the lightest option, staying inside the
 conversation. Picked per task against the heavier superpowers `brainstorming` and Ouroboros; see
 "Picking a requirements-hardening tool" in the README for the comparison).

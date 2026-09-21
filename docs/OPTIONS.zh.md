@@ -74,9 +74,9 @@ git 钩子**与 harness 无关，始终接入**（#21）。Claude Code 的 `PreT
 
 | Harness | 实测版本 | baseline | full 层已确认 / 未确认的内容 |
 |---|---|---|---|
-| Claude Code | 2.1.239 | 成立 | `.claude/rules/*.md` 的 `paths:` 条件加载、子代理、skills、`settings.json` 钩子 — 均已对照[官方文档](https://code.claude.com/docs/en/memory.md)确认 |
+| Claude Code | 2.1.278 | 成立 | `.claude/rules/*.md` 的 `paths:` 条件加载、子代理、skills、`settings.json` 钩子 — 均已对照[官方文档](https://code.claude.com/docs/en/memory.md)确认 |
 | Codex | codex-cli 0.154.0 / GPT-6 Astra | 成立 | 已实测 `AGENTS.md`、内联技术栈 P0、`.agents/skills` 与 `.env` 门禁 |
-| Antigravity | agy **1.1.18**（未重测） | 成立 | 1.1.17 上实测 **headless（`-p`）不加载规则** — 原因未查明。1.1.18 与交互模式均未重测 |
+| Antigravity | agy **1.2.7** | 成立 | 实测 **headless（`-p`）不加载规则**（1.1.17，1.2.7 再次确认 — `AGENTS.md` 与 `GEMINI.md` 均未加载）— 原因未查明。交互模式尚未实测 |
 
 Codex（codex-cli 0.154.0，`gpt-6-astra`）会自动加载 `codex` 模式产物中的 AGENTS.md 与内联技术栈 P0，并发现 `.agents/skills` 下的仓库 skills；`.claude/skills` 不会被发现。即使模型遗漏规则，git 钩子仍会以 exit 2 拦截已暂存的 `.env`。
 
@@ -144,8 +144,8 @@ curl -fsSL https://raw.githubusercontent.com/leeyudok/agents-scaffold/main/bin/a
 
 ### 更新基础文件 — `--update`
 
-将最新的基础文件（`.claude/`、`AGENTS.md`、`CLAUDE.md`、
-`GEMINI.md`）应用到已完成引导的项目。
+将最新的基础文件（`.claude/`、`AGENTS.md`、
+`.gemini/settings.json`）应用到已完成引导的项目。
 
 ```bash
 agents-scaffold/bin/agents-scaffold.sh --update /path/to/existing-repo

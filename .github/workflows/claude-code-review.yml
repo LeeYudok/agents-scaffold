@@ -32,7 +32,7 @@ jobs:
             - security-audit 에이전트로 시크릿 노출·인증 누락 등 보안 점검
             - .claude/rules/ 의 우선순위 티어를 기준으로 P0(즉시 중단)/P1(PR 차단)/P2(권장)로
               분류하고, P0·P1 위반을 최우선으로 지적한다
-            - AGENTS.md/CLAUDE.md 의 규약(이슈 연결, 테스트 동반, 브랜치 전략 등) 준수 여부 확인
+            - AGENTS.md 의 규약(이슈 연결, 테스트 동반, 브랜치 전략 등) 준수 여부 확인
 
             리뷰 결과는 PR 코멘트로 남긴다.
             Repository: ${{ github.repository }}

@@ -7,7 +7,7 @@ Each file is one markdown document.
 
 - **Scoped load**: with a frontmatter `paths:` (glob array), the file is injected **only when
   editing/creating matching files**.
-- **Always loaded**: without `paths:`, the file loads at session start (like CLAUDE.md).
+- **Always loaded**: without `paths:`, the file loads at session start (like AGENTS.md).
 - Each file's exact globs live in **its frontmatter — the single source of truth**; the table below is an overview.
 
 ```markdown

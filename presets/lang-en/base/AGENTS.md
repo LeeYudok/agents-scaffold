@@ -1,11 +1,16 @@
 # AGENTS.md — {{PROJECT_NAME}}
 
 This file is the **single source of truth (SSOT)** that AI agents (Claude Code, Gemini CLI, Codex, etc.)
-follow when working in this repository. It is the project brain. `CLAUDE.md`/`GEMINI.md` reference this file.
+follow when working in this repository. It is the project brain. No separate `CLAUDE.md`/`GEMINI.md` pointer files are shipped —
+Claude Code (v2.1.277+) and Codex read this file natively, and Gemini CLI is pointed at it through
+`context.fileName` in `.gemini/settings.json`.
 
 This file must be **self-contained** — the P0/P1 tiers below are readable here without loading any
-other file. `@` imports are Claude Code-specific syntax, so they are kept out of this
-harness-neutral file (`CLAUDE.md`/`GEMINI.md` own the memory-index import).
+other file. The only `@` import allowed here is the memory index (see "Memory path override" below):
+harnesses that expand imports auto-load the index, and the rest read it as a path pointer.
+
+> If you add a `CLAUDE.md` (or `CLAUDE.local.md`), Claude Code **stops reading this file** (fallback,
+> not merge). If you really need one, make its first line `@AGENTS.md`.
 
 ## Memory path override
 
@@ -14,6 +19,10 @@ This project's auto-memory SSOT is `.claude/memory/`.
 - All memory reads/writes happen under `.claude/memory/`.
 - `MEMORY.md` is the (single) index; type prefixes are `project_`/`feedback_`/`reference_`/`user_`.
 - Only `user_*.md` is personal; everything else is shared with the team.
+
+Memory index:
+
+@.claude/memory/MEMORY.md
 
 ## .claude/ infrastructure
 
@@ -27,7 +36,7 @@ authoring skeleton and conventions.
 | `hooks/` | enforced gates — pre-commit, auto-format, observe-lite, memory reminders | [README](.claude/hooks/README.md) |
 | `memory/` | project memory SSOT — MEMORY.md index + type-prefixed files | [README](.claude/memory/README.md) |
 | `rules/` | context-aware rules — `paths:`-scoped conditional loading | [README](.claude/rules/README.md) |
-| `skills/` | situational procedures — review, status, search-first, memory-factcheck, security-precheck, docs-sync, grill-me, ... | [README](.claude/skills/README.md) |
+| `skills/` | situational procedures — review, status, search-first, memory-factcheck, security-precheck, docs-sync, grill-me, handoff, ... | [README](.claude/skills/README.md) |
 | `workflows/` | stored Workflow orchestration scripts (`*.js`) — rules-audit example | [README](.claude/workflows/README.md) |
 | `scripts/` | repo-local helpers — knowledge_graph.py (doc graph + link checker) | [README](.claude/scripts/README.md) |
 

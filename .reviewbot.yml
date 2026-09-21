@@ -3,6 +3,6 @@ extra_rules:
   - "bin/agents-scaffold.sh 는 TARGET 경로 기준으로 rm -rf 를 실행한다(예: `rm -rf \"$TARGET/bin\" \"$TARGET/presets\" ...`) — TARGET 산출 로직이나 경로 검증을 건드리는 변경은 빈 변수·상위 디렉터리 이탈로 의도치 않은 삭제가 없는지 확인"
   - "README Quickstart 가 `curl | bash` 원격 스크립트 실행을 안내한다 — bin/agents-scaffold.sh 및 다운로드 대상 URL 변경 시 무결성 검증 없이 임의 코드 실행으로 이어지지 않는지 확인"
   - ".claude/settings.json 의 deny 규칙·훅 바인딩(P0 강제 게이트) 자체가 이 레포의 산출물이므로, presets/*.partial.sh 나 settings 조각 수정이 다른 프로젝트로 배포됐을 때 P0 게이트(시크릿 노출 차단, 인증 누락 방지 등)를 약화시키지 않는지 확인"
-  - "AGENTS.md/CLAUDE.md/presets 는 `{{PROJECT_NAME}}` 등 플레이스홀더를 포함한 fork-and-fill 템플릿이다 — 신규 프리셋/문서 추가 시 플레이스홀더 치환 누락이나 실제 값 오기입 여부 확인"
-context_files: [AGENTS.md, CLAUDE.md]
+  - "AGENTS.md/presets 는 `{{PROJECT_NAME}}` 등 플레이스홀더를 포함한 fork-and-fill 템플릿이다 — 신규 프리셋/문서 추가 시 플레이스홀더 치환 누락이나 실제 값 오기입 여부 확인"
+context_files: [AGENTS.md]
 ignore: []
