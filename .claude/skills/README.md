@@ -18,6 +18,7 @@ skills/
 동봉: `example-skill/`, `review/`, `status/`, `search-first/`, `skill-evolve/`,
 `memory-factcheck/`(메모리 사실 검증), `security-precheck/`(감사 대비 보안 사전점검),
 `docs-sync/`(문서 현행화 — 주장별 사실 대조 + 다국어 짝 파일 동시 갱신),
+`handoff/`(세션 핸드오프 — 재개 가능한 상태를 `HANDOFF.md`/이슈로 넘기고 이어받기),
 `grill-me/`(적대적 요구사항 심문 — 대화 안에서 끝나는 가장 가벼운 선택지. 더 무거운
 superpowers `brainstorming`·Ouroboros 와 작업마다 택일하며, 비교는 README 의
 "요구사항 다지기 도구 고르기" 참조).

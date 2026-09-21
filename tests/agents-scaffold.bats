@@ -29,13 +29,16 @@ setup() {
 # 로케일/CI 환경에 따라 내부 이름 인코딩이 어긋나 "unknown test name" 으로
 # 깨지는 사례가 있어(로컬 macOS ko_KR.UTF-8 환경에서 실측 재현) 회피한다.
 
-@test "base copy creates .claude AGENTS.md CLAUDE.md GEMINI.md" {
+@test "base copy creates .claude AGENTS.md .gemini/settings.json and no CLAUDE.md/GEMINI.md shims (#54)" {
   run "$SCRIPT" "$BATS_TEST_TMPDIR" --yes
   [ "$status" -eq 0 ]
   [ -d "$BATS_TEST_TMPDIR/.claude" ]
   [ -f "$BATS_TEST_TMPDIR/AGENTS.md" ]
-  [ -f "$BATS_TEST_TMPDIR/CLAUDE.md" ]
-  [ -f "$BATS_TEST_TMPDIR/GEMINI.md" ]
+  # #54: CLAUDE.md 가 있으면 Claude Code 가 AGENTS.md 를 건너뛰므로 셤을 만들지 않는다
+  [ ! -e "$BATS_TEST_TMPDIR/CLAUDE.md" ]
+  [ ! -e "$BATS_TEST_TMPDIR/GEMINI.md" ]
+  grep -q '"AGENTS.md"' "$BATS_TEST_TMPDIR/.gemini/settings.json"
+  [ -f "$BATS_TEST_TMPDIR/.claude/skills/handoff/SKILL.md" ]
 }
 
 # --- 2) 스택 1개 머지 ---
@@ -585,6 +588,7 @@ JSP
   [ ! -d "$t/.claude/workflows" ]
   [ ! -e "$t/CLAUDE.md" ]
   [ ! -e "$t/GEMINI.md" ]
+  [ ! -e "$t/.gemini" ]
   # git hook wired and executable, chains the gate
   [ -x "$t/.git/hooks/pre-commit" ]
   grep -q 'pre-commit.sh' "$t/.git/hooks/pre-commit"
@@ -605,7 +609,7 @@ JSP
   [ -f "$t/.claude/settings.json" ]
   [ -f "$t/.claude/skills/review/SKILL.md" ]
   [ -f "$t/.agents/skills/review/SKILL.md" ]
-  [ -f "$t/CLAUDE.md" ]
+  [ -f "$t/.gemini/settings.json" ]
   [ -x "$t/.git/hooks/pre-commit" ]
 
   # #21: git hook 은 하네스와 무관하게 항상 배선된다. Claude Code 의 PreToolUse 훅은
@@ -650,16 +654,15 @@ JSP
   ! grep -q '.claude/rules/<stack>.md` 의 `## P0` 섹션 참조' "$t/AGENTS.md"
 }
 
-@test "AGENTS.md carries no Claude-only @import; CLAUDE.md/GEMINI.md own it (#21)" {
+@test "AGENTS.md owns the single memory-index @import (#54, supersedes #21)" {
   t="$BATS_TEST_TMPDIR/noimport"
   mkdir -p "$t"
   run bash "$SCRIPT" "$t" --forge github --name noimport-app --yes
   [ "$status" -eq 0 ]
   run grep -c '^@' "$t/AGENTS.md"
-  [ "$output" = "0" ]
-  grep -q '^@AGENTS.md$' "$t/CLAUDE.md"
-  grep -q '^@.claude/memory/MEMORY.md$' "$t/CLAUDE.md"
-  grep -q '^@.claude/memory/MEMORY.md$' "$t/GEMINI.md"
+  [ "$output" = "1" ]
+  grep -q '^@.claude/memory/MEMORY.md$' "$t/AGENTS.md"
+  [ -f "$t/.claude/memory/MEMORY.md" ]
 }
 
 @test "every stack preset has a P0 section and an AGENTS.partial.md (#21)" {

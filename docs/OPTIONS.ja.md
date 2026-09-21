@@ -74,9 +74,9 @@ git フックは**ハーネスに関係なく常に配線されます**（#21）
 
 | ハーネス | 実測バージョン | baseline | full 層で確認できたこと / できていないこと |
 |---|---|---|---|
-| Claude Code | 2.1.239 | 成立 | `.claude/rules/*.md` の `paths:` 条件付きロード、サブエージェント、skills、`settings.json` フック — いずれも[公式ドキュメント](https://code.claude.com/docs/en/memory.md)で確認 |
+| Claude Code | 2.1.278 | 成立 | `.claude/rules/*.md` の `paths:` 条件付きロード、サブエージェント、skills、`settings.json` フック — いずれも[公式ドキュメント](https://code.claude.com/docs/en/memory.md)で確認 |
 | Codex | codex-cli 0.154.0 / GPT-6 Astra | 成立 | `AGENTS.md`、インラインのスタック P0、`.agents/skills`、`.env` ゲートを実測 |
-| Antigravity | agy **1.1.18**（再測定なし） | 成立 | 1.1.17 で **headless（`-p`）がルールを読み込まない**ことを実測 — 原因は未解明。1.1.18 もインタラクティブモードも未検証 |
+| Antigravity | agy **1.2.7** | 成立 | **headless（`-p`）がルールを読み込まない**ことを実測（1.1.17、1.2.7 で再確認 — `AGENTS.md` も `GEMINI.md` も未ロード）— 原因は未解明。インタラクティブモードは未検証 |
 
 Codex（codex-cli 0.154.0、`gpt-6-astra`）は `codex` モード成果物の AGENTS.md とインラインのスタック P0 を自動で読み込み、`.agents/skills` のリポジトリ skills を発見しました。`.claude/skills` は発見されません。モデルがルールを見落としても git フックが staged `.env` を exit 2 でブロックします。
 
@@ -144,7 +144,7 @@ curl -fsSL https://raw.githubusercontent.com/leeyudok/agents-scaffold/main/bin/a
 ### ベースの更新 — `--update`
 
 ブートストラップ済みプロジェクトに最新のベースファイル(`.claude/`、`AGENTS.md`、
-`CLAUDE.md`、`GEMINI.md`)を適用します。
+`.gemini/settings.json`)を適用します。
 
 ```bash
 agents-scaffold/bin/agents-scaffold.sh --update /path/to/existing-repo

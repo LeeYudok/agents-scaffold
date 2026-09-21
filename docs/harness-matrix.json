@@ -18,20 +18,20 @@
     {
       "id": "claude",
       "name": "Claude Code",
-      "cli_version": "2.1.239",
-      "last_measured": "2026-08-22",
+      "cli_version": "2.1.278",
+      "last_measured": "2026-09-21",
       "tier": "full",
       "trust_model": "n/a",
       "instruction_budget_bytes": null,
       "capabilities": {
         "instructions": {
           "verdict": "pass",
-          "target": "CLAUDE.md",
-          "evidence": "https://code.claude.com/docs/en/memory.md"
+          "target": "AGENTS.md (native since v2.1.277; skipped when a CLAUDE.md exists)",
+          "evidence": "https://code.claude.com/docs/en/memory § AGENTS.md + 실측 2026-09-21: AGENTS.md 단독 디렉터리에서 툴 차단 암호어 질의 응답 정확 (#54)"
         },
         "stack_p0_inline": {
           "verdict": "pass",
-          "target": "AGENTS.md via @import in CLAUDE.md",
+          "target": "AGENTS.md (native)",
           "evidence": "bats: stack P0 is inlined into AGENTS.md body (#21)"
         },
         "repo_skills": {
@@ -73,7 +73,7 @@
         "instructions": {
           "verdict": "pass",
           "target": "AGENTS.md (+ nested AGENTS.override.md)",
-          "evidence": "spike-codex-contract.sh --dynamic: P0 응답 정확",
+          "evidence": "spike-codex-contract.sh --dynamic: P0 응답 정확. codex-cli 0.155.1 에서 AGENTS.md 단독 암호어 질의 재확인(2026-09-21, #54)",
           "reproducibility": "완주 2회 / 시도 2회"
         },
         "stack_p0_inline": {
@@ -112,8 +112,8 @@
     {
       "id": "agy",
       "name": "Antigravity",
-      "cli_version": "1.1.18",
-      "last_measured": "2026-08-22",
+      "cli_version": "1.2.7",
+      "last_measured": "2026-09-21",
       "tier": "experimental",
       "trust_model": "unknown",
       "instruction_budget_bytes": null,
@@ -121,7 +121,7 @@
         "instructions": {
           "verdict": "unverified",
           "target": "unknown",
-          "evidence": "1.1.17 headless(-p) 에서 규칙 미로드 관측, 원인 미규명. 1.1.18 재측정 및 interactive 모드 미실시"
+          "evidence": "1.2.7 headless(-p) 재측정(2026-09-21): AGENTS.md 단독도 대조군 GEMINI.md 도 미로드 — headless 로는 판정 불가. 바이너리에 \"AGENTS.md\" 문자열 존재. interactive 모드 미실시 (#54)"
         },
         "stack_p0_inline": {
           "verdict": "unverified",

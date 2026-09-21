@@ -20,7 +20,7 @@ Usage:
   --harness      Target agent harness: claude (default), codex, or all.
                  codex installs AGENTS.md + .agents/skills (Codex-native) and keeps
                  shared rules/hooks/memory, drops Claude Code-only layers
-                 (settings.json, agents/, commands/, workflows/, CLAUDE.md/GEMINI.md),
+                 (settings.json, agents/, commands/, workflows/, .gemini/settings.json),
                  and wires the pre-commit gate as a real .git/hooks/pre-commit.
                  all installs both the Claude and Codex skill discovery paths.
   --yes          Skip interactive prompts (non-interactive mode).
@@ -38,7 +38,7 @@ directory and used as the template source.
   AGENTS_SCAFFOLD_REPO  Defaults to the official GitHub repo URL (override via env).
   AGENTS_SCAFFOLD_REF   Branch/tag. Default "main".
 
-Flow: copy base (.claude/ + CLAUDE.md) -> merge forge preset -> merge selected stack presets
+Flow: copy base (.claude/ + AGENTS.md + .gemini/settings.json) -> merge forge preset -> merge selected stack presets
       -> merge lang-en overlay (if --lang en) -> substitute {{PLACEHOLDER}} -> chmod +x
       -> in-place: self-clean bin/·presets/·scripts/·docs/superpowers/·docs/harness-matrix.json.
 EOF
@@ -163,7 +163,7 @@ run_update() {
   else
     while IFS= read -r f; do base_files+=("$f"); done < <(find "$SRC/.claude" -type f)
   fi
-  base_files+=("$SRC/AGENTS.md" "$SRC/CLAUDE.md" "$SRC/GEMINI.md")
+  base_files+=("$SRC/AGENTS.md" "$SRC/.gemini/settings.json")
 
   local f rel tgt
   for f in "${base_files[@]:-}"; do
@@ -277,8 +277,14 @@ if [ "$INPLACE" -eq 0 ]; then
   else
     cp -R "$SRC/.claude" "$TARGET/.claude"
   fi
-  # AGENTS.md = SSOT, CLAUDE.md/GEMINI.md = @AGENTS.md 포인터
-  cp "$SRC/AGENTS.md" "$SRC/CLAUDE.md" "$SRC/GEMINI.md" "$TARGET/"
+  # AGENTS.md = SSOT. CLAUDE.md/GEMINI.md 포인터는 두지 않는다 (#54) — Claude Code v2.1.277+·Codex 는
+  # AGENTS.md 를 네이티브로 읽고, CLAUDE.md 가 있으면 Claude Code 가 AGENTS.md 를 건너뛴다.
+  # Gemini CLI 만 기본 컨텍스트 파일명이 GEMINI.md 라 context.fileName 으로 AGENTS.md 를 가리킨다.
+  cp "$SRC/AGENTS.md" "$TARGET/"
+  if [ ! -e "$TARGET/.gemini/settings.json" ]; then
+    mkdir -p "$TARGET/.gemini"
+    cp "$SRC/.gemini/settings.json" "$TARGET/.gemini/settings.json"
+  fi
 fi
 
 # 프리셋 머지 헬퍼 — 프리셋 디렉터리의 .claude/ 하위 파일을 타깃에 복사(덮어쓰기).
@@ -411,7 +417,7 @@ if [ -f "$agents_md" ] && grep -qF "$p0_marker" "$agents_md"; then
 fi
 
 # 3) 플레이스홀더 치환
-find "$TARGET/.claude" "$TARGET/AGENTS.md" "$TARGET/CLAUDE.md" "$TARGET/GEMINI.md" -type f 2>/dev/null | while IFS= read -r f; do
+find "$TARGET/.claude" "$TARGET/AGENTS.md" -type f 2>/dev/null | while IFS= read -r f; do
   substitute_placeholders "$f"
 done
 
@@ -437,7 +443,8 @@ fi
 if [ "$HARNESS" = "codex" ]; then
   echo "== harness=codex: removing Claude Code-only layers ==" >&2
   rm -rf "$TARGET/.claude/agents" "$TARGET/.claude/commands" "$TARGET/.claude/workflows"
-  rm -f "$TARGET/.claude/settings.json" "$TARGET/CLAUDE.md" "$TARGET/GEMINI.md"
+  rm -f "$TARGET/.claude/settings.json" "$TARGET/.gemini/settings.json"
+  rmdir "$TARGET/.gemini" 2>/dev/null || true
 fi
 # git hook 은 하네스와 무관하게 항상 배선한다 (#21).
 #   Claude Code 의 PreToolUse 훅(settings.json)은 그 세션이 Bash 툴로 커밋할 때만 발동하므로,
@@ -467,4 +474,4 @@ if [ "$INPLACE" -eq 1 ]; then
   rm -f "$TARGET/docs/harness-matrix.json"
 fi
 
-echo "== Done. Fill in CLAUDE.md and .claude/ for your project. ==" >&2
+echo "== Done. Fill in AGENTS.md and .claude/ for your project. ==" >&2

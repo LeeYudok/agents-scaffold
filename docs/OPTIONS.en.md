@@ -79,9 +79,9 @@ The selected stack's P0 rules are **inlined into the `AGENTS.md` body**, so they
 
 | Harness | Measured version | baseline | What is / isn't confirmed on the full tier |
 |---|---|---|---|
-| Claude Code | 2.1.239 | holds | `paths:`-scoped loading of `.claude/rules/*.md`, subagents, skills, `settings.json` hooks — all confirmed against the [official docs](https://code.claude.com/docs/en/memory.md) |
+| Claude Code | 2.1.278 | holds | `paths:`-scoped loading of `.claude/rules/*.md`, subagents, skills, `settings.json` hooks — all confirmed against the [official docs](https://code.claude.com/docs/en/memory.md) |
 | Codex | codex-cli 0.154.0 / GPT-6 Astra | holds | `AGENTS.md`, inlined stack P0, `.agents/skills`, and the `.env` gate were measured |
-| Antigravity | agy **1.1.18** (not re-measured) | holds | On 1.1.17, **headless (`-p`) measurably did not load rules** — root cause unknown. Neither 1.1.18 nor interactive mode has been re-measured |
+| Antigravity | agy **1.2.7** | holds | **Headless (`-p`) measurably does not load rules** (1.1.17, reconfirmed on 1.2.7 — neither `AGENTS.md` nor `GEMINI.md` loads) — root cause unknown. Interactive mode has not been measured |
 
 Codex (codex-cli 0.154.0, `gpt-6-astra`) auto-loads the `codex`-mode AGENTS.md and its
 inlined stack P0, and discovers repository skills under `.agents/skills`. It does not discover
@@ -160,8 +160,8 @@ uses it as the template source. Pin a branch/tag with `AGENTS_SCAFFOLD_REF`
 
 ### Updating the base — `--update`
 
-Applies the latest base files (`.claude/`, `AGENTS.md`, `CLAUDE.md`,
-`GEMINI.md`) to an already-bootstrapped project.
+Applies the latest base files (`.claude/`, `AGENTS.md`,
+`.gemini/settings.json`) to an already-bootstrapped project.
 
 ```bash
 agents-scaffold/bin/agents-scaffold.sh --update /path/to/existing-repo

@@ -6,7 +6,7 @@ AI 에이전트(Claude Code 등)가 이 레포에서 작업할 때 자동 주입
 ## 작동 메커니즘
 
 - **스코프 로드**: frontmatter `paths:`(glob 배열)가 있으면 **매칭 파일을 수정/생성할 때만** 주입된다.
-- **항상 로드**: `paths:` 가 없으면 세션 시작 시 항상 로드된다 (CLAUDE.md 처럼).
+- **항상 로드**: `paths:` 가 없으면 세션 시작 시 항상 로드된다 (AGENTS.md 처럼).
 - 각 파일의 정확한 glob 은 **frontmatter 가 단일 진실원천** — 아래 표는 개요.
 
 ```markdown

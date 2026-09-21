@@ -39,14 +39,14 @@
     memory-factcheck/         记忆事实核查 —— 对照代码/DB/issue 验证并修正过期内容
     security-precheck/        审计前安全排查 → 拆分 issue → 并行修复
     docs-sync/                文档现行化 — 逐条主张核对 + 多语言配对文件同步
+    handoff/                  会话交接 — 通过 HANDOFF.md / Issue 传递可恢复的状态
   workflows/             （不会自动加载 — 需显式调用）
     rules-audit.js           存储式 Workflow 示例 —— 扫描/验证/修复，合并由人工把关
   scripts/               （不会自动加载 — 需显式调用）
     knowledge_graph.py       .claude 生态图谱 + --check 断链门禁
   settings.json               钩子接线 + 默认 deny 规则
 AGENTS.md                 项目大脑 —— 规则 SSOT（P0/P1/P2 + 工作流）
-CLAUDE.md                 @AGENTS.md + 记忆索引 import（Claude Code）
-GEMINI.md                 @AGENTS.md + 记忆索引 import（Gemini CLI）
+.gemini/settings.json     通过 context.fileName 让 Gemini CLI 读取 AGENTS.md
 presets/                  预设片段（复制覆盖模型）
   forge-github/           GitHub forge —— gh、PR、`Closes #N` 自动关闭
   forge-gitlab/           GitLab forge —— glab、MR、`Closes #N` 自动关闭（合并后需确认）

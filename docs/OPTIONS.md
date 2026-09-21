@@ -79,9 +79,9 @@ Bash 툴로 커밋할 때만 발동하므로 조기 피드백 계층이지 강�
 
 | 하네스 | 실측 버전 | baseline | full 쪽 확인된 것 / 확인 안 된 것 |
 |---|---|---|---|
-| Claude Code | 2.1.239 | 성립 | `.claude/rules/*.md` 의 `paths:` 조건부 로딩, 서브에이전트, skills, `settings.json` 훅 — 전부 [공식 문서](https://code.claude.com/docs/en/memory.md)로 확인 |
+| Claude Code | 2.1.278 | 성립 | `.claude/rules/*.md` 의 `paths:` 조건부 로딩, 서브에이전트, skills, `settings.json` 훅 — 전부 [공식 문서](https://code.claude.com/docs/en/memory.md)로 확인 |
 | Codex | codex-cli 0.154.0 / GPT-6 Astra | 성립 | `AGENTS.md`·스택 P0 자동 로드와 `.agents/skills` 발견, `.env` 게이트를 실측 |
-| Antigravity | agy **1.1.18** (미재검증) | 성립 | 1.1.17 에서 **headless(`-p`) 규칙 미로드** 실측 — 원인 미규명. 1.1.18 재검증·인터랙티브 모드 모두 미실시 |
+| Antigravity | agy **1.2.7** | 성립 | **headless(`-p`) 규칙 미로드** 실측(1.1.17, 1.2.7 재확인 — `AGENTS.md`·`GEMINI.md` 모두 미로드) — 원인 미규명. 인터랙티브 모드 미실시 |
 
 Codex(codex-cli 0.154.0, `gpt-6-astra`)는 `codex` 모드 산출물의 AGENTS.md 와 인라인된
 스택 P0를 자동 로드하고 `.agents/skills`의 저장소 스킬만 발견했다. `.claude/skills`는
@@ -154,7 +154,7 @@ curl -fsSL https://raw.githubusercontent.com/leeyudok/agents-scaffold/main/bin/a
 
 ### 베이스 갱신 — `--update`
 
-이미 부트스트랩된 프로젝트에 최신 베이스(`.claude/`, `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`)를
+이미 부트스트랩된 프로젝트에 최신 베이스(`.claude/`, `AGENTS.md`, `.gemini/settings.json`)를
 반영한다.
 
 ```bash

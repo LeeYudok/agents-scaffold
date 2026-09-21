@@ -37,8 +37,8 @@ the section below and the issues labeled
 ## What to change where
 
 - **Core skeleton** (`.claude/agents/`, `.claude/commands/`, `.claude/hooks/`,
-  `.claude/rules/common.md`, `.claude/skills/`, `AGENTS.md`, `CLAUDE.md`,
-  `GEMINI.md`): applies to every consuming repo regardless of stack. Changes
+  `.claude/rules/common.md`, `.claude/skills/`, `AGENTS.md`,
+  `.gemini/settings.json`): applies to every consuming repo regardless of stack. Changes
   here have the widest blast radius — keep them stack-agnostic.
 - **Stack presets** (`presets/<stack>/`): opt-in, applied only when a repo
   selects that stack via `bin/agents-scaffold.sh --stack <name>`. See

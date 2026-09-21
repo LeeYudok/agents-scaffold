@@ -39,14 +39,14 @@
     memory-factcheck/   메모리 사실 검증 — 코드·DB·이슈 대조로 stale 정정
     security-precheck/  감사 대비 보안 사전점검 → 이슈 → 병렬 수정
     docs-sync/          문서 현행화 — 주장별 사실 대조 + 다국어 짝 파일 동시 갱신
+    handoff/            세션 핸드오프 — 재개 가능한 상태를 HANDOFF.md/이슈로 넘김
   workflows/            (자동 로드 아님 — 명시 호출로만 실행)
     rules-audit.js      저장형 Workflow 예제 — 스캔/검증/수정, 머지는 사람 게이트
   scripts/              (자동 로드 아님 — 명시 호출로만 실행)
     knowledge_graph.py  .claude 생태계 그래프 + --check 깨진 링크 게이트
   settings.json         hooks 와이어링 + deny 기본값
 AGENTS.md               프로젝트 브레인 — 규칙 SSOT (P0/P1/P2 + 워크플로)
-CLAUDE.md               @AGENTS.md + 메모리 인덱스 import (Claude Code)
-GEMINI.md               @AGENTS.md + 메모리 인덱스 import (Gemini CLI)
+.gemini/settings.json   Gemini CLI 가 AGENTS.md 를 읽도록 context.fileName 지정
 presets/                프리셋 조각 (복사 덮어쓰기 방식)
   forge-github/         GitHub forge — gh, PR, `Closes #N` 자동 클로즈
   forge-gitlab/         GitLab forge — glab, MR, `Closes #N` 자동 클로즈(머지 후 확인)
