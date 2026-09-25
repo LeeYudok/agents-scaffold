@@ -12,7 +12,8 @@ Runs the code-reviewer + security-audit agents in sequence for a complete review
 
 ### Step 1 — Identify the scope of change
 ```bash
-base=$(git merge-base HEAD origin/HEAD 2>/dev/null || git merge-base HEAD origin/main)  # fork point from the default branch
+base=$(for r in origin/HEAD origin/main origin/master main master; do git merge-base HEAD "$r" 2>/dev/null && break; done)  # fork point from the default branch
+[ -n "$base" ] || base=$(git rev-parse --verify -q HEAD~1)  # still empty: ask the user for the range and stop
 git diff --stat "$base"       # committed + uncommitted changes
 git diff --name-only "$base"
 ```

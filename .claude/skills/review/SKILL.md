@@ -12,7 +12,8 @@ code-reviewer + security-audit 에이전트를 순차로 실행해 완전한 리
 
 ### Step 1 — 변경 범위 파악
 ```bash
-base=$(git merge-base HEAD origin/HEAD 2>/dev/null || git merge-base HEAD origin/main)  # 기본 브랜치 분기점
+base=$(for r in origin/HEAD origin/main origin/master main master; do git merge-base HEAD "$r" 2>/dev/null && break; done)  # 기본 브랜치 분기점
+[ -n "$base" ] || base=$(git rev-parse --verify -q HEAD~1)  # 그래도 비면 범위를 사용자에게 묻고 중단
 git diff --stat "$base"       # 커밋 + 미커밋 변경 전부
 git diff --name-only "$base"
 ```

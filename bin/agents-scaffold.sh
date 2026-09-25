@@ -154,9 +154,18 @@ substitute_placeholders() {
 # #58: 타겟 .gitattributes 에 훅 LF 고정 규칙을 멱등 추가한다.
 #   Windows(core.autocrlf=true)에서 훅이 CRLF 로 체크아웃되면 Git Bash 가 $'\r' 로 죽는다.
 ensure_hook_eol_attributes() {
-  local ga="$TARGET/.gitattributes"
-  if [ -f "$ga" ] && grep -qF '.claude/hooks/*.sh' "$ga"; then
+  local ga="$TARGET/.gitattributes" last
+  # 이미 LF 가 "유효"할 때만 건너뛴다 — 규칙 문자열 존재(주석·eol=crlf 포함)로 판정하면 안 된다.
+  # git 레포면 check-attr 이 실효값(뒤 규칙 우선·광역 패턴 포함)을 준다.
+  if [ -d "$TARGET/.git" ] &&
+     git -C "$TARGET" check-attr eol -- .claude/hooks/pre-commit.sh 2>/dev/null | grep -q ': eol: lf$'; then
     return 0
+  fi
+  if [ ! -d "$TARGET/.git" ] && [ -f "$ga" ]; then
+    last="$(grep -E '^[[:space:]]*\.claude/hooks/\*\.sh[[:space:]]' "$ga" | tail -n1 || true)"
+    if printf '%s' "$last" | grep -qE '(^|[[:space:]])eol=lf([[:space:]]|$)'; then
+      return 0
+    fi
   fi
   if [ -s "$ga" ] && [ -n "$(tail -c1 "$ga")" ]; then
     printf '\n' >> "$ga"

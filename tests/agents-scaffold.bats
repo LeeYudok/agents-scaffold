@@ -826,3 +826,17 @@ JSP
   [ "$(grep -c $'\r$' "$f")" -eq "$(wc -l < "$f")" ]
   ! LC_ALL=C grep -q $'[\x80-\xff]' "$f"
 }
+
+@test "existing crlf or commented hook rule still gets LF override (#58)" {
+  printf '# .claude/hooks/*.sh text eol=lf\n.claude/hooks/*.sh text eol=crlf\n' > "$BATS_TEST_TMPDIR/.gitattributes"
+  run "$SCRIPT" "$BATS_TEST_TMPDIR" --yes
+  [ "$status" -eq 0 ]
+  [ "$(tail -n2 "$BATS_TEST_TMPDIR/.gitattributes" | head -n1)" = '.claude/hooks/*.sh text eol=lf' ]
+
+  # git 레포에서는 실효값으로 판정: 광역 crlf 규칙이 뒤에 와도 LF 가 다시 붙는다
+  t2="$BATS_TEST_TMPDIR/repo"; mkdir -p "$t2"; git -C "$t2" init -q
+  printf '.claude/hooks/*.sh text eol=lf\n*.sh text eol=crlf\n' > "$t2/.gitattributes"
+  run "$SCRIPT" "$t2" --yes
+  [ "$status" -eq 0 ]
+  [ "$(git -C "$t2" check-attr eol -- .claude/hooks/pre-commit.sh)" = '.claude/hooks/pre-commit.sh: eol: lf' ]
+}

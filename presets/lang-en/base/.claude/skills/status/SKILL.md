@@ -25,13 +25,13 @@ if [ -f package.json ]; then
 fi
 
 # if go.mod exists
-[ -f go.mod ] && { echo "=== Go build ==="; go build ./... 2>&1 | tail -5; }
+if [ -f go.mod ]; then echo "=== Go build ==="; go build ./... 2>&1 | tail -5; fi
 
 # if Cargo.toml exists
-[ -f Cargo.toml ] && { echo "=== Cargo check ==="; cargo check 2>&1 | tail -5; }
+if [ -f Cargo.toml ]; then echo "=== Cargo check ==="; cargo check 2>&1 | tail -5; fi
 
 # if build.gradle exists
-{ [ -f build.gradle ] || [ -f build.gradle.kts ]; } && { echo "=== Gradle ==="; ./gradlew compileJava 2>&1 | tail -5; }
+if [ -f build.gradle ] || [ -f build.gradle.kts ]; then echo "=== Gradle ==="; ./gradlew compileJava 2>&1 | tail -5; fi
 ```
 
 ### 3. Test status
