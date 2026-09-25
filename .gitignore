@@ -18,3 +18,6 @@ __pycache__/
 # 시크릿(#40) — pre-commit 훅과 이중 방어
 .env
 .env.*
+
+# 오프라인 번들 산출물 (#58)
+dist/

@@ -106,6 +106,7 @@ Blocked: a .env-type file is staged. Commit is not allowed.
 |---|---|
 | [docs/OPTIONS.ja.md](docs/OPTIONS.ja.md) | 全オプション — スタックプリセット 12 種、`--forge`、`--harness`、`--lang`、使い方、プレースホルダー置換、要件を鍛えるツールの選び方 |
 | [docs/INTERNALS.ja.md](docs/INTERNALS.ja.md) | 内部構造 — 生成される `.claude/` の全ツリー、主要パターン |
+| [docs/OFFLINE_INSTALL.en.md](docs/OFFLINE_INSTALL.en.md) | 閉域網（オフライン）・Windows インストール — オフラインバンドル、Git Bash 必須、`.cmd` ランチャー、`python3` 設定（英語） |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | コントリビュートガイド |
 
 ## コントリビュート

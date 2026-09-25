@@ -782,3 +782,47 @@ JSP
   [ -f "$BATS_TEST_TMPDIR/.claude/rules/dotnet.md" ]
   [ -f "$BATS_TEST_TMPDIR/.claude/rules/bun.md" ]
 }
+
+# --- 오프라인 번들 · Windows 줄끝 (#58) ---
+
+@test "offline bundle installs from extracted tree without network (#58)" {
+  command -v git >/dev/null || skip "git required"
+  # CI 체크아웃은 HEAD 커밋이 있으므로 git archive 가능. 번들은 커밋 내용 기준이다.
+  run "$REPO_ROOT/scripts/make-offline-bundle.sh" --out "$BATS_TEST_TMPDIR/dist"
+  [ "$status" -eq 0 ]
+  (cd "$BATS_TEST_TMPDIR/dist" && sha256sum -c SHA256SUMS >/dev/null 2>&1 || shasum -a 256 -c SHA256SUMS >/dev/null)
+  ls "$BATS_TEST_TMPDIR"/dist/agents-scaffold-offline-*.zip >/dev/null
+
+  mkdir -p "$BATS_TEST_TMPDIR/x" "$BATS_TEST_TMPDIR/target"
+  tar -xzf "$BATS_TEST_TMPDIR"/dist/agents-scaffold-offline-*.tar.gz -C "$BATS_TEST_TMPDIR/x"
+  bundle="$BATS_TEST_TMPDIR/x/agents-scaffold"
+  [ -f "$bundle/bin/agents-scaffold.cmd" ]
+
+  # 원격 소스를 도달 불가 주소로 바꿔도 성공해야 한다 = 다운로드 경로를 타지 않음
+  AGENTS_SCAFFOLD_REPO="http://127.0.0.1:9/unreachable" \
+    run bash "$bundle/bin/agents-scaffold.sh" "$BATS_TEST_TMPDIR/target" --yes
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"remote install"* ]]
+  [ -f "$BATS_TEST_TMPDIR/target/AGENTS.md" ]
+  [ -f "$BATS_TEST_TMPDIR/target/.claude/hooks/pre-commit.sh" ]
+}
+
+@test "install adds hook LF rule to .gitattributes idempotently (#58)" {
+  printf '*.png binary' > "$BATS_TEST_TMPDIR/.gitattributes"   # 개행 없이 끝나는 기존 파일
+  run "$SCRIPT" "$BATS_TEST_TMPDIR" --yes
+  [ "$status" -eq 0 ]
+  grep -qx '\*.png binary' "$BATS_TEST_TMPDIR/.gitattributes"
+  grep -qx '.claude/hooks/\*.sh text eol=lf' "$BATS_TEST_TMPDIR/.gitattributes"
+
+  run "$SCRIPT" --update "$BATS_TEST_TMPDIR"
+  [ "$status" -eq 0 ]
+  [ "$(grep -c '.claude/hooks/\*.sh' "$BATS_TEST_TMPDIR/.gitattributes")" -eq 1 ]
+}
+
+@test "windows launcher is CRLF and ASCII-only (#58)" {
+  f="$REPO_ROOT/bin/agents-scaffold.cmd"
+  [ -f "$f" ]
+  # cmd.exe 는 LF 전용 배치에서 파싱이 어긋날 수 있고, 비ASCII 는 코드페이지에 따라 깨진다
+  [ "$(grep -c $'\r$' "$f")" -eq "$(wc -l < "$f")" ]
+  ! LC_ALL=C grep -q $'[\x80-\xff]' "$f"
+}
