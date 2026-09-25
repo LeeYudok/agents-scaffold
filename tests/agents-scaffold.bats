@@ -840,3 +840,19 @@ JSP
   [ "$status" -eq 0 ]
   [ "$(git -C "$t2" check-attr eol -- .claude/hooks/pre-commit.sh)" = '.claude/hooks/pre-commit.sh: eol: lf' ]
 }
+
+@test "LF rule judged from repo .gitattributes only, not local git config (#58)" {
+  # .git/info/attributes 의 LF 는 다른 체크아웃에 없다 → 레포 .gitattributes 에 규칙이 추가돼야 한다
+  t="$BATS_TEST_TMPDIR/repo"; mkdir -p "$t"; git -C "$t" init -q
+  mkdir -p "$t/.git/info"; printf '.claude/hooks/*.sh text eol=lf\n' > "$t/.git/info/attributes"
+  run "$SCRIPT" "$t" --yes
+  [ "$status" -eq 0 ]
+  grep -qx '.claude/hooks/\*.sh text eol=lf' "$t/.gitattributes"
+
+  # 비-레포(worktree 처럼 .git 디렉터리 없음)에서도 뒤따르는 광역 crlf 를 실효값으로 잡는다
+  u="$BATS_TEST_TMPDIR/plain"; mkdir -p "$u"
+  printf '.claude/hooks/*.sh text eol=lf\n*.sh text eol=crlf\n' > "$u/.gitattributes"
+  run "$SCRIPT" "$u" --yes
+  [ "$status" -eq 0 ]
+  [ "$(tail -n2 "$u/.gitattributes" | head -n1)" = '.claude/hooks/*.sh text eol=lf' ]
+}

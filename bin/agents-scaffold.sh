@@ -154,14 +154,23 @@ substitute_placeholders() {
 # #58: 타겟 .gitattributes 에 훅 LF 고정 규칙을 멱등 추가한다.
 #   Windows(core.autocrlf=true)에서 훅이 CRLF 로 체크아웃되면 Git Bash 가 $'\r' 로 죽는다.
 ensure_hook_eol_attributes() {
-  local ga="$TARGET/.gitattributes" last
-  # 이미 LF 가 "유효"할 때만 건너뛴다 — 규칙 문자열 존재(주석·eol=crlf 포함)로 판정하면 안 된다.
-  # git 레포면 check-attr 이 실효값(뒤 규칙 우선·광역 패턴 포함)을 준다.
-  if [ -d "$TARGET/.git" ] &&
-     git -C "$TARGET" check-attr eol -- .claude/hooks/pre-commit.sh 2>/dev/null | grep -q ': eol: lf$'; then
-    return 0
-  fi
-  if [ ! -d "$TARGET/.git" ] && [ -f "$ga" ]; then
+  local ga="$TARGET/.gitattributes" probe eol="" last
+  # 레포가 소유한 .gitattributes 만으로 실효값을 판정한다 — 전역 core.attributesFile·시스템·
+  # .git/info/attributes 의 LF 는 다른 체크아웃에 따라가지 않는다. 빈 임시 레포에 파일만 복사해
+  # check-attr 로 평가하므로 비-레포·worktree(.git 이 파일) 타겟도 같은 경로를 탄다.
+  if [ -f "$ga" ] && command -v git >/dev/null 2>&1; then
+    probe="$(mktemp -d)"
+    if git init -q --template= "$probe" 2>/dev/null; then
+      cp "$ga" "$probe/.gitattributes"
+      eol="$(GIT_ATTR_NOSYSTEM=1 git -C "$probe" -c core.attributesFile=/dev/null \
+        check-attr eol -- .claude/hooks/pre-commit.sh 2>/dev/null | sed 's/.*: eol: //')"
+    fi
+    rm -rf "$probe"
+    if [ "$eol" = "lf" ]; then
+      return 0
+    fi
+  elif [ -f "$ga" ]; then
+    # git 없음: 마지막 활성 훅 규칙이 eol=lf 일 때만 건너뛴다(광역 패턴은 판정 불가 — 덧붙이는 쪽이 안전)
     last="$(grep -E '^[[:space:]]*\.claude/hooks/\*\.sh[[:space:]]' "$ga" | tail -n1 || true)"
     if printf '%s' "$last" | grep -qE '(^|[[:space:]])eol=lf([[:space:]]|$)'; then
       return 0
