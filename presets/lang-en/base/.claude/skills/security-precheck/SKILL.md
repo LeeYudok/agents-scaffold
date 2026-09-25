@@ -76,16 +76,18 @@ Every Agent call needs `isolation: "worktree"` (prevents parallel edit conflicts
 each agent to create a branch and **commit only — no push, no merge**; the parent session
 gates merges sequentially (multiple worktrees hitting main concurrently is a race).
 
-## 5. Sequential merge + close
+## 5. Sequential merge + close (via PR/MR)
 
 As each agent completes:
 
 1. For security/auth changes, read the diff yourself (constant-time comparison approach, session key choice, rate-limit scope, ... — if these are wrong, the pre-check was pointless)
-2. `git pull && git merge <branch> --no-edit`
-3. Re-run the project's build/test gates on the merged state (the stack gates in `.claude/hooks/pre-commit.sh` are the reference)
-4. `git push`
-5. `git worktree remove <path> --force && git branch -d <branch>`
-6. Note + close the issue per the forge convention (`rules/forge.md`)
+2. `git push -u origin <branch>` → open a PR/MR (body `Closes #N`). Never merge locally into or
+   push directly to the default branch (P1 — no direct commits on `main`/`develop`)
+3. Merge once CI and the project's build/test gates (the stack gates in `.claude/hooks/pre-commit.sh`
+   are the reference) pass. Merge PRs/MRs **one at a time**; bring the default branch into the next
+   one (`git merge origin/<default>`) and re-check its gates first — avoids concurrent-merge races
+4. `git worktree remove <path> --force && git branch -d <branch>`
+5. Confirm the issue closed per the forge convention (`rules/forge.md`) — close manually only if it did not auto-close
 
 ## 6. Memory record
 

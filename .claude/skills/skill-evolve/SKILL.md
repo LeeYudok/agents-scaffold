@@ -29,7 +29,7 @@ allowed-tools: Edit, Read, Write, Bash
 6. **커밋**: 브랜치 재확인 후:
    ```bash
    git add .claude/skills/<스킬명>/SKILL.md
-   git commit -m "evolve skill/<스킬명>: <요약>"
+   git commit -m "evolve skill/<스킬명>: <요약> (#<이슈>)"   # 이슈 번호 필수(P1)
    ```
 7. **검증(미니 eval)**: 개선 계기가 된 것과 같은 유형의 입력으로 수정된 스킬을 실행해, 개선 전 실패했던 지점이 실제로 고쳐졌는지 전후 비교로 확인.
 

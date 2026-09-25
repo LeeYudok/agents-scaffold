@@ -29,7 +29,7 @@ Reflects problems found during execution and user feedback into the target skill
 6. **Commit**: After re-confirming the branch:
    ```bash
    git add .claude/skills/<skill-name>/SKILL.md
-   git commit -m "evolve skill/<skill-name>: <summary>"
+   git commit -m "evolve skill/<skill-name>: <summary> (#<issue>)"   # issue number required (P1)
    ```
 7. **Verify (mini eval)**: Run the modified skill on the same kind of input that triggered the improvement, and confirm via a before/after comparison that the previously failing part is actually fixed.
 

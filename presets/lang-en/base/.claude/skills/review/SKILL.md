@@ -1,7 +1,7 @@
 ---
 name: review
 description: Full review of code changes. A wrapper skill that runs the code-reviewer agent and the security-audit agent in sequence. Use before creating a PR/MR or when a review is requested.
-allowed-tools: Bash, Read, Grep, Glob
+allowed-tools: Bash, Read, Grep, Glob, Agent
 ---
 
 # Code Review (wrapper)
@@ -12,15 +12,16 @@ Runs the code-reviewer + security-audit agents in sequence for a complete review
 
 ### Step 1 — Identify the scope of change
 ```bash
-git diff --stat HEAD~1  # or git diff --stat main...HEAD
-git diff --name-only HEAD~1
+base=$(git merge-base HEAD origin/HEAD 2>/dev/null || git merge-base HEAD origin/main)  # fork point from the default branch
+git diff --stat "$base"       # committed + uncommitted changes
+git diff --name-only "$base"
 ```
 
 Stop if there are no changes.
 
 ### Step 2 — Code review (code-reviewer agent)
 
-Invoke `Agent code-reviewer`:
+Invoke `Agent(subagent_type: "code-reviewer")`:
 - Security: hardcoded keys/tokens, missing input validation
 - Performance: N+1 queries, unnecessary synchronous I/O
 - Quality: `any` types, functions over 50 lines, duplication, dead code
@@ -28,7 +29,7 @@ Invoke `Agent code-reviewer`:
 
 ### Step 3 — Security audit (security-audit agent)
 
-Invoke `Agent security-audit`:
+Invoke `Agent(subagent_type: "security-audit")`:
 - grep scan of the 12 P0 security items
 - weak cryptography, SQL injection, CORS wildcards
 

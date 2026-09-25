@@ -17,31 +17,33 @@ git branch -a | grep -v remotes | head -10
 
 ### 2. Build status (stack detection)
 ```bash
-# if package.json exists
-[ -f package.json ] && (
-  echo "=== TypeScript ===" && (bunx tsc --noEmit 2>&1 | tail -5 || npx tsc --noEmit 2>&1 | tail -5)
-  echo "=== Build ===" && (bun run build 2>&1 | tail -5 || npm run build 2>&1 | tail -5)
-) || true
+# if package.json exists — pick one runner (in `a | tail || b` the exit code is tail's, so the fallback never runs)
+if [ -f package.json ]; then
+  if command -v bun >/dev/null; then tsc="bunx tsc"; build="bun run build"; else tsc="npx tsc"; build="npm run build"; fi
+  echo "=== TypeScript ===" && $tsc --noEmit 2>&1 | tail -5
+  echo "=== Build ===" && $build 2>&1 | tail -5
+fi
 
 # if go.mod exists
-[ -f go.mod ] && echo "=== Go build ===" && go build ./... 2>&1 | tail -5 || true
+[ -f go.mod ] && { echo "=== Go build ==="; go build ./... 2>&1 | tail -5; }
 
 # if Cargo.toml exists
-[ -f Cargo.toml ] && echo "=== Cargo check ===" && cargo check 2>&1 | tail -5 || true
+[ -f Cargo.toml ] && { echo "=== Cargo check ==="; cargo check 2>&1 | tail -5; }
 
 # if build.gradle exists
-[ -f build.gradle ] || [ -f build.gradle.kts ] && echo "=== Gradle ===" && ./gradlew compileJava 2>&1 | tail -5 || true
+{ [ -f build.gradle ] || [ -f build.gradle.kts ]; } && { echo "=== Gradle ==="; ./gradlew compileJava 2>&1 | tail -5; }
 ```
 
 ### 3. Test status
 ```bash
 # most recent test results (if any)
-find . -name "*.xml" -path "*/test-results/*" -newer package.json 2>/dev/null | head -3
+find . -path ./node_modules -prune -o -path "*/test-results/*" -name "*.xml" -print 2>/dev/null | head -3
 ```
 
-### 4. Open issues (GitLab)
+### 4. Open issues (forge per `rules/forge.md`)
 ```bash
-command -v glab >/dev/null && glab issue list --state=opened -P 1 --per-page 5 2>/dev/null || true
+command -v gh >/dev/null && gh issue list --state open --limit 5 2>/dev/null || true     # GitHub
+command -v glab >/dev/null && glab issue list --per-page 5 2>/dev/null || true         # GitLab (defaults to opened)
 ```
 
 ### 5. Process status (pm2/ports)
