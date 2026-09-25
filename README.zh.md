@@ -101,6 +101,7 @@ prompt 编写也没关系：
 |---|---|
 | [docs/OPTIONS.zh.md](docs/OPTIONS.zh.md) | 全部选项 — 12 种技术栈预设、`--forge`、`--harness`、`--lang`、用法、占位符替换、需求打磨工具的挑选 |
 | [docs/INTERNALS.zh.md](docs/INTERNALS.zh.md) | 内部结构 — 生成的完整 `.claude/` 目录树、关键模式 |
+| [docs/OFFLINE_INSTALL.en.md](docs/OFFLINE_INSTALL.en.md) | 内网（离线）与 Windows 安装 — 离线包、必须使用 Git Bash、`.cmd` 启动器、`python3` 设置（英文） |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | 贡献指南 |
 
 ## 贡献

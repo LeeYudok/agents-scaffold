@@ -38,6 +38,11 @@ directory and used as the template source.
   AGENTS_SCAFFOLD_REPO  Defaults to the official GitHub repo URL (override via env).
   AGENTS_SCAFFOLD_REF   Branch/tag. Default "main".
 
+Offline / air-gapped: build a bundle with scripts/make-offline-bundle.sh on a connected machine,
+extract it inside the closed network and run bin/agents-scaffold.sh from the extracted tree —
+no download happens. Windows needs Git for Windows (Git Bash); from cmd/PowerShell use
+bin\agents-scaffold.cmd. See docs/OFFLINE_INSTALL.en.md.
+
 Flow: copy base (.claude/ + AGENTS.md + .gemini/settings.json) -> merge forge preset -> merge selected stack presets
       -> merge lang-en overlay (if --lang en) -> substitute {{PLACEHOLDER}} -> chmod +x
       -> in-place: self-clean bin/·presets/·scripts/·docs/superpowers/·docs/harness-matrix.json.
@@ -146,6 +151,41 @@ substitute_placeholders() {
   done
 }
 
+# #58: 타겟 .gitattributes 에 훅 LF 고정 규칙을 멱등 추가한다.
+#   Windows(core.autocrlf=true)에서 훅이 CRLF 로 체크아웃되면 Git Bash 가 $'\r' 로 죽는다.
+ensure_hook_eol_attributes() {
+  local ga="$TARGET/.gitattributes" probe eol="" last
+  # 레포가 소유한 .gitattributes 만으로 실효값을 판정한다 — 전역 core.attributesFile·시스템·
+  # .git/info/attributes 의 LF 는 다른 체크아웃에 따라가지 않는다. 빈 임시 레포에 파일만 복사해
+  # check-attr 로 평가하므로 비-레포·worktree(.git 이 파일) 타겟도 같은 경로를 탄다.
+  if [ -f "$ga" ] && command -v git >/dev/null 2>&1; then
+    probe="$(mktemp -d)"
+    if git init -q --template= "$probe" 2>/dev/null; then
+      cp "$ga" "$probe/.gitattributes"
+      eol="$(GIT_ATTR_NOSYSTEM=1 git -C "$probe" -c core.attributesFile=/dev/null \
+        check-attr eol -- .claude/hooks/pre-commit.sh 2>/dev/null | sed 's/.*: eol: //')"
+    fi
+    rm -rf "$probe"
+    if [ "$eol" = "lf" ]; then
+      return 0
+    fi
+  elif [ -f "$ga" ]; then
+    # git 없음: 마지막 활성 훅 규칙이 eol=lf 일 때만 건너뛴다(광역 패턴은 판정 불가 — 덧붙이는 쪽이 안전)
+    last="$(grep -E '^[[:space:]]*\.claude/hooks/\*\.sh[[:space:]]' "$ga" | tail -n1 || true)"
+    if printf '%s' "$last" | grep -qE '(^|[[:space:]])eol=lf([[:space:]]|$)'; then
+      return 0
+    fi
+  fi
+  if [ -s "$ga" ] && [ -n "$(tail -c1 "$ga")" ]; then
+    printf '\n' >> "$ga"
+  fi
+  printf '%s\n' \
+    '# agents-scaffold: keep hooks LF (CRLF breaks bash on Windows Git Bash)' \
+    '.claude/hooks/*.sh text eol=lf' \
+    '.claude/hooks/*.py text eol=lf' >> "$ga"
+  echo "== .gitattributes: hook LF rule added ==" >&2
+}
+
 # --- 이슈 #13: --update 모드. 이미 부트스트랩된 프로젝트의 베이스 파일을 최신화한다.
 run_update() {
   echo "== agents-scaffold --update: target=$TARGET name=$NAME ==" >&2
@@ -203,6 +243,7 @@ run_update() {
   done
 
   chmod +x "$TARGET/.claude/hooks/"*.sh 2>/dev/null || true
+  ensure_hook_eol_attributes
 
   echo "== --update summary ==" >&2
   echo "Added: ${#added[@]}" >&2
@@ -423,6 +464,7 @@ done
 
 # 4) 실행권한
 chmod +x "$TARGET/.claude/hooks/"*.sh 2>/dev/null || true
+ensure_hook_eol_attributes
 
 # 4.5) 하네스 조정 (#16)
 #   codex/all: Codex 네이티브 저장소 스킬 경로(.agents/skills)를 생성한다.

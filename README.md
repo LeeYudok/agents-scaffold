@@ -107,6 +107,7 @@ result is plain files under version control like any other code in the repo.
 |---|---|
 | [docs/OPTIONS.en.md](docs/OPTIONS.en.md) | Every option — 12 stack presets, `--forge`, `--harness`, `--lang`, usage, placeholder substitution, picking a requirements-hardening tool |
 | [docs/INTERNALS.en.md](docs/INTERNALS.en.md) | Internals — the full generated `.claude/` tree, key patterns |
+| [docs/OFFLINE_INSTALL.en.md](docs/OFFLINE_INSTALL.en.md) | Air-gapped & Windows install — offline bundle, Git Bash required, `.cmd` launcher, `python3` setup |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Contribution guide |
 
 ## Contributing

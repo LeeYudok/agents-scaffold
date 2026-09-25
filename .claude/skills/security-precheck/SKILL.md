@@ -73,17 +73,19 @@ glab issue create -t "<제목>" -d "<사전점검 배경 + 구체적 발견사�
 머지는 부모 세션이 순차로 게이트한다(동시에 여러 worktree가 main을 건드리면
 레이스 발생).
 
-## 5. 순차 머지 + 클로즈
+## 5. 순차 머지 + 클로즈 (PR/MR 경유)
 
 에이전트 완료 알림 올 때마다:
 
 1. 보안/인증 관련 변경이면 diff를 직접 읽고 검토(상수시간 비교 방식, 세션
    키 선택, rate-limit 스코프 등 — 틀리면 사전점검의 의미가 없어짐)
-2. `git pull && git merge <branch> --no-edit`
-3. 머지된 상태로 프로젝트 빌드/테스트 게이트 재실행(`.claude/hooks/pre-commit.sh` 의 스택 게이트가 기준)
-4. `git push`
-5. `git worktree remove <path> --force && git branch -d <branch>`
-6. forge 컨벤션(`rules/forge.md`)대로 이슈 노트 + 클로즈
+2. `git push -u origin <branch>` → PR/MR 생성(본문 `Closes #N`). 기본 브랜치에 로컬 merge·직접
+   push 금지(P1 — `main`/`develop` 직접 커밋 금지)
+3. CI 와 프로젝트 빌드/테스트 게이트(`.claude/hooks/pre-commit.sh` 의 스택 게이트가 기준) 통과 후
+   머지. PR/MR 은 **하나씩** 머지하고, 다음 것은 기본 브랜치를 반영(`git merge origin/<default>`)한
+   뒤 게이트를 다시 확인 — 동시 머지 레이스 방지
+4. `git worktree remove <path> --force && git branch -d <branch>`
+5. forge 컨벤션(`rules/forge.md`)대로 이슈 클로즈 확인 — 자동 클로즈 안 된 것만 수동
 
 ## 6. 메모리 기록
 

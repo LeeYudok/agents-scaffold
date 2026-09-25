@@ -17,31 +17,33 @@ git branch -a | grep -v remotes | head -10
 
 ### 2. 빌드 상태 (스택 감지)
 ```bash
-# package.json 있으면
-[ -f package.json ] && (
-  echo "=== TypeScript ===" && (bunx tsc --noEmit 2>&1 | tail -5 || npx tsc --noEmit 2>&1 | tail -5)
-  echo "=== 빌드 ===" && (bun run build 2>&1 | tail -5 || npm run build 2>&1 | tail -5)
-) || true
+# package.json 있으면 — 러너는 하나만 고른다(`a | tail || b` 는 tail 의 종료코드라 폴백이 돌지 않는다)
+if [ -f package.json ]; then
+  if command -v bun >/dev/null; then tsc="bunx tsc"; build="bun run build"; else tsc="npx tsc"; build="npm run build"; fi
+  echo "=== TypeScript ===" && $tsc --noEmit 2>&1 | tail -5
+  echo "=== 빌드 ===" && $build 2>&1 | tail -5
+fi
 
 # go.mod 있으면
-[ -f go.mod ] && echo "=== Go build ===" && go build ./... 2>&1 | tail -5 || true
+if [ -f go.mod ]; then echo "=== Go build ==="; go build ./... 2>&1 | tail -5; fi
 
 # Cargo.toml 있으면
-[ -f Cargo.toml ] && echo "=== Cargo check ===" && cargo check 2>&1 | tail -5 || true
+if [ -f Cargo.toml ]; then echo "=== Cargo check ==="; cargo check 2>&1 | tail -5; fi
 
 # build.gradle 있으면
-[ -f build.gradle ] || [ -f build.gradle.kts ] && echo "=== Gradle ===" && ./gradlew compileJava 2>&1 | tail -5 || true
+if [ -f build.gradle ] || [ -f build.gradle.kts ]; then echo "=== Gradle ==="; ./gradlew compileJava 2>&1 | tail -5; fi
 ```
 
 ### 3. 테스트 현황
 ```bash
 # 가장 최근 테스트 결과 (있으면)
-find . -name "*.xml" -path "*/test-results/*" -newer package.json 2>/dev/null | head -3
+find . -path ./node_modules -prune -o -path "*/test-results/*" -name "*.xml" -print 2>/dev/null | head -3
 ```
 
-### 4. 미완료 이슈 (GitLab)
+### 4. 미완료 이슈 (forge 는 `rules/forge.md` 기준)
 ```bash
-command -v glab >/dev/null && glab issue list --state=opened -P 1 --per-page 5 2>/dev/null || true
+command -v gh >/dev/null && gh issue list --state open --limit 5 2>/dev/null || true     # GitHub
+command -v glab >/dev/null && glab issue list --per-page 5 2>/dev/null || true         # GitLab (기본값이 opened)
 ```
 
 ### 5. 프로세스 상태 (pm2/포트)

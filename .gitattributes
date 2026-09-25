@@ -1,0 +1,6 @@
+# 줄끝 고정 (#58) — Windows 에서 core.autocrlf=true 로 체크아웃하거나 git archive 로 번들을 만들면
+# 셸 스크립트가 CRLF 가 되어 Git Bash 가 $'\r' 로 죽는다. .cmd 는 반대로 CRLF 여야 cmd.exe 가 안전하다.
+*.sh   text eol=lf
+*.py   text eol=lf
+*.bats text eol=lf
+*.cmd  text eol=crlf
