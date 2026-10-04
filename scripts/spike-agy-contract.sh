@@ -68,6 +68,38 @@ print("TOOL_USED" if tool_steps else response, end="")
 # ---- 동적 측정 -------------------------------------------------------------
 p0_answer="unverified"; p0_note="--dynamic 미지정"
 skill_answer="unverified"; skill_note="--dynamic 미지정"
+agent_answer="unverified"; agent_note="--dynamic 미지정"
+hook_answer="unverified"; hook_note="--dynamic 미지정"
+rule_answer="unverified"; rule_note="--dynamic 미지정"
+
+# 툴 사용을 허용하는 질의용. 첫 줄 TOOLS=<툴 단계 수> FILES=<툴이 다룬 파일(작업 디렉터리 기준)>,
+# 이후 최종 응답. 판정 때 "읽으라고 한 파일만 읽었는가"를 이 줄로 확인한다.
+ask_agy_steps() {
+  local dir="$1" out="$2"; shift 2
+  ( cd "$dir" && timeout "$AGY_TIMEOUT" "$AGY_BIN" "$@" --output-format stream-json \
+      --print-timeout "$((AGY_TIMEOUT - 10))s" </dev/null ) 2>/dev/null \
+    | python3 -c '
+import json, os, sys
+root = sys.argv[1]
+tools, files, response = 0, set(), ""
+for line in sys.stdin:
+    try:
+        o = json.loads(line)
+    except ValueError:
+        continue
+    su = o.get("step_update") or {}
+    if su.get("step_type") not in (None, "user_input", "agent_response") and su.get("state") == "DONE":
+        tools += 1
+        params = (su.get("tool_info") or {}).get("parameters") or {}
+        for key in ("AbsolutePath", "TargetFile", "Path"):
+            if params.get(key):
+                files.add(os.path.relpath(params[key], root))
+    if o.get("event") == "result":
+        response = (o.get("result") or {}).get("response") or ""
+print("TOOLS=%d FILES=%s" % (tools, ",".join(sorted(files))))
+print(response)
+' "$dir" > "$out"
+}
 if [ "$DYNAMIC" -eq 1 ] && [ "$AGY_VERSION" != "not-installed" ]; then
   out="$WORK/_p0.txt"
   ask_agy "$WORK" "Do not use any tools or read any files. From the project instructions already in your context only, list this repository's P0 rules verbatim. If none are in your context, reply exactly NONE." "$out"
@@ -111,6 +143,81 @@ if [ "$DYNAMIC" -eq 1 ] && [ "$AGY_VERSION" != "not-installed" ]; then
   else
     skill_answer="fail"; skill_note="응답은 왔으나 어느 경로도 등록되지 않음"
   fi
+
+  # ---- 서브에이전트·훅·경로 조건부 룰 (#60) ----
+  # 서브에이전트: 툴 없이 목록에 나오는가 + --agent 로 골랐을 때 본문 지시를 따르는가.
+  mkdir -p "$WORK/.agents/agents"
+  cat > "$WORK/.agents/agents/zqx-probe.md" <<'MD'
+---
+name: zqx-probe
+description: Probe agent for a discovery test. Only use when explicitly asked.
+---
+When you receive any task, reply with exactly this line and nothing else: ZQX-AGY-AGENT-5521
+MD
+  ask_agy_steps "$WORK" "$WORK/_ag_l.txt" -p "Do not use any tools or read any files. List only the subagents or custom agents available to you whose name starts with zqx-. If none, reply exactly NONE."
+  ask_agy_steps "$WORK" "$WORK/_ag_s.txt" --agent zqx-probe -p "Follow your instructions."
+  if [ ! -s "$WORK/_ag_l.txt" ] || [ ! -s "$WORK/_ag_s.txt" ]; then
+    agent_answer="inconclusive"; agent_note="agy 응답 없음 — 미측정으로 취급"
+  elif grep -q 'zqx-probe' "$WORK/_ag_l.txt" && grep -q '^TOOLS=0 ' "$WORK/_ag_l.txt" \
+    && grep -q 'ZQX-AGY-AGENT-5521' "$WORK/_ag_s.txt" && grep -q '^TOOLS=0 ' "$WORK/_ag_s.txt"; then
+    agent_answer="pass"; agent_note=".agents/agents/<name>.md 가 툴 없이 목록에 등록되고 --agent 선택 시 본문 지시대로 응답"
+  else
+    agent_answer="fail"; agent_note="목록 등록 또는 --agent 선택 응답 확인 실패"
+  fi
+
+  # 훅: 마커 파일로 실행 여부를 결정적으로 판정한다. 툴 이벤트는 matcher+hooks, 나머지는 핸들러 배열.
+  cat > "$WORK/.agents/hooks.json" <<HOOKS
+{"zqx-hook":{
+ "PreInvocation":[{"type":"command","command":"touch $WORK/.hook-PreInvocation","timeout":10}],
+ "PostInvocation":[{"type":"command","command":"touch $WORK/.hook-PostInvocation","timeout":10}],
+ "PreToolUse":[{"matcher":".*","hooks":[{"type":"command","command":"touch $WORK/.hook-PreToolUse","timeout":10}]}],
+ "Stop":[{"type":"command","command":"touch $WORK/.hook-Stop","timeout":10}]
+}}
+HOOKS
+  ask_agy_steps "$WORK" "$WORK/_hk.txt" -p "Read the file .gitattributes and reply with the single word DONE."
+  h_fired=$(find "$WORK" -maxdepth 1 -name '.hook-*' | wc -l | tr -d ' ')
+  rm -f "$WORK"/.hook-* "$WORK/.agents/hooks.json"
+  if [ ! -s "$WORK/_hk.txt" ]; then
+    hook_answer="inconclusive"; hook_note="agy 응답 없음 — 미측정으로 취급"
+  elif [ "$h_fired" -ge 1 ]; then
+    hook_answer="partial"
+    hook_note=".agents/hooks.json 의 PreInvocation·PostInvocation·PreToolUse·Stop 중 ${h_fired}/4 실행(headless, 신뢰 확인 절차 없음). 조기 피드백이지 강제선이 아니다"
+  else
+    hook_answer="fail"; hook_note=".agents/hooks.json 훅이 실행되지 않음"
+  fi
+
+  # 경로 조건부 룰: .agents/rules 의 trigger: glob. 대조군(파일 미접근)과 접근 후를 비교한다.
+  mkdir -p "$WORK/.agents/rules" "$WORK/sub" "$WORK/sub2"
+  echo "plain data file" > "$WORK/sub2/data.txt"
+  echo "plain notes file" > "$WORK/sub/notes.txt"
+  glob_rule() {
+    printf -- '---\ntrigger: glob\nglobs: "%s"\n---\nThe glob codeword is ZQX-AGY-GLOB-6620. When asked for the glob codeword, reply with it.\n' "$1" \
+      > "$WORK/.agents/rules/zqx-glob.md"
+  }
+  q_glob_read="Read the file sub2/data.txt and nothing else (do not open any rules or AGENTS.md file). Then, from the instructions in your context only, what is the glob codeword? If you do not know, reply exactly UNKNOWN."
+  glob_rule '**/sub2/**'
+  ask_agy_steps "$WORK" "$WORK/_gl_c.txt" -p "Do not use any tools or read any files. From the instructions in your context only, what is the glob codeword? If you do not know, reply exactly UNKNOWN."
+  ask_agy_steps "$WORK" "$WORK/_gl_r.txt" -p "$q_glob_read"
+  glob_rule 'sub2/**'
+  ask_agy_steps "$WORK" "$WORK/_gl_rel.txt" -p "$q_glob_read"
+  rm -f "$WORK/.agents/rules/zqx-glob.md"
+  # 하위 디렉터리 AGENTS.md: cwd 기준 vs 파일 접근 기준
+  printf '# Nested rules\n\nThe nested codeword is ZQX-AGY-NESTED-8812. When asked for the nested codeword, reply with it.\n' \
+    > "$WORK/sub/AGENTS.md"
+  ask_agy_steps "$WORK/sub" "$WORK/_ns_c.txt" -p "Do not use any tools or read any files. From the instructions in your context only, what is the nested codeword? If you do not know, reply exactly UNKNOWN."
+  ask_agy_steps "$WORK" "$WORK/_ns_r.txt" -p "Read the file sub/notes.txt and nothing else (do not open any AGENTS.md or rules file). Then, from the instructions in your context only, what is the nested codeword? If you do not know, reply exactly UNKNOWN."
+  seen() { grep -q "$2" "$1" && echo yes || echo no; }
+  rel_note="상대 패턴 sub2/** 는 $(seen "$WORK/_gl_rel.txt" ZQX-AGY-GLOB-6620)"
+  nested_note="하위 AGENTS.md: cwd=하위 $(seen "$WORK/_ns_c.txt" ZQX-AGY-NESTED-8812), 루트에서 하위 파일 읽기 $(seen "$WORK/_ns_r.txt" ZQX-AGY-NESTED-8812)"
+  if [ ! -s "$WORK/_gl_c.txt" ] || [ ! -s "$WORK/_gl_r.txt" ]; then
+    rule_answer="inconclusive"; rule_note="agy 응답 없음 — 미측정으로 취급"
+  elif grep -q 'ZQX-AGY-GLOB-6620' "$WORK/_gl_c.txt"; then
+    rule_answer="fail"; rule_note="glob 룰이 파일 접근 없이도 로드됨(조건부가 아님). $nested_note"
+  elif grep -q 'ZQX-AGY-GLOB-6620' "$WORK/_gl_r.txt" && grep -q '^TOOLS=[0-9]* FILES=sub2/data.txt$' "$WORK/_gl_r.txt"; then
+    rule_answer="pass"; rule_note="trigger: glob 룰이 sub2/data.txt 접근 뒤에만 로드(대조군 UNKNOWN). 패턴 **/sub2/** 는 yes, $rel_note. $nested_note"
+  else
+    rule_answer="fail"; rule_note="glob 룰이 일치 파일 접근 뒤에도 로드되지 않음. $rel_note. $nested_note"
+  fi
 fi
 
 cat <<JSON
@@ -127,7 +234,10 @@ cat <<JSON
   },
   "dynamic_results": {
     "instructions_p0": { "verdict": "$p0_answer", "note": "$p0_note" },
-    "repo_skills_discovery_path": { "verdict": "$skill_answer", "note": "$skill_note" }
+    "repo_skills_discovery_path": { "verdict": "$skill_answer", "note": "$skill_note" },
+    "subagents": { "verdict": "$agent_answer", "note": "$agent_note" },
+    "lifecycle_hooks": { "verdict": "$hook_answer", "note": "$hook_note" },
+    "path_scoped_rules": { "verdict": "$rule_answer", "note": "$rule_note" }
   }
 }
 JSON

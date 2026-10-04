@@ -103,8 +103,8 @@ Bash 툴로 커밋할 때만 발동하므로 조기 피드백 계층이지 강�
 | 하네스 | 실측 버전 | baseline | full 쪽 확인된 것 / 확인 안 된 것 |
 |---|---|---|---|
 | Claude Code | 2.1.289 | 성립 | `.claude/rules/*.md` 의 `paths:` 조건부 로딩, 서브에이전트, skills, `settings.json` 훅 — 전부 [공식 문서](https://code.claude.com/docs/en/memory.md)로 확인 |
-| Codex | codex-cli 0.160.0 / GPT-6.1 Sol | 성립 | `AGENTS.md`·스택 P0 자동 로드와 `.agents/skills` 발견, `.env` 게이트를 실측 |
-| Antigravity | agy 1.2.16 | 성립 | `AGENTS.md`·스택 P0 자동 로드와 `.agents/skills` 발견, `.env` 게이트를 headless(`-p`)로 실측. 서브에이전트·`.agents/rules` 조건부 룰·훅은 미측정 |
+| Codex | codex-cli 0.160.0 / GPT-6.1 Sol | 성립 | `AGENTS.md`·스택 P0 자동 로드, `.agents/skills` 발견, `.env` 게이트, `.codex/agents` 서브에이전트(신뢰 프로젝트만), `.codex/hooks.json` 훅(프로젝트 + 훅 정의 신뢰 필요), cwd 기준 하위 `AGENTS.md` 를 실측. 파일 경로 조건부 지침은 없다 |
+| Antigravity | agy 1.2.16 | 성립 | headless(`-p`)로 `AGENTS.md`·스택 P0 자동 로드, `.agents/skills` 발견, `.env` 게이트, `.agents/agents` 서브에이전트, `.agents/hooks.json` 훅(신뢰 확인 없이 실행), `.agents/rules` 의 `trigger: glob` 조건부 룰을 실측. 하위 `AGENTS.md` 는 cwd 기준으로만 로드 |
 
 Codex(codex-cli 0.160.0, `gpt-6.1-sol`)와 agy(1.2.16)는 각 모드 산출물의 AGENTS.md 와 인라인된
 스택 P0를 툴 호출 없이 자동 로드하고 `.agents/skills`의 저장소 스킬만 발견했다. `.claude/skills`는
@@ -116,8 +116,10 @@ Codex(codex-cli 0.160.0, `gpt-6.1-sol`)와 agy(1.2.16)는 각 모드 산출물�
 90일 넘게 재측정되지 않았거나 판정에 근거가 없으면 **빌드가 실패한다**. 재측정은
 `scripts/spike-codex-contract.sh --dynamic`·`scripts/spike-agy-contract.sh --dynamic` 으로 수행한다.
 
-Codex·agy 는 서브에이전트·경로 조건부 룰·lifecycle hook 이 아직 미검증이므로 전체 등급은
-baseline 이다.
+Codex·agy 는 서브에이전트·훅·경로별 지침을 하네스가 지원함을 실측했지만(위 표의 조건 포함), 스캐폴드가
+그 계층을 아직 생성하지 않으므로(어댑터 없음) 전체 등급은 baseline 이다. 훅은 Claude Code 와 마찬가지로
+조기 피드백이지 강제선이 아니다. agy 는 레포의 `.agents/hooks.json` 을 신뢰 확인 없이 실행하므로, 외부
+레포에서 agy 를 돌리기 전에 그 파일을 확인한다(`security-audit` 에이전트가 검사한다).
 
 Codex 쪽 추가 제약 두 가지도 설계에 영향을 준다.
 

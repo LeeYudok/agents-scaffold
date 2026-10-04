@@ -34,6 +34,11 @@ AGENTS.md 로드 항목만 2026-09-21 재측정: `claude 2.1.278` / `codex-cli 0
 - hook 은 정의 **hash 에 신뢰가 묶임** → 정의 변경 시 재승인 전까지 skip
 - `.codex/rules/*.rules` 는 **명령 실행 정책**(prefix_rule allow/prompt/forbidden)이지 Claude 의 `paths:` 코딩 가이던스와 다름. experimental
 - 공통 `--instructions` 플래그 없음
+- **2026-10-04 실측(0.160.0, #60)** — 재현은 `scripts/spike-codex-contract.sh --dynamic`
+  - 서브에이전트 `.codex/agents/*.toml`(`name`·`description`·`developer_instructions`): 신뢰 프로젝트에서만 등록, 위임 시 `collab_tool_call` 로 developer_instructions 대로 응답
+  - 훅 `.codex/hooks.json`(`{"hooks":{"<Event>":[{"hooks":[{"type":"command","command":...}]}]}}`): 신뢰 프로젝트 + 훅 정의 신뢰(`/hooks` 검토) 또는 `--dangerously-bypass-hook-trust` 일 때만 실행. 미신뢰 프로젝트는 우회 플래그로도 미실행
+  - 하위 `AGENTS.md` 는 cwd 기준으로만 로드(루트에서 하위 파일을 읽어도 미로드) — 파일 경로 조건부 지침 없음
+  - 함정: `codex exec` 는 stdin 이 열려 있으면 `Reading additional input from stdin...` 에서 멈춘다 → `</dev/null`. 사용자 config 를 안 건드리고 신뢰를 주려면 `-c 'projects={"<abs>"={trust_level="trusted"}}'`(인라인 테이블). `-c 'projects."<abs>".trust_level=...'` 는 "unrecognized configuration" 으로 무시된다
 
 ## agy (Antigravity)
 - 공식문서 [Rules](https://antigravity.google/docs/rules/): 워크스페이스 `AGENTS.md`/`GEMINI.md`, `.agents/AGENTS.md`, `.agents/rules/*.md`(직계 자식만) 를 파일 위치→워크스페이스 루트로 올라가며 로드. 전역은 `~/.gemini/AGENTS.md`·`~/.gemini/config/rules/*.md`, CLI 전용 `~/.gemini/antigravity-cli/rules/*.md`
@@ -42,6 +47,11 @@ AGENTS.md 로드 항목만 2026-09-21 재측정: `claude 2.1.278` / `codex-cli 0
 - 1.1.17·1.2.7 headless 는 AGENTS.md·GEMINI.md 모두 미로드였다(원인 미규명, 1.2.16 에서 해소)
 - `-p --output-format stream-json` 의 `step_update.step_type` 으로 툴 호출 여부를 판정할 수 있다(`user_input`·`agent_response` 외 단계 = 툴 사용)
 - 공통 `--instructions` 플래그 없음 (`--agent`, `--mode`, `plugin` 등)
+- **2026-10-04 실측(1.2.16 headless, #60)** — 재현은 `scripts/spike-agy-contract.sh --dynamic`
+  - 서브에이전트 `.agents/agents/<name>.md`(frontmatter `name`·`description`): 툴 없이 목록에 등록, `--agent <name>` 으로 고르면 본문 지시대로 응답. `agy agents` 서브커맨드는 출력이 비어 판정에 못 쓴다
+  - 훅 `.agents/hooks.json`: `{"<hook-name>":{"PreToolUse":[{"matcher":"...","hooks":[{...}]}],"PreInvocation":[{"type":"command","command":"..."}],...}}` — 툴 이벤트(Pre/PostToolUse)만 matcher+hooks, Pre/PostInvocation·Stop 은 핸들러 배열. 틀리면 `--log-file` 에만 `command hook must specify 'command'` 가 남고 조용히 무시된다. **신뢰 확인 없이 headless 에서도 실행**된다(보안 주의 — security-audit 대상)
+  - 룰 `.agents/rules/*.md` `trigger: glob`: 일치 파일 접근 뒤에만 로드. `globs` 는 `**/sub2/**` 처럼 `**/` 접두가 필요하고 `sub2/**` 는 미일치. `trigger: always_on` 은 상시 로드
+  - 하위 `AGENTS.md` 는 cwd 기준으로만 로드 — 공식문서의 "파일을 읽거나 고칠 때 그 폴더부터 올라가며 로드"는 headless 에서 재현되지 않음(읽기·편집·다음 턴 모두 미로드)
 
 ## Gemini CLI (지원 대상 제외 — #60)
 - 공식문서([gemini-md.md](https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/gemini-md.md)): 기본 컨텍스트 파일명은 `GEMINI.md` 뿐. `AGENTS.md` 는 `.gemini/settings.json` 의 `context.fileName` 에 넣어야 읽는다 → 스캐폴드는 #54 부터 이 설정 파일을 emit 하고 `GEMINI.md` 셤은 없앴다

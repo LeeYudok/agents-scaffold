@@ -85,14 +85,14 @@ git フックは**ハーネスに関係なく常に配線されます**（#21）
 | ハーネス | 実測バージョン | baseline | full 層で確認できたこと / できていないこと |
 |---|---|---|---|
 | Claude Code | 2.1.289 | 成立 | `.claude/rules/*.md` の `paths:` 条件付きロード、サブエージェント、skills、`settings.json` フック — いずれも[公式ドキュメント](https://code.claude.com/docs/en/memory.md)で確認 |
-| Codex | codex-cli 0.160.0 / GPT-6.1 Sol | 成立 | `AGENTS.md`、インラインのスタック P0、`.agents/skills`、`.env` ゲートを実測 |
-| Antigravity | agy 1.2.16 | 成立 | `AGENTS.md`、インラインのスタック P0、`.agents/skills`、`.env` ゲートを headless（`-p`）で実測。サブエージェント、`.agents/rules` の条件付きルール、フックは未測定 |
+| Codex | codex-cli 0.160.0 / GPT-6.1 Sol | 成立 | `AGENTS.md`、インラインのスタック P0、`.agents/skills`、`.env` ゲート、`.codex/agents` サブエージェント（信頼済みプロジェクトのみ）、`.codex/hooks.json` フック（プロジェクトとフック定義の信頼が必要）、cwd 基準のサブディレクトリ `AGENTS.md` を実測。ファイルパス条件付きの指示はない |
+| Antigravity | agy 1.2.16 | 成立 | headless（`-p`）で `AGENTS.md`、インラインのスタック P0、`.agents/skills`、`.env` ゲート、`.agents/agents` サブエージェント、`.agents/hooks.json` フック（信頼確認なしで実行）、`.agents/rules` の `trigger: glob` 条件付きルールを実測。サブディレクトリの `AGENTS.md` は cwd 基準でのみ読み込まれる |
 
 Codex（codex-cli 0.160.0、`gpt-6.1-sol`）と agy（1.2.16）は、各モード成果物の AGENTS.md とインラインのスタック P0 をツール呼び出しなしで自動的に読み込み、`.agents/skills` のリポジトリ skills のみを発見しました。どちらも `.claude/skills` は発見しません。agy 1.2.7 の headless は `AGENTS.md` も `GEMINI.md` も読み込めませんでしたが、1.2.16 で解消されています。モデルがルールを見落としても git フックが staged `.env` を exit 2 でブロックします。
 
 サポート状況の単一の真実の源は [`docs/harness-matrix.json`](harness-matrix.json) です。この表はその manifest と突き合わされ、CI では `scripts/check-harness-matrix.py` が検査します — `full` 等級が 90 日以上再実測されていない、あるいは判定に根拠がない場合、**ビルドは失敗します**。再実測は `scripts/spike-codex-contract.sh --dynamic` と `scripts/spike-agy-contract.sh --dynamic` で行います。
 
-Codex と agy はサブエージェント、パス条件付きルール、lifecycle フックが未検証のため、全体の等級は baseline です。
+Codex と agy はサブエージェント、フック、パス別の指示をハーネスとして支持することを実測しました（上表の条件を含む）が、スキャフォールドがまだその層を生成しない（アダプタがない）ため、全体の等級は baseline です。Claude Code と同じく、フックは早期フィードバックであって強制線ではありません。agy はリポジトリの `.agents/hooks.json` を信頼確認なしで実行するため、外部リポジトリで agy を動かす前にそのファイルを確認してください（`security-audit` エージェントが検査します）。
 
 Codex 側の制約がもう 2 点、設計に効いてきます。
 

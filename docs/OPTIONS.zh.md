@@ -85,14 +85,14 @@ git 钩子**与 harness 无关，始终接入**（#21）。Claude Code 的 `PreT
 | Harness | 实测版本 | baseline | full 层已确认 / 未确认的内容 |
 |---|---|---|---|
 | Claude Code | 2.1.289 | 成立 | `.claude/rules/*.md` 的 `paths:` 条件加载、子代理、skills、`settings.json` 钩子 — 均已对照[官方文档](https://code.claude.com/docs/en/memory.md)确认 |
-| Codex | codex-cli 0.160.0 / GPT-6.1 Sol | 成立 | 已实测 `AGENTS.md`、内联技术栈 P0、`.agents/skills` 与 `.env` 门禁 |
-| Antigravity | agy 1.2.16 | 成立 | 以 headless（`-p`）实测 `AGENTS.md`、内联技术栈 P0、`.agents/skills` 与 `.env` 门禁。子代理、`.agents/rules` 条件规则与钩子尚未实测 |
+| Codex | codex-cli 0.160.0 / GPT-6.1 Sol | 成立 | 已实测 `AGENTS.md`、内联技术栈 P0、`.agents/skills`、`.env` 门禁、`.codex/agents` 子代理（仅受信任项目）、`.codex/hooks.json` 钩子（需项目信任与钩子定义信任）以及按 cwd 加载的子目录 `AGENTS.md`。没有按文件路径的条件指令 |
+| Antigravity | agy 1.2.16 | 成立 | 以 headless（`-p`）实测 `AGENTS.md`、内联技术栈 P0、`.agents/skills`、`.env` 门禁、`.agents/agents` 子代理、`.agents/hooks.json` 钩子（无信任确认即执行）以及 `.agents/rules` 中 `trigger: glob` 条件规则。子目录 `AGENTS.md` 仅按 cwd 加载 |
 
 Codex（codex-cli 0.160.0，`gpt-6.1-sol`）与 agy（1.2.16）会在不调用任何工具的情况下自动加载各自模式产物中的 AGENTS.md 与内联技术栈 P0，并且只发现 `.agents/skills` 下的仓库 skills；两者都不会发现 `.claude/skills`。agy 1.2.7 的 headless 模式既不加载 `AGENTS.md` 也不加载 `GEMINI.md`，该问题已在 1.2.16 中解决。即使模型遗漏规则，git 钩子仍会以 exit 2 拦截已暂存的 `.env`。
 
 支持状态的单一真实来源是 [`docs/harness-matrix.json`](harness-matrix.json)。本表会与该 manifest 对照，并由 CI 中的 `scripts/check-harness-matrix.py` 检查 — 若某个 `full` 等级超过 90 天未重新实测，或某项判定缺少证据，**构建将失败**。重新实测请运行 `scripts/spike-codex-contract.sh --dynamic` 与 `scripts/spike-agy-contract.sh --dynamic`。
 
-Codex 与 agy 的子代理、路径条件规则和 lifecycle 钩子均尚未验证，因此整体等级为 baseline。
+已实测 Codex 与 agy 本身支持子代理、钩子和按路径的指令（含上表条件），但脚手架尚未生成这些层（没有适配器），因此整体等级为 baseline。与 Claude Code 相同，钩子是早期反馈而非强制线。agy 会在没有信任确认的情况下执行仓库中的 `.agents/hooks.json`，在外部仓库运行 agy 前请先检查该文件（`security-audit` 代理会扫描它）。
 
 另有两项 Codex 约束影响设计：
 

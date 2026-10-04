@@ -67,7 +67,7 @@
       "cli_version": "codex-cli 0.160.0",
       "last_measured": "2026-10-04",
       "tier": "baseline",
-      "trust_model": "project trust required for .codex/ layer",
+      "trust_model": "project trust required for .codex/ layer (agents·hooks), plus per-hook definition trust",
       "instruction_budget_bytes": 32768,
       "capabilities": {
         "instructions": {
@@ -88,19 +88,19 @@
           "reproducibility": "codex-cli 0.154.0·0.160.0, 완주 2회 / 시도 2회"
         },
         "subagents": {
-          "verdict": "unverified",
-          "target": ".codex/agents/*.toml",
-          "evidence": "산출물에 .codex/ 를 생성하지 않으므로 미측정"
+          "verdict": "pass",
+          "target": ".codex/agents/*.toml (name, description, developer_instructions)",
+          "evidence": "spike-codex-contract.sh --dynamic(codex-cli 0.160.0, 2026-10-04, #60): 신뢰 프로젝트에서 프로브 에이전트가 목록에 등록되고 위임(collab_tool_call) 시 developer_instructions 암호어로 응답, 셸 명령 0. 미신뢰 프로젝트에서는 미등록. 산출물은 아직 이 계층을 생성하지 않는다(어댑터 없음 — 등급은 baseline 유지)"
         },
         "path_scoped_rules": {
-          "verdict": "n/a",
-          "target": "nested AGENTS.md 계층",
-          "evidence": ".codex/rules/*.rules 는 명령 실행 정책이며 코딩 가이던스가 아니다"
+          "verdict": "partial",
+          "target": "nested AGENTS.md (cwd 기준)",
+          "evidence": "spike-codex-contract.sh --dynamic(codex-cli 0.160.0, 2026-10-04, #60): cwd 가 하위 디렉터리면 그 AGENTS.md 로드, 루트에서 하위 파일을 읽으면 미로드 — 파일 경로 조건부 로딩은 없다. .codex/rules/*.rules 는 명령 실행 정책이라 해당 없음"
         },
         "lifecycle_hooks": {
-          "verdict": "unverified",
+          "verdict": "partial",
           "target": ".codex/hooks.json",
-          "evidence": "hook 신뢰가 정의 hash 에 묶임(codex exec --dangerously-bypass-hook-trust 존재로 확인). 산출물이 .codex/ 를 만들지 않아 미측정"
+          "evidence": "spike-codex-contract.sh --dynamic(codex-cli 0.160.0, 2026-10-04, #60): 신뢰 프로젝트 + --dangerously-bypass-hook-trust 에서 SessionStart·UserPromptSubmit·Stop 3/3 실행. 훅 정의 신뢰(/hooks 검토) 없이는 0/3, 미신뢰 프로젝트는 우회 플래그로도 0/3. 신뢰에 묶인 조기 피드백이지 강제선이 아니다. 산출물은 아직 이 계층을 생성하지 않는다(어댑터 없음 — 등급은 baseline 유지)"
         },
         "oob_gate": {
           "verdict": "pass",
@@ -115,7 +115,7 @@
       "cli_version": "1.2.16",
       "last_measured": "2026-10-04",
       "tier": "baseline",
-      "trust_model": "unknown",
+      "trust_model": "none observed: workspace .agents/ (agents, rules, hooks.json) loads without a trust prompt (1.2.16 headless)",
       "instruction_budget_bytes": null,
       "capabilities": {
         "instructions": {
@@ -135,19 +135,19 @@
           "evidence": "https://antigravity.google/docs/skills + spike-agy-contract.sh 통제실험: .agents/skills 프로브만 등록, .claude/skills 프로브는 미등록 (2026-10-04, #60)"
         },
         "subagents": {
-          "verdict": "unverified",
-          "target": "unknown",
-          "evidence": "미측정"
+          "verdict": "pass",
+          "target": ".agents/agents/<name>.md (frontmatter name, description)",
+          "evidence": "https://antigravity.google/docs/subagents/ + spike-agy-contract.sh --dynamic(1.2.16 headless, 2026-10-04, #60): 툴 없이 프로브 에이전트가 목록에 등록되고 --agent 로 고르면 본문 지시대로 응답. 산출물은 아직 이 계층을 생성하지 않는다(어댑터 없음 — 등급은 baseline 유지)"
         },
         "path_scoped_rules": {
-          "verdict": "unverified",
-          "target": ".agents/rules/*.md",
-          "evidence": "공식문서상 경로 존재(https://antigravity.google/docs/rules/). Claude paths: frontmatter 와 의미가 달라 산출물이 생성하지 않으므로 미측정"
+          "verdict": "pass",
+          "target": ".agents/rules/*.md (trigger: glob, globs: \"**/<dir>/**\")",
+          "evidence": "https://antigravity.google/docs/rules/ + spike-agy-contract.sh --dynamic(1.2.16 headless, 2026-10-04, #60): glob 룰이 일치 파일 접근 뒤에만 로드(대조군 UNKNOWN). 패턴은 **/sub2/** 처럼 앞에 **/ 가 필요하고 상대 패턴 sub2/** 는 미일치. 하위 디렉터리 AGENTS.md 는 cwd 기준으로만 로드되고, 문서와 달리 파일 읽기·편집으로는 미로드. 산출물은 아직 이 계층을 생성하지 않는다(어댑터 없음 — 등급은 baseline 유지)"
         },
         "lifecycle_hooks": {
-          "verdict": "unverified",
-          "target": "unknown",
-          "evidence": "미측정"
+          "verdict": "partial",
+          "target": ".agents/hooks.json",
+          "evidence": "https://antigravity.google/docs/hooks/ + spike-agy-contract.sh --dynamic(1.2.16 headless, 2026-10-04, #60): PreInvocation·PostInvocation·PreToolUse·Stop 4/4 실행, 신뢰 확인 절차 없음. 툴 이벤트는 matcher+hooks, 나머지는 핸들러 배열 형식(틀리면 로그에만 parse 실패). 조기 피드백이지 강제선이 아니다. 산출물은 아직 이 계층을 생성하지 않는다(어댑터 없음 — 등급은 baseline 유지)"
         },
         "oob_gate": {
           "verdict": "pass",
