@@ -56,16 +56,16 @@
 | 取值 | 目标 | 行为 |
 |---|---|---|
 | `claude`（默认） | Claude Code | 完整安装 — 含 settings.json 钩子绑定、子代理、斜杠命令、workflows |
-| `codex` | Codex | 安装 `AGENTS.md`、skills 与共享 rules/hooks/memory，并移除 Claude 专用层 |
-| `agy` | Antigravity | 在 `codex` 布局之外，把 `.claude/rules` 生成为 agy 的 `.agents/rules`（`trigger: glob`）（#63） |
-| `all` | 混合团队 | `claude` 的全部内容 + 生成的 agy 规则。skills 布局与 harness 无关（#61） |
+| `codex` | Codex | 安装 `AGENTS.md`、skills 与共享 rules/hooks/memory，把 `.claude/agents` 生成为 `.codex/agents` TOML（#64），并移除 Claude 专用层（settings.json、commands、workflows） |
+| `agy` | Antigravity | 在 `codex` 的共享布局之外，把 `.claude/rules` 生成为 `.agents/rules`（`trigger: glob`，#63），把 `.claude/agents` 生成为 `.agents/agents`（#64） |
+| `all` | 混合团队 | `claude` 的全部内容 + 所有适配器（agy 规则、Codex 与 agy 子代理）。skills 布局与 harness 无关（#61） |
 
 **skills 只有一个源（#61）。** 无论使用哪个 harness，skills 只存放在 `.agents/skills/`（Codex、agy 的原生路径）一处，Claude Code 通过符号链接 `.claude/skills -> ../.agents/skills` 读取同一份文件（claude 2.1.289 实测 — 只有 `.agents/skills` 而没有链接时，Claude Code 找不到任何 skill）。两份副本不会再分叉，日后加入其他 harness 也无需重新安装。
 
 - 无法创建符号链接的环境（如 Windows Git Bash 默认设置），或设置了 `AGENTS_SCAFFOLD_NO_SYMLINK=1` 时，`.claude/skills` 为副本。已暂存的副本与源不一致时，pre-commit 门禁会拦截提交（基于索引比较，`__pycache__` 等未跟踪文件不计入）。能否创建链接可能因环境而异（如网络隔离 PC 的策略）— 见 [OFFLINE_INSTALL.en.md](OFFLINE_INSTALL.en.md) 第 6 步。
 - Git for Windows 在 `core.symlinks=false` 下检出时，链接会变成内含路径字符串的普通文件。此时 Claude Code 找不到 skills，门禁会给出警告 — 执行 `git config core.symlinks true` 后重新检出。
 - 安装前已存在的真实目录 `.claude/skills` 会被移入 `.agents/skills` 并改为链接。若同一路径的内容与 `.agents/skills` 不同，则以 `.agents/skills` 为源，旧目录保留为 `.claude/skills.pre-ssot-<时间戳>/`。
-- rules 与子代理不做链接：`.codex/rules` 是命令执行策略，agy 的 `.agents/rules` 不理解 Claude 的 `paths:` 条件加载，Claude 的 `.md` 与 Codex 的 `.toml` 子代理格式也不同。
+- rules 与子代理不做链接：`.codex/rules` 是命令执行策略，agy 的 `.agents/rules` 不理解 Claude 的 `paths:` 条件加载，Claude 的 `.md` 与 Codex 的 `.toml` 子代理格式也不同。它们改为在安装与 `--update` 时按各 harness 的格式生成（#63、#64）。
 
 三个 harness 都原生读取根目录的 `AGENTS.md`，因此不生成 `CLAUDE.md`/`GEMINI.md` 指针文件，也不生成 `.gemini/settings.json` 垫片（#54、#60）。支持目标为最新版 Claude Code、Codex 与 Antigravity；Gemini CLI 不再是支持目标。
 
@@ -94,7 +94,9 @@ Codex（codex-cli 0.160.0，`gpt-6.1-sol`）与 agy（1.2.16）会在不调用�
 
 **agy 规则适配器（#63）。** 使用 `--harness agy|all` 时，会把 `.claude/rules/*.md` 生成为 `.agents/rules/*.md`。有 `paths:` 时变为 `trigger: glob` + `globs:`，没有时变为 `trigger: always_on`。模式按 agy 1.2.16 的实测转换：含斜杠的相对模式（`src/**`）改为 `**/src/**`，不含斜杠的模式（`Dockerfile`、`*.py`）按文件名匹配，保持不变。多个模式用逗号连接且不加空格（逗号后的空格会成为下一个模式的一部分，导致无法匹配）。`.claude/rules` 仍是源；`--update` 会重新生成（已有项目用 `--update --harness agy` 首次生成），并删除源已不存在的生成文件。没有生成标记的同名文件（用户自有）不会被改动。
 
-已实测 Codex 与 agy 本身支持子代理、钩子和按路径的指令（含上表条件），但脚手架尚未生成子代理与钩子层（适配器只有 agy 规则），因此整体等级为 baseline。与 Claude Code 相同，钩子是早期反馈而非强制线。agy 会在没有信任确认的情况下执行仓库中的 `.agents/hooks.json`，在外部仓库运行 agy 前请先检查该文件（`security-audit` 代理会扫描它）。
+**子代理适配器（#64）。** 把 `.claude/agents/*.md` 生成为 Codex（`--harness codex|all`）用的 `.codex/agents/<名称>.toml` 与 agy（`--harness agy|all`）用的 `.agents/agents/<名称>.md`。Codex 使用 `name`、`description`、`developer_instructions`（正文原样放入 TOML 字面量字符串 `'''`），正文含 `'''` 时给出警告并跳过。agy 只保留 `name` 与 `description` —— frontmatter 中若有 Claude 的 `tools`、`model`、`memory`，agy 1.2.16 会静默丢弃该代理（实测）。工具与模型继承各 harness 的默认值，正文中 Claude 专用的指示保持原样。`.claude/agents` 是源，因此 codex/agy 模式也会保留它。Codex 只在受信任项目中加载 `.codex/` 层，生成文件本身不会使其生效。更新规则与规则适配器相同（`--update` 重新生成、删除源已不存在的生成文件、保留无标记的用户文件，已有项目用 `--update --harness codex|agy|all` 首次生成）。
+
+已实测 Codex 与 agy 本身支持子代理、钩子和按路径的指令（含上表条件）。脚手架会生成子代理（#64）与 agy 规则（#63），但尚未生成钩子层（#65），因此整体等级为 baseline。与 Claude Code 相同，钩子是早期反馈而非强制线。agy 会在没有信任确认的情况下执行仓库中的 `.agents/hooks.json`，在外部仓库运行 agy 前请先检查该文件（`security-audit` 代理会扫描它）。
 
 另有两项 Codex 约束影响设计：
 

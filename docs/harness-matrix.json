@@ -79,7 +79,7 @@
         "stack_p0_inline": {
           "verdict": "pass",
           "target": "AGENTS.md body",
-          "evidence": "spike: 인라인된 python 스택 P0 를 응답에 포함. 산출물 AGENTS.md 7,163 B / 32,768 B (codex-cli 0.160.0, 2026-10-04)"
+          "evidence": "spike: 인라인된 python 스택 P0 를 응답에 포함. 산출물 AGENTS.md 7,215 B / 32,768 B (codex-cli 0.160.0, 2026-10-04)"
         },
         "repo_skills": {
           "verdict": "pass",
@@ -89,8 +89,8 @@
         },
         "subagents": {
           "verdict": "pass",
-          "target": ".codex/agents/*.toml (name, description, developer_instructions)",
-          "evidence": "spike-codex-contract.sh --dynamic(codex-cli 0.160.0, 2026-10-04, #60): 신뢰 프로젝트에서 프로브 에이전트가 목록에 등록되고 위임(collab_tool_call) 시 developer_instructions 암호어로 응답, 셸 명령 0. 미신뢰 프로젝트에서는 미등록. 산출물은 아직 이 계층을 생성하지 않는다(어댑터 없음 — 등급은 baseline 유지)"
+          "target": ".codex/agents/*.toml (generated from .claude/agents, #64)",
+          "evidence": "spike-codex-contract.sh --dynamic(codex-cli 0.160.0, 2026-10-04): 신뢰 프로젝트에서 프로브 에이전트가 목록에 등록되고 위임(collab_tool_call) 시 developer_instructions 대로 응답, 셸 명령 0. 미신뢰 프로젝트에서는 미등록(#60). 산출물이 .claude/agents 에서 생성한 TOML(하이픈 이름, 리터럴 문자열 본문)을 위임하면 본문 지시대로 응답(subagents_adapter pass, #64)"
         },
         "path_scoped_rules": {
           "verdict": "partial",
@@ -136,8 +136,8 @@
         },
         "subagents": {
           "verdict": "pass",
-          "target": ".agents/agents/<name>.md (frontmatter name, description)",
-          "evidence": "https://antigravity.google/docs/subagents/ + spike-agy-contract.sh --dynamic(1.2.16 headless, 2026-10-04, #60): 툴 없이 프로브 에이전트가 목록에 등록되고 --agent 로 고르면 본문 지시대로 응답. 산출물은 아직 이 계층을 생성하지 않는다(어댑터 없음 — 등급은 baseline 유지)"
+          "target": ".agents/agents/<name>.md (generated from .claude/agents — name, description only, #64)",
+          "evidence": "https://antigravity.google/docs/subagents/ + spike-agy-contract.sh --dynamic(1.2.16 headless, 2026-10-04): 툴 없이 프로브 에이전트가 목록에 등록되고 --agent 로 고르면 본문 지시대로 응답(#60). frontmatter 에 Claude 의 tools·model·memory 가 있으면 조용히 미등록이라, 산출물은 name·description 만 남겨 생성하고 그 에이전트가 --agent 로 본문 지시대로 응답(subagents_adapter pass, #64)"
         },
         "path_scoped_rules": {
           "verdict": "pass",

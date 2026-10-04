@@ -61,9 +61,9 @@ just costs more. None of them fire automatically, even with all three installed;
 | Value | Target | What it does |
 |---|---|---|
 | `claude` (default) | Claude Code | Full install — settings.json hook bindings, subagents, slash commands, workflows |
-| `codex` | Codex | Installs `AGENTS.md`, skills, and shared rules/hooks/memory; drops Claude-only layers |
-| `agy` | Antigravity | The `codex` layout, plus `.claude/rules` generated as agy's `.agents/rules` (`trigger: glob`) (#63) |
-| `all` | Mixed teams | Everything from `claude` plus the generated agy rules. The skill layout does not depend on the harness (#61) |
+| `codex` | Codex | Installs `AGENTS.md`, skills, and shared rules/hooks/memory; generates `.claude/agents` as `.codex/agents` TOML (#64); drops Claude-only layers (settings.json, commands, workflows) |
+| `agy` | Antigravity | The shared `codex` layout, plus `.claude/rules` generated as `.agents/rules` (`trigger: glob`, #63) and `.claude/agents` as `.agents/agents` (#64) |
+| `all` | Mixed teams | Everything from `claude` plus every adapter (agy rules, Codex and agy subagents). The skill layout does not depend on the harness (#61) |
 
 **Skills have a single source (#61).** Whatever the harness, skills live once in `.agents/skills/`
 (the Codex/agy native path) and Claude Code reads the same files through the symlink
@@ -84,7 +84,8 @@ later needs no reinstall.
   is kept as `.claude/skills.pre-ssot-<timestamp>/`.
 - Rules and subagents are not linked: `.codex/rules` is a command-execution policy, agy's
   `.agents/rules` does not understand Claude's `paths:` scoping, and Claude `.md` and Codex `.toml`
-  subagents use different formats.
+  subagents use different formats. They are generated in each harness's format at install and `--update`
+  instead (#63, #64).
 
 All three harnesses read the root `AGENTS.md` natively, so no `CLAUDE.md`/`GEMINI.md` pointer or
 `.gemini/settings.json` shim is emitted (#54, #60). Supported targets are the latest Claude Code,
@@ -128,9 +129,19 @@ after a comma becomes part of the next pattern, which then never matches). `.cla
 regenerates (an existing project gets its first generation with `--update --harness agy`) and removes generated files whose source is gone. A same-named file without the generated marker
 (user-owned) is left untouched.
 
+**Subagent adapters (#64).** `.claude/agents/*.md` is generated as `.codex/agents/<name>.toml` for Codex
+(`--harness codex|all`) and as `.agents/agents/<name>.md` for agy (`--harness agy|all`). Codex gets `name`, `description` and
+`developer_instructions` (the body verbatim as a TOML literal string `'''`); a body containing `'''` is skipped with a
+warning. agy gets only `name` and `description` — with Claude's `tools`, `model` or `memory` in the frontmatter, agy 1.2.16
+silently drops the agent (measured). Tools and model fall back to each harness's defaults, and Claude-specific instructions
+in the body stay as written. `.claude/agents` is the source, so codex/agy modes keep it. Codex loads the `.codex/` layer
+only for trusted projects, so generating the files does not activate them by itself. Update rules match the rules
+adapter (`--update` regenerates, generated files whose source is gone are removed, user files without the marker are kept,
+and an existing project gets its first generation with `--update --harness codex|agy|all`).
+
 Codex and agy were measured to support subagents, hooks and path-scoped instructions (with the
-conditions in the table above), but the scaffold does not emit their subagent and hook layers yet (the agy rules are the only
-adapter), so their overall tier is baseline. As with Claude Code, hooks are early feedback, not the enforcement line. agy
+conditions in the table above). The scaffold generates subagents (#64) and agy rules (#63) but not hooks yet (#65),
+so their overall tier is baseline. As with Claude Code, hooks are early feedback, not the enforcement line. agy
 runs a repo's `.agents/hooks.json` without a trust prompt, so check that file before running agy in a
 foreign repo (the `security-audit` agent scans it).
 

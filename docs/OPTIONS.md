@@ -57,9 +57,9 @@
 | 값 | 대상 | 하는 일 |
 |---|---|---|
 | `claude` (기본) | Claude Code | 전체 설치 — settings.json 훅 바인딩·서브에이전트·슬래시 커맨드·workflows 포함 |
-| `codex` | Codex | `AGENTS.md`·스킬과 공통 rules/hooks/memory 설치, Claude 전용 계층 제거 |
-| `agy` | Antigravity | `codex` 와 같은 레이아웃에 더해 `.claude/rules` 를 agy 용 `.agents/rules`(`trigger: glob`)로 생성한다(#63) |
-| `all` | 혼용 팀 | `claude` 전체 + agy 룰 생성. 스킬 레이아웃은 하네스와 무관하다(#61) |
+| `codex` | Codex | `AGENTS.md`·스킬과 공통 rules/hooks/memory 설치, `.claude/agents` 를 `.codex/agents`(TOML)로 생성(#64), Claude 전용 계층(settings.json·commands·workflows) 제거 |
+| `agy` | Antigravity | `codex` 와 같은 공통 레이아웃에 더해 `.claude/rules` 를 `.agents/rules`(`trigger: glob`, #63)로, `.claude/agents` 를 `.agents/agents`(#64)로 생성한다 |
+| `all` | 혼용 팀 | `claude` 전체 + 모든 어댑터(agy 룰, Codex·agy 서브에이전트). 스킬 레이아웃은 하네스와 무관하다(#61) |
 
 **스킬 원본은 한 곳이다 (#61).** 스킬은 하네스와 무관하게 `.agents/skills/`(Codex·agy 네이티브
 경로)에 한 번만 두고, Claude Code 는 `.claude/skills -> ../.agents/skills` 심볼릭 링크로 같은 원본을
@@ -78,6 +78,7 @@
   `.claude/skills.pre-ssot-<시각>/` 에 남긴다.
 - 룰·서브에이전트는 링크하지 않는다. `.codex/rules` 는 명령 실행 정책, agy `.agents/rules` 는
   Claude `paths:` 조건부 로딩을 모르고, Claude `.md` 와 Codex `.toml` 서브에이전트는 포맷이 다르다.
+  대신 설치·`--update` 때 하네스 형식으로 생성한다(#63, #64).
 
 세 하네스 모두 루트 `AGENTS.md` 를 네이티브로 읽으므로 `CLAUDE.md`·`GEMINI.md` 포인터나
 `.gemini/settings.json` 셤은 만들지 않는다(#54, #60). 지원 대상은 Claude Code·Codex·Antigravity
@@ -122,8 +123,17 @@ Codex(codex-cli 0.160.0, `gpt-6.1-sol`)와 agy(1.2.16)는 각 모드 산출물�
 공백 없이 쉼표로 잇는다(쉼표 뒤 공백은 패턴에 포함돼 일치하지 않는다). `.claude/rules` 가 원본이며 `--update` 때 다시 생성하고(기존 프로젝트는 `--update --harness agy` 로 처음 생성한다),
 원본이 사라진 생성물은 지운다. 생성 표시가 없는 같은 이름의 파일(사용자 소유)은 건드리지 않는다.
 
-Codex·agy 는 서브에이전트·훅·경로별 지침을 하네스가 지원함을 실측했지만(위 표의 조건 포함), 스캐폴드가
-서브에이전트·훅 계층을 아직 생성하지 않으므로(어댑터는 agy 룰뿐) 전체 등급은 baseline 이다. 훅은 Claude Code 와 마찬가지로
+**서브에이전트 어댑터 (#64).** `.claude/agents/*.md` 를 Codex(`--harness codex|all`)용 `.codex/agents/<이름>.toml` 과
+agy(`--harness agy|all`)용 `.agents/agents/<이름>.md` 로 생성한다. Codex 는 `name`·`description`·`developer_instructions`
+(본문을 TOML 리터럴 문자열 `'''` 로 그대로) 형식이고, 본문에 `'''` 가 있으면 경고하고 건너뛴다. agy 는 `name`·`description`
+만 둔다 — Claude 의 `tools`·`model`·`memory` 가 frontmatter 에 있으면 agy 1.2.16 이 그 에이전트를 조용히 빼기 때문이다(실측).
+툴·모델은 각 하네스 기본값을 상속하고, 본문의 Claude 전용 지시는 그대로 남는다. `.claude/agents` 가 원본이라 codex/agy
+모드에서도 지우지 않는다. Codex 의 `.codex/` 레이어는 신뢰 프로젝트에서만 로드되므로 생성만으로 활성화되지는 않는다.
+갱신 규칙은 룰 어댑터와 같다(`--update` 재생성, 원본이 사라진 생성물 삭제, 표시 없는 사용자 파일 보존,
+기존 프로젝트는 `--update --harness codex|agy|all` 로 처음 생성).
+
+Codex·agy 는 서브에이전트·훅·경로별 지침을 하네스가 지원함을 실측했다(위 표의 조건 포함). 스캐폴드는 서브에이전트(#64)와
+agy 룰(#63)을 생성하지만 훅 계층은 아직 생성하지 않으므로(#65) 전체 등급은 baseline 이다. 훅은 Claude Code 와 마찬가지로
 조기 피드백이지 강제선이 아니다. agy 는 레포의 `.agents/hooks.json` 을 신뢰 확인 없이 실행하므로, 외부
 레포에서 agy 를 돌리기 전에 그 파일을 확인한다(`security-audit` 에이전트가 검사한다).
 
