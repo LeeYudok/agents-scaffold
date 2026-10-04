@@ -77,7 +77,9 @@ class Normalize(unittest.TestCase):
                                              "*** Update File: b/c.ts\n*** Move to: b/d.ts\n*** End Patch"}}
         calls = ha.normalize("codex", "PostToolUse", payload, "/w")
         self.assertEqual([c["tool_input"]["file_path"] for c in calls], ["/w/a.py", "/w/b/c.ts", "/w/b/d.ts"])
-        self.assertTrue(all(c["tool_name"] == "Edit" and c["session_id"] == "s1" for c in calls))
+        # a new file is a Write (Write-only hooks must see it), updates and moves are Edits
+        self.assertEqual([c["tool_name"] for c in calls], ["Write", "Edit", "Edit"])
+        self.assertTrue(all(c["session_id"] == "s1" for c in calls))
 
     def test_codex_bash_passes_through(self):
         payload = {"session_id": "s1", "tool_name": "Bash", "tool_input": {"command": "pytest"}, "tool_response": "1 passed"}
@@ -132,6 +134,22 @@ class Run(unittest.TestCase):
             subprocess.run([sys.executable, ADAPTER, "run", "agy", "PostToolUse", "Edit|Write", f'cat > "{dump}"'],
                            input=json.dumps(payload), text=True, check=True)
             self.assertFalse(os.path.exists(dump))
+
+    def test_codex_forwards_stdout_and_exit_code_for_other_events(self):
+        cmd = """echo '{"decision":"block","reason":"no"}'; exit 2"""
+        out = subprocess.run([sys.executable, ADAPTER, "run", "codex", "UserPromptSubmit", "", cmd],
+                             input=json.dumps({"session_id": "s", "cwd": "/"}), capture_output=True, text=True)
+        self.assertEqual(out.returncode, 2)
+        self.assertEqual(json.loads(out.stdout), {"decision": "block", "reason": "no"})
+
+    def test_agy_test_run_without_output_is_not_reported_as_passed(self):
+        hook = os.path.join(REPO_ROOT, ".claude", "hooks", "post-test-notify.sh")
+        payload = {"conversationId": "c", "workspacePaths": ["/"],
+                   "toolCall": {"name": "run_command", "args": {"CommandLine": "pytest -q"}}}
+        out = subprocess.run([sys.executable, ADAPTER, "run", "agy", "PostToolUse", "Bash", f'bash "{hook}"'],
+                             input=json.dumps(payload), capture_output=True, text=True)
+        self.assertEqual(out.returncode, 0)
+        self.assertNotIn("passed", out.stderr)
 
     def test_stop_block_becomes_agy_continue(self):
         with tempfile.TemporaryDirectory() as root:

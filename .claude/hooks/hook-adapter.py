@@ -48,7 +48,9 @@ TOOL_MAP = {
 }
 AGY_WRITE_TOOLS = {"write_to_file"}
 AGY_EDIT_TOOLS = {"replace_file_content", "multi_replace_file_content", "sed_file"}
-PATCH_FILE = re.compile(r"^\*\*\* (?:Add File|Update File|Move to): (.+?)\s*$", re.M)
+# 패치 지시어 → Claude 툴 이름. 새 파일은 Write, 수정·이동은 Edit (Write 전용 훅이 추가를 놓치지 않게)
+PATCH_FILE = re.compile(r"^\*\*\* (Add File|Update File|Move to): (.+?)\s*$", re.M)
+PATCH_TOOL = {"Add File": "Write", "Update File": "Edit", "Move to": "Edit"}
 # hooks.json 안에서 어댑터를 찾는 방법 — codex 는 세션 cwd, agy 는 .agents/ 에서 실행된다
 ADAPTER_PATH = {
     "codex": '"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.claude/hooks/hook-adapter.py"',
@@ -138,8 +140,8 @@ def normalize(harness, event, payload, root):
         if event in TOOL_EVENTS and payload.get("tool_name") == "apply_patch":
             patch = (payload.get("tool_input") or {}).get("command") or ""
             base = payload.get("cwd") or root
-            return [dict(payload, tool_name="Edit", tool_input={"file_path": absolute(p, base)})
-                    for p in PATCH_FILE.findall(patch)]
+            return [dict(payload, tool_name=PATCH_TOOL[kind], tool_input={"file_path": absolute(p, base)})
+                    for kind, p in PATCH_FILE.findall(patch)]
         return [payload]
 
     session = payload.get("conversationId") or ""
@@ -191,6 +193,9 @@ def run(harness, event, claude_matcher, command):
     root = project_root(harness, payload)
     pattern = re.compile(rf"^(?:{claude_matcher})$") if (event in TOOL_EVENTS and claude_matcher) else None
     env = dict(os.environ, CLAUDE_PROJECT_DIR=root)
+    # Codex 는 Claude 와 같은 응답 규약(stdout JSON·exit 2)을 쓰므로 Stop 외 이벤트도 결과를 넘긴다
+    # (SessionStart 의 컨텍스트, UserPromptSubmit 의 차단 등). agy 는 이벤트별 스키마가 달라 넘기지 않는다.
+    forward_out, forward_code = "", 0
     for claude_payload in normalize(harness, event, payload, root):
         if pattern and not pattern.match(str(claude_payload.get("tool_name", ""))):
             continue
@@ -207,7 +212,13 @@ def run(harness, event, claude_matcher, command):
             if reply:
                 print(json.dumps(reply, ensure_ascii=False))
                 return 0
-    return 0
+        elif harness == "codex":
+            if done.stdout.strip() and not forward_out:
+                forward_out = done.stdout
+            forward_code = max(forward_code, done.returncode)
+    if forward_out:
+        sys.stdout.write(forward_out)
+    return forward_code
 
 
 def main(argv):
