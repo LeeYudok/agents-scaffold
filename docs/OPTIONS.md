@@ -57,9 +57,9 @@
 | 값 | 대상 | 하는 일 |
 |---|---|---|
 | `claude` (기본) | Claude Code | 전체 설치 — settings.json 훅 바인딩·서브에이전트·슬래시 커맨드·workflows 포함 |
-| `codex` | Codex | `AGENTS.md`·스킬과 공통 rules/hooks/memory 설치, `.claude/agents` 를 `.codex/agents`(TOML)로 생성(#64), Claude 전용 계층(settings.json·commands·workflows) 제거 |
-| `agy` | Antigravity | `codex` 와 같은 공통 레이아웃에 더해 `.claude/rules` 를 `.agents/rules`(`trigger: glob`, #63)로, `.claude/agents` 를 `.agents/agents`(#64)로 생성한다 |
-| `all` | 혼용 팀 | `claude` 전체 + 모든 어댑터(agy 룰, Codex·agy 서브에이전트). 스킬 레이아웃은 하네스와 무관하다(#61) |
+| `codex` | Codex | `AGENTS.md`·스킬과 공통 rules/hooks/memory 설치, `.claude/agents` 를 `.codex/agents`(TOML, #64)로, 훅을 `.codex/hooks.json`(#65)으로 생성, Claude 전용 계층(commands·workflows) 제거 |
+| `agy` | Antigravity | `codex` 와 같은 공통 레이아웃에 더해 `.claude/rules` 를 `.agents/rules`(`trigger: glob`, #63)로, `.claude/agents` 를 `.agents/agents`(#64)로, 훅을 `.agents/hooks.json`(#65)으로 생성한다 |
+| `all` | 혼용 팀 | `claude` 전체 + 모든 어댑터(agy 룰, Codex·agy 서브에이전트·훅). 스킬 레이아웃은 하네스와 무관하다(#61) |
 
 **스킬 원본은 한 곳이다 (#61).** 스킬은 하네스와 무관하게 `.agents/skills/`(Codex·agy 네이티브
 경로)에 한 번만 두고, Claude Code 는 `.claude/skills -> ../.agents/skills` 심볼릭 링크로 같은 원본을
@@ -132,8 +132,24 @@ agy(`--harness agy|all`)용 `.agents/agents/<이름>.md` 로 생성한다. Codex
 갱신 규칙은 룰 어댑터와 같다(`--update` 재생성, 원본이 사라진 생성물 삭제, 표시 없는 사용자 파일 보존,
 기존 프로젝트는 `--update --harness codex|agy|all` 로 처음 생성).
 
-Codex·agy 는 서브에이전트·훅·경로별 지침을 하네스가 지원함을 실측했다(위 표의 조건 포함). 스캐폴드는 서브에이전트(#64)와
-agy 룰(#63)을 생성하지만 훅 계층은 아직 생성하지 않으므로(#65) 전체 등급은 baseline 이다. 훅은 Claude Code 와 마찬가지로
+**훅 어댑터 (#65).** 훅 원본은 Claude 형식(`.claude/settings.json` 의 `hooks` + `.claude/hooks/*`)이고,
+`.claude/hooks/hook-adapter.py` 가 Codex(`--harness codex|all`)용 `.codex/hooks.json` 과 agy(`--harness agy|all`)용
+`.agents/hooks.json` 을 생성한다. 실행할 때도 같은 어댑터가 하네스 입력을 Claude 형식으로 바꿔 원래 스크립트를 부르고
+응답을 하네스 형식으로 돌려준다(2026-10-04 실측):
+
+- Codex 입력은 Claude 와 거의 같다. 셸은 `Bash`, 파일 편집은 `apply_patch`(패치 텍스트에서 파일별로 나눠 `Edit` 로 전달).
+  Stop 의 `{"decision":"block"}` 을 그대로 받아 한 턴 더 돈다. 프로젝트 신뢰 + 훅 정의 신뢰(`/hooks` 검토)가 있어야 실행된다.
+- agy 입력은 camelCase(`conversationId`·`toolCall`)다. `run_command` → `Bash`, `write_to_file` 등 → `Write`/`Edit` 로 바꾸고,
+  Stop 의 `block` 을 agy 의 `continue` 로 바꾼다. 명령 출력이 오지 않아 테스트 결과 알림은 판정하지 못한다.
+  **신뢰 확인 없이 실행된다**(clone 만으로 레포의 `.claude/hooks/*` 가 돈다 — `security-audit` 가 검사한다).
+- 옮기지 않는 것: PreToolUse 커밋 게이트(`.git/hooks` 가 맡는다), prompt 타입 훅(PreCompact).
+- 어댑터는 `python3` 가 필요하다(없으면 생성을 건너뛴다). `.claude/settings.json` 은 훅 원본이라 codex/agy 모드에서도 남긴다.
+- Stop 훅(메모리 리마인드)은 headless(`-p`·`exec`)에서도 한 턴을 더 돌린다. 자동화에서 원치 않으면 `settings.json` 에서
+  빼고 `--update` 한다. 갱신 규칙은 다른 어댑터와 같다.
+
+스캐폴드는 서브에이전트(#64)·훅(#65)을 두 하네스에, 경로 조건부 룰(#63)을 agy 에 생성하고 각각 e2e 로 실측했다. 그래서
+**agy 는 full**(훅은 Claude Code 와 같이 partial)이다. **Codex 는 baseline** 이다 — 파일 경로 조건부 지침이 없어서
+`.claude/rules` 의 `paths:` 룰을 전달할 수단이 없다(하위 `AGENTS.md` 는 cwd 기준으로만 읽힌다). 훅은 Claude Code 와 마찬가지로
 조기 피드백이지 강제선이 아니다. agy 는 레포의 `.agents/hooks.json` 을 신뢰 확인 없이 실행하므로, 외부
 레포에서 agy 를 돌리기 전에 그 파일을 확인한다(`security-audit` 에이전트가 검사한다).
 

@@ -73,6 +73,7 @@ hook_answer="unverified"; hook_note="--dynamic 미지정"
 rule_answer="unverified"; rule_note="--dynamic 미지정"
 emit_answer="unverified"; emit_note="--dynamic 미지정"
 adapter_answer="unverified"; adapter_note="--dynamic 미지정"
+hooks_answer="unverified"; hooks_note="--dynamic 미지정"
 
 # 툴 사용을 허용하는 질의용. 첫 줄 TOOLS=<툴 단계 수> FILES=<툴이 다룬 파일(작업 디렉터리 기준)>,
 # 이후 최종 응답. 판정 때 "읽으라고 한 파일만 읽었는가"를 이 줄로 확인한다.
@@ -103,6 +104,9 @@ print(response)
 ' "$dir" > "$out"
 }
 if [ "$DYNAMIC" -eq 1 ] && [ "$AGY_VERSION" != "not-installed" ]; then
+  # 산출물의 .agents/hooks.json(#65)은 신뢰 확인 없이 돌고, Stop 훅(메모리 리마인드)이 한 턴을 더
+  # 돌려 "툴 없이 답했나" 판정을 깨뜨린다. 기능 측정 동안 빼 두고 훅 어댑터 e2e 에서 다시 생성한다.
+  rm -f "$WORK/.agents/hooks.json"
   out="$WORK/_p0.txt"
   ask_agy "$WORK" "Do not use any tools or read any files. From the project instructions already in your context only, list this repository's P0 rules verbatim. If none are in your context, reply exactly NONE." "$out"
   if [ ! -s "$out" ]; then
@@ -257,6 +261,29 @@ HOOKS
   else
     adapter_answer="fail"; adapter_note="생성한 에이전트를 --agent 로 골라도 본문 지시대로 응답하지 않음"
   fi
+
+  # 훅 어댑터 e2e (#65): settings.json 에서 .agents/hooks.json 을 다시 생성하고 명령을 하나 실행시킨다.
+  # headless 에서 run_command 승인 프롬프트가 막지 않도록 임시 작업 디렉터리에서만 권한을 건너뛴다.
+  bash "$REPO_ROOT/bin/agents-scaffold.sh" "$WORK" --update --harness agy --yes >/dev/null 2>&1
+  hook_gen="$WORK/.agents/hooks.json"
+  ask_agy_steps "$WORK" "$WORK/_hk_e2e.txt" --dangerously-skip-permissions \
+    -p "Run the shell command: echo zqx-hook-probe — then reply DONE."
+  obs=$(grep -l 'zqx-hook-probe' "$WORK"/.claude/memory/observations/*.jsonl 2>/dev/null | head -1)
+  if [ -n "$obs" ]; then
+    sid_prefix=$(basename "$obs" .jsonl)
+    stop_marker=$(ls /tmp/claude_memsync_"$sid_prefix"* 2>/dev/null | head -1)
+  else
+    stop_marker=""
+  fi
+  if [ ! -s "$hook_gen" ]; then
+    hooks_answer="fail"; hooks_note="--update --harness 가 hooks.json 을 생성하지 않음"
+  elif [ -n "$obs" ] && grep -q '"tool": "Bash"' "$obs" && [ -n "$stop_marker" ]; then
+    hooks_answer="pass"; hooks_note="생성된 hooks.json → hook-adapter.py → Claude 형식 훅: observe-lite 가 명령을 Bash 로 기록, stop-memory-remind 가 세션 표시를 남김"
+  elif [ -n "$obs" ]; then
+    hooks_answer="partial"; hooks_note="PostToolUse(observe-lite)는 실행됐으나 Stop(stop-memory-remind) 표시 없음"
+  else
+    hooks_answer="fail"; hooks_note="생성된 훅이 실행되지 않음(관찰 로그 없음)"
+  fi
 fi
 
 cat <<JSON
@@ -278,7 +305,8 @@ cat <<JSON
     "lifecycle_hooks": { "verdict": "$hook_answer", "note": "$hook_note" },
     "path_scoped_rules": { "verdict": "$rule_answer", "note": "$rule_note" },
     "rules_adapter": { "verdict": "$emit_answer", "note": "$emit_note" },
-    "subagents_adapter": { "verdict": "$adapter_answer", "note": "$adapter_note" }
+    "subagents_adapter": { "verdict": "$adapter_answer", "note": "$adapter_note" },
+    "hooks_adapter": { "verdict": "$hooks_answer", "note": "$hooks_note" }
   }
 }
 JSON

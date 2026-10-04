@@ -19,3 +19,15 @@ A lightweight version of ECC continuous-learning-v2. No background observer — 
   into `instinct_*.md` memories.
 
 See [../memory/README.md](../memory/README.md) for the instinct format.
+
+## Codex/agy hook adapters (#65)
+
+`hook-adapter.py` generates Codex `.codex/hooks.json` and agy `.agents/hooks.json` from the hooks in `settings.json`
+(`--harness codex|agy|all`), and at run time converts the harness input to Claude format and calls the scripts in this
+directory unchanged. Write hooks in Claude format only.
+
+- Carried over: `PostToolUse` (Bash/Edit/Write → Codex `Bash`/`apply_patch`, agy `run_command`/`write_to_file`, ...) and
+  `Stop`. Codex also gets `SessionStart` and `UserPromptSubmit`.
+- Not carried over: `PreToolUse` (the commit gate lives in `.git/hooks`) and prompt-type hooks.
+- Needs `python3`. The project path is provided as `CLAUDE_PROJECT_DIR`.
+- Codex runs them only after project trust plus hook-definition trust (`/hooks`). agy runs them without a trust prompt.

@@ -79,7 +79,7 @@
         "stack_p0_inline": {
           "verdict": "pass",
           "target": "AGENTS.md body",
-          "evidence": "spike: 인라인된 python 스택 P0 를 응답에 포함. 산출물 AGENTS.md 7,215 B / 32,768 B (codex-cli 0.160.0, 2026-10-04)"
+          "evidence": "spike: 인라인된 python 스택 P0 를 응답에 포함. 산출물 AGENTS.md 7,287 B / 32,768 B (codex-cli 0.160.0, 2026-10-04)"
         },
         "repo_skills": {
           "verdict": "pass",
@@ -99,8 +99,8 @@
         },
         "lifecycle_hooks": {
           "verdict": "partial",
-          "target": ".codex/hooks.json",
-          "evidence": "spike-codex-contract.sh --dynamic(codex-cli 0.160.0, 2026-10-04, #60): 신뢰 프로젝트 + --dangerously-bypass-hook-trust 에서 SessionStart·UserPromptSubmit·Stop 3/3 실행. 훅 정의 신뢰(/hooks 검토) 없이는 0/3, 미신뢰 프로젝트는 우회 플래그로도 0/3. 신뢰에 묶인 조기 피드백이지 강제선이 아니다. 산출물은 아직 이 계층을 생성하지 않는다(어댑터 없음 — 등급은 baseline 유지)"
+          "target": ".codex/hooks.json (generated from .claude/settings.json via .claude/hooks/hook-adapter.py, #65)",
+          "evidence": "spike-codex-contract.sh --dynamic(codex-cli 0.160.0, 2026-10-04): 신뢰 프로젝트 + --dangerously-bypass-hook-trust 에서 SessionStart·UserPromptSubmit·Stop 3/3 실행, 훅 정의 신뢰(/hooks 검토) 없이는 0/3, 미신뢰 프로젝트는 우회 플래그로도 0/3(#60). 입력은 Claude 와 거의 같고(apply_patch 는 패치 텍스트) Stop 의 decision:block 을 받는다. 산출물이 settings.json 에서 생성한 hooks.json 이 어댑터를 거쳐 observe-lite(Bash 기록)·stop-memory-remind(세션 표시)를 실행(hooks_adapter pass, #65). 신뢰에 묶인 조기 피드백이지 강제선이 아니다"
         },
         "oob_gate": {
           "verdict": "pass",
@@ -114,8 +114,8 @@
       "name": "Antigravity",
       "cli_version": "1.2.16",
       "last_measured": "2026-10-04",
-      "tier": "baseline",
-      "trust_model": "none observed: workspace .agents/ (agents, rules, hooks.json) loads without a trust prompt (1.2.16 headless)",
+      "tier": "full",
+      "trust_model": "none observed: workspace .agents/ (agents, rules, hooks.json) loads without a trust prompt (1.2.16 headless) — generated hooks run the repo's .claude/hooks/*",
       "instruction_budget_bytes": null,
       "capabilities": {
         "instructions": {
@@ -146,8 +146,8 @@
         },
         "lifecycle_hooks": {
           "verdict": "partial",
-          "target": ".agents/hooks.json",
-          "evidence": "https://antigravity.google/docs/hooks/ + spike-agy-contract.sh --dynamic(1.2.16 headless, 2026-10-04, #60): PreInvocation·PostInvocation·PreToolUse·Stop 4/4 실행, 신뢰 확인 절차 없음. 툴 이벤트는 matcher+hooks, 나머지는 핸들러 배열 형식(틀리면 로그에만 parse 실패). 조기 피드백이지 강제선이 아니다. 산출물은 아직 이 계층을 생성하지 않는다(어댑터 없음 — 등급은 baseline 유지)"
+          "target": ".agents/hooks.json (generated from .claude/settings.json via .claude/hooks/hook-adapter.py, #65)",
+          "evidence": "https://antigravity.google/docs/hooks/ + spike-agy-contract.sh --dynamic(1.2.16 headless, 2026-10-04): PreInvocation·PostInvocation·PreToolUse·Stop 4/4 실행, 신뢰 확인 절차 없음(#60). 입력은 camelCase(conversationId·toolCall), 훅 cwd 는 .agents/, Stop 은 decision:continue 로 한 턴 더. 산출물이 settings.json 에서 생성한 hooks.json 이 어댑터를 거쳐 observe-lite(Bash 기록)·stop-memory-remind(세션 표시)를 실행(hooks_adapter pass, #65). 조기 피드백이지 강제선이 아니다"
         },
         "oob_gate": {
           "verdict": "pass",

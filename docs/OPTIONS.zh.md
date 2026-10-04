@@ -56,9 +56,9 @@
 | 取值 | 目标 | 行为 |
 |---|---|---|
 | `claude`（默认） | Claude Code | 完整安装 — 含 settings.json 钩子绑定、子代理、斜杠命令、workflows |
-| `codex` | Codex | 安装 `AGENTS.md`、skills 与共享 rules/hooks/memory，把 `.claude/agents` 生成为 `.codex/agents` TOML（#64），并移除 Claude 专用层（settings.json、commands、workflows） |
-| `agy` | Antigravity | 在 `codex` 的共享布局之外，把 `.claude/rules` 生成为 `.agents/rules`（`trigger: glob`，#63），把 `.claude/agents` 生成为 `.agents/agents`（#64） |
-| `all` | 混合团队 | `claude` 的全部内容 + 所有适配器（agy 规则、Codex 与 agy 子代理）。skills 布局与 harness 无关（#61） |
+| `codex` | Codex | 安装 `AGENTS.md`、skills 与共享 rules/hooks/memory，生成 `.codex/agents` TOML（#64）与 `.codex/hooks.json`（#65），并移除 Claude 专用层（commands、workflows） |
+| `agy` | Antigravity | 在 `codex` 的共享布局之外，从 `.claude/` 生成 `.agents/rules`（`trigger: glob`，#63）、`.agents/agents`（#64）与 `.agents/hooks.json`（#65） |
+| `all` | 混合团队 | `claude` 的全部内容 + 所有适配器（agy 规则、Codex 与 agy 子代理和钩子）。skills 布局与 harness 无关（#61） |
 
 **skills 只有一个源（#61）。** 无论使用哪个 harness，skills 只存放在 `.agents/skills/`（Codex、agy 的原生路径）一处，Claude Code 通过符号链接 `.claude/skills -> ../.agents/skills` 读取同一份文件（claude 2.1.289 实测 — 只有 `.agents/skills` 而没有链接时，Claude Code 找不到任何 skill）。两份副本不会再分叉，日后加入其他 harness 也无需重新安装。
 
@@ -96,7 +96,15 @@ Codex（codex-cli 0.160.0，`gpt-6.1-sol`）与 agy（1.2.16）会在不调用�
 
 **子代理适配器（#64）。** 把 `.claude/agents/*.md` 生成为 Codex（`--harness codex|all`）用的 `.codex/agents/<名称>.toml` 与 agy（`--harness agy|all`）用的 `.agents/agents/<名称>.md`。Codex 使用 `name`、`description`、`developer_instructions`（正文原样放入 TOML 字面量字符串 `'''`），正文含 `'''` 时给出警告并跳过。agy 只保留 `name` 与 `description` —— frontmatter 中若有 Claude 的 `tools`、`model`、`memory`，agy 1.2.16 会静默丢弃该代理（实测）。工具与模型继承各 harness 的默认值，正文中 Claude 专用的指示保持原样。`.claude/agents` 是源，因此 codex/agy 模式也会保留它。Codex 只在受信任项目中加载 `.codex/` 层，生成文件本身不会使其生效。更新规则与规则适配器相同（`--update` 重新生成、删除源已不存在的生成文件、保留无标记的用户文件，已有项目用 `--update --harness codex|agy|all` 首次生成）。
 
-已实测 Codex 与 agy 本身支持子代理、钩子和按路径的指令（含上表条件）。脚手架会生成子代理（#64）与 agy 规则（#63），但尚未生成钩子层（#65），因此整体等级为 baseline。与 Claude Code 相同，钩子是早期反馈而非强制线。agy 会在没有信任确认的情况下执行仓库中的 `.agents/hooks.json`，在外部仓库运行 agy 前请先检查该文件（`security-audit` 代理会扫描它）。
+**钩子适配器（#65）。** 钩子以 Claude 格式编写（`.claude/settings.json` 的 `hooks` + `.claude/hooks/*`），由 `.claude/hooks/hook-adapter.py` 生成 Codex（`--harness codex|all`）用的 `.codex/hooks.json` 与 agy（`--harness agy|all`）用的 `.agents/hooks.json`。运行时同一个适配器把 harness 的输入转换为 Claude 格式、调用原脚本，并把应答转换回去（2026-10-04 实测）：
+
+- Codex 的输入与 Claude 几乎相同。shell 为 `Bash`，文件编辑为 `apply_patch`（从补丁文本按文件拆分，以 `Edit` 传入）。Codex 原样接受 Stop 的 `{"decision":"block"}` 并再运行一轮。需要项目信任与钩子定义信任（`/hooks` 审查）才会执行。
+- agy 的输入为 camelCase（`conversationId`、`toolCall`）。`run_command` 转为 `Bash`，`write_to_file` 等转为 `Write`/`Edit`，Stop 的 `block` 转为 agy 的 `continue`。不传命令输出，因此测试结果通知无法判定成败。**无需信任确认即执行**（克隆即会运行仓库的 `.claude/hooks/*` —— `security-audit` 会扫描）。
+- 不迁移：PreToolUse 提交门禁（由 `.git/hooks` 负责）与 prompt 类型钩子（PreCompact）。
+- 适配器需要 `python3`（没有时跳过生成）。`.claude/settings.json` 是钩子的源，codex/agy 模式也会保留。
+- Stop 钩子（记忆提醒）在 headless（`-p`、`exec`）下也会多运行一轮。自动化中不需要时，从 `settings.json` 删除后执行 `--update`。更新规则与其他适配器相同。
+
+脚手架为两个 harness 生成子代理（#64）与钩子（#65），为 agy 生成路径条件规则（#63），并分别做了端到端实测。因此 **agy 为 full**（钩子与 Claude Code 相同为 partial）。**Codex 仍为 baseline** —— 它没有按文件路径的条件指令，`.claude/rules` 的 `paths:` 规则无法传达（子目录 `AGENTS.md` 只按 cwd 加载）。与 Claude Code 相同，钩子是早期反馈而非强制线。agy 会在没有信任确认的情况下执行仓库中的 `.agents/hooks.json`，在外部仓库运行 agy 前请先检查该文件（`security-audit` 代理会扫描它）。
 
 另有两项 Codex 约束影响设计：
 

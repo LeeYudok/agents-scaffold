@@ -32,7 +32,7 @@ authoring skeleton and conventions.
 | :--- | :--- | :--- |
 | `agents/` | subagent definitions (code-reviewer, security-audit, db-migration, sdlc-*, agent-evolve). Codex `.codex/agents` and agy `.agents/agents` are generated from here (#64) | [README](.claude/agents/README.md) |
 | `commands/` | custom slash commands (fix-issue, sdlc-cycle, sonar, knowledge-graph) | [README](.claude/commands/README.md) |
-| `hooks/` | enforced gates — pre-commit, auto-format, observe-lite, memory reminders | [README](.claude/hooks/README.md) |
+| `hooks/` | enforced gates — pre-commit, auto-format, observe-lite, memory reminders. Codex/agy hooks are generated from `settings.json` by `hook-adapter.py` (#65) | [README](.claude/hooks/README.md) |
 | `memory/` | project memory SSOT — MEMORY.md index + type-prefixed files | [README](.claude/memory/README.md) |
 | `rules/` | context-aware rules — `paths:`-scoped conditional loading. agy's `.agents/rules` is generated from here (#63) | [README](.claude/rules/README.md) |
 | `skills/` | situational procedures — review, status, search-first, memory-factcheck, security-precheck, docs-sync, grill-me, handoff, ... In an installed project this is a symlink to the source `.agents/skills/` (#61) | [README](.claude/skills/README.md) |

@@ -56,9 +56,9 @@
 | 値 | 対象 | 動作 |
 |---|---|---|
 | `claude`（デフォルト） | Claude Code | フルインストール — settings.json のフックバインディング・サブエージェント・スラッシュコマンド・workflows を含む |
-| `codex` | Codex | `AGENTS.md`、skills、共有 rules/hooks/memory を導入し、`.claude/agents` を `.codex/agents` TOML として生成（#64）、Claude 専用層（settings.json・commands・workflows）を除去 |
-| `agy` | Antigravity | `codex` の共通レイアウトに加え、`.claude/rules` を `.agents/rules`（`trigger: glob`、#63）、`.claude/agents` を `.agents/agents`（#64）として生成 |
-| `all` | 混在チーム | `claude` の全内容 + すべてのアダプタ（agy ルール、Codex・agy サブエージェント）。skills のレイアウトはハーネスに依存しない（#61） |
+| `codex` | Codex | `AGENTS.md`、skills、共有 rules/hooks/memory を導入し、`.codex/agents` TOML（#64）と `.codex/hooks.json`（#65）を生成、Claude 専用層（commands・workflows）を除去 |
+| `agy` | Antigravity | `codex` の共通レイアウトに加え、`.claude/` から `.agents/rules`（`trigger: glob`、#63）・`.agents/agents`（#64）・`.agents/hooks.json`（#65）を生成 |
+| `all` | 混在チーム | `claude` の全内容 + すべてのアダプタ（agy ルール、Codex・agy のサブエージェントとフック）。skills のレイアウトはハーネスに依存しない（#61） |
 
 **skills の原本は 1 か所です（#61）。** ハーネスに関係なく skills は `.agents/skills/`（Codex・agy のネイティブパス）に 1 回だけ置き、Claude Code はシンボリックリンク `.claude/skills -> ../.agents/skills` 経由で同じファイルを読みます（claude 2.1.289 で実測 — リンクなしで `.agents/skills` だけを置くと Claude Code は skills を見つけられません）。2 つのコピーが食い違うことはなくなり、後から別のハーネスを加えても再インストールは不要です。
 
@@ -96,7 +96,15 @@ Codex（codex-cli 0.160.0、`gpt-6.1-sol`）と agy（1.2.16）は、各モー�
 
 **サブエージェントアダプタ（#64）。** `.claude/agents/*.md` を Codex（`--harness codex|all`）用の `.codex/agents/<名前>.toml` と agy（`--harness agy|all`）用の `.agents/agents/<名前>.md` として生成します。Codex は `name`・`description`・`developer_instructions`（本文を TOML リテラル文字列 `'''` でそのまま格納）で、本文に `'''` があれば警告してスキップします。agy は `name` と `description` だけを残します — frontmatter に Claude の `tools`・`model`・`memory` があると agy 1.2.16 はそのエージェントを黙って除外するためです（実測）。ツールとモデルは各ハーネスの既定値を継承し、本文の Claude 専用の指示はそのまま残ります。`.claude/agents` が原本なので codex/agy モードでも削除しません。Codex の `.codex/` 層は信頼済みプロジェクトでのみ読み込まれるため、生成しただけでは有効になりません。更新規則はルールアダプタと同じです（`--update` で再生成、原本がなくなった生成物は削除、マークのないユーザーファイルは保持、既存プロジェクトは `--update --harness codex|agy|all` で初回生成）。
 
-Codex と agy はサブエージェント、フック、パス別の指示をハーネスとして支持することを実測しました（上表の条件を含む）。スキャフォールドはサブエージェント（#64）と agy ルール（#63）を生成しますが、フックの層はまだ生成しない（#65）ため、全体の等級は baseline です。Claude Code と同じく、フックは早期フィードバックであって強制線ではありません。agy はリポジトリの `.agents/hooks.json` を信頼確認なしで実行するため、外部リポジトリで agy を動かす前にそのファイルを確認してください（`security-audit` エージェントが検査します）。
+**フックアダプタ（#65）。** フックは Claude 形式（`.claude/settings.json` の `hooks` + `.claude/hooks/*`）で書き、`.claude/hooks/hook-adapter.py` が Codex（`--harness codex|all`）用の `.codex/hooks.json` と agy（`--harness agy|all`）用の `.agents/hooks.json` を生成します。実行時も同じアダプタがハーネスの入力を Claude 形式に変換して元のスクリプトを呼び出し、応答をハーネス形式に戻します（2026-10-04 実測）。
+
+- Codex の入力は Claude とほぼ同じです。シェルは `Bash`、ファイル編集は `apply_patch`（パッチテキストからファイルごとに分けて `Edit` として渡す）。Stop の `{"decision":"block"}` をそのまま受け取り、もう 1 ターン回ります。プロジェクトの信頼とフック定義の信頼（`/hooks` での確認）が必要です。
+- agy の入力は camelCase（`conversationId`・`toolCall`）です。`run_command` は `Bash`、`write_to_file` などは `Write`/`Edit` に変換し、Stop の `block` は agy の `continue` に変換します。コマンド出力が渡されないため、テスト結果通知は成否を判定できません。**信頼確認なしで実行されます**（clone するだけでリポジトリの `.claude/hooks/*` が動きます — `security-audit` が検査します）。
+- 移さないもの: PreToolUse のコミットゲート（`.git/hooks` が担当）、prompt タイプのフック（PreCompact）。
+- アダプタには `python3` が必要です（ない場合は生成をスキップ）。`.claude/settings.json` はフックの原本なので codex/agy モードでも残します。
+- Stop フック（メモリリマインド）は headless（`-p`・`exec`）でももう 1 ターン回ります。自動化で不要なら `settings.json` から外して `--update` します。更新規則は他のアダプタと同じです。
+
+スキャフォールドは両ハーネスにサブエージェント（#64）とフック（#65）を、agy にパス条件付きルール（#63）を生成し、それぞれ e2e で実測しました。そのため **agy は full**（フックは Claude Code と同じく partial）です。**Codex は baseline のまま**です — ファイルパス条件付きの指示がないため、`.claude/rules` の `paths:` ルールを届ける手段がありません（サブディレクトリの `AGENTS.md` は cwd 基準でのみ読み込まれる）。Claude Code と同じく、フックは早期フィードバックであって強制線ではありません。agy はリポジトリの `.agents/hooks.json` を信頼確認なしで実行するため、外部リポジトリで agy を動かす前にそのファイルを確認してください（`security-audit` エージェントが検査します）。
 
 Codex 側の制約がもう 2 点、設計に効いてきます。
 
