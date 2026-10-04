@@ -56,16 +56,16 @@
 | 値 | 対象 | 動作 |
 |---|---|---|
 | `claude`（デフォルト） | Claude Code | フルインストール — settings.json のフックバインディング・サブエージェント・スラッシュコマンド・workflows を含む |
-| `codex` | Codex | `AGENTS.md`、skills、共有 rules/hooks/memory を導入し、Claude 専用層を除去 |
-| `agy` | Antigravity | `codex` のレイアウトに加え、`.claude/rules` を agy の `.agents/rules`（`trigger: glob`）として生成（#63） |
-| `all` | 混在チーム | `claude` の全内容 + 生成された agy ルール。skills のレイアウトはハーネスに依存しない（#61） |
+| `codex` | Codex | `AGENTS.md`、skills、共有 rules/hooks/memory を導入し、`.claude/agents` を `.codex/agents` TOML として生成（#64）、Claude 専用層（settings.json・commands・workflows）を除去 |
+| `agy` | Antigravity | `codex` の共通レイアウトに加え、`.claude/rules` を `.agents/rules`（`trigger: glob`、#63）、`.claude/agents` を `.agents/agents`（#64）として生成 |
+| `all` | 混在チーム | `claude` の全内容 + すべてのアダプタ（agy ルール、Codex・agy サブエージェント）。skills のレイアウトはハーネスに依存しない（#61） |
 
 **skills の原本は 1 か所です（#61）。** ハーネスに関係なく skills は `.agents/skills/`（Codex・agy のネイティブパス）に 1 回だけ置き、Claude Code はシンボリックリンク `.claude/skills -> ../.agents/skills` 経由で同じファイルを読みます（claude 2.1.289 で実測 — リンクなしで `.agents/skills` だけを置くと Claude Code は skills を見つけられません）。2 つのコピーが食い違うことはなくなり、後から別のハーネスを加えても再インストールは不要です。
 
 - シンボリックリンクを作れない環境（Windows Git Bash の既定値など）や `AGENTS_SCAFFOLD_NO_SYMLINK=1` の場合、`.claude/skills` はコピーになります。ステージされたコピーが原本と異なると pre-commit ゲートがコミットをブロックします（インデックス基準の比較なので `__pycache__` などの未追跡ファイルは対象外）。リンクを作れるかは環境によって変わりえます（ネットワーク分離 PC のポリシーなど）— [OFFLINE_INSTALL.en.md](OFFLINE_INSTALL.en.md) のステップ 6 を参照。
 - Git for Windows で `core.symlinks=false` のままチェックアウトすると、リンクはパス文字列を含む通常ファイルになります。このとき Claude Code は skills を見つけられず、ゲートが警告を出します — `git config core.symlinks true` の後に再チェックアウトしてください。
 - インストール前から実ディレクトリの `.claude/skills` がある場合は `.agents/skills` へ移してリンクにします。同じパスの内容が `.agents/skills` と異なる場合は `.agents/skills` を原本とし、元のディレクトリを `.claude/skills.pre-ssot-<時刻>/` に残します。
-- ルールとサブエージェントはリンクしません。`.codex/rules` はコマンド実行ポリシー、agy の `.agents/rules` は Claude の `paths:` 条件付きロードを解釈せず、Claude の `.md` と Codex の `.toml` サブエージェントは形式が異なります。
+- ルールとサブエージェントはリンクしません。`.codex/rules` はコマンド実行ポリシー、agy の `.agents/rules` は Claude の `paths:` 条件付きロードを解釈せず、Claude の `.md` と Codex の `.toml` サブエージェントは形式が異なります。代わりにインストールと `--update` 時に各ハーネスの形式で生成します（#63、#64）。
 
 3 つのハーネスはいずれもルートの `AGENTS.md` をネイティブに読むため、`CLAUDE.md`/`GEMINI.md` のポインタも `.gemini/settings.json` のシムも生成しません（#54、#60）。サポート対象は最新版の Claude Code・Codex・Antigravity で、Gemini CLI は対象から外しました。
 
@@ -94,7 +94,9 @@ Codex（codex-cli 0.160.0、`gpt-6.1-sol`）と agy（1.2.16）は、各モー�
 
 **agy ルールアダプタ（#63）。** `--harness agy|all` では `.claude/rules/*.md` を `.agents/rules/*.md` として生成します。`paths:` があれば `trigger: glob` + `globs:`、なければ `trigger: always_on` になります。パターンは agy 1.2.16 の実測どおりに変換します — スラッシュを含む相対パターン（`src/**`）は `**/src/**` に、スラッシュのないパターン（`Dockerfile`・`*.py`）はファイル名に一致するのでそのまま残します。複数のパターンは空白なしのカンマでつなぎます（カンマの後の空白は次のパターンの一部になり、一致しなくなります）。`.claude/rules` が原本で、`--update` 時に再生成し（既存プロジェクトは `--update --harness agy` で初回生成）、原本がなくなった生成物は削除します。生成マークのない同名ファイル（ユーザー所有）には触れません。
 
-Codex と agy はサブエージェント、フック、パス別の指示をハーネスとして支持することを実測しました（上表の条件を含む）が、スキャフォールドがまだサブエージェントとフックの層を生成しない（アダプタは agy ルールのみ）ため、全体の等級は baseline です。Claude Code と同じく、フックは早期フィードバックであって強制線ではありません。agy はリポジトリの `.agents/hooks.json` を信頼確認なしで実行するため、外部リポジトリで agy を動かす前にそのファイルを確認してください（`security-audit` エージェントが検査します）。
+**サブエージェントアダプタ（#64）。** `.claude/agents/*.md` を Codex（`--harness codex|all`）用の `.codex/agents/<名前>.toml` と agy（`--harness agy|all`）用の `.agents/agents/<名前>.md` として生成します。Codex は `name`・`description`・`developer_instructions`（本文を TOML リテラル文字列 `'''` でそのまま格納）で、本文に `'''` があれば警告してスキップします。agy は `name` と `description` だけを残します — frontmatter に Claude の `tools`・`model`・`memory` があると agy 1.2.16 はそのエージェントを黙って除外するためです（実測）。ツールとモデルは各ハーネスの既定値を継承し、本文の Claude 専用の指示はそのまま残ります。`.claude/agents` が原本なので codex/agy モードでも削除しません。Codex の `.codex/` 層は信頼済みプロジェクトでのみ読み込まれるため、生成しただけでは有効になりません。更新規則はルールアダプタと同じです（`--update` で再生成、原本がなくなった生成物は削除、マークのないユーザーファイルは保持、既存プロジェクトは `--update --harness codex|agy|all` で初回生成）。
+
+Codex と agy はサブエージェント、フック、パス別の指示をハーネスとして支持することを実測しました（上表の条件を含む）。スキャフォールドはサブエージェント（#64）と agy ルール（#63）を生成しますが、フックの層はまだ生成しない（#65）ため、全体の等級は baseline です。Claude Code と同じく、フックは早期フィードバックであって強制線ではありません。agy はリポジトリの `.agents/hooks.json` を信頼確認なしで実行するため、外部リポジトリで agy を動かす前にそのファイルを確認してください（`security-audit` エージェントが検査します）。
 
 Codex 側の制約がもう 2 点、設計に効いてきます。
 

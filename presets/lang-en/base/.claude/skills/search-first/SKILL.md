@@ -1,6 +1,6 @@
 ---
 name: search-first
-description: A workflow that searches for an existing solution (this repo → internal mirrors → package registries → MCP/skills → GitHub) before writing new code. Triggers right before adding a new feature/utility/dependency, or the moment a "add feature X" request tempts you to jump straight to code. (Origin: the search-first skill from [affaan-m/ECC](https://github.com/affaan-m/ECC), MIT — ported and adapted)
+description: 'A workflow that searches for an existing solution (this repo → internal mirrors → package registries → MCP/skills → GitHub) before writing new code. Triggers right before adding a new feature/utility/dependency, or the moment a "add feature X" request tempts you to jump straight to code. (Origin: the search-first skill from [affaan-m/ECC](https://github.com/affaan-m/ECC), MIT — ported and adapted)'
 allowed-tools: Bash, Read, Grep, Glob, WebSearch, WebFetch
 ---
 

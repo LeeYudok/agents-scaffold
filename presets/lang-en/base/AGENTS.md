@@ -30,7 +30,7 @@ authoring skeleton and conventions.
 
 | Directory | Role | Details |
 | :--- | :--- | :--- |
-| `agents/` | subagent definitions (code-reviewer, security-audit, db-migration, sdlc-*, agent-evolve) | [README](.claude/agents/README.md) |
+| `agents/` | subagent definitions (code-reviewer, security-audit, db-migration, sdlc-*, agent-evolve). Codex `.codex/agents` and agy `.agents/agents` are generated from here (#64) | [README](.claude/agents/README.md) |
 | `commands/` | custom slash commands (fix-issue, sdlc-cycle, sonar, knowledge-graph) | [README](.claude/commands/README.md) |
 | `hooks/` | enforced gates — pre-commit, auto-format, observe-lite, memory reminders | [README](.claude/hooks/README.md) |
 | `memory/` | project memory SSOT — MEMORY.md index + type-prefixed files | [README](.claude/memory/README.md) |

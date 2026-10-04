@@ -83,8 +83,8 @@ what stops it, so it holds whichever AI tool you use, and it holds when a human 
 <table>
   <tr><th>Harness</th><th>Measured</th><th>baseline</th><th>full</th></tr>
   <tr><td>Claude Code</td><td>2.1.289</td><td>holds</td><td>rules, skills, subagents, hooks</td></tr>
-  <tr><td>Codex</td><td>codex-cli 0.160.0 / GPT-6.1 Sol</td><td>holds</td><td>skills discovered; subagents, hooks measured (not emitted yet)</td></tr>
-  <tr><td>Antigravity</td><td>agy 1.2.16</td><td>holds</td><td>skills discovered; glob rules emitted; subagents, hooks measured (not emitted yet)</td></tr>
+  <tr><td>Codex</td><td>codex-cli 0.160.0 / GPT-6.1 Sol</td><td>holds</td><td>skills discovered; subagents emitted; hooks measured (not emitted yet)</td></tr>
+  <tr><td>Antigravity</td><td>agy 1.2.16</td><td>holds</td><td>skills discovered; glob rules, subagents emitted; hooks measured (not emitted yet)</td></tr>
 </table>
 <p><strong>baseline</strong> means the <code>AGENTS.md</code> policy body plus a real
 <code>.git/hooks/pre-commit</code> gate and CI — it holds on every harness, and it holds when a

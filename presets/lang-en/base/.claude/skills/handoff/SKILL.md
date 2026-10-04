@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: End a session and hand it off to the next one — write resumable state to HANDOFF.md, and if collaboration infrastructure (GitHub, GitLab, Forgejo, Jira, Plane, Slack) exists, create an issue with the same content so the handoff is a single URL; otherwise the file is the deliverable. At a work-issue boundary, leave a single comment on the next work issue instead of a dedicated handoff issue. The receiving side checks the recorded claims against reality before continuing, then reports results and closes when done. Use when context hits 40-50%, when told "let's stop here / save state / pick up / resume" (Korean: "여기서 끊자 / 상태 남겨 / 이어받아 / 재개"), or when a handoff URL or file path is pasted in.
+description: "End a session and hand it off to the next one — write resumable state to HANDOFF.md, and if collaboration infrastructure (GitHub, GitLab, Forgejo, Jira, Plane, Slack) exists, create an issue with the same content so the handoff is a single URL; otherwise the file is the deliverable. At a work-issue boundary, leave a single comment on the next work issue instead of a dedicated handoff issue. The receiving side checks the recorded claims against reality before continuing, then reports results and closes when done. Use when context hits 40-50%, when told \"let's stop here / save state / pick up / resume\" (Korean: \"여기서 끊자 / 상태 남겨 / 이어받아 / 재개\"), or when a handoff URL or file path is pasted in."
 ---
 
 # Session handoff

@@ -1,6 +1,6 @@
 ---
 name: search-first
-description: 코드를 새로 짜기 전에 기존 솔루션(레포 내부 → 사내 미러 → 패키지 레지스트리 → MCP/스킬 → GitHub)을 먼저 검색하는 워크플로. 새 기능/유틸/의존성 추가 직전, "X 기능 넣어줘" 요청에 코드부터 쓰려는 순간 발동. (원본: [affaan-m/ECC](https://github.com/affaan-m/ECC) 의 search-first 스킬, MIT — 이식·번안)
+description: '코드를 새로 짜기 전에 기존 솔루션(레포 내부 → 사내 미러 → 패키지 레지스트리 → MCP/스킬 → GitHub)을 먼저 검색하는 워크플로. 새 기능/유틸/의존성 추가 직전, "X 기능 넣어줘" 요청에 코드부터 쓰려는 순간 발동. (원본: [affaan-m/ECC](https://github.com/affaan-m/ECC) 의 search-first 스킬, MIT — 이식·번안)'
 allowed-tools: Bash, Read, Grep, Glob, WebSearch, WebFetch
 ---
 
