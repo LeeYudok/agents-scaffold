@@ -800,6 +800,91 @@ JSP
   [ ! -e "$t/.agents/skills" ]
 }
 
+@test "copy-layout gate lists the differing files and never suggests directory-wide staging (#61)" {
+  t="$BATS_TEST_TMPDIR/gatemsg"
+  mkdir -p "$t"
+  git -C "$t" init -q
+  run env AGENTS_SCAFFOLD_NO_SYMLINK=1 bash "$SCRIPT" "$t" --forge github --name gatemsg-app --yes
+  [ "$status" -eq 0 ]
+  cd "$t"
+  git add -- .agents/skills .claude/skills
+  echo 'drift' >> .claude/skills/handoff/SKILL.md
+  git add -- .claude/skills/handoff/SKILL.md
+  run bash .git/hooks/pre-commit
+  [ "$status" -eq 2 ]
+  [[ "$output" == *"  handoff/SKILL.md"* ]]
+  [[ "$output" != *"git add .agents/skills .claude/skills"* ]]
+}
+
+@test "copy-layout gate blocks a staged deletion of either side, allows switching to the symlink (#61)" {
+  t="$BATS_TEST_TMPDIR/gatedel"
+  mkdir -p "$t"
+  git -C "$t" init -q
+  run env AGENTS_SCAFFOLD_NO_SYMLINK=1 bash "$SCRIPT" "$t" --forge github --name gatedel-app --yes
+  [ "$status" -eq 0 ]
+  cd "$t"
+  git add -- .agents/skills .claude/skills
+  git -c user.name=t -c user.email=t@t commit -q --no-verify -m init
+  # deleting the copy alone
+  git rm -r -q -- .claude/skills
+  run bash .git/hooks/pre-commit
+  [ "$status" -eq 2 ]
+  git reset -q --hard
+  # deleting the source alone
+  git rm -r -q -- .agents/skills
+  run bash .git/hooks/pre-commit
+  [ "$status" -eq 2 ]
+  git reset -q --hard
+  # replacing the copy with the symlink is the link layout, not drift
+  git rm -r -q --cached -- .claude/skills
+  rm -r .claude/skills
+  ln -s ../.agents/skills .claude/skills
+  git add -- .claude/skills
+  run bash .git/hooks/pre-commit
+  [ "$status" -eq 0 ]
+}
+
+@test "copy-layout gate ignores repos that never had .agents/skills (#61)" {
+  t="$BATS_TEST_TMPDIR/gatenoagents"
+  mkdir -p "$t"
+  git -C "$t" init -q
+  run bash "$SCRIPT" "$t" --forge github --name noagents-app --yes
+  [ "$status" -eq 0 ]
+  cd "$t"
+  # a Claude-only layout: real .claude/skills, no .agents/
+  rm .claude/skills
+  cp -R .agents/skills .claude/skills
+  rm -r .agents
+  git add -- .claude/skills
+  run bash .git/hooks/pre-commit
+  [ "$status" -eq 0 ]
+}
+
+@test "AGENTS_SCAFFOLD_NO_SYMLINK=1 turns an existing symlink into a copy on reinstall and --update (#61)" {
+  t="$BATS_TEST_TMPDIR/tocopy"
+  mkdir -p "$t"
+  git -C "$t" init -q
+  run bash "$SCRIPT" "$t" --forge github --name tocopy-app --yes
+  [ "$status" -eq 0 ]
+  [ -L "$t/.claude/skills" ]
+  run env AGENTS_SCAFFOLD_NO_SYMLINK=1 bash "$SCRIPT" "$t" --forge github --name tocopy-app --yes
+  [ "$status" -eq 0 ]
+  [ -d "$t/.claude/skills" ]
+  [ ! -L "$t/.claude/skills" ]
+  diff -rq "$t/.agents/skills" "$t/.claude/skills"
+
+  t2="$BATS_TEST_TMPDIR/tocopy-update"
+  mkdir -p "$t2"
+  git -C "$t2" init -q
+  run bash "$SCRIPT" "$t2" --forge github --name tocopy2-app --yes
+  [ "$status" -eq 0 ]
+  run env AGENTS_SCAFFOLD_NO_SYMLINK=1 bash "$SCRIPT" "$t2" --update --yes
+  [ "$status" -eq 0 ]
+  [ -d "$t2/.claude/skills" ]
+  [ ! -L "$t2/.claude/skills" ]
+  diff -rq "$t2/.agents/skills" "$t2/.claude/skills"
+}
+
 @test "gate warns when .claude/skills is a plain file from a core.symlinks=false checkout (#61)" {
   t="$BATS_TEST_TMPDIR/plainfile"
   mkdir -p "$t"

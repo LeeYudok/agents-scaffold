@@ -96,8 +96,9 @@ PC 마다 다르다. 그래서 링크를 만들 수 없으면 설치 스크립�
 
 - 링크 가능 PC: 개발자 모드를 켜고 `git config --global core.symlinks true`, Git Bash 에서
   `export MSYS=winsymlinks:nativestrict` 후 설치·clone 한다.
-- 링크 불가 PC: 사본으로 운영한다. 스킬은 `.agents/skills` 에서만 고치고
-  `rm -rf .claude/skills && cp -R .agents/skills .claude/skills` 로 사본을 다시 떠 둘 다 스테이징한다.
+- 링크 불가 PC: 사본으로 운영한다. 스킬은 `.agents/skills` 에서만 고치고 같은 파일을 `.claude/skills` 의
+  같은 경로에 복사한 뒤, 두 경로를 파일 단위로 스테이징한다
+  (`git add -- .agents/skills/<경로> .claude/skills/<경로>` — 디렉터리째 `git add` 는 다른 작업까지 흡수한다).
 - 링크 가능 PC 와 불가 PC 가 같은 레포를 쓰면 처음부터 `AGENTS_SCAFFOLD_NO_SYMLINK=1` 로 설치해 사본
   모드로 통일한다. 링크로 커밋된 레포를 링크 불가 PC 에서 clone 하면 `.claude/skills` 가 경로 문자열이 든
   일반 파일이 되어 Claude Code 가 스킬을 찾지 못한다(게이트가 경고).
@@ -119,7 +120,7 @@ bash agents-scaffold/bin/agents-scaffold.sh --update /c/work/myproj
 | `Git Bash not found` | Git for Windows 미설치 또는 비표준 경로 → `AGENTS_SCAFFOLD_BASH` 지정 |
 | 훅이 조용히 아무것도 안 함 | `python3` 가 Store 스텁 → 5단계 |
 | 게이트 경고 `.claude/skills is a plain file` | 링크로 커밋된 레포를 링크 불가 PC 에서 clone → 6단계(사본 모드로 통일) |
-| 게이트 차단 `staged .claude/skills (copy) differs` | 사본만 고쳤거나 한쪽만 스테이징 → 6단계의 사본 재생성 후 둘 다 스테이징 |
+| 게이트 차단 `staged .claude/skills (copy) differs` | 사본만 고쳤거나 한쪽만 스테이징·삭제 → 메시지에 나열된 파일을 6단계대로 맞춘 뒤 파일 단위로 스테이징 |
 | Claude Code 가 Git Bash 를 못 찾음 | 비표준 경로면 환경변수 `CLAUDE_CODE_GIT_BASH_PATH` 에 `bash.exe` 전체 경로 지정 |
 
 Claude Code 자체의 폐쇄망 설치는 이 문서 범위 밖이다.

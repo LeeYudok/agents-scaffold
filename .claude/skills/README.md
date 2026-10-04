@@ -27,4 +27,5 @@ superpowers `brainstorming`·Ouroboros 와 작업마다 택일하며, 비교는 
 설치된 프로젝트에서 스킬 원본은 `.agents/skills/`(Codex·agy 네이티브 경로)이고, `.claude/skills` 는
 그 디렉터리를 가리키는 심볼릭 링크다(#61) — 어느 경로로 고쳐도 같은 파일이다. 링크를 만들 수 없는
 환경(Windows Git Bash 기본값 등)에서는 `.claude/skills` 가 사본이므로 `.agents/skills` 만 고치고
-사본을 다시 떠 둘 다 스테이징한다. 스테이징된 사본이 원본과 다르면 pre-commit 게이트가 차단한다.
+같은 파일을 사본에도 복사해 두 경로를 파일 단위로 스테이징한다(`git add -- .agents/skills/<경로> .claude/skills/<경로>`).
+스테이징된 사본이 원본과 다르면 pre-commit 게이트가 다른 파일을 나열하며 차단한다.

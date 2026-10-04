@@ -244,6 +244,10 @@ skills_to_ssot() {
   if [ -L "$cdir" ]; then
     if ! is_ssot_link; then
       echo "Warning: .claude/skills links to $(readlink "$cdir"), not $SKILLS_LINK_TARGET — left untouched." >&2
+    elif [ "${AGENTS_SCAFFOLD_NO_SYMLINK:-0}" = "1" ] && [ -d "$adir" ]; then
+      # 링크를 쓸 수 없는 환경으로 옮기려는 재설치 — 링크만 지우고 사본으로 바꾼다
+      rm -f "$cdir"
+      link_claude_skills
     fi
     return 0
   fi
@@ -294,6 +298,10 @@ skills_ssot_for_update() {
   if [ -L "$cdir" ]; then
     if is_ssot_link; then
       SKILLS_SSOT=1
+      # 사본 모드 요청이면 링크만 지운다 — 갱신이 끝난 뒤 사후 단계가 원본에서 사본을 뜬다
+      if [ "${AGENTS_SCAFFOLD_NO_SYMLINK:-0}" = "1" ]; then
+        rm -f "$cdir"
+      fi
     else
       echo "Note: .claude/skills links to $(readlink "$cdir"), not $SKILLS_LINK_TARGET — skills left as they are (#61)." >&2
     fi
