@@ -56,9 +56,16 @@
 | 取值 | 目标 | 行为 |
 |---|---|---|
 | `claude`（默认） | Claude Code | 完整安装 — 含 settings.json 钩子绑定、子代理、斜杠命令、workflows |
-| `codex` | Codex | 安装 `AGENTS.md`、原生 `.agents/skills` 与共享 rules/hooks/memory，并移除 Claude 专用层 |
+| `codex` | Codex | 安装 `AGENTS.md`、skills 与共享 rules/hooks/memory，并移除 Claude 专用层 |
 | `agy` | Antigravity | 与 `codex` 相同的布局 — agy 同样原生读取 `AGENTS.md` 与 `.agents/skills` |
-| `all` | 混合团队 | 同时安装 `.claude/skills`（Claude）与 `.agents/skills`（Codex、agy） |
+| `all` | 混合团队 | 与 `claude` 相同（为兼容而保留）— skills 布局已与 harness 无关（#61） |
+
+**skills 只有一个源（#61）。** 无论使用哪个 harness，skills 只存放在 `.agents/skills/`（Codex、agy 的原生路径）一处，Claude Code 通过符号链接 `.claude/skills -> ../.agents/skills` 读取同一份文件（claude 2.1.289 实测 — 只有 `.agents/skills` 而没有链接时，Claude Code 找不到任何 skill）。两份副本不会再分叉，日后加入其他 harness 也无需重新安装。
+
+- 无法创建符号链接的环境（如 Windows Git Bash 默认设置），或设置了 `AGENTS_SCAFFOLD_NO_SYMLINK=1` 时，`.claude/skills` 为副本。已暂存的副本与源不一致时，pre-commit 门禁会拦截提交（基于索引比较，`__pycache__` 等未跟踪文件不计入）。
+- Git for Windows 在 `core.symlinks=false` 下检出时，链接会变成内含路径字符串的普通文件。此时 Claude Code 找不到 skills，门禁会给出警告 — 执行 `git config core.symlinks true` 后重新检出。
+- 安装前已存在的真实目录 `.claude/skills` 会被移入 `.agents/skills` 并改为链接。若同一路径的内容与 `.agents/skills` 不同，则以 `.agents/skills` 为源，旧目录保留为 `.claude/skills.pre-ssot-<时间戳>/`。
+- rules 与子代理不做链接：`.codex/rules` 是命令执行策略，agy 的 `.agents/rules` 不理解 Claude 的 `paths:` 条件加载，Claude 的 `.md` 与 Codex 的 `.toml` 子代理格式也不同。
 
 三个 harness 都原生读取根目录的 `AGENTS.md`，因此不生成 `CLAUDE.md`/`GEMINI.md` 指针文件，也不生成 `.gemini/settings.json` 垫片（#54、#60）。支持目标为最新版 Claude Code、Codex 与 Antigravity；Gemini CLI 不再是支持目标。
 
@@ -85,7 +92,7 @@ Codex（codex-cli 0.160.0，`gpt-6.1-sol`）与 agy（1.2.16）会在不调用�
 
 支持状态的单一真实来源是 [`docs/harness-matrix.json`](harness-matrix.json)。本表会与该 manifest 对照，并由 CI 中的 `scripts/check-harness-matrix.py` 检查 — 若某个 `full` 等级超过 90 天未重新实测，或某项判定缺少证据，**构建将失败**。重新实测请运行 `scripts/spike-codex-contract.sh --dynamic` 与 `scripts/spike-agy-contract.sh --dynamic`。
 
-`--harness codex` 与 `--harness agy` 会把仓库 skills 安装到两者共用的原生路径 `.agents/skills`；`--harness all` 同时保留 Claude 使用的 `.claude/skills` 与 Codex、agy 使用的 `.agents/skills`。两者的子代理、路径条件规则和 lifecycle 钩子均尚未验证，因此整体等级为 baseline。
+Codex 与 agy 的子代理、路径条件规则和 lifecycle 钩子均尚未验证，因此整体等级为 baseline。
 
 另有两项 Codex 约束影响设计：
 
@@ -149,6 +156,7 @@ curl -fsSL https://raw.githubusercontent.com/leeyudok/agents-scaffold/main/bin/a
 
 将最新的基础文件（`.claude/`、`AGENTS.md`）应用到已完成引导的项目。
 旧版本生成的 `.gemini/settings.json` 不会被改动（保留也无害）。
+仅当 `.agents/skills` 不存在或内容相同时，才会把真实目录 `.claude/skills` 移入源 `.agents/skills` 并改为链接（#61）。两者都存在且内容不同时不做迁移，并提示手动合并。迁移后，基础 skills 会在 `.agents/skills` 一侧更新。
 
 ```bash
 agents-scaffold/bin/agents-scaffold.sh --update /path/to/existing-repo

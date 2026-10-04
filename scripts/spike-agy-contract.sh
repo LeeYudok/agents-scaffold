@@ -86,6 +86,9 @@ if [ "$DYNAMIC" -eq 1 ] && [ "$AGY_VERSION" != "not-installed" ]; then
   fi
 
   # 스킬 발견은 통제 실험으로 잰다 — 레포에만 있는 유니크 이름 2개를 서로 다른 경로에 심는다.
+  # #61: 산출물의 .claude/skills 는 .agents/skills 링크라 그대로 심으면 두 프로브가 같은 곳에 떨어진다.
+  # 대조군이 성립하도록 링크를 실디렉터리로 바꾸고 .claude 경로에만 프로브를 둔다.
+  rm -rf "$WORK/.claude/skills"   # 링크면 링크만, 사본 모드면 사본 디렉터리를 지운다
   mkdir -p "$WORK/.claude/skills/zqx-claudepath" "$WORK/.agents/skills/zqx-agentspath"
   printf -- '---\nname: zqx-claudepath\ndescription: probe skill under .claude/skills\n---\n\nprobe A\n' \
     > "$WORK/.claude/skills/zqx-claudepath/SKILL.md"

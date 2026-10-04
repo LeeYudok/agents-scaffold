@@ -61,9 +61,29 @@ just costs more. None of them fire automatically, even with all three installed;
 | Value | Target | What it does |
 |---|---|---|
 | `claude` (default) | Claude Code | Full install — settings.json hook bindings, subagents, slash commands, workflows |
-| `codex` | Codex | Installs `AGENTS.md`, native `.agents/skills`, and shared rules/hooks/memory; drops Claude-only layers |
+| `codex` | Codex | Installs `AGENTS.md`, skills, and shared rules/hooks/memory; drops Claude-only layers |
 | `agy` | Antigravity | Same layout as `codex` — agy also reads `AGENTS.md` and `.agents/skills` natively |
-| `all` | Mixed teams | Installs both `.claude/skills` (Claude) and `.agents/skills` (Codex, agy) |
+| `all` | Mixed teams | Same as `claude` (kept for compatibility) — the skill layout no longer depends on the harness (#61) |
+
+**Skills have a single source (#61).** Whatever the harness, skills live once in `.agents/skills/`
+(the Codex/agy native path) and Claude Code reads the same files through the symlink
+`.claude/skills -> ../.agents/skills` (measured on claude 2.1.289 — with `.agents/skills` alone and no
+link, Claude Code finds no skills). Two copies can no longer drift apart, and adding another harness
+later needs no reinstall.
+
+- Where a symlink cannot be created (e.g. Windows Git Bash defaults), or with
+  `AGENTS_SCAFFOLD_NO_SYMLINK=1`, `.claude/skills` is a copy. The pre-commit gate blocks a commit whose
+  staged copy differs from the staged source (an index comparison, so untracked files such as
+  `__pycache__` do not count).
+- A Git for Windows checkout with `core.symlinks=false` turns the link into a plain file holding the
+  path. Claude Code then finds no skills and the gate warns — run `git config core.symlinks true` and
+  check it out again.
+- A real `.claude/skills` that existed before install is moved into `.agents/skills` and linked. If a
+  path's content differs from `.agents/skills`, `.agents/skills` stays the source and the old directory
+  is kept as `.claude/skills.pre-ssot-<timestamp>/`.
+- Rules and subagents are not linked: `.codex/rules` is a command-execution policy, agy's
+  `.agents/rules` does not understand Claude's `paths:` scoping, and Claude `.md` and Codex `.toml`
+  subagents use different formats.
 
 All three harnesses read the root `AGENTS.md` natively, so no `CLAUDE.md`/`GEMINI.md` pointer or
 `.gemini/settings.json` shim is emitted (#54, #60). Supported targets are the latest Claude Code,
@@ -99,10 +119,8 @@ This table is checked against that manifest by `scripts/check-harness-matrix.py`
 tier has gone 90 days without re-measurement, or a verdict carries no evidence, **the build fails**.
 Re-measure with `scripts/spike-codex-contract.sh --dynamic` and `scripts/spike-agy-contract.sh --dynamic`.
 
-`--harness codex` and `--harness agy` install repository skills in `.agents/skills`, the native
-path both harnesses share. `--harness all` keeps `.claude/skills` for Claude and also emits
-`.agents/skills` for Codex and agy. Subagents, path-scoped rules, and lifecycle hooks remain
-unverified on both, so their overall tier is baseline.
+Subagents, path-scoped rules, and lifecycle hooks remain unverified on Codex and agy, so their
+overall tier is baseline.
 
 Two further Codex constraints shape the design:
 
@@ -169,6 +187,9 @@ uses it as the template source. Pin a branch/tag with `AGENTS_SCAFFOLD_REF`
 
 Applies the latest base files (`.claude/`, `AGENTS.md`) to an already-bootstrapped project.
 A `.gemini/settings.json` left by an earlier version is not touched (harmless if it stays).
+A real `.claude/skills` is moved into the source `.agents/skills` and linked only when `.agents/skills`
+does not exist or has the same content (#61). If both exist and differ, nothing is moved and a manual
+merge is suggested. Once migrated, base skills are refreshed on the `.agents/skills` side.
 
 ```bash
 agents-scaffold/bin/agents-scaffold.sh --update /path/to/existing-repo

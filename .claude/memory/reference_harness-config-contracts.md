@@ -50,5 +50,6 @@ AGENTS.md 로드 항목만 2026-09-21 재측정: `claude 2.1.278` / `codex-cli 0
 ## 실측 요령 (2026-10-04 시행착오)
 - 레포 `.claude/settings.json` deny 에 `Bash(rm -rf *)` 가 있어, 스크래치 정리용 `rm -rf` 가 섞인 Bash 명령은 **통째로 자동 거부**된다(사용자 거절과 구분 안 됨). 실측 디렉터리는 `mktemp -d` 로 매번 새로 만든다
 - CLI 가 셸 함수·alias 로 래핑된 환경에서 `timeout command <cli>` 처럼 builtin 을 넘기면 실행 실패(exit 127)한다. `timeout` 에는 바이너리 절대경로(`command -v` 가 아니라 `which -a` 로 확인)를 준다. bash 스크립트 안에서는 대화형 셸 함수가 없으므로 PATH 의 바이너리가 잡힌다
+- 스캐폴드 산출물(`.claude/settings.json` 의 Stop 훅 `stop-memory-remind.sh`)에서 `claude -p` 로 실측하면 훅이 한 턴을 더 돌려 `--output-format json` 의 `result` 가 리마인드 응답으로 덮인다. `--output-format stream-json --verbose` 로 첫 assistant 텍스트를 본다(2026-10-04, #61)
 
 관련: [[project_agents-scaffold-multiagent-review]]

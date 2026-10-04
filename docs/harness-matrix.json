@@ -36,8 +36,8 @@
         },
         "repo_skills": {
           "verdict": "pass",
-          "target": ".claude/skills/<name>/SKILL.md",
-          "evidence": "https://code.claude.com/docs/en/skills.md"
+          "target": ".claude/skills/<name>/SKILL.md (symlink -> ../.agents/skills, #61)",
+          "evidence": "https://code.claude.com/docs/en/skills.md + 실측 2.1.289(2026-10-04, #61): .claude/skills -> ../.agents/skills 링크 뒤의 프로브 스킬을 툴 차단 질의에서 등록 스킬로 응답, 링크 없이 .agents/skills 만 둔 대조군은 NONE"
         },
         "subagents": {
           "verdict": "pass",
@@ -79,7 +79,7 @@
         "stack_p0_inline": {
           "verdict": "pass",
           "target": "AGENTS.md body",
-          "evidence": "spike: 인라인된 python 스택 P0 를 응답에 포함. 산출물 AGENTS.md 7,154 B / 32,768 B (codex-cli 0.160.0, 2026-10-04)"
+          "evidence": "spike: 인라인된 python 스택 P0 를 응답에 포함. 산출물 AGENTS.md 7,163 B / 32,768 B (codex-cli 0.160.0, 2026-10-04)"
         },
         "repo_skills": {
           "verdict": "pass",

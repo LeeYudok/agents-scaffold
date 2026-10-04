@@ -184,6 +184,9 @@ EOF
   [ ! -d "$copy/bin" ]
   [ ! -d "$copy/presets" ]
   [ ! -d "$copy/docs/superpowers" ]
+  # #61: in-place install also moves the template's skills to the .agents/skills source
+  [ -L "$copy/.claude/skills" ]
+  [ -f "$copy/.agents/skills/review/SKILL.md" ]
 
   # 원본은 그대로 존재해야 함
   [ -d "$REPO_ROOT/bin" ]
@@ -584,8 +587,9 @@ JSP
   [ ! -e "$t/.claude/settings.json" ]
   [ ! -d "$t/.claude/agents" ]
   [ ! -d "$t/.claude/commands" ]
-  # canonical cross-harness skill sources remain available; Codex registers the projection above
-  [ -f "$t/.claude/skills/review/SKILL.md" ]
+  # #61: .claude/skills is a symlink to the single source .agents/skills — the user-owned skill wins
+  [ -L "$t/.claude/skills" ]
+  grep -q 'user-owned codex skill' "$t/.claude/skills/status/SKILL.md"
   [ ! -d "$t/.claude/workflows" ]
   [ ! -e "$t/CLAUDE.md" ]
   [ ! -e "$t/GEMINI.md" ]
@@ -617,6 +621,197 @@ JSP
   [ ! -e "$t/.gemini" ]
   [ ! -e "$t/GEMINI.md" ]
   [ -x "$t/.git/hooks/pre-commit" ]
+}
+
+@test "skills live once in .agents/skills; .claude/skills is a symlink to it (#61)" {
+  t="$BATS_TEST_TMPDIR/ssot"
+  mkdir -p "$t"
+  git -C "$t" init -q
+  run bash "$SCRIPT" "$t" --forge github --name ssot-app --yes
+  [ "$status" -eq 0 ]
+  [ -L "$t/.claude/skills" ]
+  [ "$(readlink "$t/.claude/skills")" = "../.agents/skills" ]
+  [ -d "$t/.agents/skills" ]
+  [ ! -L "$t/.agents/skills" ]
+  [ -f "$t/.agents/skills/handoff/SKILL.md" ]
+  [ -f "$t/.claude/skills/handoff/SKILL.md" ]
+  # placeholders are substituted in the source (bats ignores a bare `! cmd`, so assert on status)
+  run grep -rl '{{PROJECT_NAME}}' "$t/.agents/skills"
+  [ "$status" -eq 1 ]
+  # the gate accepts the symlink layout
+  cd "$t"
+  run bash .git/hooks/pre-commit
+  [ "$status" -eq 0 ]
+  # re-running the installer keeps the link, makes no backup, and substitutes a base skill
+  # it re-adds through the link (find does not follow the link on its own)
+  rm "$t/.agents/skills/review/SKILL.md"
+  run bash "$SCRIPT" "$t" --forge github --name ssot-app --yes
+  [ "$status" -eq 0 ]
+  [ -L "$t/.claude/skills" ]
+  [ -z "$(ls -d "$t"/.claude/skills.pre-ssot-* 2>/dev/null)" ]
+  [ -f "$t/.agents/skills/review/SKILL.md" ]
+  run grep -l '{{PROJECT_NAME}}' "$t/.agents/skills/review/SKILL.md"
+  [ "$status" -eq 1 ]
+}
+
+@test "AGENTS_SCAFFOLD_NO_SYMLINK=1 falls back to a copy; gate blocks a drifted copy (#61)" {
+  t="$BATS_TEST_TMPDIR/copymode"
+  mkdir -p "$t"
+  git -C "$t" init -q
+  run env AGENTS_SCAFFOLD_NO_SYMLINK=1 bash "$SCRIPT" "$t" --forge github --name copy-app --yes
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"symlink unavailable"* ]]
+  [ -d "$t/.claude/skills" ]
+  [ ! -L "$t/.claude/skills" ]
+  diff -rq "$t/.agents/skills" "$t/.claude/skills"
+  cd "$t"
+  git add .agents/skills .claude/skills
+  run bash .git/hooks/pre-commit
+  [ "$status" -eq 0 ]
+  # untracked caches in the copy do not block — the gate compares the index, not the working tree
+  mkdir -p .claude/skills/review/__pycache__
+  echo 'x' > .claude/skills/review/__pycache__/m.pyc
+  run bash .git/hooks/pre-commit
+  [ "$status" -eq 0 ]
+  # a staged drift in the copy blocks
+  echo 'drift' >> .claude/skills/handoff/SKILL.md
+  git add .claude/skills/handoff/SKILL.md
+  run bash .git/hooks/pre-commit
+  [ "$status" -eq 2 ]
+  [[ "$output" == *"differs from its source .agents/skills"* ]]
+}
+
+@test "pre-existing .claude/skills: unique skills migrate, a conflicting copy is backed up (#61)" {
+  t="$BATS_TEST_TMPDIR/premig"
+  mkdir -p "$t/.claude/skills/my-skill" "$t/.claude/skills/status" "$t/.agents/skills/status"
+  git -C "$t" init -q
+  echo 'mine' > "$t/.claude/skills/my-skill/SKILL.md"
+  echo 'claude status' > "$t/.claude/skills/status/SKILL.md"
+  echo 'agents status' > "$t/.agents/skills/status/SKILL.md"
+  run bash "$SCRIPT" "$t" --forge github --name premig-app --yes
+  [ "$status" -eq 0 ]
+  [ -L "$t/.claude/skills" ]
+  grep -q 'mine' "$t/.agents/skills/my-skill/SKILL.md"
+  grep -q 'agents status' "$t/.agents/skills/status/SKILL.md"
+  backup="$(ls -d "$t"/.claude/skills.pre-ssot-*)"
+  grep -q 'claude status' "$backup/status/SKILL.md"
+}
+
+@test "--update migrates a pre-#61 real .claude/skills to .agents/skills + symlink (#61)" {
+  t="$BATS_TEST_TMPDIR/updmig"
+  mkdir -p "$t"
+  git -C "$t" init -q
+  run bash "$SCRIPT" "$t" --forge github --name updmig-app --yes
+  [ "$status" -eq 0 ]
+  # rebuild the old layout: real .claude/skills, no .agents/
+  rm "$t/.claude/skills"
+  cp -R "$t/.agents/skills" "$t/.claude/skills"
+  rm -r "$t/.agents"
+  echo 'local skill edit' >> "$t/.claude/skills/handoff/SKILL.md"
+  run bash "$SCRIPT" "$t" --update --yes
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"skills migrated"* ]]
+  [ -L "$t/.claude/skills" ]
+  grep -q 'local skill edit' "$t/.agents/skills/handoff/SKILL.md"
+  [ -f "$t/.agents/skills/handoff/SKILL.md.new" ]
+  [[ "$output" == *".agents/skills/handoff/SKILL.md -> .agents/skills/handoff/SKILL.md.new"* ]]
+}
+
+@test "--update leaves differing .claude/skills and .agents/skills alone (#61)" {
+  t="$BATS_TEST_TMPDIR/upddiff"
+  mkdir -p "$t"
+  git -C "$t" init -q
+  run bash "$SCRIPT" "$t" --forge github --name upddiff-app --yes
+  [ "$status" -eq 0 ]
+  rm "$t/.claude/skills"
+  cp -R "$t/.agents/skills" "$t/.claude/skills"
+  echo 'only in the claude copy' >> "$t/.claude/skills/handoff/SKILL.md"
+  run bash "$SCRIPT" "$t" --update --yes
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"not migrated"* ]]
+  [ -d "$t/.claude/skills" ]
+  [ ! -L "$t/.claude/skills" ]
+  grep -q 'only in the claude copy' "$t/.claude/skills/handoff/SKILL.md"
+  # nothing migrated: the source is untouched and the refresh lands next to the Claude copy
+  run grep -q 'only in the claude copy' "$t/.agents/skills/handoff/SKILL.md"
+  [ "$status" -eq 1 ]
+  [ -f "$t/.claude/skills/handoff/SKILL.md.new" ]
+  [ ! -e "$t/.agents/skills/handoff/SKILL.md.new" ]
+}
+
+@test "--update aborts without deleting skills when .agents cannot be created (#61)" {
+  t="$BATS_TEST_TMPDIR/updabort"
+  mkdir -p "$t"
+  git -C "$t" init -q
+  run bash "$SCRIPT" "$t" --forge github --name updabort-app --yes
+  [ "$status" -eq 0 ]
+  rm "$t/.claude/skills"
+  cp -R "$t/.agents/skills" "$t/.claude/skills"
+  mkdir -p "$t/.claude/skills/mine"
+  echo 'mine' > "$t/.claude/skills/mine/SKILL.md"
+  rm -r "$t/.agents"
+  echo 'not a directory' > "$t/.agents"
+  run bash "$SCRIPT" "$t" --update --yes
+  [ "$status" -ne 0 ]
+  [ -d "$t/.claude/skills" ]
+  grep -q 'mine' "$t/.claude/skills/mine/SKILL.md"
+}
+
+@test "symlinked skill entries survive the move into .agents/skills (#61)" {
+  t="$BATS_TEST_TMPDIR/linkedentry"
+  mkdir -p "$t/shared/linked-skill" "$t/.claude/skills"
+  git -C "$t" init -q
+  echo 'shared skill' > "$t/shared/linked-skill/SKILL.md"
+  ln -s ../../shared/linked-skill "$t/.claude/skills/linked-skill"
+  run bash "$SCRIPT" "$t" --forge github --name linked-app --yes
+  [ "$status" -eq 0 ]
+  [ -L "$t/.agents/skills/linked-skill" ]
+  grep -q 'shared skill' "$t/.claude/skills/linked-skill/SKILL.md"
+}
+
+@test "re-install over the symlink layout keeps a user-edited skill (#61)" {
+  t="$BATS_TEST_TMPDIR/reinstall"
+  mkdir -p "$t"
+  git -C "$t" init -q
+  run bash "$SCRIPT" "$t" --forge github --lang en --name reinstall-app --yes
+  [ "$status" -eq 0 ]
+  [ -L "$t/.claude/skills" ]
+  echo 'user edit' >> "$t/.agents/skills/review/SKILL.md"
+  # the lang-en overlay ships review/SKILL.md; it must not overwrite the shared source
+  run bash "$SCRIPT" "$t" --forge github --lang en --name reinstall-app --yes
+  [ "$status" -eq 0 ]
+  grep -q 'user edit' "$t/.agents/skills/review/SKILL.md"
+}
+
+@test "--update leaves a .claude/skills symlink to elsewhere alone (#61)" {
+  t="$BATS_TEST_TMPDIR/foreignlink"
+  mkdir -p "$t"
+  git -C "$t" init -q
+  run bash "$SCRIPT" "$t" --forge github --name foreign-app --yes
+  [ "$status" -eq 0 ]
+  mv "$t/.agents/skills" "$t/my-skills"
+  rm -r "$t/.agents"
+  rm "$t/.claude/skills"
+  ln -s ../my-skills "$t/.claude/skills"
+  run bash "$SCRIPT" "$t" --update --yes
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"links to ../my-skills"* ]]
+  [ "$(readlink "$t/.claude/skills")" = "../my-skills" ]
+  [ ! -e "$t/.agents/skills" ]
+}
+
+@test "gate warns when .claude/skills is a plain file from a core.symlinks=false checkout (#61)" {
+  t="$BATS_TEST_TMPDIR/plainfile"
+  mkdir -p "$t"
+  git -C "$t" init -q
+  run bash "$SCRIPT" "$t" --forge github --name plain-app --yes
+  [ "$status" -eq 0 ]
+  rm "$t/.claude/skills"
+  printf '../.agents/skills' > "$t/.claude/skills"
+  cd "$t"
+  run bash .git/hooks/pre-commit
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"plain file"* ]]
 }
 
 @test "harness all keeps everything and wires git hook; default claude also wires it (#21)" {

@@ -35,7 +35,7 @@ authoring skeleton and conventions.
 | `hooks/` | enforced gates — pre-commit, auto-format, observe-lite, memory reminders | [README](.claude/hooks/README.md) |
 | `memory/` | project memory SSOT — MEMORY.md index + type-prefixed files | [README](.claude/memory/README.md) |
 | `rules/` | context-aware rules — `paths:`-scoped conditional loading | [README](.claude/rules/README.md) |
-| `skills/` | situational procedures — review, status, search-first, memory-factcheck, security-precheck, docs-sync, grill-me, handoff, ... | [README](.claude/skills/README.md) |
+| `skills/` | situational procedures — review, status, search-first, memory-factcheck, security-precheck, docs-sync, grill-me, handoff, ... In an installed project this is a symlink to the source `.agents/skills/` (#61) | [README](.claude/skills/README.md) |
 | `workflows/` | stored Workflow orchestration scripts (`*.js`) — rules-audit example | [README](.claude/workflows/README.md) |
 | `scripts/` | repo-local helpers — knowledge_graph.py (doc graph + link checker) | [README](.claude/scripts/README.md) |
 
