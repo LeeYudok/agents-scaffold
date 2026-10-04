@@ -99,20 +99,23 @@ grep -rn -E "stackTrace|stack_info|traceback\.print|err\.stack" --include="*.ts"
 
 ### 에이전트 설정 감사 (AgentShield 룰 증류)
 
-대상: `.claude/**`(settings·hooks·agents·skills·commands), `.mcp.json`, `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`.
-에이전트 설정은 공급망 아티팩트다 — 코드와 동일하게 스캔한다.
+대상: `.claude/**`(settings·hooks·agents·commands), `.agents/**`(skills 원본·agy agents·rules·hooks.json),
+`.codex/**`(config·hooks.json·agents), `.mcp.json`, `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`.
+에이전트 설정은 공급망 아티팩트다 — 코드와 동일하게 스캔한다. `.claude/skills` 는 `.agents/skills` 를
+가리키는 링크라(#61) `grep -r .claude/` 만으로는 스킬이 빠진다 — `.agents/` 를 함께 넘긴다.
+agy 1.2.16 은 `.agents/hooks.json` 을 신뢰 확인 없이 실행한다(#60 실측) — 외부 레포는 agy 실행 전에 본다.
 
 **13. [P0] 위험 플래그·엔드포인트 오버라이드 (settings/훅/스크립트)**
 ```
 grep -rn -E "dangerously-skip-permissions|enableAllProjectMcpServers|ANTHROPIC_BASE_URL|apiKeyHelper" \
-  .claude/ .mcp.json CLAUDE.md AGENTS.md 2>/dev/null | grep -v "agents/security-audit.md"
+  .claude/ .agents/ .codex/ .mcp.json CLAUDE.md AGENTS.md 2>/dev/null | grep -v "agents/security-audit.md"
 ```
 자동 승인·권한 스킵·모델 엔드포인트 교체는 전부 P0. (설명 문서 안의 "금지" 언급은 제외)
 
 **14. [P0] MCP 설정: 하드코딩 시크릿·원격 파이프 실행**
 ```
 [ -f .mcp.json ] && grep -nE '"(env|args)"' -A5 .mcp.json | grep -nE "(KEY|TOKEN|SECRET|PASSWORD)\"?\s*:\s*\"[^$\"]{8,}"
-grep -rn -E "curl[^|;]*\|\s*(ba)?sh|wget[^|;]*\|\s*(ba)?sh" .claude/ .mcp.json 2>/dev/null
+grep -rn -E "curl[^|;]*\|\s*(ba)?sh|wget[^|;]*\|\s*(ba)?sh" .claude/ .agents/ .codex/ .mcp.json 2>/dev/null
 ```
 MCP `env` 블록의 평문 시크릿(`${VAR}` 참조는 허용), 원격 다운로드를 셸에 파이프하는 command 는 P0.
 
@@ -123,6 +126,8 @@ for f in .claude/hooks/*; do
   grep -lE '\.env|printenv|process\.env|os\.environ' "$f" 2>/dev/null | xargs -I{} grep -lE 'curl|wget|nc |fetch\(' {} 2>/dev/null
 done
 grep -rn -E "crontab|launchctl|systemctl.*enable|sudo |chown root" .claude/hooks/ 2>/dev/null
+# Codex·agy 훅 정의(#60): command 문자열이 JSON 안에 있다 — 같은 패턴을 그대로 검사한다
+grep -nE '\.env|printenv|curl|wget|nc |crontab|launchctl|sudo |chown root' .codex/hooks.json .agents/hooks.json 2>/dev/null
 ```
 
 **16. [P1] permissions 하드닝 (settings.json)**
@@ -153,7 +158,8 @@ EOF
 python3 - <<'EOF'
 import glob, re, os
 pat = re.compile(u'[\u200b\u200c\u200d\u2060\ufeff\u202a-\u202e]')
-targets = ["CLAUDE.md", "AGENTS.md", "GEMINI.md"] + glob.glob(".claude/**/*", recursive=True)
+targets = ["CLAUDE.md", "AGENTS.md", "GEMINI.md"] + [p for d in (".claude", ".agents", ".codex")
+                                                    for p in glob.glob(d + "/**/*", recursive=True)]
 for p in targets:
     if not os.path.isfile(p): continue
     try: text = open(p, encoding="utf-8", errors="ignore").read()
@@ -162,13 +168,13 @@ for p in targets:
         if pat.search(line): print(f"{p}:{i}: 은닉 유니코드 발견")
 EOF
 # 숨은 블록·인코딩 페이로드
-grep -rn -E '<!--.*-->|data:text/html|base64,' .claude/ CLAUDE.md AGENTS.md 2>/dev/null | grep -viE "예시|example|가이드"
+grep -rn -E '<!--.*-->|data:text/html|base64,' .claude/ .agents/ .codex/ CLAUDE.md AGENTS.md 2>/dev/null | grep -viE "예시|example|가이드"
 ```
 
 **19. [P1] 훅 위험 행동 (외부 전송·민감 경로·백그라운드·삭제)**
 ```
 grep -rn -E "curl.*https?://|wget.*https?://" .claude/hooks/ 2>/dev/null   # 외부 전송
-grep -rn -E "~/\.ssh|~/\.aws|~/\.gnupg|id_rsa|id_ed25519" .claude/ 2>/dev/null  # 민감 경로
+grep -rn -E "~/\.ssh|~/\.aws|~/\.gnupg|id_rsa|id_ed25519" .claude/ .agents/ .codex/ 2>/dev/null  # 민감 경로
 grep -rn -E "nohup |& *$|setsid " .claude/hooks/ 2>/dev/null               # 백그라운드 상주
 grep -rn -E "rm -rf? (/|~|\\\$HOME)" .claude/hooks/ 2>/dev/null            # 광역 삭제
 ```

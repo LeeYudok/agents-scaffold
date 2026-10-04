@@ -61,8 +61,34 @@ just costs more. None of them fire automatically, even with all three installed;
 | Value | Target | What it does |
 |---|---|---|
 | `claude` (default) | Claude Code | Full install — settings.json hook bindings, subagents, slash commands, workflows |
-| `codex` | Codex | Installs `AGENTS.md`, native `.agents/skills`, and shared rules/hooks/memory; drops Claude-only layers |
-| `all` | Mixed teams | Installs both `.claude/skills` and Codex-native `.agents/skills` |
+| `codex` | Codex | Installs `AGENTS.md`, skills, and shared rules/hooks/memory; drops Claude-only layers |
+| `agy` | Antigravity | Same layout as `codex` — agy also reads `AGENTS.md` and `.agents/skills` natively |
+| `all` | Mixed teams | Same as `claude` (kept for compatibility) — the skill layout no longer depends on the harness (#61) |
+
+**Skills have a single source (#61).** Whatever the harness, skills live once in `.agents/skills/`
+(the Codex/agy native path) and Claude Code reads the same files through the symlink
+`.claude/skills -> ../.agents/skills` (measured on claude 2.1.289 — with `.agents/skills` alone and no
+link, Claude Code finds no skills). Two copies can no longer drift apart, and adding another harness
+later needs no reinstall.
+
+- Where a symlink cannot be created (e.g. Windows Git Bash defaults), or with
+  `AGENTS_SCAFFOLD_NO_SYMLINK=1`, `.claude/skills` is a copy. The pre-commit gate blocks a commit whose
+  staged copy differs from the staged source (an index comparison, so untracked files such as
+  `__pycache__` do not count). Whether a symlink works can vary with the environment (e.g. policy on
+  network-separated PCs) — see step 6 of [OFFLINE_INSTALL.en.md](OFFLINE_INSTALL.en.md).
+- A Git for Windows checkout with `core.symlinks=false` turns the link into a plain file holding the
+  path. Claude Code then finds no skills and the gate warns — run `git config core.symlinks true` and
+  check it out again.
+- A real `.claude/skills` that existed before install is moved into `.agents/skills` and linked. If a
+  path's content differs from `.agents/skills`, `.agents/skills` stays the source and the old directory
+  is kept as `.claude/skills.pre-ssot-<timestamp>/`.
+- Rules and subagents are not linked: `.codex/rules` is a command-execution policy, agy's
+  `.agents/rules` does not understand Claude's `paths:` scoping, and Claude `.md` and Codex `.toml`
+  subagents use different formats.
+
+All three harnesses read the root `AGENTS.md` natively, so no `CLAUDE.md`/`GEMINI.md` pointer or
+`.gemini/settings.json` shim is emitted (#54, #60). Supported targets are the latest Claude Code,
+Codex and Antigravity; Gemini CLI is no longer a target.
 
 **Support comes in two tiers (#21)** — not a binary "supported / unsupported".
 
@@ -75,27 +101,30 @@ The git hook is **always wired, regardless of harness** (#21). Claude Code's `Pr
 
 The selected stack's P0 rules are **inlined into the `AGENTS.md` body**, so they do not depend on a `.claude/rules/` reference link and stay reachable on harnesses that never load `.claude/`. Stacks you did not select are not inlined (Codex caps combined instructions at 32KiB by default — this avoids context flooding).
 
-### Verified (2026-09-15)
+### Verified (2026-10-04)
 
 | Harness | Measured version | baseline | What is / isn't confirmed on the full tier |
 |---|---|---|---|
-| Claude Code | 2.1.278 | holds | `paths:`-scoped loading of `.claude/rules/*.md`, subagents, skills, `settings.json` hooks — all confirmed against the [official docs](https://code.claude.com/docs/en/memory.md) |
-| Codex | codex-cli 0.154.0 / GPT-6 Astra | holds | `AGENTS.md`, inlined stack P0, `.agents/skills`, and the `.env` gate were measured |
-| Antigravity | agy **1.2.7** | holds | **Headless (`-p`) measurably does not load rules** (1.1.17, reconfirmed on 1.2.7 — neither `AGENTS.md` nor `GEMINI.md` loads) — root cause unknown. Interactive mode has not been measured |
+| Claude Code | 2.1.289 | holds | `paths:`-scoped loading of `.claude/rules/*.md`, subagents, skills, `settings.json` hooks — all confirmed against the [official docs](https://code.claude.com/docs/en/memory.md) |
+| Codex | codex-cli 0.160.0 / GPT-6.1 Sol | holds | Measured: `AGENTS.md`, inlined stack P0, `.agents/skills`, the `.env` gate, `.codex/agents` subagents (trusted projects only), `.codex/hooks.json` hooks (project and hook-definition trust required), and subdirectory `AGENTS.md` by cwd. No file-path-scoped instructions |
+| Antigravity | agy 1.2.16 | holds | Measured in headless (`-p`) mode: `AGENTS.md`, inlined stack P0, `.agents/skills`, the `.env` gate, `.agents/agents` subagents, `.agents/hooks.json` hooks (run without a trust prompt), and `trigger: glob` scoped rules in `.agents/rules`. Subdirectory `AGENTS.md` loads by cwd only |
 
-Codex (codex-cli 0.154.0, `gpt-6-astra`) auto-loads the `codex`-mode AGENTS.md and its
-inlined stack P0, and discovers repository skills under `.agents/skills`. It does not discover
-`.claude/skills`. If a model misses a rule, the git hook still blocks a staged `.env` with exit 2.
+Codex (codex-cli 0.160.0, `gpt-6.1-sol`) and agy (1.2.16) auto-load their mode's AGENTS.md and
+its inlined stack P0 without any tool call, and discover repository skills under `.agents/skills`
+only — neither discovers `.claude/skills`. agy 1.2.7 headless loaded neither `AGENTS.md` nor
+`GEMINI.md`; that is fixed in 1.2.16. If a model misses a rule, the git hook still blocks a staged
+`.env` with exit 2.
 
 The single source of truth for support status is [`docs/harness-matrix.json`](harness-matrix.json).
 This table is checked against that manifest by `scripts/check-harness-matrix.py` in CI — if a `full`
 tier has gone 90 days without re-measurement, or a verdict carries no evidence, **the build fails**.
-Re-measure with `scripts/spike-codex-contract.sh --dynamic`.
+Re-measure with `scripts/spike-codex-contract.sh --dynamic` and `scripts/spike-agy-contract.sh --dynamic`.
 
-`--harness codex` installs repository skills in Codex's native `.agents/skills` path.
-`--harness all` keeps `.claude/skills` for Claude/Antigravity and also emits `.agents/skills`
-for Codex. Codex subagents, path-scoped rules, and lifecycle hooks remain unverified, so its
-overall tier remains baseline.
+Codex and agy were measured to support subagents, hooks and path-scoped instructions (with the
+conditions in the table above), but the scaffold does not emit those layers yet (no adapter), so their
+overall tier is baseline. As with Claude Code, hooks are early feedback, not the enforcement line. agy
+runs a repo's `.agents/hooks.json` without a trust prompt, so check that file before running agy in a
+foreign repo (the `security-audit` agent scans it).
 
 Two further Codex constraints shape the design:
 
@@ -160,8 +189,11 @@ uses it as the template source. Pin a branch/tag with `AGENTS_SCAFFOLD_REF`
 
 ### Updating the base — `--update`
 
-Applies the latest base files (`.claude/`, `AGENTS.md`,
-`.gemini/settings.json`) to an already-bootstrapped project.
+Applies the latest base files (`.claude/`, `AGENTS.md`) to an already-bootstrapped project.
+A `.gemini/settings.json` left by an earlier version is not touched (harmless if it stays).
+A real `.claude/skills` is moved into the source `.agents/skills` and linked only when `.agents/skills`
+does not exist or has the same content (#61). If both exist and differ, nothing is moved and a manual
+merge is suggested. Once migrated, base skills are refreshed on the `.agents/skills` side.
 
 ```bash
 agents-scaffold/bin/agents-scaffold.sh --update /path/to/existing-repo

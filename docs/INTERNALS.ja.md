@@ -46,7 +46,6 @@
     knowledge_graph.py       .claude エコシステムグラフ + --check リンク切れゲート
   settings.json               フック配線 + デフォルト deny ルール
 AGENTS.md                 プロジェクトの頭脳 — ルール SSOT(P0/P1/P2 + ワークフロー)
-.gemini/settings.json     Gemini CLI が AGENTS.md を読むよう context.fileName を指定
 presets/                  プリセット断片(コピー上書きモデル)
   forge-github/           GitHub forge — gh、PR、`Closes #N` 自動クローズ
   forge-gitlab/           GitLab forge — glab、MR、`Closes #N` 自動クローズ(マージ後に確認)

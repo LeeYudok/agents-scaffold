@@ -17,12 +17,16 @@ Usage:
                  en overlays presets/lang-en/ (base + forge + selected stacks) on top of the
                  English base, after base copy + forge merge + stack merge.
   --name         {{PROJECT_NAME}} substitution value. Default = target directory name.
-  --harness      Target agent harness: claude (default), codex, or all.
-                 codex installs AGENTS.md + .agents/skills (Codex-native) and keeps
-                 shared rules/hooks/memory, drops Claude Code-only layers
-                 (settings.json, agents/, commands/, workflows/, .gemini/settings.json),
-                 and wires the pre-commit gate as a real .git/hooks/pre-commit.
-                 all installs both the Claude and Codex skill discovery paths.
+  --harness      Target agent harness: claude (default), codex, agy, or all.
+                 All three read AGENTS.md natively. Skills live once in .agents/skills
+                 (Codex/agy native) and Claude Code reads them via the symlink
+                 .claude/skills -> ../.agents/skills, whatever the harness (a copy
+                 checked by the pre-commit gate where symlinks are unavailable, or
+                 with AGENTS_SCAFFOLD_NO_SYMLINK=1).
+                 codex/agy drop Claude Code-only layers (settings.json, agents/,
+                 commands/, workflows/) and keep shared rules/hooks/memory.
+                 all is the same as claude (kept for compatibility).
+                 Every harness gets the pre-commit gate as a real .git/hooks/pre-commit.
   --yes          Skip interactive prompts (non-interactive mode).
   --update       Refresh the base .claude/·AGENTS.md etc. of an already-bootstrapped project.
                  .claude/hooks/pre-commit.sh has stack partials inserted, so it is skipped
@@ -43,7 +47,7 @@ extract it inside the closed network and run bin/agents-scaffold.sh from the ext
 no download happens. Windows needs Git for Windows (Git Bash); from cmd/PowerShell use
 bin\agents-scaffold.cmd. See docs/OFFLINE_INSTALL.en.md.
 
-Flow: copy base (.claude/ + AGENTS.md + .gemini/settings.json) -> merge forge preset -> merge selected stack presets
+Flow: copy base (.claude/ + AGENTS.md) -> merge forge preset -> merge selected stack presets
       -> merge lang-en overlay (if --lang en) -> substitute {{PLACEHOLDER}} -> chmod +x
       -> in-place: self-clean bin/·presets/·scripts/·docs/superpowers/·docs/harness-matrix.json.
 EOF
@@ -82,8 +86,8 @@ TARGET="$(cd "$TARGET" && pwd)"
 [ -z "$NAME" ] && NAME="$(basename "$TARGET")"
 
 case "$HARNESS" in
-  claude|codex|all) ;;
-  *) echo "Unknown --harness '$HARNESS' (claude|codex|all)" >&2; exit 1 ;;
+  claude|codex|agy|all) ;;
+  *) echo "Unknown --harness '$HARNESS' (claude|codex|agy|all)" >&2; exit 1 ;;
 esac
 
 # --- 이슈 #10: SRC 결정. 로컬 clone 이면 BASH_SOURCE 기준, curl 파이프 등으로
@@ -186,6 +190,146 @@ ensure_hook_eol_attributes() {
   echo "== .gitattributes: hook LF rule added ==" >&2
 }
 
+# --- 이슈 #61: 스킬 SSOT. 원본은 .agents/skills(Codex·agy 네이티브 경로)이고, Claude Code 는
+#     .claude/skills -> ../.agents/skills 심볼릭 링크로 같은 원본을 읽는다(claude 2.1.289 실측 —
+#     링크 없이 .agents/skills 만 두면 Claude Code 는 스킬을 찾지 못한다).
+#     링크를 만들 수 없는 환경(Windows Git Bash 기본값 등)은 사본으로 대체하고, pre-commit 게이트가
+#     두 사본의 일치를 검사한다. AGENTS_SCAFFOLD_NO_SYMLINK=1 이면 처음부터 사본을 쓴다.
+#     링크 가능 여부는 환경에 따라 달라질 수 있다 — 망 분리 PC(외부망 일부 제한, 내부망 강한 통제)는
+#     개발자 모드·core.symlinks 를 켤 수 있는지가 PC·시점마다 다르다(docs/OFFLINE_INSTALL.md 6단계).
+#     아래 함수는 반드시 단독 문장으로 호출한다 — `f && x`·`if f` 문맥에서는 함수 안의 set -e 가
+#     꺼져, 실패한 mv 뒤에 삭제가 이어질 수 있다. 그래서 결과도 반환값이 아니라 변수로 넘긴다.
+SKILLS_LINK_TARGET="../.agents/skills"
+
+# .claude/skills 가 이 스캐폴드가 만든 SSOT 링크인가
+is_ssot_link() {
+  [ -L "$TARGET/.claude/skills" ] && [ "$(readlink "$TARGET/.claude/skills")" = "$SKILLS_LINK_TARGET" ]
+}
+
+# 전제: .agents/skills 는 디렉터리이고 .claude/skills 는 없다. 어기면 아무것도 지우지 않고 중단한다.
+link_claude_skills() {
+  local cdir="$TARGET/.claude/skills" adir="$TARGET/.agents/skills"
+  if [ ! -d "$adir" ]; then
+    echo "Error: .agents/skills is not a directory — cannot link .claude/skills to it." >&2
+    exit 1
+  fi
+  if [ -e "$cdir" ] || [ -L "$cdir" ]; then
+    echo "Error: .claude/skills still exists — refusing to replace it." >&2
+    exit 1
+  fi
+  mkdir -p "$TARGET/.claude"
+  if [ "${AGENTS_SCAFFOLD_NO_SYMLINK:-0}" != "1" ] && ln -s "$SKILLS_LINK_TARGET" "$cdir" 2>/dev/null \
+    && [ -L "$cdir" ]; then
+    echo "== skills: .agents/skills (source) + .claude/skills -> $SKILLS_LINK_TARGET ==" >&2
+    return 0
+  fi
+  # Git Bash 의 ln -s 는 설정에 따라 실패하거나 링크 대신 사본을 만든다. 위에서 .claude/skills 가
+  # 없음을 확인했으니 지금 있는 것은 방금 ln 이 만든 사본뿐이다 — 지우고 원본에서 다시 뜬다.
+  if [ -e "$cdir" ]; then
+    rm -rf "$cdir"
+  fi
+  cp -R "$adir" "$cdir"
+  echo "Warning: symlink unavailable — .claude/skills is a copy of .agents/skills." >&2
+  echo "  Edit .agents/skills only; the pre-commit gate blocks a commit whose staged copy drifts." >&2
+}
+
+# 설치용: 실디렉터리 .claude/skills 를 .agents/skills 로 옮기고 링크한다.
+#   $1=1: 이번 실행 전부터 있던 .claude/skills(사용자 소유일 수 있음). .agents/skills 와 같은 경로의
+#         내용이 다르면 잃지 않도록 통째로 .claude/skills.pre-ssot-<시각>/ 에 남긴다.
+#   $1=0: 방금 복사한 베이스 스킬. .agents/skills 에 같은 경로가 있으면 그쪽(사용자 소유)이 원본이다.
+skills_to_ssot() {
+  local pre_existing="$1"
+  local cdir="$TARGET/.claude/skills" adir="$TARGET/.agents/skills"
+  local f rel conflict=0 backup
+  if [ -L "$cdir" ]; then
+    if ! is_ssot_link; then
+      echo "Warning: .claude/skills links to $(readlink "$cdir"), not $SKILLS_LINK_TARGET — left untouched." >&2
+    elif [ "${AGENTS_SCAFFOLD_NO_SYMLINK:-0}" = "1" ] && [ -d "$adir" ]; then
+      # 링크를 쓸 수 없는 환경으로 옮기려는 재설치 — 링크만 지우고 사본으로 바꾼다
+      rm -f "$cdir"
+      link_claude_skills
+    fi
+    return 0
+  fi
+  if [ -e "$cdir" ] && [ ! -d "$cdir" ]; then
+    echo "Warning: .claude/skills is a plain file (a symlink checked out with core.symlinks=false?) — left untouched." >&2
+    return 0
+  fi
+  if [ -d "$cdir" ]; then
+    mkdir -p "$adir"
+    # 일반 파일과 심볼릭 링크를 모두 옮긴다(find -type f 는 링크를 빠뜨린다). 깊이가 같은 경로
+    # (.claude/skills/x ↔ .agents/skills/x)로 옮기므로 상대 링크는 그대로 같은 곳을 가리킨다.
+    while IFS= read -r f; do
+      rel="${f#"$cdir/"}"
+      if [ -e "$adir/$rel" ] || [ -L "$adir/$rel" ]; then
+        if [ -L "$f" ] || [ -L "$adir/$rel" ]; then
+          [ "$(readlink "$f")" = "$(readlink "$adir/$rel")" ] || conflict=1
+        else
+          cmp -s "$f" "$adir/$rel" || conflict=1
+        fi
+        continue
+      fi
+      mkdir -p "$adir/$(dirname "$rel")"
+      if [ -L "$f" ]; then
+        ln -s "$(readlink "$f")" "$adir/$rel"
+      else
+        cp -p "$f" "$adir/$rel"
+      fi
+    done < <(find "$cdir" ! -type d)
+    if [ "$pre_existing" = "1" ] && [ "$conflict" = "1" ]; then
+      backup="$cdir.pre-ssot-$(date +%Y%m%d%H%M%S)"
+      mv "$cdir" "$backup"
+      echo "Warning: .claude/skills differed from .agents/skills — .agents/skills kept as the source," >&2
+      echo "  previous .claude/skills saved to ${backup#"$TARGET/"}/ for a manual merge." >&2
+    else
+      rm -rf "$cdir"
+    fi
+  fi
+  if [ -d "$adir" ]; then
+    link_claude_skills
+  fi
+}
+
+# --update 용: 기존 프로젝트를 안전할 때만 SSOT 레이아웃으로 옮긴다. 결과는 SKILLS_SSOT 에 남긴다
+#   (1 = 베이스 스킬을 .agents/skills 로 갱신, 0 = 손대지 않음).
+skills_ssot_for_update() {
+  local cdir="$TARGET/.claude/skills" adir="$TARGET/.agents/skills"
+  SKILLS_SSOT=0
+  if [ -L "$cdir" ]; then
+    if is_ssot_link; then
+      SKILLS_SSOT=1
+      # 사본 모드 요청이면 링크만 지운다 — 갱신이 끝난 뒤 사후 단계가 원본에서 사본을 뜬다
+      if [ "${AGENTS_SCAFFOLD_NO_SYMLINK:-0}" = "1" ]; then
+        rm -f "$cdir"
+      fi
+    else
+      echo "Note: .claude/skills links to $(readlink "$cdir"), not $SKILLS_LINK_TARGET — skills left as they are (#61)." >&2
+    fi
+    return 0
+  fi
+  # 부재, 또는 일반 파일(core.symlinks=false 로 체크아웃된 SSOT 링크) — 원본은 .agents/skills 다
+  if [ ! -d "$cdir" ]; then
+    SKILLS_SSOT=1
+    return 0
+  fi
+  if [ ! -e "$adir" ] && [ ! -L "$adir" ]; then
+    mkdir -p "$TARGET/.agents"
+    mv "$cdir" "$adir"
+    link_claude_skills
+    echo "== skills migrated: .claude/skills -> .agents/skills (source) (#61) ==" >&2
+    SKILLS_SSOT=1
+    return 0
+  fi
+  if [ -d "$adir" ] && diff -rq "$cdir" "$adir" >/dev/null 2>&1; then
+    rm -rf "$cdir"
+    link_claude_skills
+    SKILLS_SSOT=1
+    return 0
+  fi
+  echo "Note: .claude/skills and .agents/skills both exist and differ — skills not migrated (#61)." >&2
+  echo "  Merge them into .agents/skills, delete .claude/skills, then re-run --update." >&2
+}
+
 # --- 이슈 #13: --update 모드. 이미 부트스트랩된 프로젝트의 베이스 파일을 최신화한다.
 run_update() {
   echo "== agents-scaffold --update: target=$TARGET name=$NAME ==" >&2
@@ -203,12 +347,22 @@ run_update() {
   else
     while IFS= read -r f; do base_files+=("$f"); done < <(find "$SRC/.claude" -type f)
   fi
-  base_files+=("$SRC/AGENTS.md" "$SRC/.gemini/settings.json")
+  base_files+=("$SRC/AGENTS.md")
+
+  # #61: 스킬 원본은 .agents/skills. 이전이 끝났으면 베이스 스킬도 원본 쪽으로 갱신한다.
+  #   단독 문장으로 호출한다 — `&&` 문맥이면 함수 안 set -e 가 꺼진다.
+  skills_ssot_for_update
+  local ssot="$SKILLS_SSOT"
 
   local f rel tgt
   for f in "${base_files[@]:-}"; do
     [ -n "$f" ] || continue
     rel="${f#"$SRC"/}"
+    if [ "$ssot" -eq 1 ]; then
+      case "$rel" in
+        .claude/skills/*) rel=".agents/skills/${rel#.claude/skills/}" ;;
+      esac
+    fi
     tgt="$TARGET/$rel"
 
     if [ "$rel" = "$hook_rel" ]; then
@@ -241,6 +395,16 @@ run_update() {
     mv "$subbed" "$tgt.new"
     updated+=("$rel")
   done
+
+  # 원본을 갱신했으니 Claude 쪽 경로를 맞춘다 — 부재면 링크, 사본 모드면 사본을 다시 뜬다.
+  if [ "$ssot" -eq 1 ] && [ -d "$TARGET/.agents/skills" ]; then
+    if [ ! -e "$TARGET/.claude/skills" ] && [ ! -L "$TARGET/.claude/skills" ]; then
+      link_claude_skills
+    elif [ -d "$TARGET/.claude/skills" ] && [ ! -L "$TARGET/.claude/skills" ]; then
+      rm -rf "$TARGET/.claude/skills"
+      link_claude_skills
+    fi
+  fi
 
   chmod +x "$TARGET/.claude/hooks/"*.sh 2>/dev/null || true
   ensure_hook_eol_attributes
@@ -303,6 +467,16 @@ fi
 
 echo "== agents-scaffold: target=$TARGET name=$NAME forge=$FORGE stacks=[${STACKS:-none}] lang=$LANG_OPT inplace=$INPLACE ==" >&2
 
+# #61: 이번 실행 전부터 있던 실디렉터리 .claude/skills 인지 기록 — 4.5 에서 사용자 소유 여부 판단에 쓴다
+PRE_CLAUDE_SKILLS=0
+if [ -d "$TARGET/.claude/skills" ] && [ ! -L "$TARGET/.claude/skills" ]; then
+  PRE_CLAUDE_SKILLS=1
+fi
+# 원본이 지워진 SSOT 링크(.agents 삭제 후 재설치)면 원본 디렉터리를 다시 만들어 베이스 스킬을 받는다
+if is_ssot_link && [ ! -e "$TARGET/.claude/skills" ]; then
+  mkdir -p "$TARGET/.agents/skills"
+fi
+
 # 1) 베이스 복사 (in-place 면 이미 있으므로 스킵)
 # git 소스면 tracked 파일만 복사(#39) — cp -R 은 untracked 로컬 산출물
 # (memory/observations 세션로그, __pycache__, 에이전트 메모리)까지 실어 나른다.
@@ -318,14 +492,9 @@ if [ "$INPLACE" -eq 0 ]; then
   else
     cp -R "$SRC/.claude" "$TARGET/.claude"
   fi
-  # AGENTS.md = SSOT. CLAUDE.md/GEMINI.md 포인터는 두지 않는다 (#54) — Claude Code v2.1.277+·Codex 는
-  # AGENTS.md 를 네이티브로 읽고, CLAUDE.md 가 있으면 Claude Code 가 AGENTS.md 를 건너뛴다.
-  # Gemini CLI 만 기본 컨텍스트 파일명이 GEMINI.md 라 context.fileName 으로 AGENTS.md 를 가리킨다.
+  # AGENTS.md = SSOT. CLAUDE.md/GEMINI.md 포인터는 두지 않는다 (#54) — Claude Code v2.1.277+·Codex·agy 가
+  # 모두 AGENTS.md 를 네이티브로 읽는다 (#60). CLAUDE.md 가 있으면 Claude Code 가 AGENTS.md 를 건너뛴다.
   cp "$SRC/AGENTS.md" "$TARGET/"
-  if [ ! -e "$TARGET/.gemini/settings.json" ]; then
-    mkdir -p "$TARGET/.gemini"
-    cp "$SRC/.gemini/settings.json" "$TARGET/.gemini/settings.json"
-  fi
 fi
 
 # 프리셋 머지 헬퍼 — 프리셋 디렉터리의 .claude/ 하위 파일을 타깃에 복사(덮어쓰기).
@@ -361,6 +530,13 @@ merge_preset() {
         cat "$f" >> "$hook"
       fi
     else
+      # #61: 재설치로 .claude/skills 가 이미 링크면 그 너머는 Codex·agy 와 공유하는 원본이다 —
+      #      이미 있는 스킬은 덮어쓰지 않는다(이전에는 .agents/skills 사본이 이렇게 보호됐다).
+      if [ -L "$TARGET/.claude/skills" ] && [ -e "$TARGET/$rel" ]; then
+        case "$rel" in
+          .claude/skills/*) continue ;;
+        esac
+      fi
       mkdir -p "$TARGET/$(dirname "$rel")"
       cp "$f" "$TARGET/$rel"
     fi
@@ -458,7 +634,14 @@ if [ -f "$agents_md" ] && grep -qF "$p0_marker" "$agents_md"; then
 fi
 
 # 3) 플레이스홀더 치환
-find "$TARGET/.claude" "$TARGET/AGENTS.md" -type f 2>/dev/null | while IFS= read -r f; do
+#   재설치로 .claude/skills 가 이미 링크면 베이스 스킬이 링크 너머(.agents/skills)에 써진다 —
+#   find 는 링크를 따라가지 않으므로 원본 경로도 대상에 넣는다 (#61).
+#   처음 설치라면 .agents/skills 에는 사용자 소유 스킬만 있으므로 링크일 때만 넣는다.
+subst_roots=("$TARGET/.claude" "$TARGET/AGENTS.md")
+if is_ssot_link && [ -d "$TARGET/.agents/skills" ]; then
+  subst_roots+=("$TARGET/.agents/skills")
+fi
+find "${subst_roots[@]}" -type f 2>/dev/null | while IFS= read -r f; do
   substitute_placeholders "$f"
 done
 
@@ -467,26 +650,16 @@ chmod +x "$TARGET/.claude/hooks/"*.sh 2>/dev/null || true
 ensure_hook_eol_attributes
 
 # 4.5) 하네스 조정 (#16)
-#   codex/all: Codex 네이티브 저장소 스킬 경로(.agents/skills)를 생성한다.
-#   codex: Claude Code 전용 계층을 제거하되 공통 자료와 git gate 는 유지한다.
+#   전 하네스 공통: 스킬 원본은 .agents/skills(Codex·agy 네이티브), Claude Code 는
+#     .claude/skills -> ../.agents/skills 링크로 같은 원본을 읽는다 (#61). 레이아웃이 하네스와
+#     무관하게 같으므로 나중에 다른 하네스를 붙여도 재설치가 필요 없다.
+#   codex/agy: Claude Code 전용 계층을 제거하되 공통 자료와 git gate 는 유지한다.
 #   전 하네스 공통: pre-commit 게이트를 진짜 git hook 으로 배선 (#21).
-if [ "$HARNESS" = "codex" ] || [ "$HARNESS" = "all" ]; then
-  if [ -d "$TARGET/.claude/skills" ]; then
-    mkdir -p "$TARGET/.agents/skills"
-    while IFS= read -r skill_file; do
-      skill_rel="${skill_file#"$TARGET/.claude/skills/"}"
-      [ -e "$TARGET/.agents/skills/$skill_rel" ] && continue
-      mkdir -p "$TARGET/.agents/skills/$(dirname "$skill_rel")"
-      cp "$skill_file" "$TARGET/.agents/skills/$skill_rel"
-    done < <(find "$TARGET/.claude/skills" -type f)
-    echo "== Codex repository skills installed at .agents/skills ==" >&2
-  fi
-fi
-if [ "$HARNESS" = "codex" ]; then
-  echo "== harness=codex: removing Claude Code-only layers ==" >&2
+skills_to_ssot "$PRE_CLAUDE_SKILLS"
+if [ "$HARNESS" = "codex" ] || [ "$HARNESS" = "agy" ]; then
+  echo "== harness=$HARNESS: removing Claude Code-only layers ==" >&2
   rm -rf "$TARGET/.claude/agents" "$TARGET/.claude/commands" "$TARGET/.claude/workflows"
-  rm -f "$TARGET/.claude/settings.json" "$TARGET/.gemini/settings.json"
-  rmdir "$TARGET/.gemini" 2>/dev/null || true
+  rm -f "$TARGET/.claude/settings.json"
 fi
 # git hook 은 하네스와 무관하게 항상 배선한다 (#21).
 #   Claude Code 의 PreToolUse 훅(settings.json)은 그 세션이 Bash 툴로 커밋할 때만 발동하므로,

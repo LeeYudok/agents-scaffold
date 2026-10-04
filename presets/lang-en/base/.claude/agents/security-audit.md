@@ -99,20 +99,23 @@ grep -rn -E "stackTrace|stack_info|traceback\.print|err\.stack" --include="*.ts"
 
 ### Agent configuration audit (distilled from AgentShield rules)
 
-Targets: `.claude/**` (settings, hooks, agents, skills, commands), `.mcp.json`, `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`.
-Agent configuration is a supply-chain artifact — scan it the same as code.
+Targets: `.claude/**` (settings, hooks, agents, commands), `.agents/**` (skill source, agy agents, rules, hooks.json),
+`.codex/**` (config, hooks.json, agents), `.mcp.json`, `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`.
+Agent configuration is a supply-chain artifact — scan it the same as code. `.claude/skills` is a symlink to
+`.agents/skills` (#61), so `grep -r .claude/` alone misses the skills — always pass `.agents/` too.
+agy 1.2.16 runs `.agents/hooks.json` without any trust prompt (measured in #60) — review it before running agy in a foreign repo.
 
 **13. [P0] Dangerous flags / endpoint overrides (settings/hooks/scripts)**
 ```
 grep -rn -E "dangerously-skip-permissions|enableAllProjectMcpServers|ANTHROPIC_BASE_URL|apiKeyHelper" \
-  .claude/ .mcp.json CLAUDE.md AGENTS.md 2>/dev/null | grep -v "agents/security-audit.md"
+  .claude/ .agents/ .codex/ .mcp.json CLAUDE.md AGENTS.md 2>/dev/null | grep -v "agents/security-audit.md"
 ```
 Auto-approval, skipped permissions, and swapped model endpoints are always P0. (Mentions of "forbidden" inside documentation are excluded.)
 
 **14. [P0] MCP config: hardcoded secrets / remote pipe execution**
 ```
 [ -f .mcp.json ] && grep -nE '"(env|args)"' -A5 .mcp.json | grep -nE "(KEY|TOKEN|SECRET|PASSWORD)\"?\s*:\s*\"[^$\"]{8,}"
-grep -rn -E "curl[^|;]*\|\s*(ba)?sh|wget[^|;]*\|\s*(ba)?sh" .claude/ .mcp.json 2>/dev/null
+grep -rn -E "curl[^|;]*\|\s*(ba)?sh|wget[^|;]*\|\s*(ba)?sh" .claude/ .agents/ .codex/ .mcp.json 2>/dev/null
 ```
 Plaintext secrets in an MCP `env` block (`${VAR}` references are allowed), and commands that pipe remote downloads into a shell, are P0.
 
@@ -123,6 +126,8 @@ for f in .claude/hooks/*; do
   grep -lE '\.env|printenv|process\.env|os\.environ' "$f" 2>/dev/null | xargs -I{} grep -lE 'curl|wget|nc |fetch\(' {} 2>/dev/null
 done
 grep -rn -E "crontab|launchctl|systemctl.*enable|sudo |chown root" .claude/hooks/ 2>/dev/null
+# Codex/agy hook definitions (#60): the command strings live inside JSON — apply the same patterns
+grep -nE '\.env|printenv|curl|wget|nc |crontab|launchctl|sudo |chown root' .codex/hooks.json .agents/hooks.json 2>/dev/null
 ```
 
 **16. [P1] permissions hardening (settings.json)**
@@ -153,7 +158,8 @@ Report unpinned `npx -y` (auto-install), git URL installs, external URL transpor
 python3 - <<'EOF'
 import glob, re, os
 pat = re.compile(u'[\u200b\u200c\u200d\u2060\ufeff\u202a-\u202e]')
-targets = ["CLAUDE.md", "AGENTS.md", "GEMINI.md"] + glob.glob(".claude/**/*", recursive=True)
+targets = ["CLAUDE.md", "AGENTS.md", "GEMINI.md"] + [p for d in (".claude", ".agents", ".codex")
+                                                    for p in glob.glob(d + "/**/*", recursive=True)]
 for p in targets:
     if not os.path.isfile(p): continue
     try: text = open(p, encoding="utf-8", errors="ignore").read()
@@ -162,13 +168,13 @@ for p in targets:
         if pat.search(line): print(f"{p}:{i}: hidden unicode found")
 EOF
 # Hidden blocks / encoded payloads
-grep -rn -E '<!--.*-->|data:text/html|base64,' .claude/ CLAUDE.md AGENTS.md 2>/dev/null | grep -viE "예시|example|가이드"
+grep -rn -E '<!--.*-->|data:text/html|base64,' .claude/ .agents/ .codex/ CLAUDE.md AGENTS.md 2>/dev/null | grep -viE "예시|example|가이드"
 ```
 
 **19. [P1] Risky hook behavior (external transmission / sensitive paths / background persistence / deletion)**
 ```
 grep -rn -E "curl.*https?://|wget.*https?://" .claude/hooks/ 2>/dev/null   # external transmission
-grep -rn -E "~/\.ssh|~/\.aws|~/\.gnupg|id_rsa|id_ed25519" .claude/ 2>/dev/null  # sensitive paths
+grep -rn -E "~/\.ssh|~/\.aws|~/\.gnupg|id_rsa|id_ed25519" .claude/ .agents/ .codex/ 2>/dev/null  # sensitive paths
 grep -rn -E "nohup |& *$|setsid " .claude/hooks/ 2>/dev/null               # background persistence
 grep -rn -E "rm -rf? (/|~|\\\$HOME)" .claude/hooks/ 2>/dev/null            # broad deletion
 ```

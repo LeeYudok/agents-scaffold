@@ -46,7 +46,6 @@ The generated `.claude/` tree and the design patterns behind it. Start at the [R
     knowledge_graph.py       .claude ecosystem graph + --check broken-link gate
   settings.json               hook wiring + default deny rules
 AGENTS.md                 project brain — rule SSOT (P0/P1/P2 + workflow)
-.gemini/settings.json     points Gemini CLI at AGENTS.md via context.fileName
 presets/                  preset fragments (copy-overwrite model)
   forge-github/           GitHub forge — gh, PRs, `Closes #N` auto-close
   forge-gitlab/           GitLab forge — glab, MRs, `Closes #N` auto-close (verify after merge)

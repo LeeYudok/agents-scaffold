@@ -24,3 +24,10 @@ Included: `example-skill/`, `review/`, `status/`, `search-first/`, `skill-evolve
 conversation. Picked per task against the heavier superpowers `brainstorming` and Ouroboros; see
 "Picking a requirements-hardening tool" in the README for the comparison).
 New skills should use the `{{PROJECT_NAME}}-sk-*` prefix.
+
+In an installed project the skill source is `.agents/skills/` (the Codex/agy native path) and
+`.claude/skills` is a symlink to it (#61) — editing through either path changes the same file. Where
+a symlink cannot be created (e.g. Windows Git Bash defaults) `.claude/skills` is a copy: edit
+`.agents/skills` only, copy the same file into the copy, and stage both paths by name
+(`git add -- .agents/skills/<path> .claude/skills/<path>`). The pre-commit gate blocks a staged copy that
+differs from the source and lists the differing files.

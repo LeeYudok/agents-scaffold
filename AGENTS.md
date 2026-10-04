@@ -1,9 +1,8 @@
 # AGENTS.md — {{PROJECT_NAME}}
 
-이 파일은 이 저장소에서 작업할 때 AI 에이전트(Claude Code·Gemini CLI·Codex 등)가 따르는
+이 파일은 이 저장소에서 작업할 때 AI 에이전트(Claude Code·Codex·Antigravity)가 따르는
 **단일 진실원천(SSOT)** 이다. 프로젝트 브레인. 별도의 `CLAUDE.md`·`GEMINI.md` 포인터 파일은 두지 않는다 —
-Claude Code(v2.1.277+)·Codex 는 이 파일을 네이티브로 읽고, Gemini CLI 는 `.gemini/settings.json` 의
-`context.fileName` 으로 이 파일을 가리킨다.
+Claude Code(v2.1.277+)·Codex·Antigravity(agy) 모두 이 파일을 네이티브로 읽는다.
 
 이 파일은 **자체 완결**이어야 한다 — 아래 P0/P1 은 다른 파일 로딩 없이 여기서 읽힌다.
 `@` import 는 메모리 인덱스 한 줄만 허용한다(아래 "메모리 경로 오버라이드") — import 를 확장하는
@@ -36,7 +35,7 @@ Claude Code(v2.1.277+)·Codex 는 이 파일을 네이티브로 읽고, Gemini C
 | `hooks/` | 강제 게이트 — pre-commit, 자동 포맷, observe-lite, 메모리 리마인드 | [README](.claude/hooks/README.md) |
 | `memory/` | 프로젝트 메모리 SSOT — MEMORY.md 인덱스 + 타입접두 파일 | [README](.claude/memory/README.md) |
 | `rules/` | 맥락 인지 룰 — `paths:` 스코프 조건부 로드 | [README](.claude/rules/README.md) |
-| `skills/` | 상황별 절차 — review, status, search-first, memory-factcheck, security-precheck, docs-sync, grill-me, handoff 등 | [README](.claude/skills/README.md) |
+| `skills/` | 상황별 절차 — review, status, search-first, memory-factcheck, security-precheck, docs-sync, grill-me, handoff 등. 설치된 프로젝트에선 원본 `.agents/skills/` 를 가리키는 링크 (#61) | [README](.claude/skills/README.md) |
 | `workflows/` | 저장형 Workflow 오케스트레이션 스크립트(`*.js`) — rules-audit 예제 | [README](.claude/workflows/README.md) |
 | `scripts/` | 레포 로컬 헬퍼 — knowledge_graph.py(문서 그래프 + 링크 체커) | [README](.claude/scripts/README.md) |
 

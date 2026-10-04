@@ -56,8 +56,18 @@
 | 値 | 対象 | 動作 |
 |---|---|---|
 | `claude`（デフォルト） | Claude Code | フルインストール — settings.json のフックバインディング・サブエージェント・スラッシュコマンド・workflows を含む |
-| `codex` | Codex | `AGENTS.md`、ネイティブ `.agents/skills`、共有 rules/hooks/memory を導入し、Claude 専用層を除去 |
-| `all` | 混在チーム | `.claude/skills` と Codex ネイティブ `.agents/skills` を両方導入 |
+| `codex` | Codex | `AGENTS.md`、skills、共有 rules/hooks/memory を導入し、Claude 専用層を除去 |
+| `agy` | Antigravity | `codex` と同じレイアウト — agy も `AGENTS.md` と `.agents/skills` をネイティブに読む |
+| `all` | 混在チーム | `claude` と同じ（互換のため残置）— skills のレイアウトはハーネスに依存しなくなった（#61） |
+
+**skills の原本は 1 か所です（#61）。** ハーネスに関係なく skills は `.agents/skills/`（Codex・agy のネイティブパス）に 1 回だけ置き、Claude Code はシンボリックリンク `.claude/skills -> ../.agents/skills` 経由で同じファイルを読みます（claude 2.1.289 で実測 — リンクなしで `.agents/skills` だけを置くと Claude Code は skills を見つけられません）。2 つのコピーが食い違うことはなくなり、後から別のハーネスを加えても再インストールは不要です。
+
+- シンボリックリンクを作れない環境（Windows Git Bash の既定値など）や `AGENTS_SCAFFOLD_NO_SYMLINK=1` の場合、`.claude/skills` はコピーになります。ステージされたコピーが原本と異なると pre-commit ゲートがコミットをブロックします（インデックス基準の比較なので `__pycache__` などの未追跡ファイルは対象外）。リンクを作れるかは環境によって変わりえます（ネットワーク分離 PC のポリシーなど）— [OFFLINE_INSTALL.en.md](OFFLINE_INSTALL.en.md) のステップ 6 を参照。
+- Git for Windows で `core.symlinks=false` のままチェックアウトすると、リンクはパス文字列を含む通常ファイルになります。このとき Claude Code は skills を見つけられず、ゲートが警告を出します — `git config core.symlinks true` の後に再チェックアウトしてください。
+- インストール前から実ディレクトリの `.claude/skills` がある場合は `.agents/skills` へ移してリンクにします。同じパスの内容が `.agents/skills` と異なる場合は `.agents/skills` を原本とし、元のディレクトリを `.claude/skills.pre-ssot-<時刻>/` に残します。
+- ルールとサブエージェントはリンクしません。`.codex/rules` はコマンド実行ポリシー、agy の `.agents/rules` は Claude の `paths:` 条件付きロードを解釈せず、Claude の `.md` と Codex の `.toml` サブエージェントは形式が異なります。
+
+3 つのハーネスはいずれもルートの `AGENTS.md` をネイティブに読むため、`CLAUDE.md`/`GEMINI.md` のポインタも `.gemini/settings.json` のシムも生成しません（#54、#60）。サポート対象は最新版の Claude Code・Codex・Antigravity で、Gemini CLI は対象から外しました。
 
 **保証レベルは 2 段階です（#21）** — 「対応している/していない」の二分法ではありません。
 
@@ -70,19 +80,19 @@ git フックは**ハーネスに関係なく常に配線されます**（#21）
 
 選択したスタックの P0 は **`AGENTS.md` 本文に直接挿入**されます。`.claude/rules/` の参照リンクに依存しないため、`.claude/` を読み込まないハーネスでも到達可能です。選択していないスタックは挿入されません（Codex の指示合計はデフォルト 32KiB 上限 — context flooding を防ぐため）。
 
-### 実測検証（2026-09-15）
+### 実測検証（2026-10-04）
 
 | ハーネス | 実測バージョン | baseline | full 層で確認できたこと / できていないこと |
 |---|---|---|---|
-| Claude Code | 2.1.278 | 成立 | `.claude/rules/*.md` の `paths:` 条件付きロード、サブエージェント、skills、`settings.json` フック — いずれも[公式ドキュメント](https://code.claude.com/docs/en/memory.md)で確認 |
-| Codex | codex-cli 0.154.0 / GPT-6 Astra | 成立 | `AGENTS.md`、インラインのスタック P0、`.agents/skills`、`.env` ゲートを実測 |
-| Antigravity | agy **1.2.7** | 成立 | **headless（`-p`）がルールを読み込まない**ことを実測（1.1.17、1.2.7 で再確認 — `AGENTS.md` も `GEMINI.md` も未ロード）— 原因は未解明。インタラクティブモードは未検証 |
+| Claude Code | 2.1.289 | 成立 | `.claude/rules/*.md` の `paths:` 条件付きロード、サブエージェント、skills、`settings.json` フック — いずれも[公式ドキュメント](https://code.claude.com/docs/en/memory.md)で確認 |
+| Codex | codex-cli 0.160.0 / GPT-6.1 Sol | 成立 | `AGENTS.md`、インラインのスタック P0、`.agents/skills`、`.env` ゲート、`.codex/agents` サブエージェント（信頼済みプロジェクトのみ）、`.codex/hooks.json` フック（プロジェクトとフック定義の信頼が必要）、cwd 基準のサブディレクトリ `AGENTS.md` を実測。ファイルパス条件付きの指示はない |
+| Antigravity | agy 1.2.16 | 成立 | headless（`-p`）で `AGENTS.md`、インラインのスタック P0、`.agents/skills`、`.env` ゲート、`.agents/agents` サブエージェント、`.agents/hooks.json` フック（信頼確認なしで実行）、`.agents/rules` の `trigger: glob` 条件付きルールを実測。サブディレクトリの `AGENTS.md` は cwd 基準でのみ読み込まれる |
 
-Codex（codex-cli 0.154.0、`gpt-6-astra`）は `codex` モード成果物の AGENTS.md とインラインのスタック P0 を自動で読み込み、`.agents/skills` のリポジトリ skills を発見しました。`.claude/skills` は発見されません。モデルがルールを見落としても git フックが staged `.env` を exit 2 でブロックします。
+Codex（codex-cli 0.160.0、`gpt-6.1-sol`）と agy（1.2.16）は、各モード成果物の AGENTS.md とインラインのスタック P0 をツール呼び出しなしで自動的に読み込み、`.agents/skills` のリポジトリ skills のみを発見しました。どちらも `.claude/skills` は発見しません。agy 1.2.7 の headless は `AGENTS.md` も `GEMINI.md` も読み込めませんでしたが、1.2.16 で解消されています。モデルがルールを見落としても git フックが staged `.env` を exit 2 でブロックします。
 
-サポート状況の単一の真実の源は [`docs/harness-matrix.json`](harness-matrix.json) です。この表はその manifest と突き合わされ、CI では `scripts/check-harness-matrix.py` が検査します — `full` 等級が 90 日以上再実測されていない、あるいは判定に根拠がない場合、**ビルドは失敗します**。再実測は `scripts/spike-codex-contract.sh --dynamic` で行います。
+サポート状況の単一の真実の源は [`docs/harness-matrix.json`](harness-matrix.json) です。この表はその manifest と突き合わされ、CI では `scripts/check-harness-matrix.py` が検査します — `full` 等級が 90 日以上再実測されていない、あるいは判定に根拠がない場合、**ビルドは失敗します**。再実測は `scripts/spike-codex-contract.sh --dynamic` と `scripts/spike-agy-contract.sh --dynamic` で行います。
 
-`--harness codex` はリポジトリ skills を Codex ネイティブの `.agents/skills` に配置します。`--harness all` は Claude/Antigravity 用の `.claude/skills` と Codex 用の `.agents/skills` を両方生成します。Codex のサブエージェント、パス条件付きルール、lifecycle フックは未検証のため、全体の等級は引き続き baseline です。
+Codex と agy はサブエージェント、フック、パス別の指示をハーネスとして支持することを実測しました（上表の条件を含む）が、スキャフォールドがまだその層を生成しない（アダプタがない）ため、全体の等級は baseline です。Claude Code と同じく、フックは早期フィードバックであって強制線ではありません。agy はリポジトリの `.agents/hooks.json` を信頼確認なしで実行するため、外部リポジトリで agy を動かす前にそのファイルを確認してください（`security-audit` エージェントが検査します）。
 
 Codex 側の制約がもう 2 点、設計に効いてきます。
 
@@ -143,8 +153,9 @@ curl -fsSL https://raw.githubusercontent.com/leeyudok/agents-scaffold/main/bin/a
 
 ### ベースの更新 — `--update`
 
-ブートストラップ済みプロジェクトに最新のベースファイル(`.claude/`、`AGENTS.md`、
-`.gemini/settings.json`)を適用します。
+ブートストラップ済みプロジェクトに最新のベースファイル(`.claude/`、`AGENTS.md`)を適用します。
+以前のバージョンが生成した `.gemini/settings.json` には触れません(残っていても無害)。
+実ディレクトリの `.claude/skills` は、`.agents/skills` が存在しないか内容が同じ場合にのみ原本 `.agents/skills` へ移してリンクにします(#61)。両方が存在し内容が異なる場合は移動せず、手動マージを案内します。移行後はベースの skills も `.agents/skills` 側で更新されます。
 
 ```bash
 agents-scaffold/bin/agents-scaffold.sh --update /path/to/existing-repo
