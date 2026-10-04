@@ -1056,6 +1056,13 @@ description: has triple quotes
 ---
 say '''hi'''
 MD
+  cat > "$t/.claude/agents/stale.md" <<'MD'
+---
+name: stale
+description: will become unemittable
+---
+body
+MD
   cat > "$t/.claude/agents/gone.md" <<'MD'
 ---
 name: gone
@@ -1074,6 +1081,16 @@ MD
   [[ "$output" == *"tq.md contains '''"* ]]
   [ ! -e "$t/.codex/agents/tq.toml" ]
   [ -f "$t/.agents/agents/tq.md" ]
+  # a source that can no longer be emitted drops its stale generated file
+  printf '%s\n' "say '''now'''" >> "$t/.claude/agents/stale.md"
+  run bash "$SCRIPT" "$t" --update --yes
+  [ "$status" -eq 0 ]
+  [ ! -e "$t/.codex/agents/stale.toml" ]
+  [ -f "$t/.agents/agents/stale.md" ]
+  grep -v '^description:' "$t/.claude/agents/stale.md" > "$t/stale.tmp" && mv "$t/stale.tmp" "$t/.claude/agents/stale.md"
+  run bash "$SCRIPT" "$t" --update --yes
+  [ "$status" -eq 0 ]
+  [ ! -e "$t/.agents/agents/stale.md" ]
   # a generated adapter whose source is gone is removed on the next --update
   rm "$t/.claude/agents/gone.md"
   run bash "$SCRIPT" "$t" --update --yes

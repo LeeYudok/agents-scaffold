@@ -519,14 +519,17 @@ emit_agents() {
     fi
     name="$(claude_fm_value "$src" name)"
     desc="$(claude_fm_value "$src" description)"
+    # 여기까지 온 기존 dst 는 표시가 있는 생성물이다 — 생성할 수 없게 된 원본의 낡은 생성물은 지운다
     if [ -z "$name" ] || [ -z "$desc" ]; then
       echo "Warning: .claude/agents/$stem.md has no one-line name/description — not generated for $target." >&2
+      rm -f "$dst"
       continue
     fi
     body="$(claude_rule_body "$src")"
     if [ "$target" = "codex" ]; then
       if printf '%s' "$body" | grep -qF "'''"; then
         echo "Warning: .claude/agents/$stem.md contains ''' — cannot embed in a TOML literal string, skipped for codex." >&2
+        rm -f "$dst"
         continue
       fi
       name="${name//\\/\\\\}"; name="${name//\"/\\\"}"
