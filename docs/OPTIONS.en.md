@@ -125,7 +125,7 @@ Re-measure with `scripts/spike-codex-contract.sh --dynamic` and `scripts/spike-a
 measured on agy 1.2.16: a relative pattern containing a slash (`src/**`) becomes `**/src/**`, while a pattern without a
 slash (`Dockerfile`, `*.py`) matches the file name and is kept. Patterns are joined with commas and no spaces (a space
 after a comma becomes part of the next pattern, which then never matches). `.claude/rules` stays the source; `--update`
-regenerates and removes generated files whose source is gone. A same-named file without the generated marker
+regenerates (an existing project gets its first generation with `--update --harness agy`) and removes generated files whose source is gone. A same-named file without the generated marker
 (user-owned) is left untouched.
 
 Codex and agy were measured to support subagents, hooks and path-scoped instructions (with the

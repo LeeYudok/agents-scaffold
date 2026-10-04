@@ -119,7 +119,7 @@ Codex(codex-cli 0.160.0, `gpt-6.1-sol`)와 agy(1.2.16)는 각 모드 산출물�
 **agy 룰 어댑터 (#63).** `--harness agy|all` 이면 `.claude/rules/*.md` 를 `.agents/rules/*.md` 로 생성한다. `paths:` 는
 `trigger: glob` + `globs:`, `paths:` 가 없으면 `trigger: always_on` 이다. 패턴은 agy 1.2.16 실측대로 바꾼다 — 슬래시가 든
 상대 패턴(`src/**`)은 `**/src/**` 로, 슬래시 없는 패턴(`Dockerfile`·`*.py`)은 파일 이름에 일치하므로 그대로 둔다. 여러 패턴은
-공백 없이 쉼표로 잇는다(쉼표 뒤 공백은 패턴에 포함돼 일치하지 않는다). `.claude/rules` 가 원본이며 `--update` 때 다시 생성하고,
+공백 없이 쉼표로 잇는다(쉼표 뒤 공백은 패턴에 포함돼 일치하지 않는다). `.claude/rules` 가 원본이며 `--update` 때 다시 생성하고(기존 프로젝트는 `--update --harness agy` 로 처음 생성한다),
 원본이 사라진 생성물은 지운다. 생성 표시가 없는 같은 이름의 파일(사용자 소유)은 건드리지 않는다.
 
 Codex·agy 는 서브에이전트·훅·경로별 지침을 하네스가 지원함을 실측했지만(위 표의 조건 포함), 스캐폴드가

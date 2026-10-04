@@ -348,27 +348,49 @@ agy_glob() {
   esac
 }
 
-# frontmatter 의 paths: 목록 항목을 한 줄에 하나씩 낸다(따옴표 제거). frontmatter 가 없으면 빈 출력.
-# CRLF 로 체크아웃된 파일(Windows autocrlf)도 같은 결과가 나오도록 줄 끝 \r 을 뗀다.
+# frontmatter 의 paths: 항목을 한 줄에 하나씩 낸다. frontmatter 가 없으면 빈 출력.
+#   블록 목록(- 항목)과 인라인 배열([a, b]) 모두, 따옴표 스칼라와 줄 끝 # 주석을 YAML 대로 처리한다
+#   (따옴표 안의 # 는 값이다). CRLF 로 체크아웃된 파일(Windows autocrlf)도 같은 결과가 나오도록
+#   줄 끝 \r 을 뗀다. awk 문자열의 \047 은 작은따옴표다.
 claude_rule_paths() {
   awk '
+    function trim(s) { gsub(/^[[:space:]]+|[[:space:]]+$/, "", s); return s }
+    function scalar(v,   q, i) {
+      v = trim(v); q = substr(v, 1, 1)
+      if (q == "\"" || q == "\047") {
+        i = index(substr(v, 2), q)
+        return i ? substr(v, 2, i - 1) : substr(v, 2)
+      }
+      sub(/[[:space:]]+#.*$/, "", v)
+      return trim(v)
+    }
+    function inline_items(s,   i, c, q, cur, v) {
+      q = ""; cur = ""
+      for (i = 1; i <= length(s); i++) {
+        c = substr(s, i, 1)
+        if (q != "") { if (c == q) q = ""; cur = cur c; continue }
+        if (c == "\"" || c == "\047") { q = c; cur = cur c; continue }
+        if (c == "," || c == "]") {
+          v = scalar(cur); if (v != "") print v
+          cur = ""
+          if (c == "]") return
+          continue
+        }
+        cur = cur c
+      }
+      v = scalar(cur); if (v != "") print v
+    }
     { sub(/\r$/, "") }
     NR == 1 { if ($0 != "---") exit; next }
     $0 == "---" { exit }
-    /^paths:[[:space:]]*\[/ {
-      line = $0; sub(/^paths:[[:space:]]*\[/, "", line); sub(/\][[:space:]]*$/, "", line)
-      n = split(line, items, ",")
-      for (i = 1; i <= n; i++) {
-        it = items[i]; gsub(/^[[:space:]]+|[[:space:]]+$/, "", it); gsub(/^["'\'']|["'\'']$/, "", it)
-        if (it != "") print it
-      }
-      next
-    }
+    /^paths:[[:space:]]*\[/ { line = $0; sub(/^paths:[[:space:]]*\[/, "", line); inline_items(line); next }
     /^paths:/ { inpaths = 1; next }
     inpaths && /^[[:space:]]*-[[:space:]]/ {
-      sub(/^[[:space:]]*-[[:space:]]*/, ""); sub(/[[:space:]]+$/, "")
-      gsub(/^["'\'']|["'\'']$/, ""); print; next
+      line = $0; sub(/^[[:space:]]*-[[:space:]]*/, "", line)
+      v = scalar(line); if (v != "") print v
+      next
     }
+    inpaths && /^[[:space:]]*(#|$)/ { next }
     inpaths && !/^[[:space:]]/ { inpaths = 0 }
   ' "$1"
 }
@@ -497,8 +519,10 @@ run_update() {
     fi
   fi
 
-  # #63: agy 룰을 생성한 적 있는 프로젝트면(표시 있는 파일 존재) 현재 .claude/rules 로 다시 생성한다
-  if grep -lqF "$AGY_RULE_MARK" "$TARGET/.agents/rules/"*.md 2>/dev/null; then
+  # #63: --harness agy|all 을 주었거나(기존 프로젝트를 agy 로 옮기는 경우), 생성한 적 있는
+  #      프로젝트면(표시 있는 파일 존재) 현재 .claude/rules 로 다시 생성한다
+  if [ "$HARNESS" = "agy" ] || [ "$HARNESS" = "all" ] \
+    || grep -lqF "$AGY_RULE_MARK" "$TARGET/.agents/rules/"*.md 2>/dev/null; then
     emit_agy_rules
   fi
 

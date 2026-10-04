@@ -964,6 +964,23 @@ JSP
   [ -f "$t/.agents/rules/common.md" ]
 }
 
+@test "agy rule globs follow YAML quoting and comments; --update --harness agy migrates (#63)" {
+  t="$BATS_TEST_TMPDIR/agyrules-yaml"
+  mkdir -p "$t"
+  git -C "$t" init -q
+  run bash "$SCRIPT" "$t" --forge github --name yaml-app --yes
+  [ "$status" -eq 0 ]
+  [ ! -e "$t/.agents/rules" ]
+  printf -- "---\npaths:\n  - 'src/**' # application sources\n  - lib/** # unquoted\n  - \"a#b/**\"\n\n  # comment line\n  - \"**/*.py\"\n---\nbody\n" > "$t/.claude/rules/yc.md"
+  printf -- "---\npaths: [\"x/**\", 'y/*.md', z/** ] # trailing\n---\nbody\n" > "$t/.claude/rules/yi.md"
+  # an existing Claude-only project moves to agy through --update --harness agy (no marker yet)
+  run bash "$SCRIPT" "$t" --update --harness agy --yes
+  [ "$status" -eq 0 ]
+  [ -f "$t/.agents/rules/common.md" ]
+  grep -qx 'globs: "\*\*/src/\*\*,\*\*/lib/\*\*,\*\*/a#b/\*\*,\*\*/\*.py"' "$t/.agents/rules/yc.md"
+  grep -qx 'globs: "\*\*/x/\*\*,\*\*/y/\*.md,\*\*/z/\*\*"' "$t/.agents/rules/yi.md"
+}
+
 @test "harness all keeps everything and wires git hook; default claude also wires it (#21)" {
   t="$BATS_TEST_TMPDIR/allmode"
   mkdir -p "$t"
