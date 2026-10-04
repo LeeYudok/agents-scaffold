@@ -48,6 +48,7 @@ agent_answer="unverified"; agent_note="--dynamic 미지정"
 hook_answer="unverified"; hook_note="--dynamic 미지정"
 nested_answer="unverified"; nested_note="--dynamic 미지정"
 adapter_answer="unverified"; adapter_note="--dynamic 미지정"
+hooks_answer="unverified"; hooks_note="--dynamic 미지정"
 if [ "$DYNAMIC" -eq 1 ] && [ "$CODEX_VERSION" != "not-installed" ]; then
   out="$WORK/_p0.txt"
   timeout "$CODEX_TIMEOUT" codex exec -C "$WORK" --skip-git-repo-check -s read-only \
@@ -215,6 +216,29 @@ HOOKS
   else
     adapter_answer="fail"; adapter_note="생성한 에이전트를 위임해도 본문 지시대로 응답하지 않음"
   fi
+
+  # 훅 어댑터 e2e (#65): settings.json 에서 .codex/hooks.json 을 다시 생성하고, 신뢰 프로젝트 + 훅 신뢰
+  # 우회로 명령을 하나 실행시킨다. 관찰 로그(observe-lite)와 세션 표시(stop-memory-remind)로 판정한다.
+  bash "$REPO_ROOT/bin/agents-scaffold.sh" "$WORK" --update --harness codex --yes >/dev/null 2>&1
+  hook_gen="$WORK/.codex/hooks.json"
+  codex_ask "$WORK/_hk_e2e.txt" -C "$WORK" -c "$trust" --dangerously-bypass-hook-trust \
+    "Run the shell command: echo zqx-hook-probe — then reply DONE."
+  obs=$(grep -l 'zqx-hook-probe' "$WORK"/.claude/memory/observations/*.jsonl 2>/dev/null | head -1)
+  if [ -n "$obs" ]; then
+    sid_prefix=$(basename "$obs" .jsonl)
+    stop_marker=$(ls /tmp/claude_memsync_"$sid_prefix"* 2>/dev/null | head -1)
+  else
+    stop_marker=""
+  fi
+  if [ ! -s "$hook_gen" ]; then
+    hooks_answer="fail"; hooks_note="--update --harness 가 hooks.json 을 생성하지 않음"
+  elif [ -n "$obs" ] && grep -q '"tool": "Bash"' "$obs" && [ -n "$stop_marker" ]; then
+    hooks_answer="pass"; hooks_note="생성된 hooks.json → hook-adapter.py → Claude 형식 훅: observe-lite 가 명령을 Bash 로 기록, stop-memory-remind 가 세션 표시를 남김"
+  elif [ -n "$obs" ]; then
+    hooks_answer="partial"; hooks_note="PostToolUse(observe-lite)는 실행됐으나 Stop(stop-memory-remind) 표시 없음"
+  else
+    hooks_answer="fail"; hooks_note="생성된 훅이 실행되지 않음(관찰 로그 없음)"
+  fi
 fi
 
 cat <<JSON
@@ -237,7 +261,8 @@ cat <<JSON
     "subagents": { "verdict": "$agent_answer", "note": "$agent_note" },
     "lifecycle_hooks": { "verdict": "$hook_answer", "note": "$hook_note" },
     "path_scoped_instructions": { "verdict": "$nested_answer", "note": "$nested_note" },
-    "subagents_adapter": { "verdict": "$adapter_answer", "note": "$adapter_note" }
+    "subagents_adapter": { "verdict": "$adapter_answer", "note": "$adapter_note" },
+    "hooks_adapter": { "verdict": "$hooks_answer", "note": "$hooks_note" }
   }
 }
 JSON

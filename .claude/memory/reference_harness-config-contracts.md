@@ -38,6 +38,7 @@ AGENTS.md 로드 항목만 2026-09-21 재측정: `claude 2.1.278` / `codex-cli 0
   - 서브에이전트 `.codex/agents/*.toml`(`name`·`description`·`developer_instructions`): 신뢰 프로젝트에서만 등록, 위임 시 `collab_tool_call` 로 developer_instructions 대로 응답
   - 훅 `.codex/hooks.json`(`{"hooks":{"<Event>":[{"hooks":[{"type":"command","command":...}]}]}}`): 신뢰 프로젝트 + 훅 정의 신뢰(`/hooks` 검토) 또는 `--dangerously-bypass-hook-trust` 일 때만 실행. 미신뢰 프로젝트는 우회 플래그로도 미실행
   - 하위 `AGENTS.md` 는 cwd 기준으로만 로드(루트에서 하위 파일을 읽어도 미로드) — 파일 경로 조건부 지침 없음
+  - 훅 입력(#65 실측): Claude 와 거의 같다 — `session_id`·`cwd`·`hook_event_name`·`tool_name`·`tool_input`·`tool_response`(문자열). 셸은 `Bash`, 파일 편집은 `apply_patch`(`tool_input.command` 에 `*** Add File:/Update File:` 패치 텍스트). Stop 에 `{"decision":"block","reason"}` 을 내면 한 턴 더 돈다. 훅 cwd = 세션 cwd, 프로젝트 경로 환경변수 없음
   - 서브에이전트 이름에 하이픈(`code-reviewer`)이 되고, `developer_instructions` 를 TOML 리터럴 다중행 문자열(`'''`)로 두면 백슬래시·따옴표가 그대로 전달된다(#64)
   - 함정: `codex exec` 는 stdin 이 열려 있으면 `Reading additional input from stdin...` 에서 멈춘다 → `</dev/null`. 사용자 config 를 안 건드리고 신뢰를 주려면 `-c 'projects={"<abs>"={trust_level="trusted"}}'`(인라인 테이블). `-c 'projects."<abs>".trust_level=...'` 는 "unrecognized configuration" 으로 무시된다
 
@@ -55,6 +56,8 @@ AGENTS.md 로드 항목만 2026-09-21 재측정: `claude 2.1.278` / `codex-cli 0
   - 훅 `.agents/hooks.json`: `{"<hook-name>":{"PreToolUse":[{"matcher":"...","hooks":[{...}]}],"PreInvocation":[{"type":"command","command":"..."}],...}}` — 툴 이벤트(Pre/PostToolUse)만 matcher+hooks, Pre/PostInvocation·Stop 은 핸들러 배열. 틀리면 `--log-file` 에만 `command hook must specify 'command'` 가 남고 조용히 무시된다. **신뢰 확인 없이 headless 에서도 실행**된다(보안 주의 — security-audit 대상)
   - 룰 `.agents/rules/*.md` `trigger: glob`: 일치 파일 접근 뒤에만 로드. `globs` 는 `**/sub2/**` 처럼 `**/` 접두가 필요하고 `sub2/**` 는 미일치. `trigger: always_on` 은 상시 로드
   - glob 패턴 세부(#63 실측): 슬래시 없는 패턴(`Dockerfile`·`*.py`)은 파일 이름에 일치(루트·하위 모두), `**/*.py` 는 루트 파일에도 일치. 여러 패턴은 `"a,b"` 처럼 **공백 없는 쉼표** — 공식문서 예시 `"*.ts, *.tsx"` 처럼 쉼표 뒤에 공백을 두면 두 번째 패턴이 일치하지 않는다. YAML 리스트(`globs:` 아래 `- ...`)는 응답이 비거나 엉뚱해져 쓰지 않는다. 스캐폴드는 `.claude/rules` 에서 이 형식으로 생성한다(`emit_agy_rules`)
+  - 훅 입력(#65 실측): camelCase — `conversationId`·`workspacePaths`·`toolCall{name,args}`(`run_command`→`args.CommandLine`, `write_to_file` 등→`args.TargetFile`), PostToolUse 에 명령 출력 없음. 훅 cwd 는 hooks.json 이 있는 `.agents/`, 프로젝트 경로 환경변수 없음. Stop 은 `{"decision":"continue","reason"}` 로 한 턴 더(Claude 의 `block` 아님)
+  - 산출물에 `.agents/hooks.json`(Stop 메모리 리마인드)이 생긴 뒤로 headless 질의도 한 턴 더 돌며 툴을 써서 "툴 없이 답했나" 판정이 깨진다 — spike 는 기능 측정 동안 hooks.json 을 빼 둔다(#65)
   - 하위 `AGENTS.md` 는 cwd 기준으로만 로드 — 공식문서의 "파일을 읽거나 고칠 때 그 폴더부터 올라가며 로드"는 headless 에서 재현되지 않음(읽기·편집·다음 턴 모두 미로드)
 
 ## Gemini CLI (지원 대상 제외 — #60)

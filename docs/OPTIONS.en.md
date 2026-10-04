@@ -61,9 +61,9 @@ just costs more. None of them fire automatically, even with all three installed;
 | Value | Target | What it does |
 |---|---|---|
 | `claude` (default) | Claude Code | Full install — settings.json hook bindings, subagents, slash commands, workflows |
-| `codex` | Codex | Installs `AGENTS.md`, skills, and shared rules/hooks/memory; generates `.claude/agents` as `.codex/agents` TOML (#64); drops Claude-only layers (settings.json, commands, workflows) |
-| `agy` | Antigravity | The shared `codex` layout, plus `.claude/rules` generated as `.agents/rules` (`trigger: glob`, #63) and `.claude/agents` as `.agents/agents` (#64) |
-| `all` | Mixed teams | Everything from `claude` plus every adapter (agy rules, Codex and agy subagents). The skill layout does not depend on the harness (#61) |
+| `codex` | Codex | Installs `AGENTS.md`, skills, and shared rules/hooks/memory; generates `.codex/agents` TOML (#64) and `.codex/hooks.json` (#65); drops Claude-only layers (commands, workflows) |
+| `agy` | Antigravity | The shared `codex` layout, plus `.agents/rules` (`trigger: glob`, #63), `.agents/agents` (#64) and `.agents/hooks.json` (#65) generated from `.claude/` |
+| `all` | Mixed teams | Everything from `claude` plus every adapter (agy rules, Codex and agy subagents and hooks). The skill layout does not depend on the harness (#61) |
 
 **Skills have a single source (#61).** Whatever the harness, skills live once in `.agents/skills/`
 (the Codex/agy native path) and Claude Code reads the same files through the symlink
@@ -139,9 +139,27 @@ only for trusted projects, so generating the files does not activate them by its
 adapter (`--update` regenerates, generated files whose source is gone are removed, user files without the marker are kept,
 and an existing project gets its first generation with `--update --harness codex|agy|all`).
 
-Codex and agy were measured to support subagents, hooks and path-scoped instructions (with the
-conditions in the table above). The scaffold generates subagents (#64) and agy rules (#63) but not hooks yet (#65),
-so their overall tier is baseline. As with Claude Code, hooks are early feedback, not the enforcement line. agy
+**Hook adapters (#65).** Hooks are authored in Claude format (`hooks` in `.claude/settings.json` + `.claude/hooks/*`).
+`.claude/hooks/hook-adapter.py` generates `.codex/hooks.json` for Codex (`--harness codex|all`) and `.agents/hooks.json` for
+agy (`--harness agy|all`). At run time the same adapter converts the harness input to Claude format, calls the original
+script, and converts the reply back (measured 2026-10-04):
+
+- Codex input is almost Claude's. Shell is `Bash`; file edits are `apply_patch` (split per file from the patch text and passed
+  as `Edit`). Codex accepts Stop's `{"decision":"block"}` as-is and runs another turn. Hooks run only with project trust plus
+  hook-definition trust (`/hooks` review).
+- agy input is camelCase (`conversationId`, `toolCall`). `run_command` becomes `Bash`, `write_to_file` and friends become
+  `Write`/`Edit`, and Stop's `block` becomes agy's `continue`. Command output is not passed, so test-result notifications
+  cannot judge pass/fail. **Hooks run without a trust prompt** (cloning is enough to run the repo's `.claude/hooks/*` —
+  `security-audit` scans them).
+- Not carried over: the PreToolUse commit gate (`.git/hooks` owns it) and prompt-type hooks (PreCompact).
+- The adapter needs `python3` (generation is skipped without it). `.claude/settings.json` is the hook source, so codex/agy
+  modes keep it.
+- The Stop hook (memory reminder) runs one more turn in headless mode (`-p`, `exec`) too. If that is unwanted in automation,
+  remove it from `settings.json` and run `--update`. Update rules match the other adapters.
+
+The scaffold generates subagents (#64) and hooks (#65) for both harnesses and path-scoped rules (#63) for agy, each
+measured end to end. **agy is therefore full** (hooks partial, as for Claude Code). **Codex stays baseline**: it has no
+file-path-scoped instructions, so `.claude/rules` `paths:` rules cannot reach it (subdirectory `AGENTS.md` loads by cwd only). As with Claude Code, hooks are early feedback, not the enforcement line. agy
 runs a repo's `.agents/hooks.json` without a trust prompt, so check that file before running agy in a
 foreign repo (the `security-audit` agent scans it).
 

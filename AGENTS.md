@@ -32,7 +32,7 @@ Claude Code(v2.1.277+)·Codex·Antigravity(agy) 모두 이 파일을 네이티�
 | :--- | :--- | :--- |
 | `agents/` | 서브에이전트 정의 (code-reviewer, security-audit, db-migration, sdlc-*, agent-evolve). Codex `.codex/agents`·agy `.agents/agents` 는 여기서 생성 (#64) | [README](.claude/agents/README.md) |
 | `commands/` | 커스텀 슬래시 커맨드 (fix-issue, sdlc-cycle, sonar, knowledge-graph) | [README](.claude/commands/README.md) |
-| `hooks/` | 강제 게이트 — pre-commit, 자동 포맷, observe-lite, 메모리 리마인드 | [README](.claude/hooks/README.md) |
+| `hooks/` | 강제 게이트 — pre-commit, 자동 포맷, observe-lite, 메모리 리마인드. Codex·agy 훅은 `settings.json` 에서 `hook-adapter.py` 로 생성 (#65) | [README](.claude/hooks/README.md) |
 | `memory/` | 프로젝트 메모리 SSOT — MEMORY.md 인덱스 + 타입접두 파일 | [README](.claude/memory/README.md) |
 | `rules/` | 맥락 인지 룰 — `paths:` 스코프 조건부 로드. agy 용 `.agents/rules` 는 여기서 생성 (#63) | [README](.claude/rules/README.md) |
 | `skills/` | 상황별 절차 — review, status, search-first, memory-factcheck, security-precheck, docs-sync, grill-me, handoff 등. 설치된 프로젝트에선 원본 `.agents/skills/` 를 가리키는 링크 (#61) | [README](.claude/skills/README.md) |
