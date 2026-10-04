@@ -51,6 +51,7 @@ AGENTS.md 로드 항목만 2026-09-21 재측정: `claude 2.1.278` / `codex-cli 0
   - 서브에이전트 `.agents/agents/<name>.md`(frontmatter `name`·`description`): 툴 없이 목록에 등록, `--agent <name>` 으로 고르면 본문 지시대로 응답. `agy agents` 서브커맨드는 출력이 비어 판정에 못 쓴다
   - 훅 `.agents/hooks.json`: `{"<hook-name>":{"PreToolUse":[{"matcher":"...","hooks":[{...}]}],"PreInvocation":[{"type":"command","command":"..."}],...}}` — 툴 이벤트(Pre/PostToolUse)만 matcher+hooks, Pre/PostInvocation·Stop 은 핸들러 배열. 틀리면 `--log-file` 에만 `command hook must specify 'command'` 가 남고 조용히 무시된다. **신뢰 확인 없이 headless 에서도 실행**된다(보안 주의 — security-audit 대상)
   - 룰 `.agents/rules/*.md` `trigger: glob`: 일치 파일 접근 뒤에만 로드. `globs` 는 `**/sub2/**` 처럼 `**/` 접두가 필요하고 `sub2/**` 는 미일치. `trigger: always_on` 은 상시 로드
+  - glob 패턴 세부(#63 실측): 슬래시 없는 패턴(`Dockerfile`·`*.py`)은 파일 이름에 일치(루트·하위 모두), `**/*.py` 는 루트 파일에도 일치. 여러 패턴은 `"a,b"` 처럼 **공백 없는 쉼표** — 공식문서 예시 `"*.ts, *.tsx"` 처럼 쉼표 뒤에 공백을 두면 두 번째 패턴이 일치하지 않는다. YAML 리스트(`globs:` 아래 `- ...`)는 응답이 비거나 엉뚱해져 쓰지 않는다. 스캐폴드는 `.claude/rules` 에서 이 형식으로 생성한다(`emit_agy_rules`)
   - 하위 `AGENTS.md` 는 cwd 기준으로만 로드 — 공식문서의 "파일을 읽거나 고칠 때 그 폴더부터 올라가며 로드"는 headless 에서 재현되지 않음(읽기·편집·다음 턴 모두 미로드)
 
 ## Gemini CLI (지원 대상 제외 — #60)

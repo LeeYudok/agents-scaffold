@@ -57,8 +57,8 @@
 |---|---|---|
 | `claude`（デフォルト） | Claude Code | フルインストール — settings.json のフックバインディング・サブエージェント・スラッシュコマンド・workflows を含む |
 | `codex` | Codex | `AGENTS.md`、skills、共有 rules/hooks/memory を導入し、Claude 専用層を除去 |
-| `agy` | Antigravity | `codex` と同じレイアウト — agy も `AGENTS.md` と `.agents/skills` をネイティブに読む |
-| `all` | 混在チーム | `claude` と同じ（互換のため残置）— skills のレイアウトはハーネスに依存しなくなった（#61） |
+| `agy` | Antigravity | `codex` のレイアウトに加え、`.claude/rules` を agy の `.agents/rules`（`trigger: glob`）として生成（#63） |
+| `all` | 混在チーム | `claude` の全内容 + 生成された agy ルール。skills のレイアウトはハーネスに依存しない（#61） |
 
 **skills の原本は 1 か所です（#61）。** ハーネスに関係なく skills は `.agents/skills/`（Codex・agy のネイティブパス）に 1 回だけ置き、Claude Code はシンボリックリンク `.claude/skills -> ../.agents/skills` 経由で同じファイルを読みます（claude 2.1.289 で実測 — リンクなしで `.agents/skills` だけを置くと Claude Code は skills を見つけられません）。2 つのコピーが食い違うことはなくなり、後から別のハーネスを加えても再インストールは不要です。
 
@@ -92,7 +92,9 @@ Codex（codex-cli 0.160.0、`gpt-6.1-sol`）と agy（1.2.16）は、各モー�
 
 サポート状況の単一の真実の源は [`docs/harness-matrix.json`](harness-matrix.json) です。この表はその manifest と突き合わされ、CI では `scripts/check-harness-matrix.py` が検査します — `full` 等級が 90 日以上再実測されていない、あるいは判定に根拠がない場合、**ビルドは失敗します**。再実測は `scripts/spike-codex-contract.sh --dynamic` と `scripts/spike-agy-contract.sh --dynamic` で行います。
 
-Codex と agy はサブエージェント、フック、パス別の指示をハーネスとして支持することを実測しました（上表の条件を含む）が、スキャフォールドがまだその層を生成しない（アダプタがない）ため、全体の等級は baseline です。Claude Code と同じく、フックは早期フィードバックであって強制線ではありません。agy はリポジトリの `.agents/hooks.json` を信頼確認なしで実行するため、外部リポジトリで agy を動かす前にそのファイルを確認してください（`security-audit` エージェントが検査します）。
+**agy ルールアダプタ（#63）。** `--harness agy|all` では `.claude/rules/*.md` を `.agents/rules/*.md` として生成します。`paths:` があれば `trigger: glob` + `globs:`、なければ `trigger: always_on` になります。パターンは agy 1.2.16 の実測どおりに変換します — スラッシュを含む相対パターン（`src/**`）は `**/src/**` に、スラッシュのないパターン（`Dockerfile`・`*.py`）はファイル名に一致するのでそのまま残します。複数のパターンは空白なしのカンマでつなぎます（カンマの後の空白は次のパターンの一部になり、一致しなくなります）。`.claude/rules` が原本で、`--update` 時に再生成し（既存プロジェクトは `--update --harness agy` で初回生成）、原本がなくなった生成物は削除します。生成マークのない同名ファイル（ユーザー所有）には触れません。
+
+Codex と agy はサブエージェント、フック、パス別の指示をハーネスとして支持することを実測しました（上表の条件を含む）が、スキャフォールドがまだサブエージェントとフックの層を生成しない（アダプタは agy ルールのみ）ため、全体の等級は baseline です。Claude Code と同じく、フックは早期フィードバックであって強制線ではありません。agy はリポジトリの `.agents/hooks.json` を信頼確認なしで実行するため、外部リポジトリで agy を動かす前にそのファイルを確認してください（`security-audit` エージェントが検査します）。
 
 Codex 側の制約がもう 2 点、設計に効いてきます。
 

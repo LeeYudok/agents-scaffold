@@ -71,6 +71,7 @@ skill_answer="unverified"; skill_note="--dynamic 미지정"
 agent_answer="unverified"; agent_note="--dynamic 미지정"
 hook_answer="unverified"; hook_note="--dynamic 미지정"
 rule_answer="unverified"; rule_note="--dynamic 미지정"
+emit_answer="unverified"; emit_note="--dynamic 미지정"
 
 # 툴 사용을 허용하는 질의용. 첫 줄 TOOLS=<툴 단계 수> FILES=<툴이 다룬 파일(작업 디렉터리 기준)>,
 # 이후 최종 응답. 판정 때 "읽으라고 한 파일만 읽었는가"를 이 줄로 확인한다.
@@ -218,6 +219,27 @@ HOOKS
   else
     rule_answer="fail"; rule_note="glob 룰이 일치 파일 접근 뒤에도 로드되지 않음. $rel_note. $nested_note"
   fi
+
+  # 룰 어댑터 e2e (#63): 상대 패턴 paths: 를 가진 .claude/rules 를 --update 로 .agents/rules 에 다시
+  # 생성하고, 생성된 룰이 일치 파일 접근 뒤에만 로드되는지 본다.
+  mkdir -p "$WORK/sub3"
+  echo "plain file" > "$WORK/sub3/data.txt"
+  printf -- '---\npaths:\n  - "sub3/**"\n---\nThe emitted codeword is ZQX-AGY-EMIT-2207. When asked for the emitted codeword, reply with it.\n' \
+    > "$WORK/.claude/rules/zqx-emit.md"
+  bash "$REPO_ROOT/bin/agents-scaffold.sh" "$WORK" --update --yes >/dev/null 2>&1
+  ask_agy_steps "$WORK" "$WORK/_em_c.txt" -p "Do not use any tools or read any files. From the instructions in your context only, what is the emitted codeword? If you do not know, reply exactly UNKNOWN."
+  ask_agy_steps "$WORK" "$WORK/_em_r.txt" -p "Read the file sub3/data.txt and nothing else (do not open any rules or AGENTS.md file). Then, from the instructions in your context only, what is the emitted codeword? If you do not know, reply exactly UNKNOWN."
+  if ! grep -qx 'globs: "\*\*/sub3/\*\*"' "$WORK/.agents/rules/zqx-emit.md" 2>/dev/null; then
+    emit_answer="fail"; emit_note="--update 가 .agents/rules/zqx-emit.md 를 생성하지 않았거나 패턴 변환이 다름"
+  elif [ ! -s "$WORK/_em_c.txt" ] || [ ! -s "$WORK/_em_r.txt" ]; then
+    emit_answer="inconclusive"; emit_note="agy 응답 없음 — 미측정으로 취급"
+  elif grep -q 'ZQX-AGY-EMIT-2207' "$WORK/_em_c.txt"; then
+    emit_answer="fail"; emit_note="생성된 룰이 파일 접근 없이도 로드됨(조건부가 아님)"
+  elif grep -q 'ZQX-AGY-EMIT-2207' "$WORK/_em_r.txt" && grep -q '^TOOLS=[0-9]* FILES=sub3/data.txt$' "$WORK/_em_r.txt"; then
+    emit_answer="pass"; emit_note="paths: sub3/** 가 globs: **/sub3/** 로 생성되고, 일치 파일 접근 뒤에만 로드(대조군 미로드)"
+  else
+    emit_answer="fail"; emit_note="생성된 룰이 일치 파일 접근 뒤에도 로드되지 않음"
+  fi
 fi
 
 cat <<JSON
@@ -237,7 +259,8 @@ cat <<JSON
     "repo_skills_discovery_path": { "verdict": "$skill_answer", "note": "$skill_note" },
     "subagents": { "verdict": "$agent_answer", "note": "$agent_note" },
     "lifecycle_hooks": { "verdict": "$hook_answer", "note": "$hook_note" },
-    "path_scoped_rules": { "verdict": "$rule_answer", "note": "$rule_note" }
+    "path_scoped_rules": { "verdict": "$rule_answer", "note": "$rule_note" },
+    "rules_adapter": { "verdict": "$emit_answer", "note": "$emit_note" }
   }
 }
 JSON

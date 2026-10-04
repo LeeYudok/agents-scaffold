@@ -58,8 +58,8 @@
 |---|---|---|
 | `claude` (기본) | Claude Code | 전체 설치 — settings.json 훅 바인딩·서브에이전트·슬래시 커맨드·workflows 포함 |
 | `codex` | Codex | `AGENTS.md`·스킬과 공통 rules/hooks/memory 설치, Claude 전용 계층 제거 |
-| `agy` | Antigravity | `codex` 와 같은 레이아웃 — agy 도 `AGENTS.md` 와 `.agents/skills` 를 네이티브로 읽는다 |
-| `all` | 혼용 팀 | `claude` 와 같다(호환용으로 남김) — 스킬 레이아웃이 하네스와 무관해졌다(#61) |
+| `agy` | Antigravity | `codex` 와 같은 레이아웃에 더해 `.claude/rules` 를 agy 용 `.agents/rules`(`trigger: glob`)로 생성한다(#63) |
+| `all` | 혼용 팀 | `claude` 전체 + agy 룰 생성. 스킬 레이아웃은 하네스와 무관하다(#61) |
 
 **스킬 원본은 한 곳이다 (#61).** 스킬은 하네스와 무관하게 `.agents/skills/`(Codex·agy 네이티브
 경로)에 한 번만 두고, Claude Code 는 `.claude/skills -> ../.agents/skills` 심볼릭 링크로 같은 원본을
@@ -116,8 +116,14 @@ Codex(codex-cli 0.160.0, `gpt-6.1-sol`)와 agy(1.2.16)는 각 모드 산출물�
 90일 넘게 재측정되지 않았거나 판정에 근거가 없으면 **빌드가 실패한다**. 재측정은
 `scripts/spike-codex-contract.sh --dynamic`·`scripts/spike-agy-contract.sh --dynamic` 으로 수행한다.
 
+**agy 룰 어댑터 (#63).** `--harness agy|all` 이면 `.claude/rules/*.md` 를 `.agents/rules/*.md` 로 생성한다. `paths:` 는
+`trigger: glob` + `globs:`, `paths:` 가 없으면 `trigger: always_on` 이다. 패턴은 agy 1.2.16 실측대로 바꾼다 — 슬래시가 든
+상대 패턴(`src/**`)은 `**/src/**` 로, 슬래시 없는 패턴(`Dockerfile`·`*.py`)은 파일 이름에 일치하므로 그대로 둔다. 여러 패턴은
+공백 없이 쉼표로 잇는다(쉼표 뒤 공백은 패턴에 포함돼 일치하지 않는다). `.claude/rules` 가 원본이며 `--update` 때 다시 생성하고(기존 프로젝트는 `--update --harness agy` 로 처음 생성한다),
+원본이 사라진 생성물은 지운다. 생성 표시가 없는 같은 이름의 파일(사용자 소유)은 건드리지 않는다.
+
 Codex·agy 는 서브에이전트·훅·경로별 지침을 하네스가 지원함을 실측했지만(위 표의 조건 포함), 스캐폴드가
-그 계층을 아직 생성하지 않으므로(어댑터 없음) 전체 등급은 baseline 이다. 훅은 Claude Code 와 마찬가지로
+서브에이전트·훅 계층을 아직 생성하지 않으므로(어댑터는 agy 룰뿐) 전체 등급은 baseline 이다. 훅은 Claude Code 와 마찬가지로
 조기 피드백이지 강제선이 아니다. agy 는 레포의 `.agents/hooks.json` 을 신뢰 확인 없이 실행하므로, 외부
 레포에서 agy 를 돌리기 전에 그 파일을 확인한다(`security-audit` 에이전트가 검사한다).
 

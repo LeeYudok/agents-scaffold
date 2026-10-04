@@ -34,7 +34,7 @@ Claude Code(v2.1.277+)·Codex·Antigravity(agy) 모두 이 파일을 네이티�
 | `commands/` | 커스텀 슬래시 커맨드 (fix-issue, sdlc-cycle, sonar, knowledge-graph) | [README](.claude/commands/README.md) |
 | `hooks/` | 강제 게이트 — pre-commit, 자동 포맷, observe-lite, 메모리 리마인드 | [README](.claude/hooks/README.md) |
 | `memory/` | 프로젝트 메모리 SSOT — MEMORY.md 인덱스 + 타입접두 파일 | [README](.claude/memory/README.md) |
-| `rules/` | 맥락 인지 룰 — `paths:` 스코프 조건부 로드 | [README](.claude/rules/README.md) |
+| `rules/` | 맥락 인지 룰 — `paths:` 스코프 조건부 로드. agy 용 `.agents/rules` 는 여기서 생성 (#63) | [README](.claude/rules/README.md) |
 | `skills/` | 상황별 절차 — review, status, search-first, memory-factcheck, security-precheck, docs-sync, grill-me, handoff 등. 설치된 프로젝트에선 원본 `.agents/skills/` 를 가리키는 링크 (#61) | [README](.claude/skills/README.md) |
 | `workflows/` | 저장형 Workflow 오케스트레이션 스크립트(`*.js`) — rules-audit 예제 | [README](.claude/workflows/README.md) |
 | `scripts/` | 레포 로컬 헬퍼 — knowledge_graph.py(문서 그래프 + 링크 체커) | [README](.claude/scripts/README.md) |

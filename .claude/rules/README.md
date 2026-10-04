@@ -8,6 +8,8 @@ AI 에이전트(Claude Code 등)가 이 레포에서 작업할 때 자동 주입
 - **스코프 로드**: frontmatter `paths:`(glob 배열)가 있으면 **매칭 파일을 수정/생성할 때만** 주입된다.
 - **항상 로드**: `paths:` 가 없으면 세션 시작 시 항상 로드된다 (AGENTS.md 처럼).
 - 각 파일의 정확한 glob 은 **frontmatter 가 단일 진실원천** — 아래 표는 개요.
+- **agy 용 생성물**: `--harness agy|all` 이면 설치·`--update` 때 이 파일들을 `.agents/rules/*.md`(`trigger: glob`/`always_on`)로
+  생성한다(#63). 원본은 여기 하나다 — 생성물은 고치지 않는다. 슬래시가 든 상대 패턴은 agy 에서 `**/` 를 붙여야 일치한다.
 
 ```markdown
 ---
