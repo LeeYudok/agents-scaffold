@@ -141,8 +141,8 @@
         },
         "path_scoped_rules": {
           "verdict": "pass",
-          "target": ".agents/rules/*.md (trigger: glob, globs: \"**/<dir>/**\")",
-          "evidence": "https://antigravity.google/docs/rules/ + spike-agy-contract.sh --dynamic(1.2.16 headless, 2026-10-04, #60): glob 룰이 일치 파일 접근 뒤에만 로드(대조군 UNKNOWN). 패턴은 **/sub2/** 처럼 앞에 **/ 가 필요하고 상대 패턴 sub2/** 는 미일치. 하위 디렉터리 AGENTS.md 는 cwd 기준으로만 로드되고, 문서와 달리 파일 읽기·편집으로는 미로드. 산출물은 아직 이 계층을 생성하지 않는다(어댑터 없음 — 등급은 baseline 유지)"
+          "target": ".agents/rules/*.md (generated from .claude/rules paths:, trigger: glob, #63)",
+          "evidence": "https://antigravity.google/docs/rules/ + spike-agy-contract.sh --dynamic(1.2.16 headless, 2026-10-04): glob 룰이 일치 파일 접근 뒤에만 로드(대조군 UNKNOWN, #60). 패턴은 슬래시가 든 상대 패턴(sub2/**)이 미일치라 **/ 를 붙이고, 슬래시 없는 패턴(Dockerfile·*.py)은 파일 이름에 일치, 여러 패턴은 공백 없는 쉼표로 이어야 일치(쉼표 뒤 공백은 패턴에 포함). 산출물이 .claude/rules 에서 이 형식으로 생성하고, 생성된 룰이 일치 파일 접근 뒤에만 로드됨을 e2e 로 확인(#63). 하위 디렉터리 AGENTS.md 는 cwd 기준으로만 로드"
         },
         "lifecycle_hooks": {
           "verdict": "partial",

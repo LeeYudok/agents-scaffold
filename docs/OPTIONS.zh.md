@@ -57,8 +57,8 @@
 |---|---|---|
 | `claude`（默认） | Claude Code | 完整安装 — 含 settings.json 钩子绑定、子代理、斜杠命令、workflows |
 | `codex` | Codex | 安装 `AGENTS.md`、skills 与共享 rules/hooks/memory，并移除 Claude 专用层 |
-| `agy` | Antigravity | 与 `codex` 相同的布局 — agy 同样原生读取 `AGENTS.md` 与 `.agents/skills` |
-| `all` | 混合团队 | 与 `claude` 相同（为兼容而保留）— skills 布局已与 harness 无关（#61） |
+| `agy` | Antigravity | 在 `codex` 布局之外，把 `.claude/rules` 生成为 agy 的 `.agents/rules`（`trigger: glob`）（#63） |
+| `all` | 混合团队 | `claude` 的全部内容 + 生成的 agy 规则。skills 布局与 harness 无关（#61） |
 
 **skills 只有一个源（#61）。** 无论使用哪个 harness，skills 只存放在 `.agents/skills/`（Codex、agy 的原生路径）一处，Claude Code 通过符号链接 `.claude/skills -> ../.agents/skills` 读取同一份文件（claude 2.1.289 实测 — 只有 `.agents/skills` 而没有链接时，Claude Code 找不到任何 skill）。两份副本不会再分叉，日后加入其他 harness 也无需重新安装。
 
@@ -92,7 +92,9 @@ Codex（codex-cli 0.160.0，`gpt-6.1-sol`）与 agy（1.2.16）会在不调用�
 
 支持状态的单一真实来源是 [`docs/harness-matrix.json`](harness-matrix.json)。本表会与该 manifest 对照，并由 CI 中的 `scripts/check-harness-matrix.py` 检查 — 若某个 `full` 等级超过 90 天未重新实测，或某项判定缺少证据，**构建将失败**。重新实测请运行 `scripts/spike-codex-contract.sh --dynamic` 与 `scripts/spike-agy-contract.sh --dynamic`。
 
-已实测 Codex 与 agy 本身支持子代理、钩子和按路径的指令（含上表条件），但脚手架尚未生成这些层（没有适配器），因此整体等级为 baseline。与 Claude Code 相同，钩子是早期反馈而非强制线。agy 会在没有信任确认的情况下执行仓库中的 `.agents/hooks.json`，在外部仓库运行 agy 前请先检查该文件（`security-audit` 代理会扫描它）。
+**agy 规则适配器（#63）。** 使用 `--harness agy|all` 时，会把 `.claude/rules/*.md` 生成为 `.agents/rules/*.md`。有 `paths:` 时变为 `trigger: glob` + `globs:`，没有时变为 `trigger: always_on`。模式按 agy 1.2.16 的实测转换：含斜杠的相对模式（`src/**`）改为 `**/src/**`，不含斜杠的模式（`Dockerfile`、`*.py`）按文件名匹配，保持不变。多个模式用逗号连接且不加空格（逗号后的空格会成为下一个模式的一部分，导致无法匹配）。`.claude/rules` 仍是源；`--update` 会重新生成，并删除源已不存在的生成文件。没有生成标记的同名文件（用户自有）不会被改动。
+
+已实测 Codex 与 agy 本身支持子代理、钩子和按路径的指令（含上表条件），但脚手架尚未生成子代理与钩子层（适配器只有 agy 规则），因此整体等级为 baseline。与 Claude Code 相同，钩子是早期反馈而非强制线。agy 会在没有信任确认的情况下执行仓库中的 `.agents/hooks.json`，在外部仓库运行 agy 前请先检查该文件（`security-audit` 代理会扫描它）。
 
 另有两项 Codex 约束影响设计：
 

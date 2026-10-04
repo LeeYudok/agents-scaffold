@@ -62,8 +62,8 @@ just costs more. None of them fire automatically, even with all three installed;
 |---|---|---|
 | `claude` (default) | Claude Code | Full install — settings.json hook bindings, subagents, slash commands, workflows |
 | `codex` | Codex | Installs `AGENTS.md`, skills, and shared rules/hooks/memory; drops Claude-only layers |
-| `agy` | Antigravity | Same layout as `codex` — agy also reads `AGENTS.md` and `.agents/skills` natively |
-| `all` | Mixed teams | Same as `claude` (kept for compatibility) — the skill layout no longer depends on the harness (#61) |
+| `agy` | Antigravity | The `codex` layout, plus `.claude/rules` generated as agy's `.agents/rules` (`trigger: glob`) (#63) |
+| `all` | Mixed teams | Everything from `claude` plus the generated agy rules. The skill layout does not depend on the harness (#61) |
 
 **Skills have a single source (#61).** Whatever the harness, skills live once in `.agents/skills/`
 (the Codex/agy native path) and Claude Code reads the same files through the symlink
@@ -120,9 +120,17 @@ This table is checked against that manifest by `scripts/check-harness-matrix.py`
 tier has gone 90 days without re-measurement, or a verdict carries no evidence, **the build fails**.
 Re-measure with `scripts/spike-codex-contract.sh --dynamic` and `scripts/spike-agy-contract.sh --dynamic`.
 
+**agy rules adapter (#63).** With `--harness agy|all`, `.claude/rules/*.md` is generated as `.agents/rules/*.md`.
+`paths:` becomes `trigger: glob` + `globs:`; without `paths:` it becomes `trigger: always_on`. Patterns are converted as
+measured on agy 1.2.16: a relative pattern containing a slash (`src/**`) becomes `**/src/**`, while a pattern without a
+slash (`Dockerfile`, `*.py`) matches the file name and is kept. Patterns are joined with commas and no spaces (a space
+after a comma becomes part of the next pattern, which then never matches). `.claude/rules` stays the source; `--update`
+regenerates and removes generated files whose source is gone. A same-named file without the generated marker
+(user-owned) is left untouched.
+
 Codex and agy were measured to support subagents, hooks and path-scoped instructions (with the
-conditions in the table above), but the scaffold does not emit those layers yet (no adapter), so their
-overall tier is baseline. As with Claude Code, hooks are early feedback, not the enforcement line. agy
+conditions in the table above), but the scaffold does not emit their subagent and hook layers yet (the agy rules are the only
+adapter), so their overall tier is baseline. As with Claude Code, hooks are early feedback, not the enforcement line. agy
 runs a repo's `.agents/hooks.json` without a trust prompt, so check that file before running agy in a
 foreign repo (the `security-audit` agent scans it).
 

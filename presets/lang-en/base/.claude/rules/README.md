@@ -9,6 +9,9 @@ Each file is one markdown document.
   editing/creating matching files**.
 - **Always loaded**: without `paths:`, the file loads at session start (like AGENTS.md).
 - Each file's exact globs live in **its frontmatter — the single source of truth**; the table below is an overview.
+- **Generated for agy**: with `--harness agy|all`, install and `--update` generate these files as `.agents/rules/*.md`
+  (`trigger: glob`/`always_on`) (#63). This directory stays the source — do not edit the generated files. Relative
+  patterns containing a slash only match in agy with a `**/` prefix.
 
 ```markdown
 ---
