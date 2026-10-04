@@ -46,7 +46,6 @@
     knowledge_graph.py  .claude 생태계 그래프 + --check 깨진 링크 게이트
   settings.json         hooks 와이어링 + deny 기본값
 AGENTS.md               프로젝트 브레인 — 규칙 SSOT (P0/P1/P2 + 워크플로)
-.gemini/settings.json   Gemini CLI 가 AGENTS.md 를 읽도록 context.fileName 지정
 presets/                프리셋 조각 (복사 덮어쓰기 방식)
   forge-github/         GitHub forge — gh, PR, `Closes #N` 자동 클로즈
   forge-gitlab/         GitLab forge — glab, MR, `Closes #N` 자동 클로즈(머지 후 확인)

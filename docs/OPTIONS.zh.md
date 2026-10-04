@@ -57,7 +57,10 @@
 |---|---|---|
 | `claude`（默认） | Claude Code | 完整安装 — 含 settings.json 钩子绑定、子代理、斜杠命令、workflows |
 | `codex` | Codex | 安装 `AGENTS.md`、原生 `.agents/skills` 与共享 rules/hooks/memory，并移除 Claude 专用层 |
-| `all` | 混合团队 | 同时安装 `.claude/skills` 与 Codex 原生 `.agents/skills` |
+| `agy` | Antigravity | 与 `codex` 相同的布局 — agy 同样原生读取 `AGENTS.md` 与 `.agents/skills` |
+| `all` | 混合团队 | 同时安装 `.claude/skills`（Claude）与 `.agents/skills`（Codex、agy） |
+
+三个 harness 都原生读取根目录的 `AGENTS.md`，因此不生成 `CLAUDE.md`/`GEMINI.md` 指针文件，也不生成 `.gemini/settings.json` 垫片（#54、#60）。支持目标为最新版 Claude Code、Codex 与 Antigravity；Gemini CLI 不再是支持目标。
 
 **保障分为两级（#21）** — 不是"支持/不支持"的二分法。
 
@@ -70,19 +73,19 @@ git 钩子**与 harness 无关，始终接入**（#21）。Claude Code 的 `PreT
 
 所选技术栈的 P0 会**直接插入 `AGENTS.md` 正文**，不依赖 `.claude/rules/` 引用链接，因此在不加载 `.claude/` 的 harness 上同样可达。未选择的技术栈不会被插入（Codex 指令合计默认上限为 32KiB — 以避免 context flooding）。
 
-### 实测验证（2026-09-15）
+### 实测验证（2026-10-04）
 
 | Harness | 实测版本 | baseline | full 层已确认 / 未确认的内容 |
 |---|---|---|---|
-| Claude Code | 2.1.278 | 成立 | `.claude/rules/*.md` 的 `paths:` 条件加载、子代理、skills、`settings.json` 钩子 — 均已对照[官方文档](https://code.claude.com/docs/en/memory.md)确认 |
-| Codex | codex-cli 0.154.0 / GPT-6 Astra | 成立 | 已实测 `AGENTS.md`、内联技术栈 P0、`.agents/skills` 与 `.env` 门禁 |
-| Antigravity | agy **1.2.7** | 成立 | 实测 **headless（`-p`）不加载规则**（1.1.17，1.2.7 再次确认 — `AGENTS.md` 与 `GEMINI.md` 均未加载）— 原因未查明。交互模式尚未实测 |
+| Claude Code | 2.1.289 | 成立 | `.claude/rules/*.md` 的 `paths:` 条件加载、子代理、skills、`settings.json` 钩子 — 均已对照[官方文档](https://code.claude.com/docs/en/memory.md)确认 |
+| Codex | codex-cli 0.160.0 / GPT-6.1 Sol | 成立 | 已实测 `AGENTS.md`、内联技术栈 P0、`.agents/skills` 与 `.env` 门禁 |
+| Antigravity | agy 1.2.16 | 成立 | 以 headless（`-p`）实测 `AGENTS.md`、内联技术栈 P0、`.agents/skills` 与 `.env` 门禁。子代理、`.agents/rules` 条件规则与钩子尚未实测 |
 
-Codex（codex-cli 0.154.0，`gpt-6-astra`）会自动加载 `codex` 模式产物中的 AGENTS.md 与内联技术栈 P0，并发现 `.agents/skills` 下的仓库 skills；`.claude/skills` 不会被发现。即使模型遗漏规则，git 钩子仍会以 exit 2 拦截已暂存的 `.env`。
+Codex（codex-cli 0.160.0，`gpt-6.1-sol`）与 agy（1.2.16）会在不调用任何工具的情况下自动加载各自模式产物中的 AGENTS.md 与内联技术栈 P0，并且只发现 `.agents/skills` 下的仓库 skills；两者都不会发现 `.claude/skills`。agy 1.2.7 的 headless 模式既不加载 `AGENTS.md` 也不加载 `GEMINI.md`，该问题已在 1.2.16 中解决。即使模型遗漏规则，git 钩子仍会以 exit 2 拦截已暂存的 `.env`。
 
-支持状态的单一真实来源是 [`docs/harness-matrix.json`](harness-matrix.json)。本表会与该 manifest 对照，并由 CI 中的 `scripts/check-harness-matrix.py` 检查 — 若某个 `full` 等级超过 90 天未重新实测，或某项判定缺少证据，**构建将失败**。重新实测请运行 `scripts/spike-codex-contract.sh --dynamic`。
+支持状态的单一真实来源是 [`docs/harness-matrix.json`](harness-matrix.json)。本表会与该 manifest 对照，并由 CI 中的 `scripts/check-harness-matrix.py` 检查 — 若某个 `full` 等级超过 90 天未重新实测，或某项判定缺少证据，**构建将失败**。重新实测请运行 `scripts/spike-codex-contract.sh --dynamic` 与 `scripts/spike-agy-contract.sh --dynamic`。
 
-`--harness codex` 会把仓库 skills 安装到 Codex 原生的 `.agents/skills` 路径；`--harness all` 同时保留 Claude/Antigravity 使用的 `.claude/skills` 与 Codex 使用的 `.agents/skills`。Codex 子代理、路径条件规则和 lifecycle 钩子尚未验证，因此整体等级仍为 baseline。
+`--harness codex` 与 `--harness agy` 会把仓库 skills 安装到两者共用的原生路径 `.agents/skills`；`--harness all` 同时保留 Claude 使用的 `.claude/skills` 与 Codex、agy 使用的 `.agents/skills`。两者的子代理、路径条件规则和 lifecycle 钩子均尚未验证，因此整体等级为 baseline。
 
 另有两项 Codex 约束影响设计：
 
@@ -144,8 +147,8 @@ curl -fsSL https://raw.githubusercontent.com/leeyudok/agents-scaffold/main/bin/a
 
 ### 更新基础文件 — `--update`
 
-将最新的基础文件（`.claude/`、`AGENTS.md`、
-`.gemini/settings.json`）应用到已完成引导的项目。
+将最新的基础文件（`.claude/`、`AGENTS.md`）应用到已完成引导的项目。
+旧版本生成的 `.gemini/settings.json` 不会被改动（保留也无害）。
 
 ```bash
 agents-scaffold/bin/agents-scaffold.sh --update /path/to/existing-repo

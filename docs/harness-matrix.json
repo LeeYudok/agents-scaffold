@@ -18,8 +18,8 @@
     {
       "id": "claude",
       "name": "Claude Code",
-      "cli_version": "2.1.278",
-      "last_measured": "2026-09-21",
+      "cli_version": "2.1.289",
+      "last_measured": "2026-10-04",
       "tier": "full",
       "trust_model": "n/a",
       "instruction_budget_bytes": null,
@@ -27,7 +27,7 @@
         "instructions": {
           "verdict": "pass",
           "target": "AGENTS.md (native since v2.1.277; skipped when a CLAUDE.md exists)",
-          "evidence": "https://code.claude.com/docs/en/memory § AGENTS.md + 실측 2026-09-21: AGENTS.md 단독 디렉터리에서 툴 차단 암호어 질의 응답 정확 (#54)"
+          "evidence": "https://code.claude.com/docs/en/memory § AGENTS.md + 실측: AGENTS.md 단독 디렉터리에서 툴 차단 암호어 질의 응답 정확, 지침 없는 대조군은 UNKNOWN (2.1.278 2026-09-21 #54, 2.1.289 2026-10-04 #60)"
         },
         "stack_p0_inline": {
           "verdict": "pass",
@@ -64,8 +64,8 @@
     {
       "id": "codex",
       "name": "Codex",
-      "cli_version": "codex-cli 0.154.0",
-      "last_measured": "2026-09-15",
+      "cli_version": "codex-cli 0.160.0",
+      "last_measured": "2026-10-04",
       "tier": "baseline",
       "trust_model": "project trust required for .codex/ layer",
       "instruction_budget_bytes": 32768,
@@ -73,19 +73,19 @@
         "instructions": {
           "verdict": "pass",
           "target": "AGENTS.md (+ nested AGENTS.override.md)",
-          "evidence": "spike-codex-contract.sh --dynamic: P0 응답 정확. codex-cli 0.155.1 에서 AGENTS.md 단독 암호어 질의 재확인(2026-09-21, #54)",
-          "reproducibility": "완주 2회 / 시도 2회"
+          "evidence": "spike-codex-contract.sh --dynamic: P0 응답 정확. codex-cli 0.155.1 AGENTS.md 단독 암호어 질의(2026-09-21, #54), codex-cli 0.160.0 spike 재측정(2026-10-04, #60)",
+          "reproducibility": "완주 3회 / 시도 3회"
         },
         "stack_p0_inline": {
           "verdict": "pass",
           "target": "AGENTS.md body",
-          "evidence": "spike: 인라인된 python 스택 P0 를 응답에 포함. 산출물 AGENTS.md 6,612 B / 32,768 B"
+          "evidence": "spike: 인라인된 python 스택 P0 를 응답에 포함. 산출물 AGENTS.md 7,154 B / 32,768 B (codex-cli 0.160.0, 2026-10-04)"
         },
         "repo_skills": {
           "verdict": "pass",
           "target": ".agents/skills/<name>/SKILL.md",
-          "evidence": "gpt-6-astra 명시 통제실험: --harness codex 산출물의 .agents/skills 프로브는 등록 스킬로 응답하고 .claude/skills 프로브는 미응답 (#50).",
-          "reproducibility": "codex-cli 0.154.0, gpt-6-astra, 완주 1회 / 시도 1회"
+          "evidence": "spike 통제실험: --harness codex 산출물의 .agents/skills 프로브는 등록 스킬로 응답하고 .claude/skills 프로브는 미응답 (gpt-6-astra #50, gpt-6.1-sol 2026-10-04 #60).",
+          "reproducibility": "codex-cli 0.154.0·0.160.0, 완주 2회 / 시도 2회"
         },
         "subagents": {
           "verdict": "unverified",
@@ -112,26 +112,27 @@
     {
       "id": "agy",
       "name": "Antigravity",
-      "cli_version": "1.2.7",
-      "last_measured": "2026-09-21",
-      "tier": "experimental",
+      "cli_version": "1.2.16",
+      "last_measured": "2026-10-04",
+      "tier": "baseline",
       "trust_model": "unknown",
       "instruction_budget_bytes": null,
       "capabilities": {
         "instructions": {
-          "verdict": "unverified",
-          "target": "unknown",
-          "evidence": "1.2.7 headless(-p) 재측정(2026-09-21): AGENTS.md 단독도 대조군 GEMINI.md 도 미로드 — headless 로는 판정 불가. 바이너리에 \"AGENTS.md\" 문자열 존재. interactive 모드 미실시 (#54)"
+          "verdict": "pass",
+          "target": "AGENTS.md (or GEMINI.md, .agents/rules/*.md)",
+          "evidence": "https://antigravity.google/docs/rules/ + 실측 1.2.16 headless(-p) 2026-10-04: AGENTS.md 단독 → 암호어 정답, GEMINI.md 대조군 → 정답, 지침 없음 → UNKNOWN, 응답 전 툴 호출 없음 (#60). 1.2.7 headless 는 대조군까지 미로드였다 (#54)",
+          "reproducibility": "완주 2회 / 시도 2회 (암호어 질의 1회 + spike-agy-contract.sh 1회)"
         },
         "stack_p0_inline": {
-          "verdict": "unverified",
-          "target": "unknown",
-          "evidence": "instructions 미확정으로 종속 미측정"
+          "verdict": "pass",
+          "target": "AGENTS.md body",
+          "evidence": "spike-agy-contract.sh --dynamic: --harness agy 산출물에서 인라인된 python 스택 P0(mypy/ruff)까지 툴 없이 응답 (2026-10-04, #60)"
         },
         "repo_skills": {
-          "verdict": "unverified",
-          "target": "unknown",
-          "evidence": "미측정"
+          "verdict": "pass",
+          "target": ".agents/skills/<name>/SKILL.md",
+          "evidence": "https://antigravity.google/docs/skills + spike-agy-contract.sh 통제실험: .agents/skills 프로브만 등록, .claude/skills 프로브는 미등록 (2026-10-04, #60)"
         },
         "subagents": {
           "verdict": "unverified",
@@ -140,8 +141,8 @@
         },
         "path_scoped_rules": {
           "verdict": "unverified",
-          "target": "unknown",
-          "evidence": "미측정"
+          "target": ".agents/rules/*.md",
+          "evidence": "공식문서상 경로 존재(https://antigravity.google/docs/rules/). Claude paths: frontmatter 와 의미가 달라 산출물이 생성하지 않으므로 미측정"
         },
         "lifecycle_hooks": {
           "verdict": "unverified",
@@ -151,7 +152,7 @@
         "oob_gate": {
           "verdict": "pass",
           "target": ".git/hooks/pre-commit",
-          "evidence": "하네스와 무관하게 배선됨 (#21)"
+          "evidence": "spike-agy-contract.sh: --harness agy 산출물에서 스테이징된 .env 에 대해 exit 2 (#60)"
         }
       }
     }

@@ -46,7 +46,6 @@
     knowledge_graph.py       .claude 生态图谱 + --check 断链门禁
   settings.json               钩子接线 + 默认 deny 规则
 AGENTS.md                 项目大脑 —— 规则 SSOT（P0/P1/P2 + 工作流）
-.gemini/settings.json     通过 context.fileName 让 Gemini CLI 读取 AGENTS.md
 presets/                  预设片段（复制覆盖模型）
   forge-github/           GitHub forge —— gh、PR、`Closes #N` 自动关闭
   forge-gitlab/           GitLab forge —— glab、MR、`Closes #N` 自动关闭（合并后需确认）

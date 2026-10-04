@@ -73,8 +73,9 @@ if [ "$DYNAMIC" -eq 1 ] && [ "$CODEX_VERSION" != "not-installed" ]; then
   timeout "$CODEX_TIMEOUT" codex exec -C "$WORK" --skip-git-repo-check -s read-only \
     -o "$out2" "너에게 등록된 skill 중 이름이 'zqx-' 로 시작하는 것만 나열해라. 파일시스템을 뒤지지 마라 — ls/find/cat/grep 등 명령 실행 금지. 등록된 skill 목록에서만 골라라. 없으면 '없음'." \
     >/dev/null 2>&1
-  agents_seen=$(grep -c 'zqx-agentspath' "$out2" 2>/dev/null || echo 0)
-  claude_seen=$(grep -c 'zqx-claudepath' "$out2" 2>/dev/null || echo 0)
+  # grep -c 는 0건일 때 "0" 을 찍고 exit 1 이다 — `|| echo 0` 을 붙이면 "0\n0" 이 되어 비교가 깨진다.
+  agents_seen=$(grep -c 'zqx-agentspath' "$out2" 2>/dev/null); agents_seen=${agents_seen:-0}
+  claude_seen=$(grep -c 'zqx-claudepath' "$out2" 2>/dev/null); claude_seen=${claude_seen:-0}
   if [ ! -s "$out2" ]; then
     skill_answer="inconclusive"; skill_note="codex 응답 없음(타임아웃 또는 빈 출력) — 미측정으로 취급"
   elif [ "$agents_seen" -gt 0 ] && [ "$claude_seen" -eq 0 ]; then

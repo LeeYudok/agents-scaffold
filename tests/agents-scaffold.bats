@@ -29,7 +29,7 @@ setup() {
 # 로케일/CI 환경에 따라 내부 이름 인코딩이 어긋나 "unknown test name" 으로
 # 깨지는 사례가 있어(로컬 macOS ko_KR.UTF-8 환경에서 실측 재현) 회피한다.
 
-@test "base copy creates .claude AGENTS.md .gemini/settings.json and no CLAUDE.md/GEMINI.md shims (#54)" {
+@test "base copy creates .claude AGENTS.md and no CLAUDE.md/GEMINI.md/.gemini shims (#54, #60)" {
   run "$SCRIPT" "$BATS_TEST_TMPDIR" --yes
   [ "$status" -eq 0 ]
   [ -d "$BATS_TEST_TMPDIR/.claude" ]
@@ -37,7 +37,8 @@ setup() {
   # #54: CLAUDE.md 가 있으면 Claude Code 가 AGENTS.md 를 건너뛰므로 셤을 만들지 않는다
   [ ! -e "$BATS_TEST_TMPDIR/CLAUDE.md" ]
   [ ! -e "$BATS_TEST_TMPDIR/GEMINI.md" ]
-  grep -q '"AGENTS.md"' "$BATS_TEST_TMPDIR/.gemini/settings.json"
+  # #60: agy 가 AGENTS.md 를 네이티브로 읽으므로 Gemini CLI 용 context.fileName 셤도 두지 않는다
+  [ ! -e "$BATS_TEST_TMPDIR/.gemini" ]
   [ -f "$BATS_TEST_TMPDIR/.claude/skills/handoff/SKILL.md" ]
 }
 
@@ -600,6 +601,24 @@ JSP
   [ "$status" -eq 2 ]
 }
 
+@test "harness agy matches the codex layout: AGENTS.md + .agents/skills, no Claude-only layers (#60)" {
+  t="$BATS_TEST_TMPDIR/agymode"
+  mkdir -p "$t"
+  git -C "$t" init -q
+  run bash "$SCRIPT" "$t" --forge github --stack python --harness agy --name agy-app --yes
+  [ "$status" -eq 0 ]
+  [ -f "$t/AGENTS.md" ]
+  [ -f "$t/.agents/skills/review/SKILL.md" ]
+  [ -f "$t/.claude/rules/python.md" ]
+  [ ! -e "$t/.claude/settings.json" ]
+  [ ! -d "$t/.claude/agents" ]
+  [ ! -d "$t/.claude/commands" ]
+  [ ! -d "$t/.claude/workflows" ]
+  [ ! -e "$t/.gemini" ]
+  [ ! -e "$t/GEMINI.md" ]
+  [ -x "$t/.git/hooks/pre-commit" ]
+}
+
 @test "harness all keeps everything and wires git hook; default claude also wires it (#21)" {
   t="$BATS_TEST_TMPDIR/allmode"
   mkdir -p "$t"
@@ -609,7 +628,7 @@ JSP
   [ -f "$t/.claude/settings.json" ]
   [ -f "$t/.claude/skills/review/SKILL.md" ]
   [ -f "$t/.agents/skills/review/SKILL.md" ]
-  [ -f "$t/.gemini/settings.json" ]
+  [ ! -e "$t/.gemini" ]
   [ -x "$t/.git/hooks/pre-commit" ]
 
   # #21: git hook 은 하네스와 무관하게 항상 배선된다. Claude Code 의 PreToolUse 훅은

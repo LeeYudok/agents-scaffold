@@ -1,9 +1,8 @@
 # AGENTS.md — {{PROJECT_NAME}}
 
-This file is the **single source of truth (SSOT)** that AI agents (Claude Code, Gemini CLI, Codex, etc.)
+This file is the **single source of truth (SSOT)** that AI agents (Claude Code, Codex, Antigravity)
 follow when working in this repository. It is the project brain. No separate `CLAUDE.md`/`GEMINI.md` pointer files are shipped —
-Claude Code (v2.1.277+) and Codex read this file natively, and Gemini CLI is pointed at it through
-`context.fileName` in `.gemini/settings.json`.
+Claude Code (v2.1.277+), Codex and Antigravity (agy) all read this file natively.
 
 This file must be **self-contained** — the P0/P1 tiers below are readable here without loading any
 other file. The only `@` import allowed here is the memory index (see "Memory path override" below):

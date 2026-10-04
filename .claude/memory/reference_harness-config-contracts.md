@@ -1,6 +1,6 @@
 ---
 name: reference_harness-config-contracts
-description: Claude Code / Codex / agy 세 하네스의 설정·디스커버리 계약 실측 결과와 공식문서 위치 (Codex 2026-09-15 재측정)
+description: Claude Code / Codex / agy 세 하네스의 설정·디스커버리 계약 실측 결과와 공식문서 위치, 실측 요령 (2026-10-04 세 하네스 최신판 재측정)
 metadata:
   type: reference
 ---
@@ -10,6 +10,7 @@ metadata:
 실측 버전: `claude 2.1.239` / `codex-cli 0.154.0` + `gpt-6-astra` / `agy 1.1.18`
 (Codex 2026-09-15, 나머지 2026-08-22, 맥 로컬)
 AGENTS.md 로드 항목만 2026-09-21 재측정: `claude 2.1.278` / `codex-cli 0.155.1` / `agy 1.2.7` / `gemini 0.56.0`
+2026-10-04 재측정(#60, 리눅스 로컬): `claude 2.1.289` / `codex-cli 0.160.0` + `gpt-6.1-sol` / `agy 1.2.16` — 지원 대상은 이 세 하네스 최신판으로 고정, Gemini CLI 제외
 
 ## Claude Code
 - 프로젝트 설정 = `.claude/settings.json` (`.claude.json` 은 유저 전역 상태 파일이지 프로젝트 설정 아님)
@@ -19,6 +20,8 @@ AGENTS.md 로드 항목만 2026-09-21 재측정: `claude 2.1.278` / `codex-cli 0
   - AGENTS.md 단독 → 로드됨
   - AGENTS.md 안의 `@경로` import → **처리됨**(import 대상 내용까지 로드)
   - CLAUDE.md 와 공존(CLAUDE.md 에 `@AGENTS.md` 없음) → **CLAUDE.md 만 로드, AGENTS.md 무시**. 병합이 아니라 폴백이다 — CLAUDE.md 를 남길 거면 `@AGENTS.md` import 도 남겨야 한다
+  - 2.1.289(2026-10-04) 재확인: AGENTS.md 단독 → 정답, 지침 없음 → UNKNOWN
+- repo skills = `.claude/skills` 만 스캔(`.agents/skills` 네이티브 미지원 — 2.1.289 대조군 `NONE`). 단 **`.claude/skills -> ../.agents/skills` 심볼릭 링크는 따라가서 등록**한다(2.1.289 실측) — #61 스킬 SSOT 설계의 근거
 - `.claude/commands/` 는 레거시(skills 로 통합), `.claude/workflows/`·`.claude/scripts/` 는 **자동 로드 안 됨**
 - `settings.json` 의 `PreToolUse` 훅은 그 세션이 Bash 툴로 커밋할 때만 발동 → **강제선 아님**(조기 피드백). 결정적 강제는 `.git/hooks` + CI
 
@@ -33,12 +36,19 @@ AGENTS.md 로드 항목만 2026-09-21 재측정: `claude 2.1.278` / `codex-cli 0
 - 공통 `--instructions` 플래그 없음
 
 ## agy (Antigravity)
+- 공식문서 [Rules](https://antigravity.google/docs/rules/): 워크스페이스 `AGENTS.md`/`GEMINI.md`, `.agents/AGENTS.md`, `.agents/rules/*.md`(직계 자식만) 를 파일 위치→워크스페이스 루트로 올라가며 로드. 전역은 `~/.gemini/AGENTS.md`·`~/.gemini/config/rules/*.md`, CLI 전용 `~/.gemini/antigravity-cli/rules/*.md`
+- 공식문서 [Skills](https://antigravity.google/docs/skills): 워크스페이스 `.agents/skills/<name>/`(레거시 `.agent/skills` 호환), CLI 전역 `~/.gemini/antigravity-cli/skills/`. CLI 설정은 `~/.gemini/antigravity-cli/settings.json` — 워크스페이스 `.gemini/settings.json` 은 agy 와 무관
+- **1.2.16 headless(`-p`) 에서 AGENTS.md 로드 확인**(2026-10-04): AGENTS.md 단독 → 암호어 정답, GEMINI.md 대조군 → 정답, 없음 → UNKNOWN. `scripts/spike-agy-contract.sh --dynamic` 으로 스택 P0 인라인·`.agents/skills` 만 등록(`.claude/skills` 미등록)·.env 게이트 exit 2 까지 pass
+- 1.1.17·1.2.7 headless 는 AGENTS.md·GEMINI.md 모두 미로드였다(원인 미규명, 1.2.16 에서 해소)
+- `-p --output-format stream-json` 의 `step_update.step_type` 으로 툴 호출 여부를 판정할 수 있다(`user_input`·`agent_response` 외 단계 = 툴 사용)
 - 공통 `--instructions` 플래그 없음 (`--agent`, `--mode`, `plugin` 등)
-- 1.1.17 headless(`-p`) 에서 규칙 미로드 실측 — 원인 미규명. interactive 미검증
-- 1.2.7(2026-09-21) 에서도 동일: headless 는 AGENTS.md 단독도, 대조군 GEMINI.md 도 못 읽음 → **headless 로는 AGENTS.md 네이티브 지원 여부를 판정할 수 없다**. interactive 로 확인해야 함
 
-## Gemini CLI
+## Gemini CLI (지원 대상 제외 — #60)
 - 공식문서([gemini-md.md](https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/gemini-md.md)): 기본 컨텍스트 파일명은 `GEMINI.md` 뿐. `AGENTS.md` 는 `.gemini/settings.json` 의 `context.fileName` 에 넣어야 읽는다 → 스캐폴드는 #54 부터 이 설정 파일을 emit 하고 `GEMINI.md` 셤은 없앴다
 - 0.56.0(2026-09-21): 개인 계정은 `IneligibleTierError`(Gemini Code Assist for individuals 지원 종료, Antigravity 로 이전 안내)로 인증 단계에서 막힘 → 이 머신에선 실측 불가. headless 는 그 전에 trusted-folder 게이트(`GEMINI_CLI_TRUST_WORKSPACE=true` 또는 `--skip-trust`)도 통과해야 한다
+
+## 실측 요령 (2026-10-04 시행착오)
+- 레포 `.claude/settings.json` deny 에 `Bash(rm -rf *)` 가 있어, 스크래치 정리용 `rm -rf` 가 섞인 Bash 명령은 **통째로 자동 거부**된다(사용자 거절과 구분 안 됨). 실측 디렉터리는 `mktemp -d` 로 매번 새로 만든다
+- CLI 가 셸 함수·alias 로 래핑된 환경에서 `timeout command <cli>` 처럼 builtin 을 넘기면 실행 실패(exit 127)한다. `timeout` 에는 바이너리 절대경로(`command -v` 가 아니라 `which -a` 로 확인)를 준다. bash 스크립트 안에서는 대화형 셸 함수가 없으므로 PATH 의 바이너리가 잡힌다
 
 관련: [[project_agents-scaffold-multiagent-review]]

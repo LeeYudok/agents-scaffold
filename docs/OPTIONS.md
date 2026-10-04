@@ -58,7 +58,12 @@
 |---|---|---|
 | `claude` (기본) | Claude Code | 전체 설치 — settings.json 훅 바인딩·서브에이전트·슬래시 커맨드·workflows 포함 |
 | `codex` | Codex | `AGENTS.md`·`.agents/skills`와 공통 rules/hooks/memory 설치, Claude 전용 계층 제거 |
-| `all` | 혼용 팀 | Claude용 `.claude/skills`와 Codex용 `.agents/skills`를 함께 설치 |
+| `agy` | Antigravity | `codex` 와 같은 레이아웃 — agy 도 `AGENTS.md` 와 `.agents/skills` 를 네이티브로 읽는다 |
+| `all` | 혼용 팀 | Claude용 `.claude/skills`와 Codex·agy용 `.agents/skills`를 함께 설치 |
+
+세 하네스 모두 루트 `AGENTS.md` 를 네이티브로 읽으므로 `CLAUDE.md`·`GEMINI.md` 포인터나
+`.gemini/settings.json` 셤은 만들지 않는다(#54, #60). 지원 대상은 Claude Code·Codex·Antigravity
+최신판이며, Gemini CLI 는 지원 대상에서 뺐다.
 
 **보장 수준은 2단이다 (#21)** — "지원한다/안 한다" 이분법이 아니다.
 
@@ -75,27 +80,28 @@ Bash 툴로 커밋할 때만 발동하므로 조기 피드백 계층이지 강�
 않으므로 `.claude/` 를 로드하지 않는 하네스에서도 도달 가능하다. 선택하지 않은 스택은 삽입되지
 않는다(Codex instruction 합산 기본 한도 32KiB — context flooding 방지).
 
-### 실측 검증 (2026-09-15)
+### 실측 검증 (2026-10-04)
 
 | 하네스 | 실측 버전 | baseline | full 쪽 확인된 것 / 확인 안 된 것 |
 |---|---|---|---|
-| Claude Code | 2.1.278 | 성립 | `.claude/rules/*.md` 의 `paths:` 조건부 로딩, 서브에이전트, skills, `settings.json` 훅 — 전부 [공식 문서](https://code.claude.com/docs/en/memory.md)로 확인 |
-| Codex | codex-cli 0.154.0 / GPT-6 Astra | 성립 | `AGENTS.md`·스택 P0 자동 로드와 `.agents/skills` 발견, `.env` 게이트를 실측 |
-| Antigravity | agy **1.2.7** | 성립 | **headless(`-p`) 규칙 미로드** 실측(1.1.17, 1.2.7 재확인 — `AGENTS.md`·`GEMINI.md` 모두 미로드) — 원인 미규명. 인터랙티브 모드 미실시 |
+| Claude Code | 2.1.289 | 성립 | `.claude/rules/*.md` 의 `paths:` 조건부 로딩, 서브에이전트, skills, `settings.json` 훅 — 전부 [공식 문서](https://code.claude.com/docs/en/memory.md)로 확인 |
+| Codex | codex-cli 0.160.0 / GPT-6.1 Sol | 성립 | `AGENTS.md`·스택 P0 자동 로드와 `.agents/skills` 발견, `.env` 게이트를 실측 |
+| Antigravity | agy 1.2.16 | 성립 | `AGENTS.md`·스택 P0 자동 로드와 `.agents/skills` 발견, `.env` 게이트를 headless(`-p`)로 실측. 서브에이전트·`.agents/rules` 조건부 룰·훅은 미측정 |
 
-Codex(codex-cli 0.154.0, `gpt-6-astra`)는 `codex` 모드 산출물의 AGENTS.md 와 인라인된
-스택 P0를 자동 로드하고 `.agents/skills`의 저장소 스킬만 발견했다. `.claude/skills`는
-Codex 발견 경로가 아니다. 모델이 규칙을 놓쳐도 git hook이 exit 2로 차단한다.
+Codex(codex-cli 0.160.0, `gpt-6.1-sol`)와 agy(1.2.16)는 각 모드 산출물의 AGENTS.md 와 인라인된
+스택 P0를 툴 호출 없이 자동 로드하고 `.agents/skills`의 저장소 스킬만 발견했다. `.claude/skills`는
+둘 다 발견 경로가 아니다. agy 1.2.7 headless 는 `AGENTS.md`·`GEMINI.md` 를 모두 읽지 못했으나
+1.2.16 에서 해소됐다. 모델이 규칙을 놓쳐도 git hook이 exit 2로 차단한다.
 
 지원 상태의 단일 진실원천은 [`docs/harness-matrix.json`](harness-matrix.json) 이다. 이 표는
 그 manifest 와 대조되며, `scripts/check-harness-matrix.py` 가 CI 에서 검사한다 — `full` 등급이
 90일 넘게 재측정되지 않았거나 판정에 근거가 없으면 **빌드가 실패한다**. 재측정은
-`scripts/spike-codex-contract.sh --dynamic` 으로 수행한다.
+`scripts/spike-codex-contract.sh --dynamic`·`scripts/spike-agy-contract.sh --dynamic` 으로 수행한다.
 
-`--harness codex`는 저장소 스킬을 네이티브 경로인 `.agents/skills`에 설치한다.
-`--harness all`은 Claude·Antigravity 호환용 `.claude/skills`와 Codex용 `.agents/skills`를
-함께 둔다. Codex 서브에이전트·경로 조건부 룰·lifecycle hook은 아직 미검증이므로 전체
-등급은 계속 baseline이다.
+`--harness codex`·`--harness agy`는 저장소 스킬을 두 하네스 공통 네이티브 경로인
+`.agents/skills`에 설치한다. `--harness all`은 Claude용 `.claude/skills`와 Codex·agy용
+`.agents/skills`를 함께 둔다. 두 하네스 모두 서브에이전트·경로 조건부 룰·lifecycle hook은
+아직 미검증이므로 전체 등급은 baseline이다.
 
 Codex 쪽 추가 제약 두 가지도 설계에 영향을 준다.
 
@@ -154,8 +160,8 @@ curl -fsSL https://raw.githubusercontent.com/leeyudok/agents-scaffold/main/bin/a
 
 ### 베이스 갱신 — `--update`
 
-이미 부트스트랩된 프로젝트에 최신 베이스(`.claude/`, `AGENTS.md`, `.gemini/settings.json`)를
-반영한다.
+이미 부트스트랩된 프로젝트에 최신 베이스(`.claude/`, `AGENTS.md`)를
+반영한다. 이전 버전이 만든 `.gemini/settings.json` 은 건드리지 않는다(남아 있어도 무해).
 
 ```bash
 agents-scaffold/bin/agents-scaffold.sh --update /path/to/existing-repo
