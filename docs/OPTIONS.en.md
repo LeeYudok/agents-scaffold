@@ -74,7 +74,8 @@ later needs no reinstall.
 - Where a symlink cannot be created (e.g. Windows Git Bash defaults), or with
   `AGENTS_SCAFFOLD_NO_SYMLINK=1`, `.claude/skills` is a copy. The pre-commit gate blocks a commit whose
   staged copy differs from the staged source (an index comparison, so untracked files such as
-  `__pycache__` do not count).
+  `__pycache__` do not count). Whether a symlink works can vary with the environment (e.g. policy on
+  network-separated PCs) — see step 6 of [OFFLINE_INSTALL.en.md](OFFLINE_INSTALL.en.md).
 - A Git for Windows checkout with `core.symlinks=false` turns the link into a plain file holding the
   path. Claude Code then finds no skills and the gate warns — run `git config core.symlinks true` and
   check it out again.

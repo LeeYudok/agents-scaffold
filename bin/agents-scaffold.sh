@@ -195,6 +195,8 @@ ensure_hook_eol_attributes() {
 #     링크 없이 .agents/skills 만 두면 Claude Code 는 스킬을 찾지 못한다).
 #     링크를 만들 수 없는 환경(Windows Git Bash 기본값 등)은 사본으로 대체하고, pre-commit 게이트가
 #     두 사본의 일치를 검사한다. AGENTS_SCAFFOLD_NO_SYMLINK=1 이면 처음부터 사본을 쓴다.
+#     링크 가능 여부는 환경에 따라 달라질 수 있다 — 망 분리 PC(외부망 일부 제한, 내부망 강한 통제)는
+#     개발자 모드·core.symlinks 를 켤 수 있는지가 PC·시점마다 다르다(docs/OFFLINE_INSTALL.md 6단계).
 #     아래 함수는 반드시 단독 문장으로 호출한다 — `f && x`·`if f` 문맥에서는 함수 안의 set -e 가
 #     꺼져, 실패한 mv 뒤에 삭제가 이어질 수 있다. 그래서 결과도 반환값이 아니라 변수로 넘긴다.
 SKILLS_LINK_TARGET="../.agents/skills"

@@ -69,6 +69,7 @@
 - 링크를 만들 수 없는 환경(Windows Git Bash 기본값 등)이나 `AGENTS_SCAFFOLD_NO_SYMLINK=1` 이면
   `.claude/skills` 를 사본으로 둔다. 스테이징된 사본이 원본과 다르면 pre-commit 게이트가 커밋을 차단한다
   (인덱스 기준 비교라 `__pycache__` 같은 미추적 파일은 무관).
+  환경에 따라 링크 가능 여부가 달라질 수 있다(망 분리 PC 의 정책 등) — [OFFLINE_INSTALL.md](OFFLINE_INSTALL.md) 6단계.
 - Git for Windows 의 `core.symlinks=false` 체크아웃은 링크를 경로 문자열이 든 일반 파일로 만든다.
   이때 Claude Code 는 스킬을 찾지 못하며, 게이트가 경고를 낸다 — `git config core.symlinks true` 후
   다시 체크아웃한다.

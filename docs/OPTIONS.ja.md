@@ -62,7 +62,7 @@
 
 **skills の原本は 1 か所です（#61）。** ハーネスに関係なく skills は `.agents/skills/`（Codex・agy のネイティブパス）に 1 回だけ置き、Claude Code はシンボリックリンク `.claude/skills -> ../.agents/skills` 経由で同じファイルを読みます（claude 2.1.289 で実測 — リンクなしで `.agents/skills` だけを置くと Claude Code は skills を見つけられません）。2 つのコピーが食い違うことはなくなり、後から別のハーネスを加えても再インストールは不要です。
 
-- シンボリックリンクを作れない環境（Windows Git Bash の既定値など）や `AGENTS_SCAFFOLD_NO_SYMLINK=1` の場合、`.claude/skills` はコピーになります。ステージされたコピーが原本と異なると pre-commit ゲートがコミットをブロックします（インデックス基準の比較なので `__pycache__` などの未追跡ファイルは対象外）。
+- シンボリックリンクを作れない環境（Windows Git Bash の既定値など）や `AGENTS_SCAFFOLD_NO_SYMLINK=1` の場合、`.claude/skills` はコピーになります。ステージされたコピーが原本と異なると pre-commit ゲートがコミットをブロックします（インデックス基準の比較なので `__pycache__` などの未追跡ファイルは対象外）。リンクを作れるかは環境によって変わりえます（ネットワーク分離 PC のポリシーなど）— [OFFLINE_INSTALL.en.md](OFFLINE_INSTALL.en.md) のステップ 6 を参照。
 - Git for Windows で `core.symlinks=false` のままチェックアウトすると、リンクはパス文字列を含む通常ファイルになります。このとき Claude Code は skills を見つけられず、ゲートが警告を出します — `git config core.symlinks true` の後に再チェックアウトしてください。
 - インストール前から実ディレクトリの `.claude/skills` がある場合は `.agents/skills` へ移してリンクにします。同じパスの内容が `.agents/skills` と異なる場合は `.agents/skills` を原本とし、元のディレクトリを `.claude/skills.pre-ssot-<時刻>/` に残します。
 - ルールとサブエージェントはリンクしません。`.codex/rules` はコマンド実行ポリシー、agy の `.agents/rules` は Claude の `paths:` 条件付きロードを解釈せず、Claude の `.md` と Codex の `.toml` サブエージェントは形式が異なります。

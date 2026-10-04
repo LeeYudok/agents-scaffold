@@ -62,7 +62,7 @@
 
 **skills 只有一个源（#61）。** 无论使用哪个 harness，skills 只存放在 `.agents/skills/`（Codex、agy 的原生路径）一处，Claude Code 通过符号链接 `.claude/skills -> ../.agents/skills` 读取同一份文件（claude 2.1.289 实测 — 只有 `.agents/skills` 而没有链接时，Claude Code 找不到任何 skill）。两份副本不会再分叉，日后加入其他 harness 也无需重新安装。
 
-- 无法创建符号链接的环境（如 Windows Git Bash 默认设置），或设置了 `AGENTS_SCAFFOLD_NO_SYMLINK=1` 时，`.claude/skills` 为副本。已暂存的副本与源不一致时，pre-commit 门禁会拦截提交（基于索引比较，`__pycache__` 等未跟踪文件不计入）。
+- 无法创建符号链接的环境（如 Windows Git Bash 默认设置），或设置了 `AGENTS_SCAFFOLD_NO_SYMLINK=1` 时，`.claude/skills` 为副本。已暂存的副本与源不一致时，pre-commit 门禁会拦截提交（基于索引比较，`__pycache__` 等未跟踪文件不计入）。能否创建链接可能因环境而异（如网络隔离 PC 的策略）— 见 [OFFLINE_INSTALL.en.md](OFFLINE_INSTALL.en.md) 第 6 步。
 - Git for Windows 在 `core.symlinks=false` 下检出时，链接会变成内含路径字符串的普通文件。此时 Claude Code 找不到 skills，门禁会给出警告 — 执行 `git config core.symlinks true` 后重新检出。
 - 安装前已存在的真实目录 `.claude/skills` 会被移入 `.agents/skills` 并改为链接。若同一路径的内容与 `.agents/skills` 不同，则以 `.agents/skills` 为源，旧目录保留为 `.claude/skills.pre-ssot-<时间戳>/`。
 - rules 与子代理不做链接：`.codex/rules` 是命令执行策略，agy 的 `.agents/rules` 不理解 Claude 的 `paths:` 条件加载，Claude 的 `.md` 与 Codex 的 `.toml` 子代理格式也不同。

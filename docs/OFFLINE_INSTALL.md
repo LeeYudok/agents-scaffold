@@ -86,7 +86,23 @@ agents-scaffold\bin\agents-scaffold.cmd C:/work/myproj --stack springboot --yes
 
 `.cmd` 런처는 이 확인을 대신 해 주고, 실패하면 경고만 띄우고 설치는 계속한다.
 
-## 6. 업데이트
+## 6. 스킬 링크 — 환경에 따라 달라진다 (#61)
+
+설치 스크립트는 `.claude/skills` 를 원본 `.agents/skills` 를 가리키는 심볼릭 링크로 만든다. Windows 에서
+링크가 되는지는 **PC 정책에 달려 있고, 망 환경과 시점에 따라 달라질 수 있다.** 외부망 PC 는 일부 제한,
+내부망 PC 는 통제가 강해, 링크에 필요한 개발자 모드(또는 관리자 권한)·`core.symlinks` 설정을 켤 수 있는지가
+PC 마다 다르다. 그래서 링크를 만들 수 없으면 설치 스크립트가 자동으로 사본을 두고, pre-commit 게이트가
+스테이징된 사본과 원본의 일치를 검사한다.
+
+- 링크 가능 PC: 개발자 모드를 켜고 `git config --global core.symlinks true`, Git Bash 에서
+  `export MSYS=winsymlinks:nativestrict` 후 설치·clone 한다.
+- 링크 불가 PC: 사본으로 운영한다. 스킬은 `.agents/skills` 에서만 고치고
+  `rm -rf .claude/skills && cp -R .agents/skills .claude/skills` 로 사본을 다시 떠 둘 다 스테이징한다.
+- 링크 가능 PC 와 불가 PC 가 같은 레포를 쓰면 처음부터 `AGENTS_SCAFFOLD_NO_SYMLINK=1` 로 설치해 사본
+  모드로 통일한다. 링크로 커밋된 레포를 링크 불가 PC 에서 clone 하면 `.claude/skills` 가 경로 문자열이 든
+  일반 파일이 되어 Claude Code 가 스킬을 찾지 못한다(게이트가 경고).
+
+## 7. 업데이트
 
 새 번들을 같은 방식으로 반입·해제한 뒤 `--update` 로 실행한다.
 
@@ -102,6 +118,8 @@ bash agents-scaffold/bin/agents-scaffold.sh --update /c/work/myproj
 | `Error: template download failed` | 스크립트를 번들 트리 밖에서 실행 → 4단계 주의사항 참조 |
 | `Git Bash not found` | Git for Windows 미설치 또는 비표준 경로 → `AGENTS_SCAFFOLD_BASH` 지정 |
 | 훅이 조용히 아무것도 안 함 | `python3` 가 Store 스텁 → 5단계 |
+| 게이트 경고 `.claude/skills is a plain file` | 링크로 커밋된 레포를 링크 불가 PC 에서 clone → 6단계(사본 모드로 통일) |
+| 게이트 차단 `staged .claude/skills (copy) differs` | 사본만 고쳤거나 한쪽만 스테이징 → 6단계의 사본 재생성 후 둘 다 스테이징 |
 | Claude Code 가 Git Bash 를 못 찾음 | 비표준 경로면 환경변수 `CLAUDE_CODE_GIT_BASH_PATH` 에 `bash.exe` 전체 경로 지정 |
 
 Claude Code 자체의 폐쇄망 설치는 이 문서 범위 밖이다.

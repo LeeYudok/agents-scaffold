@@ -87,7 +87,24 @@ fails in a closed network.
 
 The `.cmd` launcher runs this check for you; on failure it warns and continues the install.
 
-## 6. Updating
+## 6. Skill symlink — it depends on the environment (#61)
+
+The installer makes `.claude/skills` a symlink to the source `.agents/skills`. Whether a symlink works on
+Windows **depends on the PC's policy, and can change with the network environment and over time.** An
+external-network PC is partly restricted and an internal-network PC is tightly controlled, so whether
+Developer Mode (or admin rights) and `core.symlinks` — both needed for symlinks — can be turned on differs
+per PC. When a symlink cannot be created, the installer therefore falls back to a copy, and the pre-commit
+gate checks that the staged copy matches the source.
+
+- PC that allows symlinks: turn on Developer Mode, run `git config --global core.symlinks true`, and
+  `export MSYS=winsymlinks:nativestrict` in Git Bash before installing or cloning.
+- PC that does not: run with the copy. Edit skills in `.agents/skills` only, refresh the copy with
+  `rm -rf .claude/skills && cp -R .agents/skills .claude/skills`, and stage both.
+- If PCs of both kinds share a repo, install with `AGENTS_SCAFFOLD_NO_SYMLINK=1` from the start so everyone
+  uses the copy. Cloning a repo committed with the symlink on a PC without symlink support turns
+  `.claude/skills` into a plain file holding the path, and Claude Code finds no skills (the gate warns).
+
+## 7. Updating
 
 Carry in and extract a new bundle the same way, then run with `--update`.
 
@@ -103,6 +120,8 @@ bash agents-scaffold/bin/agents-scaffold.sh --update /c/work/myproj
 | `Error: template download failed` | Script run outside the bundle tree → see the note in step 4 |
 | `Git Bash not found` | Git for Windows missing or in a non-standard path → set `AGENTS_SCAFFOLD_BASH` |
 | Hooks silently do nothing | `python3` is the Store stub → step 5 |
+| Gate warning `.claude/skills is a plain file` | Repo committed with the symlink, cloned on a PC without symlink support → step 6 (switch everyone to the copy) |
+| Gate block `staged .claude/skills (copy) differs` | Only the copy was edited, or only one side staged → refresh the copy as in step 6 and stage both |
 | Claude Code cannot find Git Bash | Non-standard path → set `CLAUDE_CODE_GIT_BASH_PATH` to the full `bash.exe` path |
 
 Installing Claude Code itself in a closed network is out of scope for this document.
