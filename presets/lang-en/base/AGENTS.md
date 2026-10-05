@@ -11,6 +11,10 @@ harnesses that expand imports auto-load the index, and the rest read it as a pat
 > If you add a `CLAUDE.md` (or `CLAUDE.local.md`), Claude Code **stops reading this file** (fallback,
 > not merge). If you really need one, make its first line `@AGENTS.md`.
 
+## Response language
+
+- Reply to the user (conversation, reports, questions) **in the language the user writes in**. Keep code, commands, identifiers and verbatim error messages as-is. (#70)
+
 ## Memory path override
 
 This project's auto-memory SSOT is `.claude/memory/`.

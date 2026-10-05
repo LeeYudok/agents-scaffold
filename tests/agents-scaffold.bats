@@ -1422,3 +1422,17 @@ PY
   [ "$status" -eq 0 ]
   [ "$(tail -n2 "$u/.gitattributes" | head -n1)" = '.claude/hooks/*.sh text eol=lf' ]
 }
+
+@test "AGENTS.md pins response language: ko base Korean, en overlay user's language (#70)" {
+  ko="$BATS_TEST_TMPDIR/ko"; en="$BATS_TEST_TMPDIR/en"; mkdir -p "$ko" "$en"
+  run "$SCRIPT" "$ko" --yes
+  [ "$status" -eq 0 ]
+  grep -qx '## 응답 언어' "$ko/AGENTS.md"
+  grep -q '항상 한국어' "$ko/AGENTS.md"
+
+  run "$SCRIPT" "$en" --lang en --yes
+  [ "$status" -eq 0 ]
+  grep -qx '## Response language' "$en/AGENTS.md"
+  grep -q 'in the language the user writes in' "$en/AGENTS.md"
+  ! grep -q '항상 한국어' "$en/AGENTS.md"
+}
