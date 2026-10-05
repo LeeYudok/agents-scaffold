@@ -11,6 +11,10 @@ Claude Code(v2.1.277+)·Codex·Antigravity(agy) 모두 이 파일을 네이티�
 > `CLAUDE.md`(또는 `CLAUDE.local.md`)를 새로 만들면 Claude Code 는 이 파일을 **더 이상 읽지 않는다**
 > (병합이 아니라 폴백). 꼭 필요하면 그 파일 첫 줄에 `@AGENTS.md` 를 넣을 것.
 
+## 응답 언어
+
+- 사용자와의 대화·보고·질문은 **항상 한국어**로 한다. 코드·명령·식별자·원문 에러 메시지는 원문 그대로 둔다. (#70)
+
 ## 메모리 경로 오버라이드
 
 이 프로젝트의 auto-memory SSOT는 `.claude/memory/` 이다.
