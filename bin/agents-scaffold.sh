@@ -198,7 +198,7 @@ ensure_hook_eol_attributes() {
 }
 
 # --- 이슈 #61: 스킬 SSOT. 원본은 .agents/skills(Codex·agy 네이티브 경로)이고, Claude Code 는
-#     .claude/skills -> ../.agents/skills 심볼릭 링크로 같은 원본을 읽는다(claude 2.1.289 실측 —
+#     .claude/skills -> ../.agents/skills 심볼릭 링크로 같은 원본을 읽는다(claude 2.1.289·2.1.299 실측 —
 #     링크 없이 .agents/skills 만 두면 Claude Code 는 스킬을 찾지 못한다).
 #     링크를 만들 수 없는 환경(Windows Git Bash 기본값 등)은 사본으로 대체하고, pre-commit 게이트가
 #     두 사본의 일치를 검사한다. AGENTS_SCAFFOLD_NO_SYMLINK=1 이면 처음부터 사본을 쓴다.

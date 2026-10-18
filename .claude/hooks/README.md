@@ -8,6 +8,12 @@
 동봉: `pre-commit.sh` — 커밋 전 검증 골격. 스택 프리셋(springboot)이 빌드 검증을 append.
 스크립트는 실행권한(`chmod +x`) 필요.
 
+- `pre-commit.sh` 훅에는 `"onFailure": "block"`(Claude Code v2.1.295+)이 걸려 있다 — 스크립트 경로 오류·크래시 때
+  커밋을 통과시키지 않고 막는다. 그래도 하네스 훅은 조기 피드백이고, 강제선은 `.git/hooks` + CI 다 (#72).
+- `compact-remind.sh` (SessionStart, matcher `compact`) — 컨텍스트 압축 직후 재진입 사실 정리·메모리 기록을 유도한다.
+  stdout 이 모델 컨텍스트에 들어간다. `PreCompact` 는 prompt 타입 훅을 지원하지 않아 예전 PreCompact prompt 훅은
+  실행된 적이 없다 (#72).
+
 ## instinct-lite (세션 관찰 → 습관 추출)
 
 ECC continuous-learning-v2 의 경량판. 백그라운드 관찰자 없이 훅 2개로 구성:
@@ -26,6 +32,6 @@ instinct 포맷은 [../memory/README.md](../memory/README.md) 참고.
 
 - 옮기는 것: `PostToolUse`(Bash·Edit·Write → Codex `Bash`·`apply_patch`, agy `run_command`·`write_to_file` 등), `Stop`.
   Codex 는 `SessionStart`·`UserPromptSubmit` 도 옮긴다.
-- 옮기지 않는 것: `PreToolUse`(커밋 게이트는 `.git/hooks`), prompt 타입 훅.
+- 옮기지 않는 것: `PreToolUse`(커밋 게이트는 `.git/hooks`), prompt 타입 훅, matcher 가 걸린 비-툴 이벤트(`SessionStart` `compact` 등, #72).
 - `python3` 가 필요하다. 프로젝트 경로는 `CLAUDE_PROJECT_DIR` 로 채워 준다.
 - Codex 는 프로젝트 신뢰 + 훅 정의 신뢰(`/hooks`) 뒤에만 실행한다. agy 는 신뢰 확인 없이 실행한다.

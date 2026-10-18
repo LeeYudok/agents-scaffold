@@ -22,6 +22,7 @@ The generated `.claude/` tree and the design patterns behind it. Start at the [R
     post-edit-format.sh   PostToolUse(Edit|Write) → auto-format
     post-test-notify.sh   PostToolUse(Bash, *test*) → terminal notification
     stop-memory-remind.sh Stop hook → once-per-session memory reminder
+    compact-remind.sh     SessionStart(compact) hook → re-entry reminder right after compaction
     cc-check.py            PostToolUse(Bash, git commit) → warn if CC > 15
   memory/
     MEMORY.md              auto-memory index (SSOT)

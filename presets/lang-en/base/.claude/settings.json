@@ -18,7 +18,8 @@
             "type": "command",
             "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/pre-commit.sh",
             "if": "Bash(git commit*)",
-            "timeout": 120
+            "timeout": 120,
+            "onFailure": "block"
           }
         ]
       }
@@ -56,13 +57,14 @@
         ]
       }
     ],
-    "PreCompact": [
+    "SessionStart": [
       {
+        "matcher": "compact",
         "hooks": [
           {
-            "type": "prompt",
-            "prompt": "Context compaction is about to start. Before it does, capture and preserve the facts needed to re-enter the current work (done/in-progress/next steps, key decisions and their rationale, blockers, related issues/branches/files).\n\n- Any non-trivial fact that needs to persist across sessions should be written to `.claude/memory/` as a type-prefixed memory (project_/feedback_/reference_), with a one-line entry added to the `MEMORY.md` index.\n- Do not record facts already evident from code/git (that would be duplication).",
-            "timeout": 30
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/compact-remind.sh",
+            "timeout": 10
           }
         ]
       }
