@@ -18,8 +18,8 @@
     {
       "id": "claude",
       "name": "Claude Code",
-      "cli_version": "2.1.289",
-      "last_measured": "2026-10-04",
+      "cli_version": "2.1.299",
+      "last_measured": "2026-10-18",
       "tier": "full",
       "trust_model": "n/a",
       "instruction_budget_bytes": null,
@@ -27,7 +27,7 @@
         "instructions": {
           "verdict": "pass",
           "target": "AGENTS.md (native since v2.1.277; skipped when a CLAUDE.md exists)",
-          "evidence": "https://code.claude.com/docs/en/memory § AGENTS.md + 실측: AGENTS.md 단독 디렉터리에서 툴 차단 암호어 질의 응답 정확, 지침 없는 대조군은 UNKNOWN (2.1.278 2026-09-21 #54, 2.1.289 2026-10-04 #60)"
+          "evidence": "https://code.claude.com/docs/en/memory § AGENTS.md + 실측: AGENTS.md 단독 디렉터리에서 툴 차단 암호어 질의 응답 정확, 지침 없는 대조군은 UNKNOWN (2.1.278 2026-09-21 #54, 2.1.289 2026-10-04 #60, 2.1.299 2026-10-18 #72)"
         },
         "stack_p0_inline": {
           "verdict": "pass",
@@ -37,7 +37,7 @@
         "repo_skills": {
           "verdict": "pass",
           "target": ".claude/skills/<name>/SKILL.md (symlink -> ../.agents/skills, #61)",
-          "evidence": "https://code.claude.com/docs/en/skills.md + 실측 2.1.289(2026-10-04, #61): .claude/skills -> ../.agents/skills 링크 뒤의 프로브 스킬을 툴 차단 질의에서 등록 스킬로 응답, 링크 없이 .agents/skills 만 둔 대조군은 NONE"
+          "evidence": "https://code.claude.com/docs/en/skills.md + 실측 2.1.289(2026-10-04, #61): .claude/skills -> ../.agents/skills 링크 뒤의 프로브 스킬을 툴 차단 질의에서 등록 스킬로 응답, 링크 없이 .agents/skills 만 둔 대조군은 NONE. 2.1.299(2026-10-18, #72) 재확인: 스캐폴드 산출물에서 링크 뒤 grill-me 를 YES, 링크를 뺀 대조군은 NO"
         },
         "subagents": {
           "verdict": "pass",
@@ -52,13 +52,19 @@
         "lifecycle_hooks": {
           "verdict": "partial",
           "target": "settings.json hooks",
-          "evidence": "PreToolUse 는 그 세션이 Bash 툴로 커밋할 때만 발동 — 강제선이 아니라 조기 피드백 (#21)"
+          "evidence": "PreToolUse 는 그 세션이 Bash 툴로 커밋할 때만 발동 — 강제선이 아니라 조기 피드백 (#21). PreCompact 는 prompt 타입 훅 미지원(https://code.claude.com/docs/en/hooks — 'Events that support command, http, and mcp_tool hooks but not prompt or agent') → 압축 리마인드를 SessionStart(compact) command 훅으로 교체, pre-commit 훅은 onFailure: block(v2.1.295+) (#72)"
         },
         "oob_gate": {
           "verdict": "pass",
           "target": ".git/hooks/pre-commit",
           "evidence": "bats: default harness gate blocks a staged .env, exit 2 (#21)"
         }
+      },
+      "docs_checked": {
+        "date": "2026-10-14",
+        "latest_version": "2.1.299",
+        "source": "https://code.claude.com/docs/en/{memory,skills,sub-agents,hooks,settings} + CHANGELOG 2.1.290–2.1.299",
+        "note": "실측(2026-10-18)과 함께 반영 (#72)"
       }
     },
     {
@@ -107,6 +113,12 @@
           "target": ".git/hooks/pre-commit",
           "evidence": "spike: 스테이징된 .env 에 대해 exit 2"
         }
+      },
+      "docs_checked": {
+        "date": "2026-10-14",
+        "latest_version": "codex-cli 0.162.1 (npm 2026-10-09)",
+        "source": "openai/codex 소스 rust-v0.162.1 (config schema·agents_md.rs·hooks discovery). developers.openai.com 은 세션 프록시 차단",
+        "note": "문서·소스 대조만 — verdict·last_measured 는 0.160.0 실측 그대로. 0.160.0→0.162.1 스키마 diff 상 훅·에이전트·스킬·프로젝트 섹션 변경 없음. 재실측 #73"
       }
     },
     {
@@ -154,6 +166,12 @@
           "target": ".git/hooks/pre-commit",
           "evidence": "spike-agy-contract.sh: --harness agy 산출물에서 스테이징된 .env 에 대해 exit 2 (#60)"
         }
+      },
+      "docs_checked": {
+        "date": "2026-10-14",
+        "latest_version": "1.3.5",
+        "source": "https://github.com/google-antigravity/antigravity-cli/blob/main/CHANGELOG.md (antigravity.google 은 세션 프록시 차단)",
+        "note": "CHANGELOG 대조만 — verdict·last_measured 는 1.2.16 실측 그대로. 1.3.1 서브에이전트 추가 필드 지원·1.3.4 --agent 불일치 exit 1·훅 enabled 키 등 재실측 필요 #73"
       }
     }
   ]

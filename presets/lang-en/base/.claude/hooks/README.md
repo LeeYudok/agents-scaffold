@@ -8,6 +8,12 @@ The `hooks` block in `settings.json` wires events to scripts.
 Included: `pre-commit.sh` — pre-commit verification skeleton. Stack presets (e.g. springboot) append build verification.
 Scripts need execute permission (`chmod +x`).
 
+- The `pre-commit.sh` hook sets `"onFailure": "block"` (Claude Code v2.1.295+) — a wrong path or a crashing script blocks
+  the commit instead of letting it through. Harness hooks are still early feedback; the enforcement line is `.git/hooks` + CI (#72).
+- `compact-remind.sh` (SessionStart, matcher `compact`) — right after context compaction, prompts a re-entry check and
+  memory write. Its stdout goes into the model's context. `PreCompact` does not support prompt-type hooks, so the old
+  PreCompact prompt hook never ran (#72).
+
 ## instinct-lite (session observation → habit extraction)
 
 A lightweight version of ECC continuous-learning-v2. No background observer — just two hooks:
@@ -28,6 +34,6 @@ directory unchanged. Write hooks in Claude format only.
 
 - Carried over: `PostToolUse` (Bash/Edit/Write → Codex `Bash`/`apply_patch`, agy `run_command`/`write_to_file`, ...) and
   `Stop`. Codex also gets `SessionStart` and `UserPromptSubmit`.
-- Not carried over: `PreToolUse` (the commit gate lives in `.git/hooks`) and prompt-type hooks.
+- Not carried over: `PreToolUse` (the commit gate lives in `.git/hooks`), prompt-type hooks, and non-tool events with a matcher (`SessionStart` `compact`, #72).
 - Needs `python3`. The project path is provided as `CLAUDE_PROJECT_DIR`.
 - Codex runs them only after project trust plus hook-definition trust (`/hooks`). agy runs them without a trust prompt.

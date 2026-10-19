@@ -30,6 +30,7 @@ SETTINGS = {
             {"matcher": "Bash", "hooks": [{"type": "command", "command": "notify.sh"}]},
         ],
         "PreCompact": [{"hooks": [{"type": "prompt", "prompt": "save state"}]}],
+        "SessionStart": [{"matcher": "compact", "hooks": [{"type": "command", "command": "compact.sh"}]}],
         "Stop": [{"hooks": [{"type": "command", "command": "stop.sh"}]}],
     }
 }
@@ -48,6 +49,12 @@ def emit(harness):
 
 
 class Emit(unittest.TestCase):
+    def test_non_tool_event_with_matcher_is_not_carried_over(self):
+        # SessionStart "compact" 가 matcher 없이 옮겨지면 Codex 의 모든 세션 시작에 붙는다 (#72)
+        for harness, key in (("codex", "hooks"), ("agy", "agents-scaffold")):
+            self.assertNotIn("SessionStart", emit(harness)[key])
+            self.assertNotIn("compact.sh", json.dumps(emit(harness)))
+
     def test_codex_maps_tools_and_skips_gate_and_prompt_hooks(self):
         hooks = emit("codex")["hooks"]
         self.assertEqual(sorted(hooks), ["PostToolUse", "Stop"])

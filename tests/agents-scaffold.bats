@@ -1436,3 +1436,27 @@ PY
   grep -q 'in the language the user writes in' "$en/AGENTS.md"
   ! grep -q '항상 한국어' "$en/AGENTS.md"
 }
+
+@test "compaction reminder is a SessionStart(compact) command hook, gate fails closed (#72)" {
+  for lang in ko en; do
+    t="$BATS_TEST_TMPDIR/$lang"; mkdir -p "$t"
+    run "$SCRIPT" "$t" --lang "$lang" --yes
+    [ "$status" -eq 0 ]
+    # PreCompact 는 prompt 타입 훅을 지원하지 않는다 — 실행되지 않는 훅을 다시 내보내지 않는다
+    run python3 - "$t/.claude/settings.json" <<'PY'
+import json, sys
+h = json.load(open(sys.argv[1]))["hooks"]
+assert "PreCompact" not in h, "PreCompact hook still emitted"
+ss = [g for g in h["SessionStart"] if g.get("matcher") == "compact"]
+assert ss and ss[0]["hooks"][0]["type"] == "command", ss
+assert ss[0]["hooks"][0]["command"].endswith("/.claude/hooks/compact-remind.sh")
+gate = [x for g in h["PreToolUse"] for x in g["hooks"] if x["command"].endswith("pre-commit.sh")]
+assert gate and gate[0].get("onFailure") == "block", gate
+PY
+    [ "$status" -eq 0 ]
+    [ -x "$t/.claude/hooks/compact-remind.sh" ]
+    run bash "$t/.claude/hooks/compact-remind.sh" </dev/null
+    [ "$status" -eq 0 ]
+    [[ "$output" == *".claude/memory/"* ]]
+  done
+}

@@ -5,8 +5,8 @@ Each file is one markdown document.
 
 ## How loading works
 
-- **Scoped load**: with a frontmatter `paths:` (glob array), the file is injected **only when
-  editing/creating matching files**.
+- **Scoped load**: with a frontmatter `paths:` (glob array), the file is injected **when a
+  matching file is read (Read, or a single-file `cat`/`head`) or edited/created**.
 - **Always loaded**: without `paths:`, the file loads at session start (like AGENTS.md).
 - Each file's exact globs live in **its frontmatter — the single source of truth**; the table below is an overview.
 - **Generated for agy**: with `--harness agy|all`, install and `--update` generate these files as `.agents/rules/*.md`

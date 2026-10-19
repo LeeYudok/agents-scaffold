@@ -67,7 +67,7 @@ just costs more. None of them fire automatically, even with all three installed;
 
 **Skills have a single source (#61).** Whatever the harness, skills live once in `.agents/skills/`
 (the Codex/agy native path) and Claude Code reads the same files through the symlink
-`.claude/skills -> ../.agents/skills` (measured on claude 2.1.289 — with `.agents/skills` alone and no
+`.claude/skills -> ../.agents/skills` (measured on claude 2.1.299 — with `.agents/skills` alone and no
 link, Claude Code finds no skills). Two copies can no longer drift apart, and adding another harness
 later needs no reinstall.
 
@@ -106,7 +106,7 @@ The selected stack's P0 rules are **inlined into the `AGENTS.md` body**, so they
 
 | Harness | Measured version | baseline | What is / isn't confirmed on the full tier |
 |---|---|---|---|
-| Claude Code | 2.1.289 | holds | `paths:`-scoped loading of `.claude/rules/*.md`, subagents, skills, `settings.json` hooks — all confirmed against the [official docs](https://code.claude.com/docs/en/memory.md) |
+| Claude Code | 2.1.299 | holds | `paths:`-scoped loading of `.claude/rules/*.md`, subagents, skills, `settings.json` hooks — all confirmed against the [official docs](https://code.claude.com/docs/en/memory.md) |
 | Codex | codex-cli 0.160.0 / GPT-6.1 Sol | holds | Measured: `AGENTS.md`, inlined stack P0, `.agents/skills`, the `.env` gate, `.codex/agents` subagents (trusted projects only), `.codex/hooks.json` hooks (project and hook-definition trust required), and subdirectory `AGENTS.md` by cwd. No file-path-scoped instructions |
 | Antigravity | agy 1.2.16 | holds | Measured in headless (`-p`) mode: `AGENTS.md`, inlined stack P0, `.agents/skills`, the `.env` gate, `.agents/agents` subagents, `.agents/hooks.json` hooks (run without a trust prompt), and `trigger: glob` scoped rules in `.agents/rules`. Subdirectory `AGENTS.md` loads by cwd only |
 
@@ -151,7 +151,7 @@ script, and converts the reply back (measured 2026-10-04):
   `Write`/`Edit`, and Stop's `block` becomes agy's `continue`. Command output is not passed, so test-result notifications
   cannot judge pass/fail. **Hooks run without a trust prompt** (cloning is enough to run the repo's `.claude/hooks/*` —
   `security-audit` scans them).
-- Not carried over: the PreToolUse commit gate (`.git/hooks` owns it) and prompt-type hooks (PreCompact).
+- Not carried over: the PreToolUse commit gate (`.git/hooks` owns it) and prompt-type hooks, and non-tool events with a matcher (the SessionStart `compact` reminder, #72).
 - The adapter needs `python3` (generation is skipped without it). `.claude/settings.json` is the hook source, so codex/agy
   modes keep it.
 - The Stop hook (memory reminder) runs one more turn in headless mode (`-p`, `exec`) too. If that is unwanted in automation,

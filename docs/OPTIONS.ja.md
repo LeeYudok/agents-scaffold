@@ -60,7 +60,7 @@
 | `agy` | Antigravity | `codex` の共通レイアウトに加え、`.claude/` から `.agents/rules`（`trigger: glob`、#63）・`.agents/agents`（#64）・`.agents/hooks.json`（#65）を生成 |
 | `all` | 混在チーム | `claude` の全内容 + すべてのアダプタ（agy ルール、Codex・agy のサブエージェントとフック）。skills のレイアウトはハーネスに依存しない（#61） |
 
-**skills の原本は 1 か所です（#61）。** ハーネスに関係なく skills は `.agents/skills/`（Codex・agy のネイティブパス）に 1 回だけ置き、Claude Code はシンボリックリンク `.claude/skills -> ../.agents/skills` 経由で同じファイルを読みます（claude 2.1.289 で実測 — リンクなしで `.agents/skills` だけを置くと Claude Code は skills を見つけられません）。2 つのコピーが食い違うことはなくなり、後から別のハーネスを加えても再インストールは不要です。
+**skills の原本は 1 か所です（#61）。** ハーネスに関係なく skills は `.agents/skills/`（Codex・agy のネイティブパス）に 1 回だけ置き、Claude Code はシンボリックリンク `.claude/skills -> ../.agents/skills` 経由で同じファイルを読みます（claude 2.1.299 で実測 — リンクなしで `.agents/skills` だけを置くと Claude Code は skills を見つけられません）。2 つのコピーが食い違うことはなくなり、後から別のハーネスを加えても再インストールは不要です。
 
 - シンボリックリンクを作れない環境（Windows Git Bash の既定値など）や `AGENTS_SCAFFOLD_NO_SYMLINK=1` の場合、`.claude/skills` はコピーになります。ステージされたコピーが原本と異なると pre-commit ゲートがコミットをブロックします（インデックス基準の比較なので `__pycache__` などの未追跡ファイルは対象外）。リンクを作れるかは環境によって変わりえます（ネットワーク分離 PC のポリシーなど）— [OFFLINE_INSTALL.en.md](OFFLINE_INSTALL.en.md) のステップ 6 を参照。
 - Git for Windows で `core.symlinks=false` のままチェックアウトすると、リンクはパス文字列を含む通常ファイルになります。このとき Claude Code は skills を見つけられず、ゲートが警告を出します — `git config core.symlinks true` の後に再チェックアウトしてください。
@@ -84,7 +84,7 @@ git フックは**ハーネスに関係なく常に配線されます**（#21）
 
 | ハーネス | 実測バージョン | baseline | full 層で確認できたこと / できていないこと |
 |---|---|---|---|
-| Claude Code | 2.1.289 | 成立 | `.claude/rules/*.md` の `paths:` 条件付きロード、サブエージェント、skills、`settings.json` フック — いずれも[公式ドキュメント](https://code.claude.com/docs/en/memory.md)で確認 |
+| Claude Code | 2.1.299 | 成立 | `.claude/rules/*.md` の `paths:` 条件付きロード、サブエージェント、skills、`settings.json` フック — いずれも[公式ドキュメント](https://code.claude.com/docs/en/memory.md)で確認 |
 | Codex | codex-cli 0.160.0 / GPT-6.1 Sol | 成立 | `AGENTS.md`、インラインのスタック P0、`.agents/skills`、`.env` ゲート、`.codex/agents` サブエージェント（信頼済みプロジェクトのみ）、`.codex/hooks.json` フック（プロジェクトとフック定義の信頼が必要）、cwd 基準のサブディレクトリ `AGENTS.md` を実測。ファイルパス条件付きの指示はない |
 | Antigravity | agy 1.2.16 | 成立 | headless（`-p`）で `AGENTS.md`、インラインのスタック P0、`.agents/skills`、`.env` ゲート、`.agents/agents` サブエージェント、`.agents/hooks.json` フック（信頼確認なしで実行）、`.agents/rules` の `trigger: glob` 条件付きルールを実測。サブディレクトリの `AGENTS.md` は cwd 基準でのみ読み込まれる |
 
@@ -100,7 +100,7 @@ Codex（codex-cli 0.160.0、`gpt-6.1-sol`）と agy（1.2.16）は、各モー�
 
 - Codex の入力は Claude とほぼ同じです。シェルは `Bash`、ファイル編集は `apply_patch`（パッチテキストからファイルごとに分けて `Edit` として渡す）。Stop の `{"decision":"block"}` をそのまま受け取り、もう 1 ターン回ります。プロジェクトの信頼とフック定義の信頼（`/hooks` での確認）が必要です。
 - agy の入力は camelCase（`conversationId`・`toolCall`）です。`run_command` は `Bash`、`write_to_file` などは `Write`/`Edit` に変換し、Stop の `block` は agy の `continue` に変換します。コマンド出力が渡されないため、テスト結果通知は成否を判定できません。**信頼確認なしで実行されます**（clone するだけでリポジトリの `.claude/hooks/*` が動きます — `security-audit` が検査します）。
-- 移さないもの: PreToolUse のコミットゲート（`.git/hooks` が担当）、prompt タイプのフック（PreCompact）。
+- 移さないもの: PreToolUse のコミットゲート（`.git/hooks` が担当）、prompt タイプのフック、matcher 付きの非ツールイベント（SessionStart `compact` の圧縮リマインド、#72）。
 - アダプタには `python3` が必要です（ない場合は生成をスキップ）。`.claude/settings.json` はフックの原本なので codex/agy モードでも残します。
 - Stop フック（メモリリマインド）は headless（`-p`・`exec`）でももう 1 ターン回ります。自動化で不要なら `settings.json` から外して `--update` します。更新規則は他のアダプタと同じです。
 

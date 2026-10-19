@@ -22,6 +22,7 @@
     post-edit-format.sh   PostToolUse(Edit|Write) → 自動フォーマット
     post-test-notify.sh   PostToolUse(Bash, *test*) → ターミナル通知
     stop-memory-remind.sh Stop フック → セッションごとに1回のメモリリマインダー
+    compact-remind.sh     SessionStart(compact) フック → 圧縮直後の再開情報整理リマインダー
     cc-check.py            PostToolUse(Bash, git commit) → CC > 15 なら警告
   memory/
     MEMORY.md              auto-memory インデックス(SSOT)

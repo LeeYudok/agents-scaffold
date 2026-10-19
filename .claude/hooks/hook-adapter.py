@@ -20,7 +20,7 @@ agy(Antigravity)는 훅 설정 위치·이벤트·입력 JSON·응답 형식이 
 - 둘 다 프로젝트 경로 환경변수가 없어서 CLAUDE_PROJECT_DIR 를 여기서 채운다.
 
 옮기지 않는 것: PreToolUse(커밋 게이트는 .git/hooks 가 맡는다, 차단 의미도 하네스마다 다르다),
-prompt 타입 훅(PreCompact 등 — 두 하네스에 대응물이 없다).
+prompt 타입 훅, matcher 가 걸린 비-툴 이벤트(SessionStart "compact" 등 — 두 하네스에 대응물이 없다, #72).
 """
 import json
 import os
@@ -78,6 +78,10 @@ def emit(harness, settings_path):
             claude_matcher = group.get("matcher", "") or ""
             matcher = harness_matcher(harness, claude_matcher) if event in TOOL_EVENTS else ""
             if event in TOOL_EVENTS and claude_matcher and not matcher:
+                continue
+            # 비-툴 이벤트의 matcher(예: SessionStart "compact")는 옮길 대응물이 없다 — 버리면
+            # 모든 세션 시작에 붙으므로 그룹째 건너뛴다 (#72)
+            if event not in TOOL_EVENTS and claude_matcher:
                 continue
             for hook in group.get("hooks") or []:
                 if hook.get("type") != "command" or not hook.get("command"):

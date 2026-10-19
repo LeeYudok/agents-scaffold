@@ -63,7 +63,7 @@
 
 **스킬 원본은 한 곳이다 (#61).** 스킬은 하네스와 무관하게 `.agents/skills/`(Codex·agy 네이티브
 경로)에 한 번만 두고, Claude Code 는 `.claude/skills -> ../.agents/skills` 심볼릭 링크로 같은 원본을
-읽는다(claude 2.1.289 실측 — 링크 없이 `.agents/skills` 만 두면 스킬을 찾지 못한다). 사본 두 벌이
+읽는다(claude 2.1.299 실측 — 링크 없이 `.agents/skills` 만 두면 스킬을 찾지 못한다). 사본 두 벌이
 갈라지는 일이 없고, 나중에 다른 하네스를 붙여도 재설치가 필요 없다.
 
 - 링크를 만들 수 없는 환경(Windows Git Bash 기본값 등)이나 `AGENTS_SCAFFOLD_NO_SYMLINK=1` 이면
@@ -103,7 +103,7 @@ Bash 툴로 커밋할 때만 발동하므로 조기 피드백 계층이지 강�
 
 | 하네스 | 실측 버전 | baseline | full 쪽 확인된 것 / 확인 안 된 것 |
 |---|---|---|---|
-| Claude Code | 2.1.289 | 성립 | `.claude/rules/*.md` 의 `paths:` 조건부 로딩, 서브에이전트, skills, `settings.json` 훅 — 전부 [공식 문서](https://code.claude.com/docs/en/memory.md)로 확인 |
+| Claude Code | 2.1.299 | 성립 | `.claude/rules/*.md` 의 `paths:` 조건부 로딩, 서브에이전트, skills, `settings.json` 훅 — 전부 [공식 문서](https://code.claude.com/docs/en/memory.md)로 확인 |
 | Codex | codex-cli 0.160.0 / GPT-6.1 Sol | 성립 | `AGENTS.md`·스택 P0 자동 로드, `.agents/skills` 발견, `.env` 게이트, `.codex/agents` 서브에이전트(신뢰 프로젝트만), `.codex/hooks.json` 훅(프로젝트 + 훅 정의 신뢰 필요), cwd 기준 하위 `AGENTS.md` 를 실측. 파일 경로 조건부 지침은 없다 |
 | Antigravity | agy 1.2.16 | 성립 | headless(`-p`)로 `AGENTS.md`·스택 P0 자동 로드, `.agents/skills` 발견, `.env` 게이트, `.agents/agents` 서브에이전트, `.agents/hooks.json` 훅(신뢰 확인 없이 실행), `.agents/rules` 의 `trigger: glob` 조건부 룰을 실측. 하위 `AGENTS.md` 는 cwd 기준으로만 로드 |
 
@@ -142,7 +142,7 @@ agy(`--harness agy|all`)용 `.agents/agents/<이름>.md` 로 생성한다. Codex
 - agy 입력은 camelCase(`conversationId`·`toolCall`)다. `run_command` → `Bash`, `write_to_file` 등 → `Write`/`Edit` 로 바꾸고,
   Stop 의 `block` 을 agy 의 `continue` 로 바꾼다. 명령 출력이 오지 않아 테스트 결과 알림은 판정하지 못한다.
   **신뢰 확인 없이 실행된다**(clone 만으로 레포의 `.claude/hooks/*` 가 돈다 — `security-audit` 가 검사한다).
-- 옮기지 않는 것: PreToolUse 커밋 게이트(`.git/hooks` 가 맡는다), prompt 타입 훅(PreCompact).
+- 옮기지 않는 것: PreToolUse 커밋 게이트(`.git/hooks` 가 맡는다), prompt 타입 훅, matcher 가 걸린 비-툴 이벤트(SessionStart `compact` 압축 리마인드, #72).
 - 어댑터는 `python3` 가 필요하다(없으면 생성을 건너뛴다). `.claude/settings.json` 은 훅 원본이라 codex/agy 모드에서도 남긴다.
 - Stop 훅(메모리 리마인드)은 headless(`-p`·`exec`)에서도 한 턴을 더 돌린다. 자동화에서 원치 않으면 `settings.json` 에서
   빼고 `--update` 한다. 갱신 규칙은 다른 어댑터와 같다.
