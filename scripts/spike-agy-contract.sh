@@ -42,6 +42,12 @@ gate_exit=0
 ( cd "$WORK" && bash .git/hooks/pre-commit >/dev/null 2>&1 ) || gate_exit=$?
 ( cd "$WORK" && git reset -q HEAD .env >/dev/null 2>&1; rm -f .env )
 
+# 툴 호출 판정 (#73): "user_input·agent_response 가 아닌 단계 = 툴" 로 세면, 툴이 아닌 새 단계 종류가
+# 생긴 버전(agy 1.4.0)에서 모든 질의가 TOOL_USED 로 오탐된다. 실제 툴 이름(tool_info.name)이 있는
+# 단계만 툴로 센다. 버전마다 단계 종류가 바뀌므로 본 종류를 STEPS_LOG 에 모아 결과 JSON 에 싣는다.
+STEPS_LOG="$WORK/_steps.log"
+: > "$STEPS_LOG"
+
 # agy -p 를 stream-json 으로 돌려 최종 응답만 파일에 남긴다.
 # 응답 전 툴 호출 단계가 있으면 응답 대신 TOOL_USED 를 남긴다.
 ask_agy() {
@@ -50,19 +56,24 @@ ask_agy() {
       --output-format stream-json --print-timeout "$((AGY_TIMEOUT - 10))s" ) 2>/dev/null \
     | python3 -c '
 import json, sys
+log = open(sys.argv[1], "a")
 tool_steps, response = 0, ""
 for line in sys.stdin:
     try:
         o = json.loads(line)
     except ValueError:
         continue
-    st = (o.get("step_update") or {}).get("step_type")
-    if st and st not in ("user_input", "agent_response"):
+    su = o.get("step_update") or {}
+    st = su.get("step_type")
+    name = (su.get("tool_info") or {}).get("name")
+    if st:
+        log.write("%s:%s\n" % (st, "tool" if name else "-"))
+    if name:
         tool_steps += 1
     if o.get("event") == "result":
         response = (o.get("result") or {}).get("response") or ""
 print("TOOL_USED" if tool_steps else response, end="")
-' > "$out"
+' "$STEPS_LOG" > "$out"
 }
 
 # ---- 동적 측정 -------------------------------------------------------------
@@ -83,7 +94,7 @@ ask_agy_steps() {
       --print-timeout "$((AGY_TIMEOUT - 10))s" </dev/null ) 2>/dev/null \
     | python3 -c '
 import json, os, sys
-root = sys.argv[1]
+root, log = sys.argv[1], open(sys.argv[2], "a")
 tools, files, response = 0, set(), ""
 for line in sys.stdin:
     try:
@@ -91,9 +102,12 @@ for line in sys.stdin:
     except ValueError:
         continue
     su = o.get("step_update") or {}
-    if su.get("step_type") not in (None, "user_input", "agent_response") and su.get("state") == "DONE":
+    info = su.get("tool_info") or {}
+    if su.get("step_type") and su.get("state") == "DONE":
+        log.write("%s:%s\n" % (su["step_type"], "tool" if info.get("name") else "-"))
+    if info.get("name") and su.get("state") == "DONE":
         tools += 1
-        params = (su.get("tool_info") or {}).get("parameters") or {}
+        params = info.get("parameters") or {}
         for key in ("AbsolutePath", "TargetFile", "Path"):
             if params.get(key):
                 files.add(os.path.relpath(params[key], root))
@@ -101,7 +115,7 @@ for line in sys.stdin:
         response = (o.get("result") or {}).get("response") or ""
 print("TOOLS=%d FILES=%s" % (tools, ",".join(sorted(files))))
 print(response)
-' "$dir" > "$out"
+' "$dir" "$STEPS_LOG" > "$out"
 }
 if [ "$DYNAMIC" -eq 1 ] && [ "$AGY_VERSION" != "not-installed" ]; then
   # 산출물의 .agents/hooks.json(#65)은 신뢰 확인 없이 돌고, Stop 훅(메모리 리마인드)이 한 턴을 더
@@ -182,12 +196,13 @@ MD
 HOOKS
   ask_agy_steps "$WORK" "$WORK/_hk.txt" -p "Read the file .gitattributes and reply with the single word DONE."
   h_fired=$(find "$WORK" -maxdepth 1 -name '.hook-*' | wc -l | tr -d ' ')
+  h_names=$(find "$WORK" -maxdepth 1 -name '.hook-*' -exec basename {} \; | sed 's/^\.hook-//' | sort | paste -sd, -)
   rm -f "$WORK"/.hook-* "$WORK/.agents/hooks.json"
   if [ ! -s "$WORK/_hk.txt" ]; then
     hook_answer="inconclusive"; hook_note="agy 응답 없음 — 미측정으로 취급"
   elif [ "$h_fired" -ge 1 ]; then
     hook_answer="partial"
-    hook_note=".agents/hooks.json 의 PreInvocation·PostInvocation·PreToolUse·Stop 중 ${h_fired}/4 실행(headless, 신뢰 확인 절차 없음). 조기 피드백이지 강제선이 아니다"
+    hook_note=".agents/hooks.json 의 PreInvocation·PostInvocation·PreToolUse·Stop 중 ${h_fired}/4 실행(${h_names}; headless, 신뢰 확인 절차 없음). 조기 피드백이지 강제선이 아니다"
   else
     hook_answer="fail"; hook_note=".agents/hooks.json 훅이 실행되지 않음"
   fi
@@ -213,13 +228,19 @@ HOOKS
   ask_agy_steps "$WORK/sub" "$WORK/_ns_c.txt" -p "Do not use any tools or read any files. From the instructions in your context only, what is the nested codeword? If you do not know, reply exactly UNKNOWN."
   ask_agy_steps "$WORK" "$WORK/_ns_r.txt" -p "Read the file sub/notes.txt and nothing else (do not open any AGENTS.md or rules file). Then, from the instructions in your context only, what is the nested codeword? If you do not know, reply exactly UNKNOWN."
   seen() { grep -q "$2" "$1" && echo yes || echo no; }
+  # 읽으라고 한 파일을 읽었고 룰·AGENTS.md 는 직접 열지 않았는가 (#73: 정확 일치 대신 포함 여부 —
+  # 버전에 따라 디렉터리 목록 등 다른 툴 단계가 끼어도 판정이 깨지지 않게)
+  read_only_target() {
+    local files; files=$(sed -n '1s/^TOOLS=[0-9]* FILES=//p' "$1")
+    printf ',%s,' "$files" | grep -q ",$2," && ! printf '%s' "$files" | grep -Eq '(^|,)(\.agents/rules/|[^,]*AGENTS\.md)'
+  }
   rel_note="상대 패턴 sub2/** 는 $(seen "$WORK/_gl_rel.txt" ZQX-AGY-GLOB-6620)"
   nested_note="하위 AGENTS.md: cwd=하위 $(seen "$WORK/_ns_c.txt" ZQX-AGY-NESTED-8812), 루트에서 하위 파일 읽기 $(seen "$WORK/_ns_r.txt" ZQX-AGY-NESTED-8812)"
   if [ ! -s "$WORK/_gl_c.txt" ] || [ ! -s "$WORK/_gl_r.txt" ]; then
     rule_answer="inconclusive"; rule_note="agy 응답 없음 — 미측정으로 취급"
   elif grep -q 'ZQX-AGY-GLOB-6620' "$WORK/_gl_c.txt"; then
     rule_answer="fail"; rule_note="glob 룰이 파일 접근 없이도 로드됨(조건부가 아님). $nested_note"
-  elif grep -q 'ZQX-AGY-GLOB-6620' "$WORK/_gl_r.txt" && grep -q '^TOOLS=[0-9]* FILES=sub2/data.txt$' "$WORK/_gl_r.txt"; then
+  elif grep -q 'ZQX-AGY-GLOB-6620' "$WORK/_gl_r.txt" && read_only_target "$WORK/_gl_r.txt" sub2/data.txt; then
     rule_answer="pass"; rule_note="trigger: glob 룰이 sub2/data.txt 접근 뒤에만 로드(대조군 UNKNOWN). 패턴 **/sub2/** 는 yes, $rel_note. $nested_note"
   else
     rule_answer="fail"; rule_note="glob 룰이 일치 파일 접근 뒤에도 로드되지 않음. $rel_note. $nested_note"
@@ -240,7 +261,7 @@ HOOKS
     emit_answer="inconclusive"; emit_note="agy 응답 없음 — 미측정으로 취급"
   elif grep -q 'ZQX-AGY-EMIT-2207' "$WORK/_em_c.txt"; then
     emit_answer="fail"; emit_note="생성된 룰이 파일 접근 없이도 로드됨(조건부가 아님)"
-  elif grep -q 'ZQX-AGY-EMIT-2207' "$WORK/_em_r.txt" && grep -q '^TOOLS=[0-9]* FILES=sub3/data.txt$' "$WORK/_em_r.txt"; then
+  elif grep -q 'ZQX-AGY-EMIT-2207' "$WORK/_em_r.txt" && read_only_target "$WORK/_em_r.txt" sub3/data.txt; then
     emit_answer="pass"; emit_note="paths: sub3/** 가 globs: **/sub3/** 로 생성되고, 일치 파일 접근 뒤에만 로드(대조군 미로드)"
   else
     emit_answer="fail"; emit_note="생성된 룰이 일치 파일 접근 뒤에도 로드되지 않음"
@@ -282,7 +303,8 @@ HOOKS
   elif [ -n "$obs" ]; then
     hooks_answer="partial"; hooks_note="PostToolUse(observe-lite)는 실행됐으나 Stop(stop-memory-remind) 표시 없음"
   else
-    hooks_answer="fail"; hooks_note="생성된 훅이 실행되지 않음(관찰 로그 없음)"
+    hooks_answer="fail"
+    hooks_note="생성된 훅이 실행되지 않음(관찰 로그 없음). 생성된 이벤트: $(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(",".join(k for v in d.values() for k in v))' "$hook_gen" 2>/dev/null)"
   fi
 fi
 
@@ -307,6 +329,7 @@ cat <<JSON
     "rules_adapter": { "verdict": "$emit_answer", "note": "$emit_note" },
     "subagents_adapter": { "verdict": "$adapter_answer", "note": "$adapter_note" },
     "hooks_adapter": { "verdict": "$hooks_answer", "note": "$hooks_note" }
-  }
+  },
+  "step_types_seen": "$(sort "$STEPS_LOG" 2>/dev/null | uniq -c | awk '{printf "%s%s=%s", (NR>1?", ":""), $2, $1}')"
 }
 JSON
