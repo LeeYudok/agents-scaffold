@@ -1,6 +1,6 @@
 ---
 name: reference_harness-config-contracts
-description: Claude Code / Codex / agy 세 하네스의 설정·디스커버리 계약 실측 결과와 공식문서 위치, 실측 요령 (2026-10-04 세 하네스 실측, 2026-10-14 문서 대조·2026-10-18 claude 2.1.299 재측정)
+description: Claude Code / Codex / agy 세 하네스의 설정·디스커버리 계약 실측 결과와 공식문서 위치, 실측 요령 (2026-10-04 세 하네스 실측, 2026-10-14 문서 대조·2026-10-18 claude 2.1.299·2026-10-19 codex 0.163.0·agy 1.4.2 재측정)
 metadata:
   type: reference
 ---
@@ -11,6 +11,7 @@ metadata:
 (Codex 2026-09-15, 나머지 2026-08-22, 맥 로컬)
 AGENTS.md 로드 항목만 2026-09-21 재측정: `claude 2.1.278` / `codex-cli 0.155.1` / `agy 1.2.7` / `gemini 0.56.0`
 2026-10-04 재측정(#60, 리눅스 로컬): `claude 2.1.289` / `codex-cli 0.160.0` + `gpt-6.1-sol` / `agy 1.2.16` — 지원 대상은 이 세 하네스 최신판으로 고정, Gemini CLI 제외
+2026-10-19 재측정(#73, 맥 로컬): `codex-cli 0.163.0` spike `--dynamic` 판정 0.160.0 과 동일(pass 5·partial 2). `agy 1.4.0` 은 거의 전 항목 inconclusive/fail — spike 가 `user_input`·`agent_response` 외 모든 `step_type` 을 툴로 세고 룰 판정은 `FILES=` 정확 일치라, 툴이 아닌 새 단계 종류가 생기면 같은 패턴으로 무너진다(가짜 agy 로 재현). 판정을 `tool_info.name` 있는 단계만 툴, 룰은 "대상 파일 포함·룰/AGENTS.md 미열람"으로 바꾸고 결과 JSON 에 `step_types_seen` 을 싣게 고침(#73). 고친 spike 로 `agy 1.4.2` 재실측(2회, 2026-10-19 UTC) → 판정 1.2.16 과 동일로 매트릭스 반영. 남은 오탐 두 가지도 고침: `ask_agy_steps` 출력은 `TOOLS=` 헤더가 늘 있어 `[ -s ]` 빈 응답 검사가 안 걸려 빈 응답이 fail 로 떨어졌다(→ `no_reply`), `--agent` 불일치 exit 1 은 `AGENT_UNKNOWN` 으로 미등록 fail. 판정이 바뀌면 `AGY_KEEP_WORK=1` 로 질의 원문(`_*.txt`)을 남기고, 결과 JSON `errors_seen` 에 error_message 단계 원문이 실린다. 주의: spike 의 `measured_at` 은 로컬 날짜라 KST 자정 직후면 UTC 보다 하루 앞선다 — 매트릭스 `last_measured` 는 UTC 날짜로 적는다(CI 의 미래 날짜 검사)
 2026-10-14 문서·소스 대조(#72, 실측 아님): 최신 `claude 2.1.299` / `codex-cli 0.162.1`(npm 10-09) / `agy 1.3.5`. 클라우드 세션에선 developers.openai.com·antigravity.google 이 프록시 차단 → Codex 는 소스(rust-v0.162.1), agy 는 공식 CHANGELOG 로만 대조. 2026-10-18 claude 2.1.299 만 재측정(AGENTS.md 단독 정답·대조군 UNKNOWN, 스킬 링크 YES·링크 없는 대조군 NO)
 
 ## Claude Code
@@ -55,7 +56,7 @@ AGENTS.md 로드 항목만 2026-09-21 재측정: `claude 2.1.278` / `codex-cli 0
 - 공식문서 [Skills](https://antigravity.google/docs/skills): 워크스페이스 `.agents/skills/<name>/`(레거시 `.agent/skills` 호환), CLI 전역 `~/.gemini/antigravity-cli/skills/`. CLI 설정은 `~/.gemini/antigravity-cli/settings.json` — 워크스페이스 `.gemini/settings.json` 은 agy 와 무관
 - **1.2.16 headless(`-p`) 에서 AGENTS.md 로드 확인**(2026-10-04): AGENTS.md 단독 → 암호어 정답, GEMINI.md 대조군 → 정답, 없음 → UNKNOWN. `scripts/spike-agy-contract.sh --dynamic` 으로 스택 P0 인라인·`.agents/skills` 만 등록(`.claude/skills` 미등록)·.env 게이트 exit 2 까지 pass
 - 1.1.17·1.2.7 headless 는 AGENTS.md·GEMINI.md 모두 미로드였다(원인 미규명, 1.2.16 에서 해소)
-- `-p --output-format stream-json` 의 `step_update.step_type` 으로 툴 호출 여부를 판정할 수 있다(`user_input`·`agent_response` 외 단계 = 툴 사용)
+- `-p --output-format stream-json` 의 `step_update` 에서 툴 호출은 `tool_info.name` 이 있는 단계로 센다 — 1.4.x 에 `error_message`·`system_message` 같은 비-툴 단계가 생겨 "`user_input`·`agent_response` 외 = 툴"은 오탐한다(#73)
 - 공통 `--instructions` 플래그 없음 (`--agent`, `--mode`, `plugin` 등)
 - **2026-10-04 실측(1.2.16 headless, #60)** — 재현은 `scripts/spike-agy-contract.sh --dynamic`
   - 서브에이전트 `.agents/agents/<name>.md`(frontmatter `name`·`description`): 툴 없이 목록에 등록, `--agent <name>` 으로 고르면 본문 지시대로 응답. `agy agents` 서브커맨드는 출력이 비어 판정에 못 쓴다
@@ -67,6 +68,7 @@ AGENTS.md 로드 항목만 2026-09-21 재측정: `claude 2.1.278` / `codex-cli 0
   - 훅 입력(#65 실측): camelCase — `conversationId`·`workspacePaths`·`toolCall{name,args}`(`run_command`→`args.CommandLine`, `write_to_file` 등→`args.TargetFile`), PostToolUse 에 명령 출력 없음. 훅 cwd 는 hooks.json 이 있는 `.agents/`, 프로젝트 경로 환경변수 없음. Stop 은 `{"decision":"continue","reason"}` 로 한 턴 더(Claude 의 `block` 아님)
   - 산출물에 `.agents/hooks.json`(Stop 메모리 리마인드)이 생긴 뒤로 headless 질의도 한 턴 더 돌며 툴을 써서 "툴 없이 답했나" 판정이 깨진다 — spike 는 기능 측정 동안 hooks.json 을 빼 둔다(#65)
   - 2026-10-14 CHANGELOG 대조(1.3.5, 실측 아님 #72): 전역 위치에 `~/.gemini/config/{AGENTS.md,GEMINI.md,agents/,hooks.json}` 추가, manifest(`rules.json`·`skills.json`·`agents.json`·`plugins.json`)는 cwd→프로젝트 루트 사이 모든 `.agents/` 에서 로드(1.2.16). 1.3.1 부터 마크다운 에이전트가 `skills:`·`plugins:`·`rules:`·`agents:`·`hooks:` 를 받는다 → 위의 "name·description 외 필드면 조용히 미등록"은 Claude 필드(`tools`·`model`·`memory`)에 대해 **재실측 대상**. 1.3.4: headless `--agent` 이름 불일치 시 exit 1 + 목록 출력(예전엔 기본 에이전트로 조용히 실행). 훅 정의에 `enabled` 키, 커뮤니티 예시엔 평면 `{"enabled":true,"PreToolUse":[...]}` 형식도 보여 래퍼 형식과 대조 필요. 1.3.2 플러그인(skills·MCP·subagents·rules·hooks 번들), 공유 설정 `~/.gemini/config/config.json`. 재실측은 #73
+  - **1.4.2 재실측(2026-10-19 UTC, #73)**: `tools`·`model`·`memory` frontmatter 에이전트는 여전히 미등록이고, `--agent` 로 고르면 `error: unknown agent "<name>" (available: …)` + exit 1 — 생성기 형식(`name`·`description` 만) 유지. 훅은 래퍼 형식 `{"<이름>":{...}}` 만 실행되고 평면 `{"enabled":true,"PreInvocation":[...]}` 은 0회, 래퍼 안 `"enabled":false` 면 비활성. 스택 P0 인라인 질의는 2회 중 1회 mypy/ruff 누락(응답 변동). 같은 실행 안에서 glob 룰 질의만 연달아 빈 응답(error_message 단계)이 났고 단독 재실행은 정상 — 빈 응답은 inconclusive 로 보고 그 질의만 다시 돌린다. `--agent` 목록에 사용자 전역 에이전트도 섞여 나온다
   - 하위 `AGENTS.md` 는 cwd 기준으로만 로드 — 공식문서의 "파일을 읽거나 고칠 때 그 폴더부터 올라가며 로드"는 headless 에서 재현되지 않음(읽기·편집·다음 턴 모두 미로드)
 
 ## Gemini CLI (지원 대상 제외 — #60)
