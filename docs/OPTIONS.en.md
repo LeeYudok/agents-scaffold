@@ -107,10 +107,10 @@ The selected stack's P0 rules are **inlined into the `AGENTS.md` body**, so they
 | Harness | Measured version | baseline | What is / isn't confirmed on the full tier |
 |---|---|---|---|
 | Claude Code | 2.1.299 | holds | `paths:`-scoped loading of `.claude/rules/*.md`, subagents, skills, `settings.json` hooks — all confirmed against the [official docs](https://code.claude.com/docs/en/memory.md) |
-| Codex | codex-cli 0.160.0 / GPT-6.1 Sol | holds | Measured: `AGENTS.md`, inlined stack P0, `.agents/skills`, the `.env` gate, `.codex/agents` subagents (trusted projects only), `.codex/hooks.json` hooks (project and hook-definition trust required), and subdirectory `AGENTS.md` by cwd. No file-path-scoped instructions |
+| Codex | codex-cli 0.163.0 | holds | Measured: `AGENTS.md`, inlined stack P0, `.agents/skills`, the `.env` gate, `.codex/agents` subagents (trusted projects only), `.codex/hooks.json` hooks (project and hook-definition trust required), and subdirectory `AGENTS.md` by cwd. No file-path-scoped instructions |
 | Antigravity | agy 1.2.16 | holds | Measured in headless (`-p`) mode: `AGENTS.md`, inlined stack P0, `.agents/skills`, the `.env` gate, `.agents/agents` subagents, `.agents/hooks.json` hooks (run without a trust prompt), and `trigger: glob` scoped rules in `.agents/rules`. Subdirectory `AGENTS.md` loads by cwd only |
 
-Codex (codex-cli 0.160.0, `gpt-6.1-sol`) and agy (1.2.16) auto-load their mode's AGENTS.md and
+Codex (codex-cli 0.163.0) and agy (1.2.16) auto-load their mode's AGENTS.md and
 its inlined stack P0 without any tool call, and discover repository skills under `.agents/skills`
 only — neither discovers `.claude/skills`. agy 1.2.7 headless loaded neither `AGENTS.md` nor
 `GEMINI.md`; that is fixed in 1.2.16. If a model misses a rule, the git hook still blocks a staged

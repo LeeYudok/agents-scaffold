@@ -11,6 +11,7 @@ metadata:
 (Codex 2026-09-15, 나머지 2026-08-22, 맥 로컬)
 AGENTS.md 로드 항목만 2026-09-21 재측정: `claude 2.1.278` / `codex-cli 0.155.1` / `agy 1.2.7` / `gemini 0.56.0`
 2026-10-04 재측정(#60, 리눅스 로컬): `claude 2.1.289` / `codex-cli 0.160.0` + `gpt-6.1-sol` / `agy 1.2.16` — 지원 대상은 이 세 하네스 최신판으로 고정, Gemini CLI 제외
+2026-10-19 재측정(#73, 맥 로컬): `codex-cli 0.163.0` spike `--dynamic` 판정 0.160.0 과 동일(pass 5·partial 2). `agy 1.4.0` 은 거의 전 항목 inconclusive/fail — 판정 로직(툴 단계 집계) 오탐 의심으로 진단 중, 매트릭스 미반영. 주의: spike 의 `measured_at` 은 로컬 날짜라 KST 자정 직후면 UTC 보다 하루 앞선다 — 매트릭스 `last_measured` 는 UTC 날짜로 적는다(CI 의 미래 날짜 검사)
 2026-10-14 문서·소스 대조(#72, 실측 아님): 최신 `claude 2.1.299` / `codex-cli 0.162.1`(npm 10-09) / `agy 1.3.5`. 클라우드 세션에선 developers.openai.com·antigravity.google 이 프록시 차단 → Codex 는 소스(rust-v0.162.1), agy 는 공식 CHANGELOG 로만 대조. 2026-10-18 claude 2.1.299 만 재측정(AGENTS.md 단독 정답·대조군 UNKNOWN, 스킬 링크 YES·링크 없는 대조군 NO)
 
 ## Claude Code

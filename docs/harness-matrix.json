@@ -70,8 +70,8 @@
     {
       "id": "codex",
       "name": "Codex",
-      "cli_version": "codex-cli 0.160.0",
-      "last_measured": "2026-10-04",
+      "cli_version": "codex-cli 0.163.0",
+      "last_measured": "2026-10-19",
       "tier": "baseline",
       "trust_model": "project trust required for .codex/ layer (agents·hooks), plus per-hook definition trust",
       "instruction_budget_bytes": 32768,
@@ -79,34 +79,34 @@
         "instructions": {
           "verdict": "pass",
           "target": "AGENTS.md (+ nested AGENTS.override.md)",
-          "evidence": "spike-codex-contract.sh --dynamic: P0 응답 정확. codex-cli 0.155.1 AGENTS.md 단독 암호어 질의(2026-09-21, #54), codex-cli 0.160.0 spike 재측정(2026-10-04, #60)",
+          "evidence": "spike-codex-contract.sh --dynamic: P0 응답 정확. codex-cli 0.155.1 AGENTS.md 단독 암호어 질의(2026-09-21, #54), codex-cli 0.160.0 spike 재측정(2026-10-04, #60), codex-cli 0.163.0 spike 재측정(2026-10-19, #73)",
           "reproducibility": "완주 3회 / 시도 3회"
         },
         "stack_p0_inline": {
           "verdict": "pass",
           "target": "AGENTS.md body",
-          "evidence": "spike: 인라인된 python 스택 P0 를 응답에 포함. 산출물 AGENTS.md 7,287 B / 32,768 B (codex-cli 0.160.0, 2026-10-04)"
+          "evidence": "spike: 인라인된 python 스택 P0 를 응답에 포함. 산출물 AGENTS.md 7,544 B / 32,768 B (codex-cli 0.163.0, 2026-10-19, #73). 이전: 7,287 B (0.160.0, 2026-10-04)"
         },
         "repo_skills": {
           "verdict": "pass",
           "target": ".agents/skills/<name>/SKILL.md",
-          "evidence": "spike 통제실험: --harness codex 산출물의 .agents/skills 프로브는 등록 스킬로 응답하고 .claude/skills 프로브는 미응답 (gpt-6-astra #50, gpt-6.1-sol 2026-10-04 #60).",
-          "reproducibility": "codex-cli 0.154.0·0.160.0, 완주 2회 / 시도 2회"
+          "evidence": "spike 통제실험: --harness codex 산출물의 .agents/skills 프로브는 등록 스킬로 응답하고 .claude/skills 프로브는 미응답 (gpt-6-astra #50, gpt-6.1-sol 2026-10-04 #60).. codex-cli 0.163.0 spike 재측정(2026-10-19 UTC·KST 10-20, #73): 판정 동일",
+          "reproducibility": "codex-cli 0.154.0·0.160.0·0.163.0, 완주 3회 / 시도 3회"
         },
         "subagents": {
           "verdict": "pass",
           "target": ".codex/agents/*.toml (generated from .claude/agents, #64)",
-          "evidence": "spike-codex-contract.sh --dynamic(codex-cli 0.160.0, 2026-10-04): 신뢰 프로젝트에서 프로브 에이전트가 목록에 등록되고 위임(collab_tool_call) 시 developer_instructions 대로 응답, 셸 명령 0. 미신뢰 프로젝트에서는 미등록(#60). 산출물이 .claude/agents 에서 생성한 TOML(하이픈 이름, 리터럴 문자열 본문)을 위임하면 본문 지시대로 응답(subagents_adapter pass, #64)"
+          "evidence": "spike-codex-contract.sh --dynamic(codex-cli 0.160.0, 2026-10-04): 신뢰 프로젝트에서 프로브 에이전트가 목록에 등록되고 위임(collab_tool_call) 시 developer_instructions 대로 응답, 셸 명령 0. 미신뢰 프로젝트에서는 미등록(#60). 산출물이 .claude/agents 에서 생성한 TOML(하이픈 이름, 리터럴 문자열 본문)을 위임하면 본문 지시대로 응답(subagents_adapter pass, #64). codex-cli 0.163.0 spike 재측정(2026-10-19 UTC·KST 10-20, #73): 판정 동일"
         },
         "path_scoped_rules": {
           "verdict": "partial",
           "target": "nested AGENTS.md (cwd 기준)",
-          "evidence": "spike-codex-contract.sh --dynamic(codex-cli 0.160.0, 2026-10-04, #60): cwd 가 하위 디렉터리면 그 AGENTS.md 로드, 루트에서 하위 파일을 읽으면 미로드 — 파일 경로 조건부 로딩은 없다. .codex/rules/*.rules 는 명령 실행 정책이라 해당 없음"
+          "evidence": "spike-codex-contract.sh --dynamic(codex-cli 0.160.0, 2026-10-04, #60): cwd 가 하위 디렉터리면 그 AGENTS.md 로드, 루트에서 하위 파일을 읽으면 미로드 — 파일 경로 조건부 로딩은 없다. .codex/rules/*.rules 는 명령 실행 정책이라 해당 없음. codex-cli 0.163.0 spike 재측정(2026-10-19 UTC·KST 10-20, #73): 판정 동일"
         },
         "lifecycle_hooks": {
           "verdict": "partial",
           "target": ".codex/hooks.json (generated from .claude/settings.json via .claude/hooks/hook-adapter.py, #65)",
-          "evidence": "spike-codex-contract.sh --dynamic(codex-cli 0.160.0, 2026-10-04): 신뢰 프로젝트 + --dangerously-bypass-hook-trust 에서 SessionStart·UserPromptSubmit·Stop 3/3 실행, 훅 정의 신뢰(/hooks 검토) 없이는 0/3, 미신뢰 프로젝트는 우회 플래그로도 0/3(#60). 입력은 Claude 와 거의 같고(apply_patch 는 패치 텍스트) Stop 의 decision:block 을 받는다. 산출물이 settings.json 에서 생성한 hooks.json 이 어댑터를 거쳐 observe-lite(Bash 기록)·stop-memory-remind(세션 표시)를 실행(hooks_adapter pass, #65). 신뢰에 묶인 조기 피드백이지 강제선이 아니다"
+          "evidence": "spike-codex-contract.sh --dynamic(codex-cli 0.160.0, 2026-10-04): 신뢰 프로젝트 + --dangerously-bypass-hook-trust 에서 SessionStart·UserPromptSubmit·Stop 3/3 실행, 훅 정의 신뢰(/hooks 검토) 없이는 0/3, 미신뢰 프로젝트는 우회 플래그로도 0/3(#60). 입력은 Claude 와 거의 같고(apply_patch 는 패치 텍스트) Stop 의 decision:block 을 받는다. 산출물이 settings.json 에서 생성한 hooks.json 이 어댑터를 거쳐 observe-lite(Bash 기록)·stop-memory-remind(세션 표시)를 실행(hooks_adapter pass, #65). 신뢰에 묶인 조기 피드백이지 강제선이 아니다. codex-cli 0.163.0 spike 재측정(2026-10-19 UTC·KST 10-20, #73): 판정 동일"
         },
         "oob_gate": {
           "verdict": "pass",
@@ -118,7 +118,7 @@
         "date": "2026-10-14",
         "latest_version": "codex-cli 0.162.1 (npm 2026-10-09)",
         "source": "openai/codex 소스 rust-v0.162.1 (config schema·agents_md.rs·hooks discovery). developers.openai.com 은 세션 프록시 차단",
-        "note": "문서·소스 대조만 — verdict·last_measured 는 0.160.0 실측 그대로. 0.160.0→0.162.1 스키마 diff 상 훅·에이전트·스킬·프로젝트 섹션 변경 없음. 재실측 #73"
+        "note": "문서·소스 대조(0.162.1) 후 0.163.0 으로 spike 재실측(2026-10-19, #73) — 판정 전부 동일"
       }
     },
     {
