@@ -105,9 +105,9 @@ Bash 툴로 커밋할 때만 발동하므로 조기 피드백 계층이지 강�
 |---|---|---|---|
 | Claude Code | 2.1.299 | 성립 | `.claude/rules/*.md` 의 `paths:` 조건부 로딩, 서브에이전트, skills, `settings.json` 훅 — 전부 [공식 문서](https://code.claude.com/docs/en/memory.md)로 확인 |
 | Codex | codex-cli 0.163.0 | 성립 | `AGENTS.md`·스택 P0 자동 로드, `.agents/skills` 발견, `.env` 게이트, `.codex/agents` 서브에이전트(신뢰 프로젝트만), `.codex/hooks.json` 훅(프로젝트 + 훅 정의 신뢰 필요), cwd 기준 하위 `AGENTS.md` 를 실측. 파일 경로 조건부 지침은 없다 |
-| Antigravity | agy 1.2.16 | 성립 | headless(`-p`)로 `AGENTS.md`·스택 P0 자동 로드, `.agents/skills` 발견, `.env` 게이트, `.agents/agents` 서브에이전트, `.agents/hooks.json` 훅(신뢰 확인 없이 실행), `.agents/rules` 의 `trigger: glob` 조건부 룰을 실측. 하위 `AGENTS.md` 는 cwd 기준으로만 로드 |
+| Antigravity | agy 1.4.2 | 성립 | headless(`-p`)로 `AGENTS.md`·스택 P0 자동 로드, `.agents/skills` 발견, `.env` 게이트, `.agents/agents` 서브에이전트, `.agents/hooks.json` 훅(신뢰 확인 없이 실행), `.agents/rules` 의 `trigger: glob` 조건부 룰을 실측. 하위 `AGENTS.md` 는 cwd 기준으로만 로드 |
 
-Codex(codex-cli 0.163.0)와 agy(1.2.16)는 각 모드 산출물의 AGENTS.md 와 인라인된
+Codex(codex-cli 0.163.0)와 agy(1.4.2)는 각 모드 산출물의 AGENTS.md 와 인라인된
 스택 P0를 툴 호출 없이 자동 로드하고 `.agents/skills`의 저장소 스킬만 발견했다. `.claude/skills`는
 둘 다 발견 경로가 아니다. agy 1.2.7 headless 는 `AGENTS.md`·`GEMINI.md` 를 모두 읽지 못했으나
 1.2.16 에서 해소됐다. 모델이 규칙을 놓쳐도 git hook이 exit 2로 차단한다.
