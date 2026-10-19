@@ -18,6 +18,10 @@ DYNAMIC=0
 [ "${1:-}" = "--dynamic" ] && DYNAMIC=1
 AGY_BIN="${AGY_BIN:-agy}"
 AGY_TIMEOUT="${AGY_TIMEOUT:-300}"
+# 모든 agy 질의에 덧붙일 인자(공백 구분). 예: AGY_ARGS="--model <이름>" — 기본 모델 할당량이 찼을 때 (#73).
+# macOS bash 3.2 + set -u 에서 빈 배열 확장이 죽지 않도록 ${arr[@]+...} 형태로만 쓴다.
+AGY_ARGS="${AGY_ARGS:-}"
+read -r -a AGY_EXTRA <<< "$AGY_ARGS"
 
 AGY_VERSION="$("$AGY_BIN" --version 2>/dev/null | tr -d '\n' || true)"
 [ -n "$AGY_VERSION" ] || AGY_VERSION="not-installed"
@@ -52,7 +56,7 @@ STEPS_LOG="$WORK/_steps.log"
 # 응답 전 툴 호출 단계가 있으면 응답 대신 TOOL_USED 를 남긴다.
 ask_agy() {
   local dir="$1" prompt="$2" out="$3"
-  ( cd "$dir" && timeout "$AGY_TIMEOUT" "$AGY_BIN" -p "$prompt" \
+  ( cd "$dir" && timeout "$AGY_TIMEOUT" "$AGY_BIN" ${AGY_EXTRA[@]+"${AGY_EXTRA[@]}"} -p "$prompt" \
       --output-format stream-json --print-timeout "$((AGY_TIMEOUT - 10))s" ) 2>/dev/null \
     | python3 -c '
 import json, sys
@@ -90,7 +94,7 @@ hooks_answer="unverified"; hooks_note="--dynamic 미지정"
 # 이후 최종 응답. 판정 때 "읽으라고 한 파일만 읽었는가"를 이 줄로 확인한다.
 ask_agy_steps() {
   local dir="$1" out="$2"; shift 2
-  ( cd "$dir" && timeout "$AGY_TIMEOUT" "$AGY_BIN" "$@" --output-format stream-json \
+  ( cd "$dir" && timeout "$AGY_TIMEOUT" "$AGY_BIN" ${AGY_EXTRA[@]+"${AGY_EXTRA[@]}"} "$@" --output-format stream-json \
       --print-timeout "$((AGY_TIMEOUT - 10))s" </dev/null ) 2>/dev/null \
     | python3 -c '
 import json, os, sys
@@ -312,6 +316,7 @@ cat <<JSON
 {
   "measured_at": "$TODAY",
   "agy_version": "$AGY_VERSION",
+  "agy_args": "$AGY_ARGS",
   "dynamic": $([ "$DYNAMIC" -eq 1 ] && echo true || echo false),
   "static": {
     "agents_md_bytes": $agents_bytes,
