@@ -1,0 +1,142 @@
+{
+  "claims": [
+    {
+      "id": "BR-SECTIONS",
+      "kind": "정상",
+      "rule": "화면 ID 를 키로 화면마다 4개 절",
+      "test": "test_contract.py::test_br_sections_exist_in_planner"
+    },
+    {
+      "id": "FILENAME-PATTERNS",
+      "kind": "정상",
+      "rule": "*_business-rules.md",
+      "test": "test_contract.py::test_deliverable_filename_patterns_match_planner"
+    },
+    {
+      "id": "JAVA8-VERSION",
+      "kind": "정상",
+      "rule": "Java 8 언어 수준을 지킨다.",
+      "test": "test_contract.py::test_java_version_is_consistent"
+    },
+    {
+      "id": "SPRING-27",
+      "kind": "실패",
+      "rule": "Spring Boot 2.7.x(지원 마지막 2.x)",
+      "test": "test_contract.py::test_spring_boot_line_is_java8_compatible"
+    },
+    {
+      "id": "TWO-MODES",
+      "kind": "정상",
+      "rule": "**Vite + React SPA** 두 가지다.",
+      "test": "test_contract.py::test_two_frontend_modes_and_owners_are_explicit"
+    },
+    {
+      "id": "MODES-REF",
+      "kind": "정상",
+      "rule": "[references/implementation-modes.md](references/implementation-modes.md)",
+      "test": "test_contract.py::test_mode_reference_and_traceability_contract_exist"
+    },
+    {
+      "id": "REFS-EXIST",
+      "kind": "실패",
+      "rule": "[references/implementation-modes.md](references/implementation-modes.md)",
+      "test": "test_contract.py::test_linked_references_exist"
+    },
+    {
+      "id": "SERVE-WIRED",
+      "kind": "정상",
+      "rule": "`serve_and_check.py` 가 exit 0 이 아니면 완료가 아니다.",
+      "test": "test_contract.py::test_serve_and_check_is_wired"
+    },
+    {
+      "id": "SMB-PLANNER-FIRST",
+      "kind": "실패",
+      "rule": "기획서 없이 바로 코드로 가지 않는다.",
+      "test": "test_contract.py::test_smb_reference_keeps_planner_first"
+    },
+    {
+      "id": "TRACE-VALID",
+      "kind": "정상",
+      "rule": "화면·규칙 ID의 누락/중복/잘못된 연결, 구현·테스트 파일의 부재를 모두",
+      "test": "test_traceability.py::test_valid_manifest_passes"
+    },
+    {
+      "id": "TRACE-MISSING",
+      "kind": "실패",
+      "rule": "화면·규칙 ID의 누락/중복/잘못된 연결, 구현·테스트 파일의 부재를 모두",
+      "test": "test_traceability.py::test_missing_rule_and_file_are_reported"
+    },
+    {
+      "id": "TRACE-DUP-WRONG",
+      "kind": "실패",
+      "rule": "화면·규칙 ID의 누락/중복/잘못된 연결, 구현·테스트 파일의 부재를 모두",
+      "test": "test_traceability.py::test_wrong_screen_and_duplicate_rule_are_reported"
+    },
+    {
+      "id": "ROUTE-OBJ",
+      "kind": "정상",
+      "rule": "`화면`은 route object에",
+      "test": "test_traceability.py::test_route_object_syntax_is_read"
+    },
+    {
+      "id": "ROUTE-UNREG",
+      "kind": "실패",
+      "rule": "등록되지 않은 화면은 빌드가 통과하고 그 URL 에서만 빈 화면이 된다.",
+      "test": "test_traceability.py::test_unregistered_route_is_reported"
+    },
+    {
+      "id": "ROUTE-ORPHAN",
+      "kind": "실패",
+      "rule": "문서에만 있는 라우트와 라우터에만 있는 라우트를 양방향으로 보고한다.",
+      "test": "test_traceability.py::test_orphan_route_in_router_is_reported"
+    },
+    {
+      "id": "ROUTE-CATCHALL",
+      "kind": "오탐",
+      "rule": "index는 화면 ID를 갖지 않으므로 대조 대상이 아니다.",
+      "test": "test_traceability.py::test_catch_all_is_not_an_orphan"
+    },
+    {
+      "id": "OVERLAY-NOROUTE",
+      "kind": "오탐",
+      "rule": "오버레이는 라우트를 갖지 않으므로 `traceability.json`에 `route`를",
+      "test": "test_traceability.py::test_overlay_screens_without_route_are_untouched"
+    },
+    {
+      "id": "PORT-FREE",
+      "kind": "정상",
+      "rule": "포트가 막히면 프레임워크가 조용히 다른 포트로 옮겨",
+      "test": "test_serve_and_check.py::test_free_port_is_used_as_is"
+    },
+    {
+      "id": "PORT-BUSY",
+      "kind": "경계",
+      "rule": "포트가 막히면 프레임워크가 조용히 다른 포트로 옮겨",
+      "test": "test_serve_and_check.py::test_busy_port_moves_up"
+    },
+    {
+      "id": "SERVE-HEALTHY",
+      "kind": "정상",
+      "rule": "확인된 포트만 사용자에게 알린다.",
+      "test": "test_serve_and_check.py::test_healthy_server_passes_and_is_stopped"
+    },
+    {
+      "id": "SERVE-404",
+      "kind": "실패",
+      "rule": "손으로 하지 말고 스크립트로 판정한다",
+      "test": "test_serve_and_check.py::test_missing_route_fails"
+    },
+    {
+      "id": "SERVE-NOLISTEN",
+      "kind": "도구오류",
+      "rule": "손으로 하지 말고 스크립트로 판정한다",
+      "test": "test_serve_and_check.py::test_server_that_never_listens_fails"
+    },
+    {
+      "id": "SERVE-PLACEHOLDER",
+      "kind": "정상",
+      "rule": "--cmd \"pnpm dev -- --port {port}\"",
+      "test": "test_serve_and_check.py::test_port_placeholder_is_substituted"
+    }
+  ]
+}

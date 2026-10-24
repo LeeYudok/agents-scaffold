@@ -1,0 +1,130 @@
+{
+  "claims": [
+    {
+      "id": "HOOK-ACCEPTS-TAGGED",
+      "kind": "정상",
+      "rule": "[<model>] <type>: <desc> (#N)",
+      "test": "test_commit_msg.py::test_accepts_tagged_subject_with_issue"
+    },
+    {
+      "id": "HOOK-NO-MODEL",
+      "kind": "실패",
+      "rule": "hook 이 막으면 메시지를 고친다",
+      "test": "test_commit_msg.py::test_rejects_missing_model_tag"
+    },
+    {
+      "id": "HOOK-NO-ISSUE",
+      "kind": "실패",
+      "rule": "hook 이 막으면 메시지를 고친다",
+      "test": "test_commit_msg.py::test_rejects_missing_issue_number"
+    },
+    {
+      "id": "HOOK-TRIVIAL",
+      "kind": "경계",
+      "rule": "오타 수준만 `YD_TRIVIAL=1`",
+      "test": "test_commit_msg.py::test_trivial_env_allows_missing_issue"
+    },
+    {
+      "id": "HOOK-TRIVIAL-NOT-TAG",
+      "kind": "경계",
+      "rule": "오타 수준만 `YD_TRIVIAL=1`",
+      "test": "test_commit_msg.py::test_trivial_env_does_not_waive_model_tag"
+    },
+    {
+      "id": "HOOK-COMMENT-IGNORED",
+      "kind": "오탐",
+      "rule": "hook 이 막으면 메시지를 고친다",
+      "test": "test_commit_msg.py::test_co_author_text_inside_comment_is_ignored"
+    },
+    {
+      "id": "INSTALL-HOOK",
+      "kind": "정상",
+      "rule": "scripts/commit-msg.sh 를 첫 커밋에 포함",
+      "test": "test_install_hook.py::test_installs_script_copy_and_hook"
+    },
+    {
+      "id": "INSTALL-CHECK",
+      "kind": "경계",
+      "rule": "install-hook.sh --check",
+      "test": "test_install_hook.py::test_check_fails_before_install_and_passes_after"
+    },
+    {
+      "id": "INSTALL-FOREIGN",
+      "kind": "실패",
+      "rule": "install-hook.sh --check",
+      "test": "test_install_hook.py::test_refuses_to_overwrite_foreign_hook"
+    },
+    {
+      "id": "GLAB-NO-TOKEN-PRINT",
+      "kind": "정상",
+      "rule": "토큰을 출력하지 않고 자기 계정으로 glab 실행",
+      "test": "test_glab_as.py::test_passes_args_and_token_to_glab_without_printing_token"
+    },
+    {
+      "id": "GLAB-MISSING-TOKEN",
+      "kind": "도구오류",
+      "rule": "토큰을 출력하지 않고 자기 계정으로 glab 실행",
+      "test": "test_glab_as.py::test_missing_agent_section_fails_without_running_glab_or_leaking"
+    },
+    {
+      "id": "CI-SUCCESS",
+      "kind": "정상",
+      "rule": "배포 잡까지 끝나야 완료",
+      "test": "test_ci_wait.py::test_success_exits_0_and_prints_url"
+    },
+    {
+      "id": "CI-FAILED",
+      "kind": "실패",
+      "rule": "1 실패·취소",
+      "test": "test_ci_wait.py::test_failed_exits_1"
+    },
+    {
+      "id": "CI-TIMEOUT",
+      "kind": "경계",
+      "rule": "2 시간 초과",
+      "test": "test_ci_wait.py::test_timeout_exits_2"
+    },
+    {
+      "id": "CI-NO-PIPELINE",
+      "kind": "경계",
+      "rule": "0 성공(또는 파이프라인 없음)",
+      "test": "test_ci_wait.py::test_no_pipeline_after_four_empty_polls_exits_0"
+    },
+    {
+      "id": "CI-TOOL-ERROR",
+      "kind": "도구오류",
+      "rule": "3 도구 오류(glab 실패·토큰 없음)",
+      "test": "test_ci_wait.py::test_glab_auth_failure_never_reports_success_or_no_pipeline"
+    },
+    {
+      "id": "HOOK-REJECTS-ATTRIBUTION",
+      "kind": "실패",
+      "rule": "줄을 사람 커밋이어도 거부한다",
+      "test": "test_commit_msg.py::test_co_author_rejected_even_for_human_author"
+    },
+    {
+      "id": "HOOK-MERGE-EXEMPT",
+      "kind": "오탐",
+      "rule": "`Merge` 로 시작하는 제목은 형식 검사에서 뺀다",
+      "test": "test_commit_msg.py::test_merge_subject_is_exempt"
+    },
+    {
+      "id": "GLAB-AS-NO-TOMLLIB",
+      "kind": "정상",
+      "rule": "Python 3.11 미만(tomllib 없음)에서도 요청한 계정 섹션의 토큰만 읽는다",
+      "test": "test_glab_as_fallback.py::test_fallback_reader_matches"
+    },
+    {
+      "id": "GLAB-AS-HEADER-COMMENT",
+      "kind": "경계",
+      "rule": "Python 3.11 미만(tomllib 없음)에서도 요청한 계정 섹션의 토큰만 읽는다",
+      "test": "test_glab_as_fallback.py::test_header_comment_does_not_leak_other_section"
+    },
+    {
+      "id": "GLAB-AS-NO-SECTION-FALLBACK",
+      "kind": "실패",
+      "rule": "Python 3.11 미만(tomllib 없음)에서도 요청한 계정 섹션의 토큰만 읽는다",
+      "test": "test_glab_as_fallback.py::test_missing_section_fails_without_leaking"
+    }
+  ]
+}

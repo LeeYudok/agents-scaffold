@@ -1,0 +1,18 @@
+{
+  "claims": [
+    {"id": "CONF-PATHS", "kind": "정상", "rule": "설정의 상대 경로는 레포 기준이고, 대본은 주소 번호·라벨·파일 이름 어느 것으로도 찾는다", "test": "test_script_editor.py::test_paths_relative_to_repo_and_labels"},
+    {"id": "CONF-FIND", "kind": "정상", "rule": "설정 파일은 현재 폴더에서 위로 올라가며 찾는다", "test": "test_script_editor.py::test_find_walks_up_from_cwd"},
+    {"id": "CONF-HOME", "kind": "정상", "rule": "`~/` 는 홈으로 편다", "test": "test_script_editor.py::test_tilde_expands_to_home"},
+    {"id": "MD-ROWS", "kind": "정상", "rule": "대본 표의 시각·화면 자막·AI 프롬프트와 목표 길이를 읽고, 인트로는 0초·마지막 줄은 목표 길이까지로 둔다", "test": "test_script_editor.py::test_read_script_rows_and_target"},
+    {"id": "MD-TARGET", "kind": "실패", "rule": "머리말에 목표 길이가 없으면 렌더를 시작하지 않는다", "test": "test_script_editor.py::test_missing_target_fails"},
+    {"id": "CLI-SAVE", "kind": "정상", "rule": "`se.py set` 은 서버 API 로 etag 와 함께 문서 전체를 저장하고 다른 줄은 건드리지 않는다", "test": "test_script_editor.py::test_set_prompt_sends_whole_doc_with_etag"},
+    {"id": "CLI-SPEAK", "kind": "정상", "rule": "읽는 말을 직접 주면 '자막과 같음' 을 끈다", "test": "test_script_editor.py::test_set_speak_turns_off_same"},
+    {"id": "CLI-REJECT", "kind": "실패", "rule": "모르는 칸·없는 줄은 저장하지 않고 실패한다", "test": "test_script_editor.py::test_unknown_field_and_row_fail"},
+    {"id": "CLI-SCRIPT", "kind": "실패", "rule": "없는 대본은 실패한다", "test": "test_script_editor.py::test_unknown_script_fails"},
+    {"id": "SETUP-CONF", "kind": "실패", "rule": "설정 파일이 없으면 런타임을 만들기 전에 멈춘다", "test": "test_script_editor.py::test_missing_config_fails_before_install"},
+    {"id": "SETUP-NAME", "kind": "실패", "rule": "서비스 이름(name)은 영소문자·숫자·- 만 받는다", "test": "test_script_editor.py::test_bad_name_rejected"},
+    {"id": "SETUP-PUBLIC", "kind": "정상", "rule": "`public` 은 대상 하나(객체)나 여러 개(배열)를 받고, 대상마다 터널 서비스를 하나씩 둔다", "test": "test_script_editor.py::test_public_list_gets_one_tunnel_per_host"},
+    {"id": "SETUP-PUBLIC-OBJ", "kind": "정상", "rule": "예전 형식(객체 하나)도 그대로 받는다", "test": "test_script_editor.py::test_public_object_still_works"},
+    {"id": "SETUP-SSH", "kind": "실패", "rule": "`public.ssh` 는 SSH 호스트 이름(영문·숫자·`._@-`)만 받는다", "test": "test_script_editor.py::test_bad_ssh_host_rejected"}
+  ]
+}

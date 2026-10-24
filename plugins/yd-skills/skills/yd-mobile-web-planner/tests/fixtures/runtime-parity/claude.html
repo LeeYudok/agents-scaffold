@@ -1,0 +1,2925 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta name="skill-ruleset" content="2">
+<meta charset="UTF-8">
+<!-- 고정 레이아웃 뷰포트: 모바일 브라우저가 1280px 로 렌더한 전체 페이지를
+     화면 폭에 맞게 축소해, PPT 슬라이드를 세로 스크롤로 넘겨보는 형태가 된다.
+     내부 요소가 px 고정이라 device-width 로 두면 슬라이드 내부가 깨진다. -->
+<meta name="viewport" content="width=1280">
+<title>토스인베스트 화면설계서</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+      primaryColor: '#ffffff',
+      primaryTextColor: '#333333',
+      primaryBorderColor: '#888888',
+      lineColor: '#555555',
+      secondaryColor: '#f4f4f4',
+      tertiaryColor: '#eeeeee'
+    }
+  });
+</script>
+<style>
+/* @import 는 @font-face 를 포함한 모든 규칙보다 앞에 있어야 유효하다 (CSS 스펙) */
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+@font-face {
+  font-family: 'Pretendard';
+  src: url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/woff2/Pretendard-Regular.woff2') format('woff2');
+  font-weight: 400;
+}
+
+:root {
+  --accent: #1b64da;     /* 증권/금융 도메인 — 토스 블루 계열 */
+  --accent-ink: #ffffff; /* --accent 배경 위 글자색 */
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: 'Pretendard', -apple-system, sans-serif;
+  background: #333; /* Dark background outside slides */
+  padding: 40px;
+}
+
+.docwrap {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Authentic PPT Slide Frame */
+.ppt-slide {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9; /* Standard widescreen PPT */
+  background: #e5e7eb; /* Slide canvas background */
+  border: 1px solid #111;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Top Bar */
+.ppt-top-bar {
+  height: 48px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  border-bottom: 2px solid #ccc;
+}
+.ppt-top-no {
+  background: #737373;
+  color: #ffffff;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  font-weight: 800;
+  font-size: 18px;
+}
+.ppt-top-title {
+  padding: 0 24px;
+  color: #555555;
+  font-size: 18px;
+  font-weight: 500;
+}
+.ppt-top-proj {
+  margin-left: auto;
+  padding-right: 24px;
+  color: #777777;
+  font-size: 14px;
+}
+
+/* 메타 바 — 화면 상세(06.x) 슬라이드의 상단 바 아래 한 줄.
+   실무 화면설계서의 헤더 표에서 Location(화면 위치 경로)에 해당한다.
+   이 줄이 있으면 IA 슬라이드를 넘겨보지 않아도 화면 맥락이 잡힌다.
+   높이 28px 만큼 ppt-content 가 줄지만, 목업(zoom 0.9 기준 540px)은
+   남는 높이 안에 그대로 들어간다. */
+.ppt-meta-bar {
+  height: 28px;
+  background: #f4f4f5;
+  border-bottom: 1px solid #ccc;
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  color: #555555;
+  flex: none;
+}
+.ppt-meta-label {
+  background: #d4d4d8;
+  color: #3f3f46;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-weight: 700;
+  flex: none;
+}
+.ppt-meta-value {
+  padding: 0 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* 메타 줄의 마지막 칸(화면 ID)을 우측으로 민다. */
+.ppt-meta-id {
+  margin-left: auto;
+  padding: 0 12px;
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 11px;
+  color: #3f3f46;
+  letter-spacing: 0.02em;
+  flex: none;
+}
+
+/* Bottom Footer */
+.ppt-footer {
+  height: 40px;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 24px;
+  color: var(--accent-ink);
+  font-size: 14px;
+  font-weight: 600;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+/* Middle Content Area */
+.ppt-content {
+  flex: 1;
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  margin-bottom: 40px; /* Space for footer */
+}
+
+/* Cover & General Text Content (for non-wireframe slides) */
+.ppt-body-full {
+  flex: 1;
+  background: #ffffff;
+  border: 1px solid #aaa;
+  padding: 40px;
+  overflow-y: auto;
+  position: relative; /* .mermaid 를 absolute 로 채우기 위한 기준 */
+}
+
+/* Mermaid 다이어그램 (IA 슬라이드)
+   mermaid.js 는 생성한 SVG 에 인라인 max-width 를 박아 자체 크기에 가둔다.
+   또 .mermaid 를 flex item 으로 두면 shrink-to-fit 되어 300px 남짓에 머문다.
+   absolute + inset:0 으로 폭·높이를 확정해 주어야 SVG 의 max-height:100% 가
+   해석되고, 비율을 유지한 채 슬라이드를 채운다. 퍼센트 높이만 주면
+   flex 안에서 순환 참조가 생겨 부모가 부풀어 슬라이드 레이아웃이 깨진다.
+   mermaid 가 유일한 자식일 때만 적용한다(텍스트와 혼용 시 겹침 방지). */
+.ppt-body-full > .mermaid:only-child {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mermaid > svg {
+  max-width: 100% !important; /* 인라인 max-width 를 이겨야 한다 */
+  max-height: 100%;
+  width: auto;
+  height: auto;
+}
+
+/* Left Wireframe Canvas */
+.ppt-wireframe {
+  flex: 1;
+  background: #ffffff;
+  border: 1px solid #aaa;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Right Description Panel */
+.ppt-desc-panel {
+  width: 380px;
+  background: #ffffff;
+  border: 1px solid #aaa;
+  display: flex;
+  flex-direction: column;
+}
+.ppt-desc-header {
+  background: #737373;
+  color: #ffffff;
+  text-align: center;
+  padding: 12px;
+  font-weight: 700;
+  font-size: 15px;
+}
+.ppt-desc-body {
+  padding: 24px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Pointer & Lists */
+.desc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.desc-list li {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  font-size: 14px;
+  color: #333;
+}
+/* 목업 위 pointer-badge 와 1:1 로 짝을 이루는 번호 칩. 같은 accent 칩
+   모양이어야 배지↔설명 대응이 즉시 읽히고, 목업 1개(1·2·3)든 2개
+   이상(1-1)이든 슬라이드 간 표현이 같아진다. nowrap 은 "1-1" 이
+   하이픈에서 줄바꿈되어 두 줄로 깨지는 것을 막는다. */
+.desc-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 20px;
+  padding: 0 5px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 800;
+  font-size: 12px;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex: none;
+  margin-right: 8px;
+}
+
+/* 설명 항목이 많은 슬라이드(8개 이상)는 목록을 압축한다.
+   ppt-desc-body 가 overflow-y:auto 라도 인쇄·정적 열람에는 스크롤이
+   없어 마지막 항목이 잘린 것처럼 보인다 — 항목 수를 감지해 밀도를
+   낮춰 한 화면에 다 들어가게 한다. */
+.ppt-desc-body:has(.desc-list li:nth-child(8)) .desc-list li {
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+/* Pointer Badges on Wireframe */
+/* 배지는 가변 폭이다. "1" 같은 한 글자는 min-width 로 24px 정사각형을
+   유지하고, 2단 번호("2-1")는 내용만큼 늘어난다. 늘어난 폭은 아래
+   목업 2개 이상일 때의 넓은 gutter 안에 들어간다. */
+.pointer-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  width: auto;
+  padding: 0 4px;
+  height: 24px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 800;
+  font-size: 14px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+/* Mobile Mockup UI (Centered in Wireframe Panel) */
+.mock {
+  width: 320px;
+  height: 600px;
+  border: 2px solid #555;
+  background: #fff;
+  padding: 0;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  transform: scale(0.9);
+}
+.mock-screen {
+  flex: 1;
+  background: #f4f4f5;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.mock-status { height: 20px; background: #e2e8f0; }
+.mock-header {
+  background: #fff;
+  color: #111;
+  font-size: 16px;
+  font-weight: 700;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #e2e8f0;
+}
+/* padding-left 28px 는 pointer-badge 전용 gutter 다.
+   배지를 left:-12px 로 프레임 밖에 두면 mock-body(overflow-y:auto 이므로
+   overflow-x 도 auto 로 계산된다) 와 mock-screen(overflow:hidden) 이
+   절반을 잘라낸다. 배지를 left:2px 로 이 여백 안에 두면 온전히 보이고
+   콘텐츠(28px 부터 시작)와 겹치지도 않는다. 배지 폭 24px + 여유 4px. */
+.mock-body { padding: 16px 16px 16px 28px; flex: 1; background: #fff; overflow-y: auto; }
+/* 목업이 2개 이상이면 배지가 2단 번호("2-1")가 되어 폭이 늘어난다.
+   gutter 를 34px 로 넓혀 배지가 콘텐츠를 가리지 않게 한다. 이 규칙은
+   목업 복수 배치와 같은 :has(.mock ~ .mock) 로 게이트되므로 단일 목업
+   슬라이드의 28px gutter 는 그대로다(이슈 #6 무회귀). */
+.ppt-wireframe:has(.mock ~ .mock) .mock-body { padding-left: 34px; }
+.mock-footer {
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-around;
+  padding: 12px 0;
+  background: #fff;
+}
+.mock-tab { font-size: 10px; color: #94a3b8; text-align: center; text-transform: uppercase; font-weight: 700;}
+.mock-tab.active { color: var(--accent); }
+
+/* 목업 2개 이상 배치 (상태 변화 · 단계 흐름 비교)
+
+   아래 규칙은 전부 :has(.mock ~ .mock) 로 게이트되어 있다 — 형제 목업이
+   실제로 있을 때만 걸리므로 기존 1개 배치 슬라이드의 렌더는 바뀌지 않는다.
+   개수 판정에 :nth-of-type 대신 형제 결합자(~)를 쓴 이유: nth-of-type 은
+   같은 태그명 형제만 세므로 목업 사이에 다른 div 가 끼면 어긋난다.
+
+   scale() 대신 zoom 을 쓰는 이유: transform 은 레이아웃 박스 크기를 바꾸지
+   않아 flex 가 여전히 320px 를 기준으로 배치하고, 넘치는 만큼 이 패널의
+   overflow:hidden 에 잘린다. zoom 은 사용값(used value)에 곱해져 레이아웃에
+   반영된다. zoom 은 서브트리의 모든 px 를 같은 비율로 곱하므로
+   mock-body 의 배지 gutter(padding-left:28px)와 배지(left:2px + width:24px)가
+   함께 줄어 2+24 <= 28 관계가 배율과 무관하게 보존된다 (이슈 #6 참조).
+
+   가용 폭 980px = 슬라이드 1400 - 테두리 2 - ppt-content padding 24
+                   - desc panel 380 - gap 12 - wireframe 테두리 2
+   가용 높이 643.5px = 787.5(16:9) - 테두리 2 - top bar 48 - meta bar 28
+                       - footer 40 - ppt-content padding 24 - wireframe 테두리 2
+                       (box-sizing:border-box 이므로 각 테두리는 height 에 포함)
+   2~3개: 320*0.9 = 288    -> 3*288 + 2*24(gap)   = 912   <= 980
+   4개  : 320*0.68 = 217.6 -> 4*217.6 + 3*24(gap) = 942.4 <= 980
+   5개 이상은 슬라이드를 나눈다. */
+.ppt-wireframe:has(.mock ~ .mock) { gap: 24px; }
+.ppt-wireframe:has(.mock ~ .mock) .mock {
+  flex: none;      /* flex-shrink 로 폭이 찌그러지면 목업 내용 비율이 깨진다 */
+  transform: none; /* 아래 zoom 과 곱해지지 않도록 해제 */
+  zoom: 0.9;
+}
+.ppt-wireframe:has(.mock ~ .mock ~ .mock ~ .mock) .mock { zoom: 0.68; }
+
+/* 목업 라벨 ("기본 상태" / "선택됨"). .mock 이 position:relative 이므로
+   absolute 로 프레임 바로 아래에 놓는다 — .mock 의 column flex 흐름에도,
+   위 규칙의 .mock ~ .mock 형제 카운트에도 영향을 주지 않는다. */
+.mock-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -24px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #555;
+}
+
+/* 부분 목업 — 팝업·바텀시트·토스트처럼 화면 일부만 덮는 요소.
+   .mock 과 함께 쓴다: <div class="mock mock-partial">
+   전체 화면 목업으로 그리면 별개 화면처럼 보이므로, 높이를 줄여
+   "화면 일부를 덮는다" 는 사실 자체를 그림으로 전달한다.
+   위쪽 배경 힌트(회색으로 뭉갠 영역)는 인라인 style 로 채운다.
+   .mock 의 형제이므로 :has(.mock ~ .mock) 규칙에 그대로 걸려
+   zoom 과 gutter 가 전체 목업과 동일하게 적용된다. */
+.mock-partial {
+  height: 320px;
+}
+
+/* Code tags */
+code {
+  background: #f1f5f9;
+  padding: 2px 6px;
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 12px;
+  color: var(--accent);
+  border: 1px solid #e2e8f0;
+}
+
+/* Phosphor Icons (MIT) 인라인 SVG 용 — 이모지 아이콘 대체 */
+.icon {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+  vertical-align: -2px;
+  flex: none;
+}
+</style>
+</head>
+<body>
+<div class="docwrap">
+
+<!-- ============ 01 Cover ============ -->
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 01</div>
+    <div class="ppt-top-title">Cover</div>
+    <div class="ppt-top-proj">토스인베스트</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-body-full" style="display:flex; flex-direction:column; justify-content:center;">
+      <div style="font-size:15px; letter-spacing:0.3em; color:#94a3b8; font-weight:700;">TOSS SECURITIES OPEN API</div>
+      <div style="font-size:52px; font-weight:800; margin-top:12px; color:#111;">토스인베스트</div>
+      <div style="font-size:26px; font-weight:600; margin-top:6px; color:#475569;">모바일 웹 화면설계서</div>
+      <div style="width:72px; height:5px; background:var(--accent); margin:28px 0;"></div>
+      <table style="border-collapse:collapse; font-size:14px; color:#334155; width:340px;">
+        <tr><td style="padding:5px 0; width:110px; color:#94a3b8; font-weight:700;">Version</td><td style="padding:5px 0;">2.0.0</td></tr>
+        <tr><td style="padding:5px 0; color:#94a3b8; font-weight:700;">Date</td><td style="padding:5px 0;">2026-07-29</td></tr>
+        <tr><td style="padding:5px 0; color:#94a3b8; font-weight:700;">Author</td><td style="padding:5px 0;">기획</td></tr>
+        <tr><td style="padding:5px 0; color:#94a3b8; font-weight:700;">Scope</td><td style="padding:5px 0;">조회 · 모니터링 전용 (주문 실행 제외)</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<!-- ============ 02 Document History ============ -->
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 02</div>
+    <div class="ppt-top-title">Document History</div>
+    <div class="ppt-top-proj">토스인베스트</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-body-full">
+      <table style="width:100%; border-collapse:collapse; font-size:14px;">
+        <tr style="background:#f4f4f5; border-bottom:2px solid #cbd5e1;">
+          <th style="padding:10px; text-align:left; width:100px;">Version</th>
+          <th style="padding:10px; text-align:left; width:120px;">Date</th>
+          <th style="padding:10px; text-align:left; width:100px;">Author</th>
+          <th style="padding:10px; text-align:left;">Description</th>
+        </tr>
+        <tr style="border-bottom:1px solid #e2e8f0;">
+          <td style="padding:10px;">1.0.0</td>
+          <td style="padding:10px;">2026-07-24</td>
+          <td style="padding:10px;">기획</td>
+          <td style="padding:10px;">최초 작성. 조회 전용 증권 앱 기준 27화면.</td>
+        </tr>
+        <tr style="border-bottom:1px solid #e2e8f0; background:#fafafa;">
+          <td style="padding:10px; font-weight:700;">2.0.0</td>
+          <td style="padding:10px;">2026-07-29</td>
+          <td style="padding:10px;">기획</td>
+          <td style="padding:10px;">
+            전면 재설계. 정보구조를 5탭(홈·투자·종목·시장·기타)으로 재정의하고,
+            1.0.0 에서 누락됐던 <b>자산 대시보드 · 익절/손절 타깃 · 워치독 · 종목별 수급 ·
+            알림 내역</b> 을 화면으로 편입. 주문 실행(매수·매도·정정·취소)은 범위에서 제외하고
+            조회·모니터링 전용으로 확정. 화면 ID 체계는 1.0.0 을 계승한다.
+          </td>
+        </tr>
+      </table>
+      <div style="margin-top:24px; padding:16px; background:#f8fafc; border-left:4px solid var(--accent); font-size:13px; color:#475569; line-height:1.8;">
+        <b>2.0.0 재설계 배경</b><br>
+        1.0.0 은 일반 증권 앱의 조회 화면만 담아, 이 서비스의 실제 사용 목적인 <b>보유 자산 모니터링</b>
+        (평가손익 추적 · 조건 알림 · 수급 흐름 확인)이 문서에 없었다. 2.0.0 은 그 축을
+        정보구조 최상위에 올려 <b>투자</b> 탭으로 묶는다.
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<!-- ============ 03 Index ============ -->
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 03</div>
+    <div class="ppt-top-title">Index</div>
+    <div class="ppt-top-proj">토스인베스트</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-body-full" style="padding:20px 28px;">
+      <table style="width:100%; border-collapse:collapse; font-size:11.5px;">
+        <tr style="background:#f4f4f5; border-bottom:2px solid #cbd5e1;">
+          <th style="padding:5px 8px; text-align:left; width:56px;">NO.</th>
+          <th style="padding:5px 8px; text-align:left; width:170px;">제목</th>
+          <th style="padding:5px 8px; text-align:left; width:130px;">화면 ID</th>
+          <th style="padding:5px 8px; text-align:left;">설명</th>
+        </tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:3px 8px;">01</td><td style="padding:3px 8px;">Cover</td><td style="padding:3px 8px;">-</td><td style="padding:3px 8px;">문서 표지</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:3px 8px;">02</td><td style="padding:3px 8px;">Document History</td><td style="padding:3px 8px;">-</td><td style="padding:3px 8px;">개정 이력</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:3px 8px;">03</td><td style="padding:3px 8px;">Index</td><td style="padding:3px 8px;">-</td><td style="padding:3px 8px;">목차</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:3px 8px;">04</td><td style="padding:3px 8px;">Information Architecture</td><td style="padding:3px 8px;">-</td><td style="padding:3px 8px;">화면 트리</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:3px 8px;">05</td><td style="padding:3px 8px;">Screen List</td><td style="padding:3px 8px;">-</td><td style="padding:3px 8px;">화면 ID 매핑표</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:3px 8px;">06</td><td style="padding:3px 8px;">Service Flow</td><td style="padding:3px 8px;">-</td><td style="padding:3px 8px;">정상 케이스 흐름도</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:3px 8px;">07.1~07.7</td><td style="padding:3px 8px;">Sequence Diagram</td><td style="padding:3px 8px;">-</td><td style="padding:3px 8px;">상태 변경 트랜잭션 7종</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:3px 8px;">08</td><td style="padding:3px 8px;">General Rule</td><td style="padding:3px 8px;">-</td><td style="padding:3px 8px;">공통 규칙</td></tr>
+        <tr style="border-bottom:1px solid #eee; background:#fafafa;"><td style="padding:3px 8px;">09.1</td><td style="padding:3px 8px;">홈</td><td style="padding:3px 8px;">TSI-MAIN-001</td><td style="padding:3px 8px;">총자산 · 지수 · 보유 상위 · 알림 요약</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:3px 8px;">09.2</td><td style="padding:3px 8px;">로그인</td><td style="padding:3px 8px;">TSI-AUTH-001</td><td style="padding:3px 8px;">아이디·비밀번호 인증, QR 로그인 진입</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:3px 8px;">09.3</td><td style="padding:3px 8px;">QR 로그인 승인</td><td style="padding:3px 8px;">TSI-AUTH-002</td><td style="padding:3px 8px;">기존 로그인 기기에서 승인</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:3px 8px;">09.4</td><td style="padding:3px 8px;">비밀번호 변경</td><td style="padding:3px 8px;">TSI-AUTH-003</td><td style="padding:3px 8px;">현재·신규 비밀번호 입력, 규칙 검증</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:3px 8px;">09.5</td><td style="padding:3px 8px;">계좌</td><td style="padding:3px 8px;">TSI-ACCT-001</td><td style="padding:3px 8px;">계좌번호·총자산·하위 메뉴</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:3px 8px;">09.6</td><td style="padding:3px 8px;">자산 대시보드</td><td style="padding:3px 8px;">TSI-DASH-001</td><td style="padding:3px 8px;">잔고·평가손익·보유 비중</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:3px 8px;">09.7</td><td style="padding:3px 8px;">보유종목</td><td style="padding:3px 8px;">TSI-HOLD-001</td><td style="padding:3px 8px;">보유 목록·정렬, 종목별 상세</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:3px 8px;">09.8</td><td style="padding:3px 8px;">주문내역</td><td style="padding:3px 8px;">TSI-ORDER-001</td><td style="padding:3px 8px;">체결·미체결 탭, 주문 상세</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:3px 8px;">09.9</td><td style="padding:3px 8px;">익절/손절</td><td style="padding:3px 8px;">TSI-TGT-001</td><td style="padding:3px 8px;">ATR 기반 참고 타깃·스탑</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:3px 8px;">09.10</td><td style="padding:3px 8px;">워치독</td><td style="padding:3px 8px;">TSI-WD-001</td><td style="padding:3px 8px;">조건 알림 목록·등록·삭제</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:3px 8px;">09.11</td><td style="padding:3px 8px;">알림 내역</td><td style="padding:3px 8px;">TSI-NOTI-001</td><td style="padding:3px 8px;">발동 알림 이력</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:3px 8px;">09.12</td><td style="padding:3px 8px;">종목 검색</td><td style="padding:3px 8px;">TSI-SEARCH-001</td><td style="padding:3px 8px;">심볼·종목명 검색, 최근 검색</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:3px 8px;">09.13</td><td style="padding:3px 8px;">종목 상세</td><td style="padding:3px 8px;">TSI-STOCK-001</td><td style="padding:3px 8px;">현재가·상하한가·탭 진입</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:3px 8px;">09.14</td><td style="padding:3px 8px;">차트</td><td style="padding:3px 8px;">TSI-CHART-001</td><td style="padding:3px 8px;">분봉·일봉 캔들</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:3px 8px;">09.15</td><td style="padding:3px 8px;">호가</td><td style="padding:3px 8px;">TSI-ORDB-001</td><td style="padding:3px 8px;">매도·매수 호가 잔량</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:3px 8px;">09.16</td><td style="padding:3px 8px;">체결</td><td style="padding:3px 8px;">TSI-TRADE-001</td><td style="padding:3px 8px;">최근 체결 시각·가격·수량</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:3px 8px;">09.17</td><td style="padding:3px 8px;">랭킹</td><td style="padding:3px 8px;">TSI-RANK-001</td><td style="padding:3px 8px;">거래대금·상승·하락 등</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:3px 8px;">09.18</td><td style="padding:3px 8px;">시장지표</td><td style="padding:3px 8px;">TSI-MKT-001</td><td style="padding:3px 8px;">KOSPI·KOSDAQ 지수</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:3px 8px;">09.19</td><td style="padding:3px 8px;">종목별 수급</td><td style="padding:3px 8px;">TSI-FLOW-001</td><td style="padding:3px 8px;">외국인·기관 순매수 흐름</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:3px 8px;">09.20</td><td style="padding:3px 8px;">환율</td><td style="padding:3px 8px;">TSI-FX-001</td><td style="padding:3px 8px;">통화쌍 환율·기준시각</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:3px 8px;">09.21</td><td style="padding:3px 8px;">장운영 캘린더</td><td style="padding:3px 8px;">TSI-CAL-001</td><td style="padding:3px 8px;">개장·휴장 정보</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:3px 8px;">09.22</td><td style="padding:3px 8px;">수수료</td><td style="padding:3px 8px;">TSI-FEE-001</td><td style="padding:3px 8px;">수수료율·거래세 계산기</td></tr>
+        <tr><td style="padding:3px 8px;">09.23</td><td style="padding:3px 8px;">설정</td><td style="padding:3px 8px;">TSI-SET-001</td><td style="padding:3px 8px;">계정·표시 설정·로그아웃</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<!-- ============ 04 Information Architecture ============ -->
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 04</div>
+    <div class="ppt-top-title">Information Architecture</div>
+    <div class="ppt-top-proj">토스인베스트</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-body-full">
+      <div class="mermaid">
+flowchart LR
+  ROOT["토스인베스트"]
+  ROOT --> HOME["홈<br/>TSI-MAIN-001"]
+  ROOT --> AUTH["인증"]
+  ROOT --> INV["투자"]
+  ROOT --> STK["종목"]
+  ROOT --> MKT["시장"]
+  ROOT --> ETC["기타"]
+
+  AUTH --> A1["로그인<br/>TSI-AUTH-001"]
+  A1 --> A2["QR 로그인 승인<br/>TSI-AUTH-002"]
+  A1 --> A3["비밀번호 변경<br/>TSI-AUTH-003"]
+
+  INV --> I1["계좌<br/>TSI-ACCT-001"]
+  INV --> I2["자산 대시보드<br/>TSI-DASH-001"]
+  I1 --> I3["보유종목<br/>TSI-HOLD-001"]
+  I1 --> I4["주문내역<br/>TSI-ORDER-001"]
+  INV --> I5["익절/손절<br/>TSI-TGT-001"]
+  INV --> I6["워치독<br/>TSI-WD-001"]
+  HOME --> H1["알림 내역<br/>TSI-NOTI-001"]
+
+  STK --> S1["종목 검색<br/>TSI-SEARCH-001"]
+  S1 --> S2["종목 상세<br/>TSI-STOCK-001"]
+  S2 --> S3["차트<br/>TSI-CHART-001"]
+  S2 --> S4["호가<br/>TSI-ORDB-001"]
+  S2 --> S5["체결<br/>TSI-TRADE-001"]
+
+  MKT --> M1["랭킹<br/>TSI-RANK-001"]
+  MKT --> M2["시장지표<br/>TSI-MKT-001"]
+  MKT --> M3["종목별 수급<br/>TSI-FLOW-001"]
+
+  ETC --> E1["환율<br/>TSI-FX-001"]
+  ETC --> E2["장운영 캘린더<br/>TSI-CAL-001"]
+  ETC --> E3["수수료<br/>TSI-FEE-001"]
+  ETC --> E4["설정<br/>TSI-SET-001"]
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<!-- ============ 05 Screen List ============ -->
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 05</div>
+    <div class="ppt-top-title">Screen List</div>
+    <div class="ppt-top-proj">토스인베스트</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-body-full" style="padding:16px 24px;">
+      <table style="width:100%; border-collapse:collapse; font-size:10.5px;">
+        <tr style="background:#f4f4f5; border-bottom:2px solid #cbd5e1;">
+          <th style="padding:4px 8px; text-align:left; width:130px;">화면 ID</th>
+          <th style="padding:4px 8px; text-align:left; width:130px;">화면명</th>
+          <th style="padding:4px 8px; text-align:left; width:70px;">유형</th>
+          <th style="padding:4px 8px; text-align:left; width:200px;">Location</th>
+          <th style="padding:4px 8px; text-align:left;">주요 내용</th>
+        </tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:2px 8px;">TSI-MAIN-001</td><td style="padding:2px 8px;">홈</td><td style="padding:2px 8px;">화면</td><td style="padding:2px 8px;">홈</td><td style="padding:2px 8px;">총자산·지수·보유 상위·알림 요약</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:2px 8px;">TSI-AUTH-001</td><td style="padding:2px 8px;">로그인</td><td style="padding:2px 8px;">화면</td><td style="padding:2px 8px;">로그인</td><td style="padding:2px 8px;">아이디·비밀번호 인증, 세션 발급</td></tr>
+        <tr style="border-bottom:1px solid #eee; background:#fafafa;"><td style="padding:2px 8px;">TSI-AUTH-101</td><td style="padding:2px 8px;">세션 만료 안내</td><td style="padding:2px 8px;">팝업</td><td style="padding:2px 8px;">전 화면 공통</td><td style="padding:2px 8px;">401 수신 시 재로그인 유도</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:2px 8px;">TSI-AUTH-002</td><td style="padding:2px 8px;">QR 로그인 승인</td><td style="padding:2px 8px;">화면</td><td style="padding:2px 8px;">로그인 &gt; QR 승인</td><td style="padding:2px 8px;">기존 로그인 기기에서 승인·거절</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:2px 8px;">TSI-AUTH-003</td><td style="padding:2px 8px;">비밀번호 변경</td><td style="padding:2px 8px;">화면</td><td style="padding:2px 8px;">기타 &gt; 설정 &gt; 비밀번호 변경</td><td style="padding:2px 8px;">현재·신규 비밀번호 입력, 규칙 검증</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:2px 8px;">TSI-ACCT-001</td><td style="padding:2px 8px;">계좌</td><td style="padding:2px 8px;">화면</td><td style="padding:2px 8px;">투자 &gt; 계좌</td><td style="padding:2px 8px;">계좌번호·총자산·하위 메뉴</td></tr>
+        <tr style="border-bottom:1px solid #eee; background:#fafafa;"><td style="padding:2px 8px;">TSI-ACCT-101</td><td style="padding:2px 8px;">계좌 전환</td><td style="padding:2px 8px;">바텀시트</td><td style="padding:2px 8px;">투자 &gt; 계좌</td><td style="padding:2px 8px;">복수 계좌 선택 전환</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:2px 8px;">TSI-DASH-001</td><td style="padding:2px 8px;">자산 대시보드</td><td style="padding:2px 8px;">화면</td><td style="padding:2px 8px;">투자 &gt; 자산 대시보드</td><td style="padding:2px 8px;">잔고·평가손익·보유 비중</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:2px 8px;">TSI-HOLD-001</td><td style="padding:2px 8px;">보유종목</td><td style="padding:2px 8px;">화면</td><td style="padding:2px 8px;">투자 &gt; 계좌 &gt; 보유종목</td><td style="padding:2px 8px;">보유 목록·평가손익·정렬</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:2px 8px;">TSI-HOLD-002</td><td style="padding:2px 8px;">보유종목 상세</td><td style="padding:2px 8px;">화면</td><td style="padding:2px 8px;">투자 &gt; 계좌 &gt; 보유종목 &gt; 상세</td><td style="padding:2px 8px;">평단·손익·비중·타깃 요약</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:2px 8px;">TSI-ORDER-001</td><td style="padding:2px 8px;">주문내역</td><td style="padding:2px 8px;">화면</td><td style="padding:2px 8px;">투자 &gt; 계좌 &gt; 주문내역</td><td style="padding:2px 8px;">체결·미체결 탭, 기간 필터</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:2px 8px;">TSI-ORDER-002</td><td style="padding:2px 8px;">주문 상세</td><td style="padding:2px 8px;">화면</td><td style="padding:2px 8px;">투자 &gt; 계좌 &gt; 주문내역 &gt; 상세</td><td style="padding:2px 8px;">체결 단가·수수료·세금</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:2px 8px;">TSI-TGT-001</td><td style="padding:2px 8px;">익절/손절</td><td style="padding:2px 8px;">화면</td><td style="padding:2px 8px;">투자 &gt; 익절/손절</td><td style="padding:2px 8px;">ATR 기반 참고 타깃·스탑</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:2px 8px;">TSI-WD-001</td><td style="padding:2px 8px;">워치독</td><td style="padding:2px 8px;">화면</td><td style="padding:2px 8px;">투자 &gt; 워치독</td><td style="padding:2px 8px;">조건 알림 목록·활성 토글</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:2px 8px;">TSI-WD-002</td><td style="padding:2px 8px;">워치독 등록</td><td style="padding:2px 8px;">화면</td><td style="padding:2px 8px;">투자 &gt; 워치독 &gt; 등록</td><td style="padding:2px 8px;">종목·조건 그룹 구성</td></tr>
+        <tr style="border-bottom:1px solid #eee; background:#fafafa;"><td style="padding:2px 8px;">TSI-WD-101</td><td style="padding:2px 8px;">워치독 삭제 확인</td><td style="padding:2px 8px;">바텀시트</td><td style="padding:2px 8px;">투자 &gt; 워치독</td><td style="padding:2px 8px;">삭제 확인·취소</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:2px 8px;">TSI-NOTI-001</td><td style="padding:2px 8px;">알림 내역</td><td style="padding:2px 8px;">화면</td><td style="padding:2px 8px;">홈 &gt; 알림</td><td style="padding:2px 8px;">워치독 발동 이력·읽음 처리</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:2px 8px;">TSI-SEARCH-001</td><td style="padding:2px 8px;">종목 검색</td><td style="padding:2px 8px;">화면</td><td style="padding:2px 8px;">종목 &gt; 검색</td><td style="padding:2px 8px;">심볼·종목명 검색, 최근 검색</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:2px 8px;">TSI-STOCK-001</td><td style="padding:2px 8px;">종목 상세</td><td style="padding:2px 8px;">화면</td><td style="padding:2px 8px;">종목 &gt; 검색 &gt; 종목 상세</td><td style="padding:2px 8px;">현재가·상하한가·탭 진입</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:2px 8px;">TSI-CHART-001</td><td style="padding:2px 8px;">차트</td><td style="padding:2px 8px;">화면</td><td style="padding:2px 8px;">종목 &gt; 종목 상세 &gt; 차트</td><td style="padding:2px 8px;">분봉·일봉 캔들, 이동평균</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:2px 8px;">TSI-ORDB-001</td><td style="padding:2px 8px;">호가</td><td style="padding:2px 8px;">화면</td><td style="padding:2px 8px;">종목 &gt; 종목 상세 &gt; 호가</td><td style="padding:2px 8px;">매도·매수 호가 잔량 대칭</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:2px 8px;">TSI-TRADE-001</td><td style="padding:2px 8px;">체결</td><td style="padding:2px 8px;">화면</td><td style="padding:2px 8px;">종목 &gt; 종목 상세 &gt; 체결</td><td style="padding:2px 8px;">최근 체결 시각·가격·수량</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:2px 8px;">TSI-RANK-001</td><td style="padding:2px 8px;">랭킹</td><td style="padding:2px 8px;">화면</td><td style="padding:2px 8px;">시장 &gt; 랭킹</td><td style="padding:2px 8px;">거래대금·상승·하락 등</td></tr>
+        <tr style="border-bottom:1px solid #eee; background:#fafafa;"><td style="padding:2px 8px;">TSI-RANK-101</td><td style="padding:2px 8px;">랭킹 필터</td><td style="padding:2px 8px;">바텀시트</td><td style="padding:2px 8px;">시장 &gt; 랭킹</td><td style="padding:2px 8px;">유형·시장 구분 선택</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:2px 8px;">TSI-MKT-001</td><td style="padding:2px 8px;">시장지표</td><td style="padding:2px 8px;">화면</td><td style="padding:2px 8px;">시장 &gt; 시장지표</td><td style="padding:2px 8px;">KOSPI·KOSDAQ 현재가·추이</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:2px 8px;">TSI-FLOW-001</td><td style="padding:2px 8px;">종목별 수급</td><td style="padding:2px 8px;">화면</td><td style="padding:2px 8px;">시장 &gt; 종목별 수급</td><td style="padding:2px 8px;">외국인·기관 순매수 흐름</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:2px 8px;">TSI-FX-001</td><td style="padding:2px 8px;">환율</td><td style="padding:2px 8px;">화면</td><td style="padding:2px 8px;">기타 &gt; 환율</td><td style="padding:2px 8px;">통화쌍 환율·기준시각</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:2px 8px;">TSI-CAL-001</td><td style="padding:2px 8px;">장운영 캘린더</td><td style="padding:2px 8px;">화면</td><td style="padding:2px 8px;">기타 &gt; 장운영 캘린더</td><td style="padding:2px 8px;">개장·휴장·조기폐장 정보</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:2px 8px;">TSI-FEE-001</td><td style="padding:2px 8px;">수수료</td><td style="padding:2px 8px;">화면</td><td style="padding:2px 8px;">기타 &gt; 수수료</td><td style="padding:2px 8px;">수수료율·거래세 계산기</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:2px 8px;">TSI-SET-001</td><td style="padding:2px 8px;">설정</td><td style="padding:2px 8px;">화면</td><td style="padding:2px 8px;">기타 &gt; 설정</td><td style="padding:2px 8px;">계정·표시 설정·로그아웃</td></tr>
+        <tr style="background:#fafafa;"><td style="padding:2px 8px;">TSI-SET-101</td><td style="padding:2px 8px;">로그아웃 확인</td><td style="padding:2px 8px;">바텀시트</td><td style="padding:2px 8px;">기타 &gt; 설정</td><td style="padding:2px 8px;">로그아웃 확인·취소</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<!-- ============ 06 Service Flow ============ -->
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 06</div>
+    <div class="ppt-top-title">Service Flow</div>
+    <div class="ppt-top-proj">토스인베스트</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-body-full">
+      <div class="mermaid">
+flowchart LR
+  START(["앱 진입"]) --> SESS{"세션 유효"}
+  SESS -->|없음| LOGIN["로그인<br/>TSI-AUTH-001"]
+  LOGIN -->|인증 성공| HOME["홈<br/>TSI-MAIN-001"]
+  SESS -->|있음| HOME
+
+  HOME -->|알림 배지 탭| NOTI["알림 내역<br/>TSI-NOTI-001"]
+  HOME -->|계좌 카드 탭| ACCT["계좌<br/>TSI-ACCT-001"]
+  ACCT -->|자산 상세 탭| DASH["자산 대시보드<br/>TSI-DASH-001"]
+  ACCT -->|보유종목 탭| HOLD["보유종목<br/>TSI-HOLD-001"]
+  HOLD -->|종목 행 탭| HOLDD["보유종목 상세<br/>TSI-HOLD-002"]
+  ACCT -->|주문내역 탭| ORD["주문내역<br/>TSI-ORDER-001"]
+  ORD -->|주문 행 탭| ORDD["주문 상세<br/>TSI-ORDER-002"]
+  HOLDD -->|타깃 보기 탭| TGT["익절/손절<br/>TSI-TGT-001"]
+
+  HOME -->|워치독 탭| WD["워치독<br/>TSI-WD-001"]
+  WD -->|등록 버튼 탭| WDNEW["워치독 등록<br/>TSI-WD-002"]
+  WDNEW -->|저장| WD
+  WD -->|조건 발동| NOTI
+
+  HOME -->|검색 탭| SEARCH["종목 검색<br/>TSI-SEARCH-001"]
+  SEARCH -->|결과 행 탭| STOCK["종목 상세<br/>TSI-STOCK-001"]
+  HOLDD -->|종목 정보 탭| STOCK
+  STOCK -->|차트 탭| CHART["차트<br/>TSI-CHART-001"]
+  STOCK -->|호가 탭| ORDB["호가<br/>TSI-ORDB-001"]
+  STOCK -->|체결 탭| TRADE["체결<br/>TSI-TRADE-001"]
+  STOCK -->|수급 탭| FLOW["종목별 수급<br/>TSI-FLOW-001"]
+
+  HOME -->|시장 탭| RANK["랭킹<br/>TSI-RANK-001"]
+  RANK -->|종목 행 탭| STOCK
+  RANK -->|지수 카드 탭| MKTI["시장지표<br/>TSI-MKT-001"]
+
+  HOME -->|기타 탭| SET["설정<br/>TSI-SET-001"]
+  SET -->|환율 탭| FX["환율<br/>TSI-FX-001"]
+  SET -->|캘린더 탭| CAL["장운영 캘린더<br/>TSI-CAL-001"]
+  SET -->|수수료 탭| FEE["수수료<br/>TSI-FEE-001"]
+  SET -->|비밀번호 변경 탭| PW["비밀번호 변경<br/>TSI-AUTH-003"]
+  LOGIN -->|QR 로그인| QR["QR 로그인 승인<br/>TSI-AUTH-002"]
+  QR -->|승인| HOME
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<!-- ============ 07.1 Sequence — 로그인 ============ -->
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 07.1</div>
+    <div class="ppt-top-title">Sequence — 로그인 세션 발급</div>
+    <div class="ppt-top-proj">토스인베스트</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-body-full">
+      <div class="mermaid">
+sequenceDiagram
+  actor U as 사용자
+  participant V as 로그인 (TSI-AUTH-001)
+  participant S as 서버
+  U->>V: 아이디·비밀번호 입력 후 로그인 탭
+  V->>V: 필수값 검증
+  V->>S: 인증 요청
+  S->>S: 저장된 해시와 대조
+  alt 인증 성공
+    S-->>V: 세션 쿠키 발급 (HttpOnly, 7일)
+    V-->>U: 홈으로 이동 (TSI-MAIN-001)
+  else 인증 실패
+    S-->>V: 401
+    V-->>U: 아이디 또는 비밀번호가 틀렸습니다
+  else 사용자 저장소 불가
+    S-->>V: 500
+    V-->>U: 로그인 비활성 안내, 재시도만 제공
+  end
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<!-- ============ 07.2 Sequence — QR 로그인 승인 ============ -->
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 07.2</div>
+    <div class="ppt-top-title">Sequence — QR 로그인 승인</div>
+    <div class="ppt-top-proj">토스인베스트</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-body-full">
+      <div class="mermaid">
+sequenceDiagram
+  actor U as 사용자
+  participant N as 새 기기 로그인 (TSI-AUTH-001)
+  participant S as 서버
+  participant P as 기존 기기 승인 (TSI-AUTH-002)
+  U->>N: QR 로그인 탭
+  N->>S: 로그인 챌린지 생성 요청
+  S-->>N: 챌린지 ID + QR (유효 2분)
+  loop 2초 간격 폴링
+    N->>S: 챌린지 상태 조회
+  end
+  U->>P: 기존 기기에서 QR 스캔 후 승인 탭
+  P->>S: 챌린지 승인 요청 (세션 필요)
+  alt 챌린지 유효
+    S->>S: 승인 표시
+    S-->>N: 다음 폴링에서 승인 응답 + 세션 발급
+    N-->>U: 홈으로 이동 (TSI-MAIN-001)
+  else 2분 경과로 만료
+    S-->>P: 만료 안내
+    P-->>U: QR 재발급 요청 안내
+  end
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<!-- ============ 07.3 Sequence — 비밀번호 변경 ============ -->
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 07.3</div>
+    <div class="ppt-top-title">Sequence — 비밀번호 변경</div>
+    <div class="ppt-top-proj">토스인베스트</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-body-full">
+      <div class="mermaid">
+sequenceDiagram
+  actor U as 사용자
+  participant V as 비밀번호 변경 (TSI-AUTH-003)
+  participant S as 서버
+  U->>V: 현재·신규·확인 비밀번호 입력 후 변경 탭
+  V->>V: 길이 8자 이상, 신규-확인 일치, 현재와 다름 검증
+  V->>S: 변경 요청
+  S->>S: 현재 비밀번호 대조
+  alt 대조 성공
+    S->>S: 새 해시 저장 후 전 세션 무효화
+    S-->>V: 성공
+    V-->>U: 로그인 화면으로 이동 (TSI-AUTH-001)
+  else 현재 비밀번호 불일치
+    S-->>V: 401
+    V-->>U: 현재 비밀번호가 일치하지 않습니다
+  end
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<!-- ============ 07.4 Sequence — 워치독 등록 ============ -->
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 07.4</div>
+    <div class="ppt-top-title">Sequence — 워치독 등록</div>
+    <div class="ppt-top-proj">토스인베스트</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-body-full">
+      <div class="mermaid">
+sequenceDiagram
+  actor U as 사용자
+  participant V as 워치독 등록 (TSI-WD-002)
+  participant L as 워치독 목록 (TSI-WD-001)
+  participant S as 서버
+  U->>V: 종목·조건 그룹 구성 후 저장 탭
+  V->>V: 종목 선택·조건 1개 이상·임계값 형식 검증
+  V->>S: 워치독 생성 요청
+  alt 조건 유효
+    S->>S: 조건 저장, 활성 상태로 등록
+    S-->>V: 생성된 워치독
+    V-->>L: 목록으로 복귀 후 갱신
+    L-->>U: 신규 항목 노출
+  else 동일 종목·조건 중복
+    S-->>V: 409
+    V-->>U: 같은 조건의 워치독이 이미 있습니다
+  else 등록 한도 20건 초과
+    S-->>V: 400
+    V-->>U: 한도 안내, 저장 차단
+  end
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<!-- ============ 07.5 Sequence — 워치독 발동·알림 ============ -->
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 07.5</div>
+    <div class="ppt-top-title">Sequence — 워치독 조건 발동 및 알림 발송</div>
+    <div class="ppt-top-proj">토스인베스트</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-body-full">
+      <div class="mermaid">
+sequenceDiagram
+  participant S as 서버 스케줄러
+  participant X as 외부 시세·수급
+  participant T as 외부 알림 채널
+  participant N as 알림 내역 (TSI-NOTI-001)
+  participant L as 워치독 목록 (TSI-WD-001)
+  loop 평가 주기
+    S->>X: 활성 워치독 종목 시세·수급 조회
+    X-->>S: 현재가·지표
+    S->>S: 조건 그룹 평가 (그룹 내 AND, 그룹 간 OR)
+    alt 조건 충족 및 쿨다운 경과
+      S->>T: 알림 발송
+      T-->>S: 발송 결과
+      S->>S: 발동 이력 적재, 최근 발동 시각 갱신
+      S-->>N: 알림 내역에 노출
+      S-->>L: 목록의 최근 발동 시각 갱신
+    else 쿨다운 이내
+      S->>S: 발송 생략, 평가 시각만 갱신
+    end
+  end
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<!-- ============ 07.6 Sequence — 워치독 삭제 ============ -->
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 07.6</div>
+    <div class="ppt-top-title">Sequence — 워치독 삭제</div>
+    <div class="ppt-top-proj">토스인베스트</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-body-full">
+      <div class="mermaid">
+sequenceDiagram
+  actor U as 사용자
+  participant L as 워치독 목록 (TSI-WD-001)
+  participant C as 삭제 확인 (TSI-WD-101)
+  participant S as 서버
+  U->>L: 항목 스와이프 후 삭제 탭
+  L->>C: 확인 바텀시트 노출
+  alt 삭제 확인
+    C->>S: 삭제 요청
+    S->>S: 워치독 비활성화 후 제거, 발동 이력은 보존
+    S-->>C: 성공
+    C->>L: 시트 닫고 목록에서 항목 제거
+    L-->>U: 삭제 완료 토스트
+  else 취소 또는 배경 딤 탭
+    C->>L: 시트만 닫음, 목록 유지
+  end
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<!-- ============ 07.7 Sequence — 로그아웃 ============ -->
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 07.7</div>
+    <div class="ppt-top-title">Sequence — 로그아웃</div>
+    <div class="ppt-top-proj">토스인베스트</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-body-full">
+      <div class="mermaid">
+sequenceDiagram
+  actor U as 사용자
+  participant V as 설정 (TSI-SET-001)
+  participant C as 로그아웃 확인 (TSI-SET-101)
+  participant S as 서버
+  U->>V: 로그아웃 탭
+  V->>C: 확인 바텀시트 노출
+  alt 로그아웃 확인
+    C->>S: 세션 종료 요청
+    alt 요청 성공
+      S-->>C: 세션 쿠키 만료
+    else 요청 실패
+      C->>C: 실패해도 클라이언트 상태를 신뢰하지 않고 진행
+    end
+    C->>C: 조회 캐시·최근 검색 삭제, 표시 설정은 보존
+    C-->>U: 로그인으로 히스토리 치환 이동 (TSI-AUTH-001)
+  else 취소 또는 배경 딤 탭
+    C->>V: 시트만 닫음, 세션 유지
+  end
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<!-- ============ 08 General Rule ============ -->
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 08</div>
+    <div class="ppt-top-title">General Rule</div>
+    <div class="ppt-top-proj">토스인베스트</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-body-full" style="padding:20px 28px; font-size:12px; color:#334155; line-height:1.65;">
+      <div style="display:flex; gap:20px;">
+        <div style="flex:1;">
+          <div style="font-weight:800; color:#111; border-bottom:2px solid var(--accent); padding-bottom:4px; margin-bottom:8px;">그리드 · 여백</div>
+          <ul style="margin:0 0 14px 16px; padding:0;">
+            <li>기준 뷰포트 360~430px. 좌우 기본 여백 16px, 노치·곡면 인셋과 큰 값을 취한다.</li>
+            <li>카드 간 세로 간격 12px, 카드 내부 패딩 16px, 리스트 행 높이 최소 52px.</li>
+            <li>터치 타깃 최소 44×44px. 하단 탭바 높이 56px + 안전영역.</li>
+          </ul>
+          <div style="font-weight:800; color:#111; border-bottom:2px solid var(--accent); padding-bottom:4px; margin-bottom:8px;">타이포그래피</div>
+          <ul style="margin:0 0 14px 16px; padding:0;">
+            <li>금액·수량·비율은 <b>고정폭 숫자</b>로 렌더해 자릿수가 흔들리지 않게 한다.</li>
+            <li>총자산 28px/800, 섹션 제목 16px/700, 본문 14px/500, 캡션 12px/400.</li>
+            <li>종목명은 1줄 말줄임, 심볼은 부가 정보로만 노출한다.</li>
+          </ul>
+          <div style="font-weight:800; color:#111; border-bottom:2px solid var(--accent); padding-bottom:4px; margin-bottom:8px;">상태색 (accent 와 분리)</div>
+          <table style="width:100%; border-collapse:collapse; font-size:11.5px;">
+            <tr style="background:#f4f4f5;"><th style="padding:3px 6px; text-align:left;">의미</th><th style="padding:3px 6px; text-align:left;">기본(한국식)</th><th style="padding:3px 6px; text-align:left;">글로벌식</th></tr>
+            <tr><td style="padding:3px 6px;">상승·이익</td><td style="padding:3px 6px; color:#e11d48;">적색</td><td style="padding:3px 6px; color:#16a34a;">녹색</td></tr>
+            <tr><td style="padding:3px 6px;">하락·손실</td><td style="padding:3px 6px; color:#2563eb;">청색</td><td style="padding:3px 6px; color:#e11d48;">적색</td></tr>
+            <tr><td style="padding:3px 6px;">보합 0</td><td style="padding:3px 6px; color:#64748b;">회색</td><td style="padding:3px 6px; color:#64748b;">회색</td></tr>
+            <tr><td style="padding:3px 6px;">위험 동작</td><td style="padding:3px 6px; color:#e11d48;">적색 텍스트·버튼</td><td style="padding:3px 6px;">동일</td></tr>
+          </table>
+        </div>
+        <div style="flex:1;">
+          <div style="font-weight:800; color:#111; border-bottom:2px solid var(--accent); padding-bottom:4px; margin-bottom:8px;">공통 컴포넌트</div>
+          <ul style="margin:0 0 14px 16px; padding:0;">
+            <li><code>Card</code> <code>ListRow</code> <code>Tabs</code> <code>ChipGroup</code> <code>BottomSheet</code> <code>Toast</code> <code>Skeleton</code> <code>ErrorState</code> <code>EmptyState</code> <code>Switch</code></li>
+            <li>아이콘은 Phosphor 규격 24px. 이모지를 아이콘 대용으로 쓰지 않는다.</li>
+          </ul>
+          <div style="font-weight:800; color:#111; border-bottom:2px solid var(--accent); padding-bottom:4px; margin-bottom:8px;">공통 예외처리</div>
+          <table style="width:100%; border-collapse:collapse; font-size:11.5px; margin-bottom:14px;">
+            <tr style="background:#f4f4f5;"><th style="padding:3px 6px; text-align:left; width:92px;">상황</th><th style="padding:3px 6px; text-align:left;">처리</th></tr>
+            <tr style="border-bottom:1px solid #eee;"><td style="padding:3px 6px;">로딩</td><td style="padding:3px 6px;">해당 영역 스켈레톤. 전체 화면 스피너를 쓰지 않는다</td></tr>
+            <tr style="border-bottom:1px solid #eee;"><td style="padding:3px 6px;">조회 실패</td><td style="padding:3px 6px;">금액 자리에 "—" + "갱신 실패" 캡션. <b>0 으로 대체하지 않는다</b></td></tr>
+            <tr style="border-bottom:1px solid #eee;"><td style="padding:3px 6px;">데이터 없음</td><td style="padding:3px 6px;">빈 상태 문구 + 다음 행동 CTA</td></tr>
+            <tr style="border-bottom:1px solid #eee;"><td style="padding:3px 6px;">세션 만료 401</td><td style="padding:3px 6px;">세션 만료 안내 팝업 노출 후 로그인 이동 (TSI-AUTH-101)</td></tr>
+            <tr style="border-bottom:1px solid #eee;"><td style="padding:3px 6px;">호출 한도 429</td><td style="padding:3px 6px;">30초 후 1회 자동 재시도, 이후 수동 재시도 버튼</td></tr>
+            <tr><td style="padding:3px 6px;">장 마감</td><td style="padding:3px 6px;">실시간 값에 "장 마감" 배지, 마지막 갱신 시각 병기</td></tr>
+          </table>
+          <div style="font-weight:800; color:#111; border-bottom:2px solid var(--accent); padding-bottom:4px; margin-bottom:8px;">데이터 · 갱신</div>
+          <ul style="margin:0 0 14px 16px; padding:0;">
+            <li>계좌 목록은 호출 한도가 낮아 <b>세션당 1회 조회 후 캐시</b>, 명시적 새로고침에서만 재조회.</li>
+            <li>시세는 화면 진입 시 1회 + 당겨서 새로고침. 자동 폴링은 실시간 화면에 한정한다.</li>
+            <li>금액 표기는 원 단위 3자리 콤마, 손익은 부호(+/−)와 색을 병기한다.</li>
+            <li>계좌번호는 마스킹하지 않는다 — 본인 계좌만 조회되므로 실익이 없다.</li>
+          </ul>
+          <div style="font-weight:800; color:#111; border-bottom:2px solid var(--accent); padding-bottom:4px; margin-bottom:8px;">접근성</div>
+          <ul style="margin:0 0 0 16px; padding:0;">
+            <li>색만으로 등락을 전달하지 않는다 — 부호·화살표를 함께 쓴다.</li>
+            <li>본문 대비 4.5:1 이상. 토글·탭에 역할과 상태를 노출한다.</li>
+            <li>차트는 요약 수치를 텍스트로도 제공한다.</li>
+          </ul>
+        </div>
+      </div>
+      <div style="margin-top:12px; padding:10px 14px; background:#fff7ed; border-left:4px solid #e11d48; font-size:11.5px; color:#7c2d12;">
+        <b>범위 고지</b> — 이 문서는 <b>조회·모니터링 전용</b>이다. 매수·매도·정정·취소 등 주문 실행 화면은 범위에서 제외한다.
+        워치독은 조건 충족 시 <b>알림만</b> 보내며 자동으로 주문을 내지 않는다.
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<!-- ============ 09.1 홈 ============ -->
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.1</div>
+    <div class="ppt-top-title">홈</div>
+    <div class="ppt-top-proj">토스인베스트</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">홈</div>
+    <div class="ppt-meta-id">TSI-MAIN-001</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span>토스인베스트</span><span style="position:relative; font-size:12px; color:#64748b;">알림 <span style="background:#e11d48; color:#fff; border-radius:8px; padding:0 5px; font-size:9px;">3</span></span></div>
+          <div class="mock-body" style="position:relative; background:#f4f4f5;">
+            <span class="pointer-badge" style="position:absolute; top:-6px; left:2px; z-index:10;">2</span>
+            <span class="pointer-badge" style="position:absolute; top:26px; left:2px; z-index:10;">1</span>
+            <div style="background:#fff; border-radius:10px; padding:13px; margin-bottom:10px;">
+              <div style="font-size:10px; color:#94a3b8;">위탁계좌 11309999999</div>
+              <div style="font-size:22px; font-weight:800; margin-top:2px;">59,102,870원</div>
+              <div style="font-size:10px; color:#e11d48; margin-top:2px;">평가손익 +4,490,000 (+9.29%)</div>
+              <div style="display:flex; gap:6px; margin-top:9px;">
+                <div style="flex:1; background:#f8fafc; border-radius:6px; padding:6px;"><div style="font-size:9px; color:#94a3b8;">매수가능</div><div style="font-size:11px; font-weight:700;">6,182,869</div></div>
+                <div style="flex:1; background:#f8fafc; border-radius:6px; padding:6px;"><div style="font-size:9px; color:#94a3b8;">주식평가</div><div style="font-size:11px; font-weight:700;">52,840,000</div></div>
+              </div>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:172px; left:2px; z-index:10;">3</span>
+            <div style="display:flex; gap:8px; margin-bottom:10px;">
+              <div style="flex:1; background:#fff; border-radius:10px; padding:10px;"><div style="font-size:10px; color:#64748b;">KOSPI</div><div style="font-size:13px; font-weight:800;">2,684.31</div><div style="font-size:9px; color:#e11d48;">+0.62%</div></div>
+              <div style="flex:1; background:#fff; border-radius:10px; padding:10px;"><div style="font-size:10px; color:#64748b;">KOSDAQ</div><div style="font-size:13px; font-weight:800;">861.22</div><div style="font-size:9px; color:#2563eb;">−0.31%</div></div>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:248px; left:2px; z-index:10;">4</span>
+            <div style="background:#fff; border-radius:10px; margin-bottom:10px;">
+              <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:700; padding:10px 12px 6px;"><span>보유 상위</span><span style="color:#cbd5e1; font-size:10px;">전체 ›</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:11px; padding:7px 12px; border-top:1px solid #f1f5f9;"><span>삼성전자</span><span style="color:#e11d48;">+3.21%</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:11px; padding:7px 12px; border-top:1px solid #f1f5f9;"><span>SK하이닉스</span><span style="color:#e11d48;">+1.04%</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:11px; padding:7px 12px; border-top:1px solid #f1f5f9;"><span>NAVER</span><span style="color:#2563eb;">−0.88%</span></div>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:378px; left:2px; z-index:10;">5</span>
+            <div style="background:#fff; border-radius:10px; padding:11px 12px;">
+              <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:700;"><span>워치독</span><span style="color:#cbd5e1; font-size:10px;">›</span></div>
+              <div style="font-size:10px; color:#64748b; margin-top:4px;">활성 4건 · 오늘 발동 1건</div>
+            </div>
+          </div>
+          <div class="mock-footer" style="position:relative;">
+            <span class="pointer-badge" style="position:absolute; top:9px; left:2px; z-index:10;">6</span>
+            <div class="mock-tab active">홈</div>
+            <div class="mock-tab">투자</div>
+            <div class="mock-tab">종목</div>
+            <div class="mock-tab">시장</div>
+            <div class="mock-tab">기타</div>
+          </div>
+        </div>
+        <div class="mock-caption">홈 (TSI-MAIN-001)</div>
+      </div>
+    </div>
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1</span> <div><b>계좌 요약 카드</b><br>선택 계좌의 총자산·평가손익·매수가능금액<br>탭: 계좌로 이동 (TSI-ACCT-001)<br><code>Card</code></div></li>
+          <li><span class="desc-num">2</span> <div><b>알림 배지</b><br>미확인 알림 건수. 0건이면 배지 숨김<br>탭: 알림 내역으로 이동 (TSI-NOTI-001)</div></li>
+          <li><span class="desc-num">3</span> <div><b>지수 요약</b><br>KOSPI·KOSDAQ 현재가와 등락률<br>탭: 시장지표로 이동 (TSI-MKT-001)</div></li>
+          <li><span class="desc-num">4</span> <div><b>보유 상위 3건</b><br>평가금액 내림차순 상위 3건만<br>탭: 보유종목으로 이동 (TSI-HOLD-001)<br><code>ListRow</code></div></li>
+          <li><span class="desc-num">5</span> <div><b>워치독 요약</b><br>활성 건수와 당일 발동 건수<br>탭: 워치독으로 이동 (TSI-WD-001)</div></li>
+          <li><span class="desc-num">6</span> <div><b>하단 탭바</b><br>홈·투자·종목·시장·기타 5탭 고정<br>탭: 각 탭 최상위 화면으로 전환<br><code>Tabs</code></div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<!-- ============ 09.2 로그인 ============ -->
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.2</div>
+    <div class="ppt-top-title">로그인</div>
+    <div class="ppt-top-proj">토스인베스트</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">로그인</div>
+    <div class="ppt-meta-id">TSI-AUTH-001</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-body" style="position:relative; display:flex; flex-direction:column; justify-content:center;">
+            <div style="font-size:17px; font-weight:800; margin-bottom:4px;">토스인베스트</div>
+            <div style="font-size:10px; color:#94a3b8; margin-bottom:18px;">계좌 조회·모니터링</div>
+            <span class="pointer-badge" style="position:absolute; top:180px; left:2px; z-index:10;">1-1</span>
+            <div style="font-size:10px; color:#64748b; margin-bottom:3px;">아이디</div>
+            <div style="border:1px solid #e2e8f0; border-radius:7px; padding:10px; font-size:11px; color:#111; margin-bottom:11px;">user01</div>
+            <span class="pointer-badge" style="position:absolute; top:252px; left:2px; z-index:10;">1-2</span>
+            <div style="font-size:10px; color:#64748b; margin-bottom:3px;">비밀번호</div>
+            <div style="border:1px solid #e2e8f0; border-radius:7px; padding:10px; font-size:11px; color:#94a3b8; margin-bottom:16px;">••••••••</div>
+            <span class="pointer-badge" style="position:absolute; top:330px; left:2px; z-index:10;">1-3</span>
+            <div style="background:var(--accent); color:var(--accent-ink); border-radius:7px; padding:11px; text-align:center; font-size:12px; font-weight:700;">로그인</div>
+            <span class="pointer-badge" style="position:absolute; top:382px; left:2px; z-index:10;">1-4</span>
+            <div style="text-align:center; font-size:11px; color:var(--accent); margin-top:14px; text-decoration:underline;">QR 로 로그인</div>
+          </div>
+        </div>
+        <div class="mock-caption">로그인 기본 (TSI-AUTH-001)</div>
+      </div>
+
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-body" style="position:relative; display:flex; flex-direction:column; justify-content:center;">
+            <div style="font-size:17px; font-weight:800; margin-bottom:4px;">토스인베스트</div>
+            <div style="font-size:10px; color:#94a3b8; margin-bottom:18px;">계좌 조회·모니터링</div>
+            <div style="font-size:10px; color:#64748b; margin-bottom:3px;">아이디</div>
+            <div style="border:1px solid #e2e8f0; border-radius:7px; padding:10px; font-size:11px; margin-bottom:11px;">user01</div>
+            <div style="font-size:10px; color:#64748b; margin-bottom:3px;">비밀번호</div>
+            <div style="border:1px solid #e11d48; border-radius:7px; padding:10px; font-size:11px; color:#94a3b8;">••••</div>
+            <span class="pointer-badge" style="position:absolute; top:300px; left:2px; z-index:10;">2-1</span>
+            <div style="font-size:10px; color:#e11d48; margin:5px 0 14px;">아이디 또는 비밀번호가 틀렸습니다</div>
+            <div style="background:var(--accent); color:var(--accent-ink); border-radius:7px; padding:11px; text-align:center; font-size:12px; font-weight:700;">로그인</div>
+            <div style="text-align:center; font-size:11px; color:var(--accent); margin-top:14px; text-decoration:underline;">QR 로 로그인</div>
+          </div>
+        </div>
+        <div class="mock-caption">인증 실패 (TSI-AUTH-001)</div>
+      </div>
+
+      <div class="mock mock-partial">
+        <div class="mock-screen">
+          <div style="height:150px; background:#e2e8f0;"></div>
+          <div class="mock-body" style="position:relative; border-top:1px solid #cbd5e1;">
+            <div style="font-size:13px; font-weight:800; margin-bottom:6px;">세션이 만료되었습니다</div>
+            <div style="font-size:11px; color:#64748b; line-height:1.7;">보안을 위해 로그인이 해제되었습니다. 다시 로그인해주세요.</div>
+            <span class="pointer-badge" style="position:absolute; top:77px; left:2px; z-index:10;">3-1</span>
+            <div style="background:var(--accent); color:var(--accent-ink); border-radius:8px; padding:10px; text-align:center; font-size:11px; font-weight:700; margin-top:20px;">로그인하러 가기</div>
+          </div>
+        </div>
+        <div class="mock-caption">세션 만료 안내 (TSI-AUTH-101)</div>
+      </div>
+    </div>
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1-1</span> <div><b>아이디 입력</b><br>영문·숫자 4~20자<br>입력: 공백 자동 제거, 오류 문구 초기화</div></li>
+          <li><span class="desc-num">1-2</span> <div><b>비밀번호 입력</b><br>마스킹 표시, 8자 이상<br>입력: 두 필드가 모두 차면 로그인 버튼 활성</div></li>
+          <li><span class="desc-num">1-3</span> <div><b>로그인 버튼</b><br>미입력 시 비활성<br>탭: 인증 성공 시 홈으로 이동 (TSI-MAIN-001)<br><code>Button</code></div></li>
+          <li><span class="desc-num">1-4</span> <div><b>QR 로그인 진입</b><br>탭: QR 챌린지 생성 후 승인 대기 (TSI-AUTH-002)</div></li>
+          <li><span class="desc-num">2-1</span> <div><b>인증 실패 문구</b><br>아이디·비밀번호 중 어느 쪽이 틀렸는지 구분하지 않는다<br>비밀번호 필드만 비우고 아이디는 유지</div></li>
+          <li><span class="desc-num">3-1</span> <div><b>세션 만료 안내 (TSI-AUTH-101)</b><br>전 화면 공통 401 수신 시 노출<br>탭: 로그인으로 히스토리 치환 이동 (TSI-AUTH-001)<br><code>BottomSheet</code></div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<!-- ============ 09.3 QR 로그인 승인 ============ -->
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.3</div>
+    <div class="ppt-top-title">QR 로그인 승인</div>
+    <div class="ppt-top-proj">토스인베스트</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">로그인 &gt; QR 승인</div>
+    <div class="ppt-meta-id">TSI-AUTH-002</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span>‹ 로그인 승인</span></div>
+          <div class="mock-body" style="position:relative;">
+            <span class="pointer-badge" style="position:absolute; top:14px; left:2px; z-index:10;">1</span>
+            <div style="border:1px solid #e2e8f0; border-radius:10px; padding:14px; margin-bottom:14px;">
+              <div style="font-size:12px; font-weight:800; margin-bottom:8px;">새 기기에서 로그인을 시도했습니다</div>
+              <div style="display:flex; justify-content:space-between; font-size:10px; color:#64748b; padding:4px 0; border-top:1px solid #f1f5f9;"><span>요청 시각</span><span>2026-07-29 22:41:07</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:10px; color:#64748b; padding:4px 0; border-top:1px solid #f1f5f9;"><span>접속 IP</span><span>198.51.100.7</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:10px; color:#64748b; padding:4px 0; border-top:1px solid #f1f5f9;"><span>브라우저</span><span>Chrome / macOS</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:10px; color:#e11d48; padding:4px 0; border-top:1px solid #f1f5f9;"><span>유효시간</span><span>01:42 남음</span></div>
+            </div>
+            <div style="background:#fff7ed; border-left:3px solid #e11d48; padding:9px 11px; font-size:10px; color:#7c2d12; line-height:1.6; margin-bottom:16px;">본인이 요청한 로그인이 아니면 승인하지 마세요. 승인 즉시 해당 기기에서 계좌 정보를 조회할 수 있습니다.</div>
+            <span class="pointer-badge" style="position:absolute; top:232px; left:2px; z-index:10;">2</span>
+            <div style="background:var(--accent); color:var(--accent-ink); border-radius:8px; padding:11px; text-align:center; font-size:12px; font-weight:700; margin-bottom:8px;">승인하기</div>
+            <span class="pointer-badge" style="position:absolute; top:277px; left:2px; z-index:10;">3</span>
+            <div style="border:1px solid #e2e8f0; border-radius:8px; padding:11px; text-align:center; font-size:12px; font-weight:700; color:#64748b;">거절</div>
+          </div>
+        </div>
+        <div class="mock-caption">QR 로그인 승인 (TSI-AUTH-002)</div>
+      </div>
+    </div>
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1</span> <div><b>요청 정보 카드</b><br>요청 시각·접속 IP·브라우저와 남은 유효시간(2분)<br>1초 단위 카운트다운, 만료 시 승인 버튼 비활성<br><code>Card</code></div></li>
+          <li><span class="desc-num">2</span> <div><b>승인 버튼</b><br>탭: 챌린지 승인, 요청 기기에 세션 발급 후 홈으로 이동 (TSI-MAIN-001)<br><code>Button</code></div></li>
+          <li><span class="desc-num">3</span> <div><b>거절 버튼</b><br>탭: 챌린지 폐기, 요청 기기는 로그인 실패 처리 (TSI-AUTH-001)</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<!-- ============ 09.4 비밀번호 변경 ============ -->
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.4</div>
+    <div class="ppt-top-title">비밀번호 변경</div>
+    <div class="ppt-top-proj">토스인베스트</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">기타 &gt; 설정 &gt; 비밀번호 변경</div>
+    <div class="ppt-meta-id">TSI-AUTH-003</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span>‹ 비밀번호 변경</span></div>
+          <div class="mock-body" style="position:relative;">
+            <span class="pointer-badge" style="position:absolute; top:14px; left:2px; z-index:10;">1-1</span>
+            <div style="font-size:10px; color:#64748b; margin-bottom:3px;">현재 비밀번호</div>
+            <div style="border:1px solid #e2e8f0; border-radius:7px; padding:10px; font-size:11px; color:#94a3b8; margin-bottom:12px;">••••••••</div>
+            <span class="pointer-badge" style="position:absolute; top:86px; left:2px; z-index:10;">1-2</span>
+            <div style="font-size:10px; color:#64748b; margin-bottom:3px;">새 비밀번호</div>
+            <div style="border:1px solid #e2e8f0; border-radius:7px; padding:10px; font-size:11px; color:#94a3b8;">••••••••••</div>
+            <div style="font-size:9px; color:#94a3b8; margin:4px 0 12px;">8자 이상. 현재 비밀번호와 달라야 합니다</div>
+            <span class="pointer-badge" style="position:absolute; top:176px; left:2px; z-index:10;">1-3</span>
+            <div style="font-size:10px; color:#64748b; margin-bottom:3px;">새 비밀번호 확인</div>
+            <div style="border:1px solid #e2e8f0; border-radius:7px; padding:10px; font-size:11px; color:#94a3b8; margin-bottom:18px;">••••••••••</div>
+            <span class="pointer-badge" style="position:absolute; top:262px; left:2px; z-index:10;">1-4</span>
+            <div style="background:var(--accent); color:var(--accent-ink); border-radius:7px; padding:11px; text-align:center; font-size:12px; font-weight:700;">변경하기</div>
+            <div style="background:#f8fafc; border-radius:8px; padding:10px; font-size:9.5px; color:#64748b; line-height:1.6; margin-top:16px;">변경 시 다른 기기의 로그인도 모두 해제됩니다.</div>
+          </div>
+        </div>
+        <div class="mock-caption">입력 전 (TSI-AUTH-003)</div>
+      </div>
+
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span>‹ 비밀번호 변경</span></div>
+          <div class="mock-body" style="position:relative;">
+            <div style="font-size:10px; color:#64748b; margin-bottom:3px;">현재 비밀번호</div>
+            <div style="border:1px solid #e11d48; border-radius:7px; padding:10px; font-size:11px; color:#94a3b8;">••••••••</div>
+            <span class="pointer-badge" style="position:absolute; top:56px; left:2px; z-index:10;">2-1</span>
+            <div style="font-size:10px; color:#e11d48; margin:5px 0 12px;">현재 비밀번호가 일치하지 않습니다</div>
+            <div style="font-size:10px; color:#64748b; margin-bottom:3px;">새 비밀번호</div>
+            <div style="border:1px solid #e2e8f0; border-radius:7px; padding:10px; font-size:11px; color:#94a3b8; margin-bottom:12px;">••••••••••</div>
+            <div style="font-size:10px; color:#64748b; margin-bottom:3px;">새 비밀번호 확인</div>
+            <div style="border:1px solid #e2e8f0; border-radius:7px; padding:10px; font-size:11px; color:#94a3b8; margin-bottom:18px;">••••••••••</div>
+            <div style="background:var(--accent); color:var(--accent-ink); border-radius:7px; padding:11px; text-align:center; font-size:12px; font-weight:700;">변경하기</div>
+          </div>
+        </div>
+        <div class="mock-caption">검증 실패 (TSI-AUTH-003)</div>
+      </div>
+    </div>
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1-1</span> <div><b>현재 비밀번호</b><br>서버 대조는 제출 시점에만 수행<br>입력: 오류 문구 초기화</div></li>
+          <li><span class="desc-num">1-2</span> <div><b>새 비밀번호</b><br>8자 이상, 현재와 달라야 한다<br>입력: 포커스 아웃 시 규칙 즉시 검사</div></li>
+          <li><span class="desc-num">1-3</span> <div><b>새 비밀번호 확인</b><br>입력: 새 비밀번호와 불일치 시 인라인 오류</div></li>
+          <li><span class="desc-num">1-4</span> <div><b>변경 버튼</b><br>세 필드가 모두 규칙을 통과해야 활성<br>탭: 성공 시 전 세션 무효화 후 로그인으로 이동 (TSI-AUTH-001)<br><code>Button</code></div></li>
+          <li><span class="desc-num">2-1</span> <div><b>서버 검증 실패</b><br>현재 비밀번호 불일치(401)는 해당 필드 아래 인라인 표시<br>새 비밀번호 입력값은 지우지 않는다</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<!-- ============ 09.5 계좌 ============ -->
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.5</div>
+    <div class="ppt-top-title">계좌</div>
+    <div class="ppt-top-proj">토스인베스트</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">투자 &gt; 계좌</div>
+    <div class="ppt-meta-id">TSI-ACCT-001</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span>계좌</span></div>
+          <div class="mock-body" style="position:relative; background:#f4f4f5;">
+            <span class="pointer-badge" style="position:absolute; top:14px; left:2px; z-index:10;">1-1</span>
+            <div style="background:#fff; border-radius:10px; padding:13px; margin-bottom:10px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:10px; color:#64748b;">위탁계좌 11309999999 ⌄</span>
+                <span style="border:1px solid #e2e8f0; border-radius:5px; padding:2px 7px; font-size:9px; color:#64748b;">전환</span>
+              </div>
+              <div style="font-size:21px; font-weight:800; margin-top:4px;">59,102,870원</div>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:114px; left:2px; z-index:10;">1-2</span>
+            <div style="background:#fff; border-radius:10px; margin-bottom:10px;">
+              <div style="display:flex; justify-content:space-between; font-size:11px; padding:10px 13px; border-bottom:1px solid #f1f5f9;"><span style="color:#64748b;">매수가능금액</span><span style="font-weight:700;">6,182,869원</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:11px; padding:10px 13px; border-bottom:1px solid #f1f5f9;"><span style="color:#64748b;">주식 평가액</span><span style="font-weight:700;">52,840,000원</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:11px; padding:10px 13px;"><span style="color:#64748b;">평가손익</span><span style="font-weight:700; color:#e11d48;">+4,490,000원</span></div>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:250px; left:2px; z-index:10;">1-3</span>
+            <div style="background:#fff; border-radius:10px;">
+              <div style="display:flex; justify-content:space-between; font-size:12px; padding:12px 13px; border-bottom:1px solid #f1f5f9;"><span>자산 대시보드</span><span style="color:#cbd5e1;">›</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:12px; padding:12px 13px; border-bottom:1px solid #f1f5f9;"><span>보유종목</span><span style="color:#cbd5e1;">›</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:12px; padding:12px 13px;"><span>주문내역</span><span style="color:#cbd5e1;">›</span></div>
+            </div>
+          </div>
+          <div class="mock-footer">
+            <div class="mock-tab">홈</div>
+            <div class="mock-tab active">투자</div>
+            <div class="mock-tab">종목</div>
+            <div class="mock-tab">시장</div>
+            <div class="mock-tab">기타</div>
+          </div>
+        </div>
+        <div class="mock-caption">계좌 (TSI-ACCT-001)</div>
+      </div>
+
+      <div class="mock mock-partial">
+        <div class="mock-screen">
+          <div style="height:120px; background:#e2e8f0;"></div>
+          <div class="mock-body" style="position:relative; border-top:1px solid #cbd5e1;">
+            <div style="font-size:13px; font-weight:800; margin-bottom:12px;">계좌 선택</div>
+            <span class="pointer-badge" style="position:absolute; top:52px; left:2px; z-index:10;">2-1</span>
+            <div style="border:2px solid var(--accent); border-radius:8px; padding:11px; margin-bottom:8px;">
+              <div style="font-size:11px; font-weight:700;">위탁계좌 11309999999</div>
+              <div style="font-size:10px; color:#64748b;">BROKERAGE · seq 2</div>
+            </div>
+            <div style="border:1px solid #e2e8f0; border-radius:8px; padding:11px;">
+              <div style="font-size:11px; font-weight:700;">위탁계좌 11309999888</div>
+              <div style="font-size:10px; color:#64748b;">BROKERAGE · seq 3</div>
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">계좌 전환 (TSI-ACCT-101)</div>
+      </div>
+    </div>
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1-1</span> <div><b>계좌 헤더</b><br>계좌번호 전체 표기(마스킹 없음)와 총자산<br>탭: 계좌 전환 바텀시트 노출 (TSI-ACCT-101)<br>계좌가 1개면 전환 버튼과 화살표를 숨긴다<br><code>Card</code></div></li>
+          <li><span class="desc-num">1-2</span> <div><b>자산 요약 3행</b><br>매수가능금액·주식 평가액·평가손익<br>읽기 전용. 손익은 부호와 색 병기, 0원은 회색</div></li>
+          <li><span class="desc-num">1-3</span> <div><b>하위 메뉴</b><br>탭: 자산 대시보드로 이동 (TSI-DASH-001)<br>탭: 보유종목으로 이동 (TSI-HOLD-001)<br>탭: 주문내역으로 이동 (TSI-ORDER-001)<br><code>ListRow</code></div></li>
+          <li><span class="desc-num">2-1</span> <div><b>계좌 항목 (TSI-ACCT-101)</b><br>seq 오름차순 고정, 선택 계좌는 accent 테두리<br>탭: 계좌 전환 후 시트 닫힘, 화면 전체 재조회<br><code>BottomSheet</code></div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<!-- ============ 09.6 자산 대시보드 ============ -->
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.6</div>
+    <div class="ppt-top-title">자산 대시보드</div>
+    <div class="ppt-top-proj">토스인베스트</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">투자 &gt; 자산 대시보드</div>
+    <div class="ppt-meta-id">TSI-DASH-001</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span>‹ 자산 대시보드</span><span style="font-size:11px; color:#64748b;">새로고침</span></div>
+          <div class="mock-body" style="position:relative; background:#f4f4f5;">
+            <span class="pointer-badge" style="position:absolute; top:-6px; left:2px; z-index:10;">5</span>
+            <span class="pointer-badge" style="position:absolute; top:26px; left:2px; z-index:10;">1</span>
+            <div style="display:flex; gap:8px; margin-bottom:10px;">
+              <div style="flex:1; background:#fff; border-radius:10px; padding:11px;"><div style="font-size:9px; color:#94a3b8;">원화 잔고</div><div style="font-size:13px; font-weight:800; margin-top:2px;">6,182,869원</div></div>
+              <div style="flex:1; background:#fff; border-radius:10px; padding:11px;"><div style="font-size:9px; color:#94a3b8;">달러 잔고</div><div style="font-size:13px; font-weight:800; margin-top:2px;">$0.00</div></div>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:104px; left:2px; z-index:10;">2</span>
+            <div style="background:#fff; border-radius:10px; padding:13px; margin-bottom:10px;">
+              <div style="font-size:9px; color:#94a3b8;">평가손익</div>
+              <div style="font-size:20px; font-weight:800; color:#e11d48; margin-top:2px;">+4,490,000원</div>
+              <div style="font-size:10px; color:#e11d48;">+9.29% · 매입 48,350,000원</div>
+              <div style="height:7px; background:#f1f5f9; border-radius:4px; margin-top:10px; overflow:hidden;"><div style="width:64%; height:100%; background:#e11d48;"></div></div>
+              <div style="display:flex; justify-content:space-between; font-size:9px; color:#94a3b8; margin-top:3px;"><span>수익 3종목</span><span>손실 2종목</span></div>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:262px; left:2px; z-index:10;">3</span>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:7px;">
+              <span style="font-size:11px; font-weight:700;">보유 비중</span>
+              <span style="border:1px solid #e2e8f0; background:#fff; border-radius:5px; padding:2px 7px; font-size:9px; color:#64748b;">평가금액순 ⌄</span>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:300px; left:2px; z-index:10;">4</span>
+            <div style="background:#fff; border-radius:10px;">
+              <div style="padding:9px 12px; border-bottom:1px solid #f1f5f9;">
+                <div style="display:flex; justify-content:space-between; font-size:11px;"><span style="font-weight:700;">삼성전자</span><span>28,140,000원</span></div>
+                <div style="height:5px; background:#f1f5f9; border-radius:3px; margin-top:5px;"><div style="width:53%; height:100%; background:var(--accent); border-radius:3px;"></div></div>
+                <div style="display:flex; justify-content:space-between; font-size:9px; color:#94a3b8; margin-top:3px;"><span>53.3%</span><span style="color:#e11d48;">+3.21%</span></div>
+              </div>
+              <div style="padding:9px 12px; border-bottom:1px solid #f1f5f9;">
+                <div style="display:flex; justify-content:space-between; font-size:11px;"><span style="font-weight:700;">SK하이닉스</span><span>16,200,000원</span></div>
+                <div style="height:5px; background:#f1f5f9; border-radius:3px; margin-top:5px;"><div style="width:31%; height:100%; background:var(--accent); border-radius:3px;"></div></div>
+                <div style="display:flex; justify-content:space-between; font-size:9px; color:#94a3b8; margin-top:3px;"><span>30.7%</span><span style="color:#e11d48;">+1.04%</span></div>
+              </div>
+              <div style="padding:9px 12px;">
+                <div style="display:flex; justify-content:space-between; font-size:11px;"><span style="font-weight:700;">NAVER</span><span>8,500,000원</span></div>
+                <div style="height:5px; background:#f1f5f9; border-radius:3px; margin-top:5px;"><div style="width:16%; height:100%; background:var(--accent); border-radius:3px;"></div></div>
+                <div style="display:flex; justify-content:space-between; font-size:9px; color:#94a3b8; margin-top:3px;"><span>16.0%</span><span style="color:#2563eb;">−0.88%</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="mock-footer">
+            <div class="mock-tab">홈</div>
+            <div class="mock-tab active">투자</div>
+            <div class="mock-tab">종목</div>
+            <div class="mock-tab">시장</div>
+            <div class="mock-tab">기타</div>
+          </div>
+        </div>
+        <div class="mock-caption">자산 대시보드 (TSI-DASH-001)</div>
+      </div>
+    </div>
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1</span> <div><b>잔고 카드</b><br>원화·달러 예수금. 조회 실패 시 "—"<br>읽기 전용<br><code>Card</code></div></li>
+          <li><span class="desc-num">2</span> <div><b>평가손익 카드</b><br>손익 금액·수익률·매입금액, 수익/손실 종목 수 게이지<br>읽기 전용</div></li>
+          <li><span class="desc-num">3</span> <div><b>정렬 선택</b><br>평가금액순·손익률순·종목명순<br>탭: 정렬 바텀시트 노출 후 클라이언트 정렬, 재조회 없음<br><code>ChipGroup</code></div></li>
+          <li><span class="desc-num">4</span> <div><b>보유 비중 행</b><br>종목별 평가금액·비중 막대·등락률<br>탭: 보유종목 상세로 이동 (TSI-HOLD-002)<br><code>ListRow</code></div></li>
+          <li><span class="desc-num">5</span> <div><b>새로고침</b><br>탭: 잔고·보유 전체 재조회, 진행 중 스켈레톤 표시</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<!-- ============ 09.7 보유종목 ============ -->
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.7</div>
+    <div class="ppt-top-title">보유종목</div>
+    <div class="ppt-top-proj">토스인베스트</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">투자 &gt; 계좌 &gt; 보유종목</div>
+    <div class="ppt-meta-id">TSI-HOLD-001</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span>‹ 보유종목</span></div>
+          <div class="mock-body" style="position:relative;">
+            <span class="pointer-badge" style="position:absolute; top:14px; left:2px; z-index:10;">1-1</span>
+            <div style="display:flex; gap:5px; margin-bottom:11px;">
+              <div style="background:var(--accent); color:var(--accent-ink); border-radius:12px; padding:4px 10px; font-size:9px; font-weight:700;">평가금액</div>
+              <div style="border:1px solid #e2e8f0; border-radius:12px; padding:4px 10px; font-size:9px; color:#64748b;">손익률</div>
+              <div style="border:1px solid #e2e8f0; border-radius:12px; padding:4px 10px; font-size:9px; color:#64748b;">종목명</div>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:64px; left:2px; z-index:10;">1-2</span>
+            <div style="border-bottom:1px solid #f1f5f9; padding:9px 0;">
+              <div style="display:flex; justify-content:space-between; font-size:11.5px;"><span style="font-weight:700;">삼성전자</span><span style="font-weight:700;">28,140,000원</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:9.5px; color:#94a3b8; margin-top:3px;"><span>300주 · 평단 87,300</span><span style="color:#e11d48;">+2,940,000 (+3.21%)</span></div>
+            </div>
+            <div style="border-bottom:1px solid #f1f5f9; padding:9px 0;">
+              <div style="display:flex; justify-content:space-between; font-size:11.5px;"><span style="font-weight:700;">SK하이닉스</span><span style="font-weight:700;">16,200,000원</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:9.5px; color:#94a3b8; margin-top:3px;"><span>90주 · 평단 178,200</span><span style="color:#e11d48;">+166,000 (+1.04%)</span></div>
+            </div>
+            <div style="border-bottom:1px solid #f1f5f9; padding:9px 0;">
+              <div style="display:flex; justify-content:space-between; font-size:11.5px;"><span style="font-weight:700;">NAVER</span><span style="font-weight:700;">8,500,000원</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:9.5px; color:#94a3b8; margin-top:3px;"><span>50주 · 평단 171,500</span><span style="color:#2563eb;">−75,000 (−0.88%)</span></div>
+            </div>
+            <div style="border-bottom:1px solid #f1f5f9; padding:9px 0;">
+              <div style="display:flex; justify-content:space-between; font-size:11.5px;"><span style="font-weight:700;">카카오</span><span style="font-weight:700;">3,120,000원</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:9.5px; color:#94a3b8; margin-top:3px;"><span>80주 · 평단 40,900</span><span style="color:#2563eb;">−152,000 (−4.65%)</span></div>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:300px; left:2px; z-index:10;">1-3</span>
+            <div style="background:#f8fafc; border-radius:9px; padding:11px; margin-top:12px;">
+              <div style="display:flex; justify-content:space-between; font-size:10.5px; padding:2px 0;"><span style="color:#64748b;">평가금액 합계</span><span style="font-weight:700;">52,840,000원</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:10.5px; padding:2px 0;"><span style="color:#64748b;">매입금액 합계</span><span style="font-weight:700;">48,350,000원</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:10.5px; padding:2px 0; border-top:1px solid #e2e8f0; margin-top:4px; padding-top:5px;"><span style="color:#64748b;">평가손익</span><span style="font-weight:700; color:#e11d48;">+4,490,000원</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">보유종목 (TSI-HOLD-001)</div>
+      </div>
+
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span>‹ 삼성전자</span></div>
+          <div class="mock-body" style="position:relative; background:#f4f4f5;">
+            <span class="pointer-badge" style="position:absolute; top:14px; left:2px; z-index:10;">2-1</span>
+            <div style="background:#fff; border-radius:10px; padding:13px; margin-bottom:10px;">
+              <div style="font-size:10px; color:#94a3b8;">005930 · KOSPI</div>
+              <div style="font-size:20px; font-weight:800; margin-top:2px;">93,800원</div>
+              <div style="font-size:10px; color:#e11d48;">+2,900 (+3.19%)</div>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:114px; left:2px; z-index:10;">2-2</span>
+            <div style="background:#fff; border-radius:10px; margin-bottom:10px;">
+              <div style="display:flex; justify-content:space-between; font-size:10.5px; padding:9px 12px; border-bottom:1px solid #f1f5f9;"><span style="color:#64748b;">보유수량</span><span style="font-weight:700;">300주</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:10.5px; padding:9px 12px; border-bottom:1px solid #f1f5f9;"><span style="color:#64748b;">매입평균가</span><span style="font-weight:700;">87,300원</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:10.5px; padding:9px 12px; border-bottom:1px solid #f1f5f9;"><span style="color:#64748b;">평가금액</span><span style="font-weight:700;">28,140,000원</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:10.5px; padding:9px 12px; border-bottom:1px solid #f1f5f9;"><span style="color:#64748b;">평가손익</span><span style="font-weight:700; color:#e11d48;">+1,950,000원</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:10.5px; padding:9px 12px;"><span style="color:#64748b;">포트폴리오 비중</span><span style="font-weight:700;">53.3%</span></div>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:296px; left:2px; z-index:10;">2-3</span>
+            <div style="background:#fff; border-radius:10px; padding:12px; margin-bottom:10px;">
+              <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:700; margin-bottom:7px;"><span>익절/손절 참고</span><span style="color:#cbd5e1; font-size:10px;">›</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:10px; padding:2px 0;"><span style="color:#64748b;">익절 타깃</span><span style="color:#e11d48; font-weight:700;">101,300원 (+8.0%)</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:10px; padding:2px 0;"><span style="color:#64748b;">손절 스탑</span><span style="color:#2563eb; font-weight:700;">88,600원 (−5.5%)</span></div>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:353px; left:2px; z-index:10;">2-4</span>
+            <div style="background:#fff; border-radius:10px;">
+              <div style="display:flex; justify-content:space-between; font-size:12px; padding:12px 13px;"><span>종목 정보 보기</span><span style="color:#cbd5e1;">›</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">보유종목 상세 (TSI-HOLD-002)</div>
+      </div>
+    </div>
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1-1</span> <div><b>정렬 칩</b><br>기본 평가금액 내림차순<br>탭: 클라이언트 정렬 즉시 적용, 재조회 없음<br><code>ChipGroup</code></div></li>
+          <li><span class="desc-num">1-2</span> <div><b>보유 종목 행</b><br>종목명·평가금액·수량·평단·손익<br>탭: 보유종목 상세로 이동 (TSI-HOLD-002)<br><code>ListRow</code></div></li>
+          <li><span class="desc-num">1-3</span> <div><b>합계 카드</b><br>평가·매입 합계와 평가손익<br>읽기 전용. 보유 0건이면 숨김</div></li>
+          <li><span class="desc-num">2-1</span> <div><b>종목 헤더</b><br>현재가·등락. 장 마감 시 마감 배지 병기<br>읽기 전용</div></li>
+          <li><span class="desc-num">2-2</span> <div><b>보유 상세 5행</b><br>수량·평단·평가금액·평가손익·비중<br>읽기 전용</div></li>
+          <li><span class="desc-num">2-3</span> <div><b>익절/손절 참고</b><br>ATR 기반 타깃·스탑 요약<br>탭: 익절/손절로 이동 (TSI-TGT-001)</div></li>
+          <li><span class="desc-num">2-4</span> <div><b>종목 정보 보기</b><br>탭: 종목 상세로 이동 (TSI-STOCK-001)<br><code>ListRow</code></div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<!-- ============ 09.8 주문내역 ============ -->
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.8</div>
+    <div class="ppt-top-title">주문내역</div>
+    <div class="ppt-top-proj">토스인베스트</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">투자 &gt; 계좌 &gt; 주문내역</div>
+    <div class="ppt-meta-id">TSI-ORDER-001</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span>‹ 주문내역</span></div>
+          <div class="mock-body" style="position:relative;">
+            <span class="pointer-badge" style="position:absolute; top:8px; left:2px; z-index:10;">1-1</span>
+            <div style="display:flex; border-bottom:1px solid #e2e8f0; margin-bottom:10px;">
+              <div style="flex:1; text-align:center; font-size:11px; font-weight:700; padding:7px 0; border-bottom:2px solid var(--accent); color:var(--accent);">체결</div>
+              <div style="flex:1; text-align:center; font-size:11px; padding:7px 0; color:#94a3b8;">미체결</div>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:56px; left:2px; z-index:10;">1-2</span>
+            <div style="display:flex; gap:5px; margin-bottom:11px;">
+              <div style="background:var(--accent); color:var(--accent-ink); border-radius:12px; padding:4px 10px; font-size:9px; font-weight:700;">1개월</div>
+              <div style="border:1px solid #e2e8f0; border-radius:12px; padding:4px 10px; font-size:9px; color:#64748b;">3개월</div>
+              <div style="border:1px solid #e2e8f0; border-radius:12px; padding:4px 10px; font-size:9px; color:#64748b;">직접선택</div>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:106px; left:2px; z-index:10;">1-3</span>
+            <div style="border-bottom:1px solid #f1f5f9; padding:9px 0;">
+              <div style="display:flex; justify-content:space-between; font-size:11.5px;"><span><span style="color:#e11d48; font-weight:700;">매수</span> <span style="font-weight:700;">삼성전자</span></span><span style="font-weight:700;">100주</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:9.5px; color:#94a3b8; margin-top:3px;"><span>2026-07-23 09:12:04</span><span>체결 87,300원</span></div>
+            </div>
+            <div style="border-bottom:1px solid #f1f5f9; padding:9px 0;">
+              <div style="display:flex; justify-content:space-between; font-size:11.5px;"><span><span style="color:#2563eb; font-weight:700;">매도</span> <span style="font-weight:700;">카카오</span></span><span style="font-weight:700;">40주</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:9.5px; color:#94a3b8; margin-top:3px;"><span>2026-07-21 14:38:51</span><span>체결 41,050원</span></div>
+            </div>
+            <div style="border-bottom:1px solid #f1f5f9; padding:9px 0;">
+              <div style="display:flex; justify-content:space-between; font-size:11.5px;"><span><span style="color:#e11d48; font-weight:700;">매수</span> <span style="font-weight:700;">SK하이닉스</span></span><span style="font-weight:700;">30주</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:9.5px; color:#94a3b8; margin-top:3px;"><span>2026-07-17 10:02:33</span><span>체결 178,200원</span></div>
+            </div>
+            <div style="border-bottom:1px solid #f1f5f9; padding:9px 0;">
+              <div style="display:flex; justify-content:space-between; font-size:11.5px;"><span><span style="color:#e11d48; font-weight:700;">매수</span> <span style="font-weight:700;">NAVER</span></span><span style="font-weight:700;">50주</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:9.5px; color:#94a3b8; margin-top:3px;"><span>2026-07-09 11:47:20</span><span>체결 171,500원</span></div>
+            </div>
+            <div style="text-align:center; font-size:10px; color:#94a3b8; padding:14px 0;">더 보기</div>
+          </div>
+        </div>
+        <div class="mock-caption">주문내역 (TSI-ORDER-001)</div>
+      </div>
+
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span>‹ 주문 상세</span></div>
+          <div class="mock-body" style="position:relative; background:#f4f4f5;">
+            <span class="pointer-badge" style="position:absolute; top:14px; left:2px; z-index:10;">2-1</span>
+            <div style="background:#fff; border-radius:10px; padding:13px; margin-bottom:10px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:13px; font-weight:800;">삼성전자</span>
+                <span style="background:#fee2e2; color:#e11d48; border-radius:5px; padding:2px 7px; font-size:9px; font-weight:700;">매수 체결</span>
+              </div>
+              <div style="font-size:10px; color:#94a3b8; margin-top:3px;">005930 · 주문번호 20260723-000412</div>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:104px; left:2px; z-index:10;">2-2</span>
+            <div style="background:#fff; border-radius:10px; margin-bottom:10px;">
+              <div style="display:flex; justify-content:space-between; font-size:10.5px; padding:9px 12px; border-bottom:1px solid #f1f5f9;"><span style="color:#64748b;">주문유형</span><span style="font-weight:700;">지정가</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:10.5px; padding:9px 12px; border-bottom:1px solid #f1f5f9;"><span style="color:#64748b;">주문수량</span><span style="font-weight:700;">100주</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:10.5px; padding:9px 12px; border-bottom:1px solid #f1f5f9;"><span style="color:#64748b;">체결수량</span><span style="font-weight:700;">100주</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:10.5px; padding:9px 12px; border-bottom:1px solid #f1f5f9;"><span style="color:#64748b;">체결 단가</span><span style="font-weight:700;">87,300원</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:10.5px; padding:9px 12px;"><span style="color:#64748b;">체결 시각</span><span style="font-weight:700;">2026-07-23 09:12:04</span></div>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:286px; left:2px; z-index:10;">2-3</span>
+            <div style="background:#fff; border-radius:10px;">
+              <div style="display:flex; justify-content:space-between; font-size:10.5px; padding:9px 12px; border-bottom:1px solid #f1f5f9;"><span style="color:#64748b;">거래대금</span><span style="font-weight:700;">8,730,000원</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:10.5px; padding:9px 12px; border-bottom:1px solid #f1f5f9;"><span style="color:#64748b;">수수료</span><span style="font-weight:700;">1,270원</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:10.5px; padding:9px 12px; border-bottom:1px solid #f1f5f9;"><span style="color:#64748b;">거래세</span><span style="font-weight:700;">0원</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:11px; padding:10px 12px;"><span style="font-weight:700;">정산금액</span><span style="font-weight:800;">8,731,270원</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">주문 상세 (TSI-ORDER-002)</div>
+      </div>
+    </div>
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1-1</span> <div><b>체결·미체결 탭</b><br>기본은 체결 탭<br>탭: 목록 전환, 기간 필터는 유지<br><code>Tabs</code></div></li>
+          <li><span class="desc-num">1-2</span> <div><b>기간 필터</b><br>기본 1개월. 최대 조회 범위 6개월<br>탭: 선택 기간으로 재조회<br><code>ChipGroup</code></div></li>
+          <li><span class="desc-num">1-3</span> <div><b>주문 행</b><br>매수 적색·매도 청색 라벨, 체결 시각 내림차순<br>탭: 주문 상세로 이동 (TSI-ORDER-002)<br><code>ListRow</code></div></li>
+          <li><span class="desc-num">2-1</span> <div><b>주문 요약 헤더</b><br>종목명·주문번호·상태 배지<br>읽기 전용</div></li>
+          <li><span class="desc-num">2-2</span> <div><b>체결 정보</b><br>주문유형·주문수량·체결수량·단가·시각<br>부분체결이면 체결수량을 강조 표기</div></li>
+          <li><span class="desc-num">2-3</span> <div><b>비용 상세</b><br>거래대금·수수료·거래세·정산금액<br>매수는 거래세 0원으로 표기한다</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<!-- ============ 09.9 익절/손절 ============ -->
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.9</div>
+    <div class="ppt-top-title">익절/손절</div>
+    <div class="ppt-top-proj">토스인베스트</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">투자 &gt; 익절/손절</div>
+    <div class="ppt-meta-id">TSI-TGT-001</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span>익절/손절</span><span style="font-size:11px; color:#64748b;">새로고침</span></div>
+          <div class="mock-body" style="position:relative;">
+            <span class="pointer-badge" style="position:absolute; top:-6px; left:2px; z-index:10;">5</span>
+            <span class="pointer-badge" style="position:absolute; top:22px; left:2px; z-index:10;">1</span>
+            <div style="background:#fff7ed; border-left:3px solid #f59e0b; padding:9px 11px; font-size:9.5px; color:#7c2d12; line-height:1.6; margin-bottom:11px;">참고용 계산값입니다. 자동으로 주문이 실행되지 않습니다.</div>
+            <span class="pointer-badge" style="position:absolute; top:62px; left:2px; z-index:10;">2</span>
+            <div style="display:flex; gap:5px; margin-bottom:11px;">
+              <div style="background:var(--accent); color:var(--accent-ink); border-radius:12px; padding:4px 10px; font-size:9px; font-weight:700;">ATR 2.0배</div>
+              <div style="border:1px solid #e2e8f0; border-radius:12px; padding:4px 10px; font-size:9px; color:#64748b;">2.5배</div>
+              <div style="border:1px solid #e2e8f0; border-radius:12px; padding:4px 10px; font-size:9px; color:#64748b;">3.0배</div>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:92px; left:2px; z-index:10;">3</span>
+            <div style="border:1px solid #e2e8f0; border-radius:10px; padding:11px; margin-bottom:9px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:11.5px; font-weight:700;">삼성전자</span>
+                <span style="background:#dcfce7; color:#15803d; border-radius:5px; padding:2px 6px; font-size:8.5px; font-weight:700;">보유</span>
+              </div>
+              <div style="font-size:9.5px; color:#94a3b8; margin-top:2px;">현재 93,800 · 평단 87,300 · ATR 3,180</div>
+              <span class="pointer-badge" style="position:absolute; top:142px; left:2px; z-index:10;">4</span>
+              <div style="position:relative; height:6px; background:#f1f5f9; border-radius:3px; margin:11px 0 5px;">
+                <div style="position:absolute; left:0; top:0; bottom:0; width:22%; background:#2563eb; border-radius:3px;"></div>
+                <div style="position:absolute; left:64%; top:0; bottom:0; right:0; background:#e11d48; border-radius:3px;"></div>
+                <div style="position:absolute; left:46%; top:-3px; width:2px; height:12px; background:#111;"></div>
+              </div>
+              <div style="display:flex; justify-content:space-between; font-size:9px;"><span style="color:#2563eb;">스탑 88,600</span><span style="color:#64748b;">현재</span><span style="color:#e11d48;">타깃 101,300</span></div>
+            </div>
+            <div style="border:1px solid #e2e8f0; border-radius:10px; padding:11px; margin-bottom:9px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:11.5px; font-weight:700;">SK하이닉스</span>
+                <span style="background:#dcfce7; color:#15803d; border-radius:5px; padding:2px 6px; font-size:8.5px; font-weight:700;">보유</span>
+              </div>
+              <div style="font-size:9.5px; color:#94a3b8; margin-top:2px;">현재 180,000 · 평단 178,200 · ATR 6,420</div>
+              <div style="position:relative; height:6px; background:#f1f5f9; border-radius:3px; margin:11px 0 5px;">
+                <div style="position:absolute; left:0; top:0; bottom:0; width:26%; background:#2563eb; border-radius:3px;"></div>
+                <div style="position:absolute; left:70%; top:0; bottom:0; right:0; background:#e11d48; border-radius:3px;"></div>
+                <div style="position:absolute; left:33%; top:-3px; width:2px; height:12px; background:#111;"></div>
+              </div>
+              <div style="display:flex; justify-content:space-between; font-size:9px;"><span style="color:#2563eb;">스탑 165,400</span><span style="color:#64748b;">현재</span><span style="color:#e11d48;">타깃 193,000</span></div>
+            </div>
+            <div style="border:1px solid #e2e8f0; border-radius:10px; padding:11px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:11.5px; font-weight:700;">카카오</span>
+                <span style="background:#fee2e2; color:#b91c1c; border-radius:5px; padding:2px 6px; font-size:8.5px; font-weight:700;">스탑 근접</span>
+              </div>
+              <div style="font-size:9.5px; color:#94a3b8; margin-top:2px;">현재 39,000 · 평단 40,900 · ATR 1,240</div>
+            </div>
+          </div>
+          <div class="mock-footer">
+            <div class="mock-tab">홈</div>
+            <div class="mock-tab active">투자</div>
+            <div class="mock-tab">종목</div>
+            <div class="mock-tab">시장</div>
+            <div class="mock-tab">기타</div>
+          </div>
+        </div>
+        <div class="mock-caption">익절/손절 (TSI-TGT-001)</div>
+      </div>
+    </div>
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1</span> <div><b>참고 고지 배너</b><br>자동 주문이 실행되지 않음을 상시 고지<br>닫기 불가 — 항상 노출한다</div></li>
+          <li><span class="desc-num">2</span> <div><b>ATR 배수 칩</b><br>기본 2.0배. 타깃·스탑 계산에 쓰는 변동성 배수<br>탭: 선택 배수로 전 종목 재계산, 서버 재조회 없음<br><code>ChipGroup</code></div></li>
+          <li><span class="desc-num">3</span> <div><b>종목 카드</b><br>현재가·평단·ATR(20일)과 상태 배지<br>탭: 보유종목 상세로 이동 (TSI-HOLD-002)<br><code>Card</code></div></li>
+          <li><span class="desc-num">4</span> <div><b>타깃·스탑 게이지</b><br>스탑에서 타깃까지 구간 안 현재가 위치<br>읽기 전용. 색만이 아니라 금액도 함께 표기</div></li>
+          <li><span class="desc-num">5</span> <div><b>새로고침</b><br>탭: 현재가·ATR 재조회 후 전 종목 재계산</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<!-- ============ 09.10 워치독 ============ -->
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.10</div>
+    <div class="ppt-top-title">워치독</div>
+    <div class="ppt-top-proj">토스인베스트</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">투자 &gt; 워치독</div>
+    <div class="ppt-meta-id">TSI-WD-001</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span>워치독</span><span style="font-size:11px; color:var(--accent); font-weight:700;">+ 등록</span></div>
+          <div class="mock-body" style="position:relative;">
+            <span class="pointer-badge" style="position:absolute; top:-6px; left:2px; z-index:10;">1-1</span>
+            <div style="font-size:9.5px; color:#94a3b8; margin-bottom:10px;">활성 4건 · 오늘 발동 1건</div>
+            <span class="pointer-badge" style="position:absolute; top:38px; left:2px; z-index:10;">1-2</span>
+            <div style="border:1px solid #e2e8f0; border-radius:10px; padding:11px; margin-bottom:9px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:11.5px; font-weight:700;">삼성전자 급등 감시</span>
+                <span style="width:30px; height:17px; border-radius:9px; background:var(--accent); position:relative;"><span style="position:absolute; width:13px; height:13px; border-radius:50%; background:#fff; top:2px; right:2px;"></span></span>
+              </div>
+              <div style="font-size:9.5px; color:#64748b; margin-top:5px; line-height:1.6;">현재가 &gt; 95,000 <b>AND</b> 외국인 순매수 &gt; 50억</div>
+              <div style="font-size:9px; color:#94a3b8; margin-top:4px;">쿨다운 60분 · 최근 발동 2026-07-29 10:12</div>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:121px; left:2px; z-index:10;">1-3</span>
+            <div style="border:1px solid #e2e8f0; border-radius:10px; padding:11px; margin-bottom:9px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:11.5px; font-weight:700;">카카오 손절 경보</span>
+                <span style="width:30px; height:17px; border-radius:9px; background:#e2e8f0; position:relative;"><span style="position:absolute; width:13px; height:13px; border-radius:50%; background:#fff; top:2px; left:2px;"></span></span>
+              </div>
+              <div style="font-size:9.5px; color:#64748b; margin-top:5px; line-height:1.6;">현재가 &lt; 39,000</div>
+              <div style="font-size:9px; color:#94a3b8; margin-top:4px;">쿨다운 30분 · 발동 이력 없음</div>
+            </div>
+            <div style="border:1px solid #e2e8f0; border-radius:10px; padding:11px; margin-bottom:9px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:11.5px; font-weight:700;">SK하이닉스 수급</span>
+                <span style="width:30px; height:17px; border-radius:9px; background:var(--accent); position:relative;"><span style="position:absolute; width:13px; height:13px; border-radius:50%; background:#fff; top:2px; right:2px;"></span></span>
+              </div>
+              <div style="font-size:9.5px; color:#64748b; margin-top:5px; line-height:1.6;">기관 순매수 &gt; 30억 <b>OR</b> 뉴스 키워드 "HBM"</div>
+              <div style="font-size:9px; color:#94a3b8; margin-top:4px;">쿨다운 120분 · 최근 발동 2026-07-28 13:40</div>
+            </div>
+          </div>
+          <div class="mock-footer">
+            <div class="mock-tab">홈</div>
+            <div class="mock-tab active">투자</div>
+            <div class="mock-tab">종목</div>
+            <div class="mock-tab">시장</div>
+            <div class="mock-tab">기타</div>
+          </div>
+        </div>
+        <div class="mock-caption">워치독 (TSI-WD-001)</div>
+      </div>
+
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span>‹ 워치독 등록</span></div>
+          <div class="mock-body" style="position:relative;">
+            <span class="pointer-badge" style="position:absolute; top:14px; left:2px; z-index:10;">2-1</span>
+            <div style="font-size:10px; color:#64748b; margin-bottom:3px;">감시 종목</div>
+            <div style="border:1px solid #e2e8f0; border-radius:7px; padding:10px; font-size:11px; display:flex; justify-content:space-between; margin-bottom:12px;"><span>삼성전자 005930</span><span style="color:#cbd5e1;">›</span></div>
+            <span class="pointer-badge" style="position:absolute; top:92px; left:2px; z-index:10;">2-2</span>
+            <div style="font-size:10px; color:#64748b; margin-bottom:5px;">조건 그룹 1 · 그룹 안은 AND</div>
+            <div style="border:1px solid #e2e8f0; border-radius:8px; padding:10px; margin-bottom:8px;">
+              <div style="display:flex; gap:5px; margin-bottom:7px;">
+                <div style="flex:1; border:1px solid #e2e8f0; border-radius:5px; padding:6px; font-size:9.5px;">현재가 ⌄</div>
+                <div style="width:44px; border:1px solid #e2e8f0; border-radius:5px; padding:6px; font-size:9.5px; text-align:center;">&gt; ⌄</div>
+                <div style="width:76px; border:1px solid #e2e8f0; border-radius:5px; padding:6px; font-size:9.5px; text-align:right;">95,000</div>
+              </div>
+              <div style="display:flex; gap:5px;">
+                <div style="flex:1; border:1px solid #e2e8f0; border-radius:5px; padding:6px; font-size:9.5px;">외국인 순매수 ⌄</div>
+                <div style="width:44px; border:1px solid #e2e8f0; border-radius:5px; padding:6px; font-size:9.5px; text-align:center;">&gt; ⌄</div>
+                <div style="width:76px; border:1px solid #e2e8f0; border-radius:5px; padding:6px; font-size:9.5px; text-align:right;">50억</div>
+              </div>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:178px; left:2px; z-index:10;">2-3</span>
+            <div style="border:1px dashed #cbd5e1; border-radius:8px; padding:9px; text-align:center; font-size:10px; color:#64748b; margin-bottom:12px;">+ 조건 그룹 추가 (그룹끼리 OR)</div>
+            <div style="font-size:10px; color:#64748b; margin-bottom:3px;">쿨다운</div>
+            <div style="border:1px solid #e2e8f0; border-radius:7px; padding:9px; font-size:11px; margin-bottom:16px;">60분</div>
+            <span class="pointer-badge" style="position:absolute; top:284px; left:2px; z-index:10;">2-4</span>
+            <div style="background:var(--accent); color:var(--accent-ink); border-radius:7px; padding:11px; text-align:center; font-size:12px; font-weight:700;">저장</div>
+          </div>
+        </div>
+        <div class="mock-caption">워치독 등록 (TSI-WD-002)</div>
+      </div>
+
+      <div class="mock mock-partial">
+        <div class="mock-screen">
+          <div style="height:150px; background:#e2e8f0;"></div>
+          <div class="mock-body" style="position:relative; border-top:1px solid #cbd5e1;">
+            <div style="font-size:13px; font-weight:800; margin-bottom:6px;">워치독을 삭제할까요?</div>
+            <div style="font-size:11px; color:#64748b; line-height:1.7;">삼성전자 급등 감시<br>삭제하면 알림이 더 이상 오지 않습니다.</div>
+            <span class="pointer-badge" style="position:absolute; top:93px; left:2px; z-index:10;">3-1</span>
+            <div style="display:flex; gap:8px; margin-top:18px;">
+              <div style="flex:1; border:1px solid #e2e8f0; border-radius:8px; padding:10px; text-align:center; font-size:11px; font-weight:700; color:#64748b;">취소</div>
+              <div style="flex:1; background:#e11d48; color:#fff; border-radius:8px; padding:10px; text-align:center; font-size:11px; font-weight:700;">삭제</div>
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">워치독 삭제 확인 (TSI-WD-101)</div>
+      </div>
+    </div>
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1-1</span> <div><b>등록 버튼 · 요약</b><br>활성 건수와 당일 발동 건수<br>탭: 워치독 등록으로 이동 (TSI-WD-002)</div></li>
+          <li><span class="desc-num">1-2</span> <div><b>워치독 카드</b><br>이름·조건식·쿨다운·최근 발동 시각<br>탭: 워치독 등록 화면을 수정 모드로 진입 (TSI-WD-002)<br>스와이프: 삭제 확인 바텀시트 노출 (TSI-WD-101)<br><code>Card</code></div></li>
+          <li><span class="desc-num">1-3</span> <div><b>활성 토글</b><br>탭: 활성·비활성 즉시 전환, 비활성은 평가 대상에서 제외<br><code>Switch</code></div></li>
+          <li><span class="desc-num">2-1</span> <div><b>감시 종목 선택</b><br>탭: 종목 검색으로 이동 후 선택 결과를 되돌려받는다 (TSI-SEARCH-001)</div></li>
+          <li><span class="desc-num">2-2</span> <div><b>조건 그룹</b><br>지표·비교연산자·임계값 3칸. 그룹 안은 AND<br>입력: 임계값 형식 검사, 위반 시 저장 버튼 비활성</div></li>
+          <li><span class="desc-num">2-3</span> <div><b>조건 그룹 추가</b><br>탭: 그룹 추가. 그룹끼리는 OR 로 평가<br>최대 3그룹, 그룹당 조건 3개</div></li>
+          <li><span class="desc-num">2-4</span> <div><b>저장 버튼</b><br>종목·조건 1개 이상이어야 활성<br>탭: 저장 후 워치독 목록으로 복귀 (TSI-WD-001)<br><code>Button</code></div></li>
+          <li><span class="desc-num">3-1</span> <div><b>삭제 확인 (TSI-WD-101)</b><br>탭: 취소 시 시트만 닫힘, 목록 유지<br>탭: 삭제 시 목록에서 제거, 발동 이력은 보존 (TSI-NOTI-001)<br><code>BottomSheet</code></div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<!-- ============ 09.11 알림 내역 ============ -->
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.11</div>
+    <div class="ppt-top-title">알림 내역</div>
+    <div class="ppt-top-proj">토스인베스트</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">홈 &gt; 알림</div>
+    <div class="ppt-meta-id">TSI-NOTI-001</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span>‹ 알림</span><span style="font-size:11px; color:#64748b;">모두 읽음</span></div>
+          <div class="mock-body" style="position:relative;">
+            <span class="pointer-badge" style="position:absolute; top:-6px; left:2px; z-index:10;">1-3</span>
+            <span class="pointer-badge" style="position:absolute; top:22px; left:2px; z-index:10;">1-1</span>
+            <div style="display:flex; gap:5px; margin-bottom:11px;">
+              <div style="background:var(--accent); color:var(--accent-ink); border-radius:12px; padding:4px 10px; font-size:9px; font-weight:700;">전체</div>
+              <div style="border:1px solid #e2e8f0; border-radius:12px; padding:4px 10px; font-size:9px; color:#64748b;">안 읽음</div>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:72px; left:2px; z-index:10;">1-2</span>
+            <div style="border-left:3px solid var(--accent); background:#f8fafc; padding:9px 11px; border-radius:0 8px 8px 0; margin-bottom:8px;">
+              <div style="display:flex; justify-content:space-between; font-size:11px;"><span style="font-weight:700;">삼성전자 급등 감시</span><span style="font-size:9px; color:#94a3b8;">10:12</span></div>
+              <div style="font-size:9.5px; color:#64748b; margin-top:3px; line-height:1.6;">현재가 95,400원으로 조건 충족 (기준 95,000원)</div>
+            </div>
+            <div style="border-left:3px solid #e2e8f0; padding:9px 11px; margin-bottom:8px;">
+              <div style="display:flex; justify-content:space-between; font-size:11px;"><span style="font-weight:700;">SK하이닉스 수급</span><span style="font-size:9px; color:#94a3b8;">어제 13:40</span></div>
+              <div style="font-size:9.5px; color:#64748b; margin-top:3px; line-height:1.6;">기관 순매수 34.2억으로 조건 충족 (기준 30억)</div>
+            </div>
+            <div style="border-left:3px solid #e2e8f0; padding:9px 11px; margin-bottom:8px;">
+              <div style="display:flex; justify-content:space-between; font-size:11px;"><span style="font-weight:700;">삼성전자 급등 감시</span><span style="font-size:9px; color:#94a3b8;">07-27 09:31</span></div>
+              <div style="font-size:9.5px; color:#64748b; margin-top:3px; line-height:1.6;">현재가 95,100원으로 조건 충족 (기준 95,000원)</div>
+            </div>
+            <div style="text-align:center; font-size:10px; color:#94a3b8; padding:12px 0;">더 보기</div>
+          </div>
+        </div>
+        <div class="mock-caption">알림 내역 (TSI-NOTI-001)</div>
+      </div>
+
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span>‹ 알림</span></div>
+          <div class="mock-body" style="position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+            <div style="width:46px; height:46px; border-radius:50%; background:#f1f5f9; display:flex; align-items:center; justify-content:center; margin-bottom:12px;">
+              <svg class="icon" style="width:22px; height:22px; fill:#94a3b8;" viewBox="0 0 256 256"><path d="M221.8,175.94C216.25,166.38,208,139.33,208,104a80,80,0,1,0-160,0c0,35.34-8.26,62.38-13.81,71.94A16,16,0,0,0,48,200H88.81a40,40,0,0,0,78.38,0H208a16,16,0,0,0,13.8-24.06ZM128,216a24,24,0,0,1-22.62-16h45.24A24,24,0,0,1,128,216Z"/></svg>
+            </div>
+            <div style="font-size:12px; font-weight:700; color:#475569;">받은 알림이 없습니다</div>
+            <div style="font-size:10px; color:#94a3b8; margin-top:5px; text-align:center; line-height:1.6;">워치독을 등록하면 조건 충족 시<br>알림을 받을 수 있습니다</div>
+            <span class="pointer-badge" style="position:absolute; top:330px; left:2px; z-index:10;">2-1</span>
+            <div style="background:var(--accent); color:var(--accent-ink); border-radius:7px; padding:9px 18px; font-size:11px; font-weight:700; margin-top:16px;">워치독 등록하기</div>
+          </div>
+        </div>
+        <div class="mock-caption">알림 없음 (TSI-NOTI-001)</div>
+      </div>
+    </div>
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1-1</span> <div><b>필터 칩</b><br>전체·안 읽음. 기본은 전체<br>탭: 목록 필터 즉시 적용<br><code>ChipGroup</code></div></li>
+          <li><span class="desc-num">1-2</span> <div><b>알림 행</b><br>워치독 이름·발동 사유·시각. 안 읽음은 좌측 accent 바<br>탭: 읽음 처리 후 해당 워치독으로 이동 (TSI-WD-001)<br><code>ListRow</code></div></li>
+          <li><span class="desc-num">1-3</span> <div><b>모두 읽음</b><br>안 읽음 0건이면 비활성<br>탭: 전체 읽음 처리, 홈 배지 즉시 갱신 (TSI-MAIN-001)</div></li>
+          <li><span class="desc-num">2-1</span> <div><b>빈 상태 CTA</b><br>알림 0건일 때만 노출<br>탭: 워치독 등록으로 이동 (TSI-WD-002)<br><code>EmptyState</code></div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<!-- ============ 09.12 종목 검색 ============ -->
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.12</div>
+    <div class="ppt-top-title">종목 검색</div>
+    <div class="ppt-top-proj">토스인베스트</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">종목 &gt; 검색</div>
+    <div class="ppt-meta-id">TSI-SEARCH-001</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span>종목 검색</span></div>
+          <div class="mock-body" style="position:relative;">
+            <span class="pointer-badge" style="position:absolute; top:14px; left:2px; z-index:10;">1-1</span>
+            <div style="border:1px solid #e2e8f0; border-radius:8px; padding:9px 11px; font-size:11px; color:#94a3b8; margin-bottom:16px; display:flex; align-items:center; gap:6px;">
+              <svg class="icon" style="width:14px; height:14px; fill:#94a3b8;" viewBox="0 0 256 256"><path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"/></svg>
+              종목명 또는 종목코드
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <span style="font-size:11px; font-weight:700;">최근 검색</span>
+              <span style="font-size:9.5px; color:#94a3b8;">전체 삭제</span>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:60px; left:2px; z-index:10;">1-2</span>
+            <span class="pointer-badge" style="position:absolute; top:88px; left:2px; z-index:10;">1-3</span>
+            <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:18px;">
+              <div style="border:1px solid #e2e8f0; border-radius:14px; padding:5px 11px; font-size:10px;">삼성전자 ×</div>
+              <div style="border:1px solid #e2e8f0; border-radius:14px; padding:5px 11px; font-size:10px;">SK하이닉스 ×</div>
+              <div style="border:1px solid #e2e8f0; border-radius:14px; padding:5px 11px; font-size:10px;">NAVER ×</div>
+              <div style="border:1px solid #e2e8f0; border-radius:14px; padding:5px 11px; font-size:10px;">카카오 ×</div>
+            </div>
+            <div style="font-size:11px; font-weight:700; margin-bottom:8px;">거래대금 상위</div>
+            <div style="display:flex; justify-content:space-between; font-size:10.5px; padding:6px 0; border-bottom:1px solid #f1f5f9;"><span>1 삼성전자</span><span style="color:#e11d48;">+3.19%</span></div>
+            <div style="display:flex; justify-content:space-between; font-size:10.5px; padding:6px 0; border-bottom:1px solid #f1f5f9;"><span>2 SK하이닉스</span><span style="color:#e11d48;">+1.04%</span></div>
+            <div style="display:flex; justify-content:space-between; font-size:10.5px; padding:6px 0;"><span>3 한미반도체</span><span style="color:#2563eb;">−2.11%</span></div>
+          </div>
+          <div class="mock-footer">
+            <div class="mock-tab">홈</div>
+            <div class="mock-tab">투자</div>
+            <div class="mock-tab active">종목</div>
+            <div class="mock-tab">시장</div>
+            <div class="mock-tab">기타</div>
+          </div>
+        </div>
+        <div class="mock-caption">검색 전 (TSI-SEARCH-001)</div>
+      </div>
+
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span>종목 검색</span></div>
+          <div class="mock-body" style="position:relative;">
+            <div style="border:1px solid var(--accent); border-radius:8px; padding:9px 11px; font-size:11px; margin-bottom:14px;">삼성</div>
+            <div style="font-size:9.5px; color:#94a3b8; margin-bottom:8px;">검색 결과 4건</div>
+            <span class="pointer-badge" style="position:absolute; top:96px; left:2px; z-index:10;">2-1</span>
+            <div style="padding:9px 0; border-bottom:1px solid #f1f5f9;">
+              <div style="display:flex; justify-content:space-between; font-size:11.5px;"><span style="font-weight:700;">삼성전자</span><span style="font-weight:700;">93,800원</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:9.5px; color:#94a3b8; margin-top:2px;"><span>005930 · KOSPI</span><span style="color:#e11d48;">+3.19%</span></div>
+            </div>
+            <div style="padding:9px 0; border-bottom:1px solid #f1f5f9;">
+              <div style="display:flex; justify-content:space-between; font-size:11.5px;"><span style="font-weight:700;">삼성바이오로직스</span><span style="font-weight:700;">1,024,000원</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:9.5px; color:#94a3b8; margin-top:2px;"><span>207940 · KOSPI</span><span style="color:#2563eb;">−0.58%</span></div>
+            </div>
+            <div style="padding:9px 0; border-bottom:1px solid #f1f5f9;">
+              <div style="display:flex; justify-content:space-between; font-size:11.5px;"><span style="font-weight:700;">삼성SDI</span><span style="font-weight:700;">318,500원</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:9.5px; color:#94a3b8; margin-top:2px;"><span>006400 · KOSPI</span><span style="color:#e11d48;">+0.79%</span></div>
+            </div>
+            <div style="padding:9px 0;">
+              <div style="display:flex; justify-content:space-between; font-size:11.5px;"><span style="font-weight:700;">삼성물산</span><span style="font-weight:700;">146,200원</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:9.5px; color:#94a3b8; margin-top:2px;"><span>028260 · KOSPI</span><span style="color:#64748b;">0.00%</span></div>
+            </div>
+          </div>
+          <div class="mock-footer">
+            <div class="mock-tab">홈</div>
+            <div class="mock-tab">투자</div>
+            <div class="mock-tab active">종목</div>
+            <div class="mock-tab">시장</div>
+            <div class="mock-tab">기타</div>
+          </div>
+        </div>
+        <div class="mock-caption">검색 결과 (TSI-SEARCH-001)</div>
+      </div>
+    </div>
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1-1</span> <div><b>검색 입력</b><br>종목명(한글·영문) 또는 6자리 종목코드<br>입력: 300ms 디바운스 후 자동 조회<br><code>Input</code></div></li>
+          <li><span class="desc-num">1-2</span> <div><b>전체 삭제</b><br>탭: 최근 검색 전체 삭제, 확인 없이 즉시 실행<br>최근 검색 0건이면 영역 자체를 숨긴다</div></li>
+          <li><span class="desc-num">1-3</span> <div><b>최근 검색 칩</b><br>최대 10건, 최신순. 로컬에만 저장<br>탭: 해당 종목 상세로 이동 (TSI-STOCK-001)<br><code>ChipGroup</code></div></li>
+          <li><span class="desc-num">2-1</span> <div><b>검색 결과 행</b><br>종목명·코드·시장·현재가·등락률<br>탭: 종목 상세로 이동하며 최근 검색에 추가 (TSI-STOCK-001)<br><code>ListRow</code></div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<!-- ============ 09.13 종목 상세 ============ -->
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.13</div>
+    <div class="ppt-top-title">종목 상세</div>
+    <div class="ppt-top-proj">토스인베스트</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">종목 &gt; 검색 &gt; 종목 상세</div>
+    <div class="ppt-meta-id">TSI-STOCK-001</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span>‹ 삼성전자</span></div>
+          <div class="mock-body" style="position:relative;">
+            <span class="pointer-badge" style="position:absolute; top:14px; left:2px; z-index:10;">1</span>
+            <div style="font-size:9.5px; color:#94a3b8;">005930 · KOSPI</div>
+            <div style="display:flex; align-items:baseline; gap:7px; margin-top:2px;">
+              <span style="font-size:24px; font-weight:800;">93,800</span>
+              <span style="font-size:11px; color:#e11d48; font-weight:700;">+2,900 (+3.19%)</span>
+            </div>
+            <div style="font-size:9px; color:#94a3b8; margin-top:3px;">2026-07-29 15:30 장 마감 기준</div>
+            <span class="pointer-badge" style="position:absolute; top:96px; left:2px; z-index:10;">2</span>
+            <div style="background:#f8fafc; border-radius:9px; padding:10px; margin:11px 0;">
+              <div style="display:flex; justify-content:space-between; font-size:10px; padding:2px 0;"><span style="color:#94a3b8;">시가</span><span>91,200원</span><span style="color:#94a3b8;">고가</span><span style="color:#e11d48;">94,100원</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:10px; padding:2px 0;"><span style="color:#94a3b8;">전일</span><span>90,900원</span><span style="color:#94a3b8;">저가</span><span style="color:#2563eb;">90,800원</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:10px; padding:2px 0; border-top:1px solid #e2e8f0; margin-top:4px; padding-top:5px;"><span style="color:#94a3b8;">상한가</span><span style="color:#e11d48;">118,100원</span><span style="color:#94a3b8;">하한가</span><span style="color:#2563eb;">63,700원</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:10px; padding:2px 0;"><span style="color:#94a3b8;">거래량</span><span>18,420,113주</span><span style="color:#94a3b8;">거래대금</span><span>1.72조</span></div>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:236px; left:2px; z-index:10;">3</span>
+            <div style="display:flex; border-bottom:1px solid #e2e8f0; margin-bottom:11px;">
+              <div style="flex:1; text-align:center; font-size:10.5px; font-weight:700; padding:7px 0; border-bottom:2px solid var(--accent); color:var(--accent);">차트</div>
+              <div style="flex:1; text-align:center; font-size:10.5px; padding:7px 0; color:#94a3b8;">호가</div>
+              <div style="flex:1; text-align:center; font-size:10.5px; padding:7px 0; color:#94a3b8;">체결</div>
+              <div style="flex:1; text-align:center; font-size:10.5px; padding:7px 0; color:#94a3b8;">수급</div>
+            </div>
+            <div style="height:96px; background:#f8fafc; border-radius:8px; display:flex; align-items:flex-end; gap:3px; padding:9px;">
+              <div style="flex:1; height:38%; background:#cbd5e1;"></div>
+              <div style="flex:1; height:52%; background:#cbd5e1;"></div>
+              <div style="flex:1; height:44%; background:#cbd5e1;"></div>
+              <div style="flex:1; height:66%; background:#e11d48;"></div>
+              <div style="flex:1; height:58%; background:#cbd5e1;"></div>
+              <div style="flex:1; height:78%; background:#e11d48;"></div>
+              <div style="flex:1; height:71%; background:#cbd5e1;"></div>
+              <div style="flex:1; height:88%; background:#e11d48;"></div>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:334px; left:2px; z-index:10;">4</span>
+            <div style="border:1px solid var(--accent); color:var(--accent); border-radius:8px; padding:10px; text-align:center; font-size:11px; font-weight:700; margin-top:12px;">이 종목 워치독 등록</div>
+          </div>
+        </div>
+        <div class="mock-caption">종목 상세 (TSI-STOCK-001)</div>
+      </div>
+    </div>
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1</span> <div><b>종목 헤더</b><br>현재가·등락액·등락률과 기준 시각<br>장 마감 시 "장 마감 기준" 문구를 병기한다<br>읽기 전용</div></li>
+          <li><span class="desc-num">2</span> <div><b>시세 요약</b><br>시가·고가·저가·전일·상한가·하한가·거래량·거래대금<br>읽기 전용. 상하한가는 등락 색과 무관하게 고정색</div></li>
+          <li><span class="desc-num">3</span> <div><b>상세 탭</b><br>탭: 차트로 전환 (TSI-CHART-001)<br>탭: 호가로 전환 (TSI-ORDB-001)<br>탭: 체결로 전환 (TSI-TRADE-001)<br>탭: 종목별 수급으로 전환 (TSI-FLOW-001)<br><code>Tabs</code></div></li>
+          <li><span class="desc-num">4</span> <div><b>워치독 등록 CTA</b><br>탭: 종목이 채워진 상태로 워치독 등록 진입 (TSI-WD-002)<br><code>Button</code></div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<!-- ============ 09.14 차트 ============ -->
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.14</div>
+    <div class="ppt-top-title">차트</div>
+    <div class="ppt-top-proj">토스인베스트</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">종목 &gt; 종목 상세 &gt; 차트</div>
+    <div class="ppt-meta-id">TSI-CHART-001</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span>‹ 삼성전자 차트</span></div>
+          <div class="mock-body" style="position:relative;">
+            <span class="pointer-badge" style="position:absolute; top:14px; left:2px; z-index:10;">1</span>
+            <div style="display:flex; gap:5px; margin-bottom:10px;">
+              <div style="background:var(--accent); color:var(--accent-ink); border-radius:12px; padding:4px 10px; font-size:9px; font-weight:700;">1분</div>
+              <div style="border:1px solid #e2e8f0; border-radius:12px; padding:4px 10px; font-size:9px; color:#64748b;">일</div>
+              <div style="border:1px solid #e2e8f0; border-radius:12px; padding:4px 10px; font-size:9px; color:#64748b;">주</div>
+              <div style="border:1px solid #e2e8f0; border-radius:12px; padding:4px 10px; font-size:9px; color:#64748b;">월</div>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:42px; left:2px; z-index:10;">2</span>
+            <div style="display:flex; gap:9px; font-size:9px; margin-bottom:9px;">
+              <span style="color:#f59e0b; font-weight:700;">— MA5</span>
+              <span style="color:#8b5cf6; font-weight:700;">— MA20</span>
+              <span style="color:#cbd5e1;">— MA60</span>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:70px; left:2px; z-index:10;">3</span>
+            <div style="border:1px solid #f1f5f9; border-radius:8px; padding:10px; margin-bottom:10px;">
+              <div style="display:flex; justify-content:space-between; font-size:9px; color:#94a3b8; margin-bottom:6px;"><span>94,100</span><span>고가</span></div>
+              <div style="height:150px; display:flex; align-items:flex-end; gap:3px;">
+                <div style="flex:1; height:40%; background:#2563eb;"></div>
+                <div style="flex:1; height:55%; background:#e11d48;"></div>
+                <div style="flex:1; height:48%; background:#2563eb;"></div>
+                <div style="flex:1; height:62%; background:#e11d48;"></div>
+                <div style="flex:1; height:70%; background:#e11d48;"></div>
+                <div style="flex:1; height:58%; background:#2563eb;"></div>
+                <div style="flex:1; height:76%; background:#e11d48;"></div>
+                <div style="flex:1; height:84%; background:#e11d48;"></div>
+                <div style="flex:1; height:79%; background:#2563eb;"></div>
+                <div style="flex:1; height:92%; background:#e11d48;"></div>
+              </div>
+              <div style="display:flex; justify-content:space-between; font-size:9px; color:#94a3b8; margin-top:6px;"><span>90,800</span><span>저가</span></div>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:281px; left:2px; z-index:10;">4</span>
+            <div style="border:1px solid #f1f5f9; border-radius:8px; padding:10px;">
+              <div style="font-size:9px; color:#94a3b8; margin-bottom:6px;">거래량</div>
+              <div style="height:52px; display:flex; align-items:flex-end; gap:3px;">
+                <div style="flex:1; height:30%; background:#e2e8f0;"></div>
+                <div style="flex:1; height:52%; background:#e2e8f0;"></div>
+                <div style="flex:1; height:38%; background:#e2e8f0;"></div>
+                <div style="flex:1; height:64%; background:#e2e8f0;"></div>
+                <div style="flex:1; height:88%; background:#cbd5e1;"></div>
+                <div style="flex:1; height:44%; background:#e2e8f0;"></div>
+                <div style="flex:1; height:71%; background:#e2e8f0;"></div>
+                <div style="flex:1; height:96%; background:#cbd5e1;"></div>
+                <div style="flex:1; height:58%; background:#e2e8f0;"></div>
+                <div style="flex:1; height:80%; background:#e2e8f0;"></div>
+              </div>
+            </div>
+            <div style="font-size:9px; color:#94a3b8; margin-top:9px; line-height:1.6;">요약 · 최근 10봉 중 상승 6 / 하락 4, 최고 94,100 · 최저 90,800</div>
+          </div>
+        </div>
+        <div class="mock-caption">차트 (TSI-CHART-001)</div>
+      </div>
+    </div>
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1</span> <div><b>주기 칩</b><br>1분·일·주·월. 기본은 일봉<br>탭: 선택 주기로 캔들 재조회<br><code>ChipGroup</code></div></li>
+          <li><span class="desc-num">2</span> <div><b>이동평균 범례</b><br>MA5·MA20·MA60<br>탭: 해당 이동평균선 표시·숨김 전환</div></li>
+          <li><span class="desc-num">3</span> <div><b>캔들 영역</b><br>상승 적색·하락 청색(설정에 따라 반전)<br>롱프레스: 해당 봉의 시가·고가·저가·종가 툴팁 표시</div></li>
+          <li><span class="desc-num">4</span> <div><b>거래량 영역</b><br>캔들과 x축을 공유한다<br>읽기 전용. 하단에 요약 수치를 텍스트로도 제공</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<!-- ============ 09.15 호가 ============ -->
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.15</div>
+    <div class="ppt-top-title">호가</div>
+    <div class="ppt-top-proj">토스인베스트</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">종목 &gt; 종목 상세 &gt; 호가</div>
+    <div class="ppt-meta-id">TSI-ORDB-001</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span>‹ 삼성전자 호가</span></div>
+          <div class="mock-body" style="position:relative;">
+            <span class="pointer-badge" style="position:absolute; top:14px; left:2px; z-index:10;">1</span>
+            <div style="display:flex; align-items:center; padding:4px 0;"><div style="flex:1; text-align:right; font-size:9.5px; color:#64748b;">128,400</div><div style="width:66px; text-align:center; font-size:10.5px; font-weight:700; color:#2563eb;">94,300</div><div style="flex:1;"></div></div>
+            <div style="display:flex; align-items:center; padding:4px 0;"><div style="flex:1; text-align:right; font-size:9.5px; color:#64748b;">96,220</div><div style="width:66px; text-align:center; font-size:10.5px; font-weight:700; color:#2563eb;">94,200</div><div style="flex:1;"></div></div>
+            <span class="pointer-badge" style="position:absolute; top:80px; left:2px; z-index:10;">2</span>
+            <div style="display:flex; align-items:center; padding:4px 0;"><div style="flex:1; display:flex; justify-content:flex-end;"><div style="width:52%; height:15px; background:#dbeafe; display:flex; align-items:center; justify-content:flex-end; padding-right:4px; font-size:9px; color:#1e40af;">74,110</div></div><div style="width:66px; text-align:center; font-size:10.5px; font-weight:700; color:#2563eb;">94,100</div><div style="flex:1;"></div></div>
+            <div style="display:flex; align-items:center; padding:4px 0;"><div style="flex:1; display:flex; justify-content:flex-end;"><div style="width:38%; height:15px; background:#dbeafe; display:flex; align-items:center; justify-content:flex-end; padding-right:4px; font-size:9px; color:#1e40af;">51,900</div></div><div style="width:66px; text-align:center; font-size:10.5px; font-weight:700; color:#2563eb;">94,000</div><div style="flex:1;"></div></div>
+            <div style="display:flex; align-items:center; padding:4px 0;"><div style="flex:1; display:flex; justify-content:flex-end;"><div style="width:24%; height:15px; background:#dbeafe; display:flex; align-items:center; justify-content:flex-end; padding-right:4px; font-size:9px; color:#1e40af;">33,240</div></div><div style="width:66px; text-align:center; font-size:10.5px; font-weight:700; color:#2563eb;">93,900</div><div style="flex:1;"></div></div>
+            <div style="border-top:2px solid #111; border-bottom:2px solid #111; padding:7px 0; margin:6px 0; text-align:center;">
+              <span style="font-size:13px; font-weight:800; color:#e11d48;">93,800</span>
+              <span style="font-size:9.5px; color:#e11d48; margin-left:6px;">+3.19%</span>
+            </div>
+            <div style="display:flex; align-items:center; padding:4px 0;"><div style="flex:1;"></div><div style="width:66px; text-align:center; font-size:10.5px; font-weight:700; color:#e11d48;">93,700</div><div style="flex:1;"><div style="width:44%; height:15px; background:#fee2e2; display:flex; align-items:center; padding-left:4px; font-size:9px; color:#b91c1c;">62,880</div></div></div>
+            <div style="display:flex; align-items:center; padding:4px 0;"><div style="flex:1;"></div><div style="width:66px; text-align:center; font-size:10.5px; font-weight:700; color:#e11d48;">93,600</div><div style="flex:1;"><div style="width:61%; height:15px; background:#fee2e2; display:flex; align-items:center; padding-left:4px; font-size:9px; color:#b91c1c;">88,410</div></div></div>
+            <div style="display:flex; align-items:center; padding:4px 0;"><div style="flex:1;"></div><div style="width:66px; text-align:center; font-size:10.5px; font-weight:700; color:#e11d48;">93,500</div><div style="flex:1;"><div style="width:33%; height:15px; background:#fee2e2; display:flex; align-items:center; padding-left:4px; font-size:9px; color:#b91c1c;">47,020</div></div></div>
+            <div style="display:flex; align-items:center; padding:4px 0;"><div style="flex:1;"></div><div style="width:66px; text-align:center; font-size:10.5px; font-weight:700; color:#e11d48;">93,400</div><div style="flex:1; font-size:9.5px; color:#64748b; padding-left:4px;">39,600</div></div>
+            <div style="display:flex; align-items:center; padding:4px 0;"><div style="flex:1;"></div><div style="width:66px; text-align:center; font-size:10.5px; font-weight:700; color:#e11d48;">93,300</div><div style="flex:1; font-size:9.5px; color:#64748b; padding-left:4px;">28,150</div></div>
+            <span class="pointer-badge" style="position:absolute; top:296px; left:2px; z-index:10;">3</span>
+            <div style="display:flex; justify-content:space-between; background:#f8fafc; border-radius:8px; padding:9px 11px; margin-top:10px; font-size:10px;">
+              <span style="color:#2563eb; font-weight:700;">매도 총잔량 383,870</span>
+              <span style="color:#e11d48; font-weight:700;">매수 총잔량 266,060</span>
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">호가 (TSI-ORDB-001)</div>
+      </div>
+    </div>
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1</span> <div><b>호가 테이블</b><br>매도 5호가 위, 매수 5호가 아래, 현재가는 중앙 굵은 구분선<br>탭: 해당 가격을 워치독 임계값으로 채워 등록 진입 (TSI-WD-002)</div></li>
+          <li><span class="desc-num">2</span> <div><b>잔량 막대</b><br>표시된 호가 중 최대 잔량을 100%로 한 상대 길이<br>읽기 전용. 잔량 수치를 막대 안에 함께 표기</div></li>
+          <li><span class="desc-num">3</span> <div><b>총잔량 요약</b><br>매도·매수 총잔량 합계<br>읽기 전용. 장 마감 후에는 마지막 스냅샷을 유지</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<!-- ============ 09.16 체결 ============ -->
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.16</div>
+    <div class="ppt-top-title">체결</div>
+    <div class="ppt-top-proj">토스인베스트</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">종목 &gt; 종목 상세 &gt; 체결</div>
+    <div class="ppt-meta-id">TSI-TRADE-001</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span>‹ 삼성전자 체결</span></div>
+          <div class="mock-body" style="position:relative;">
+            <span class="pointer-badge" style="position:absolute; top:14px; left:2px; z-index:10;">1</span>
+            <div style="display:flex; gap:5px; margin-bottom:11px;">
+              <div style="background:var(--accent); color:var(--accent-ink); border-radius:12px; padding:4px 10px; font-size:9px; font-weight:700;">전체</div>
+              <div style="border:1px solid #e2e8f0; border-radius:12px; padding:4px 10px; font-size:9px; color:#64748b;">1천주 이상</div>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:64px; left:2px; z-index:10;">2</span>
+            <div style="background:#f8fafc; border-radius:9px; padding:10px; margin-bottom:11px;">
+              <div style="display:flex; justify-content:space-between; font-size:10px; padding:2px 0;"><span style="color:#94a3b8;">체결강도</span><span style="font-weight:700; color:#e11d48;">118.4%</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:10px; padding:2px 0;"><span style="color:#94a3b8;">누적 거래량</span><span style="font-weight:700;">18,420,113주</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:10px; padding:2px 0;"><span style="color:#94a3b8;">평균 체결가</span><span style="font-weight:700;">93,140원</span></div>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:174px; left:2px; z-index:10;">3</span>
+            <div style="display:flex; font-size:9px; color:#94a3b8; padding:5px 0; border-bottom:1px solid #e2e8f0;"><span style="flex:1;">시각</span><span style="flex:1; text-align:right;">체결가</span><span style="flex:1; text-align:right;">체결량</span><span style="flex:1; text-align:right;">구분</span></div>
+            <div style="display:flex; font-size:10px; padding:6px 0; border-bottom:1px solid #f1f5f9;"><span style="flex:1; color:#64748b;">15:29:58</span><span style="flex:1; text-align:right; font-weight:700;">93,800</span><span style="flex:1; text-align:right;">1,240</span><span style="flex:1; text-align:right; color:#e11d48;">매수</span></div>
+            <div style="display:flex; font-size:10px; padding:6px 0; border-bottom:1px solid #f1f5f9;"><span style="flex:1; color:#64748b;">15:29:54</span><span style="flex:1; text-align:right; font-weight:700;">93,800</span><span style="flex:1; text-align:right;">380</span><span style="flex:1; text-align:right; color:#e11d48;">매수</span></div>
+            <div style="display:flex; font-size:10px; padding:6px 0; border-bottom:1px solid #f1f5f9;"><span style="flex:1; color:#64748b;">15:29:51</span><span style="flex:1; text-align:right; font-weight:700;">93,700</span><span style="flex:1; text-align:right;">2,900</span><span style="flex:1; text-align:right; color:#2563eb;">매도</span></div>
+            <div style="display:flex; font-size:10px; padding:6px 0; border-bottom:1px solid #f1f5f9;"><span style="flex:1; color:#64748b;">15:29:47</span><span style="flex:1; text-align:right; font-weight:700;">93,700</span><span style="flex:1; text-align:right;">640</span><span style="flex:1; text-align:right; color:#2563eb;">매도</span></div>
+            <div style="display:flex; font-size:10px; padding:6px 0; border-bottom:1px solid #f1f5f9;"><span style="flex:1; color:#64748b;">15:29:42</span><span style="flex:1; text-align:right; font-weight:700;">93,800</span><span style="flex:1; text-align:right;">5,120</span><span style="flex:1; text-align:right; color:#e11d48;">매수</span></div>
+            <div style="display:flex; font-size:10px; padding:6px 0; border-bottom:1px solid #f1f5f9;"><span style="flex:1; color:#64748b;">15:29:38</span><span style="flex:1; text-align:right; font-weight:700;">93,600</span><span style="flex:1; text-align:right;">870</span><span style="flex:1; text-align:right; color:#2563eb;">매도</span></div>
+            <div style="display:flex; font-size:10px; padding:6px 0;"><span style="flex:1; color:#64748b;">15:29:31</span><span style="flex:1; text-align:right; font-weight:700;">93,700</span><span style="flex:1; text-align:right;">1,510</span><span style="flex:1; text-align:right; color:#e11d48;">매수</span></div>
+          </div>
+        </div>
+        <div class="mock-caption">체결 (TSI-TRADE-001)</div>
+      </div>
+    </div>
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1</span> <div><b>체결량 필터</b><br>전체 · 1천주 이상(대량 체결만)<br>탭: 목록 필터 즉시 적용, 재조회 없음<br><code>ChipGroup</code></div></li>
+          <li><span class="desc-num">2</span> <div><b>체결 요약</b><br>체결강도·누적 거래량·평균 체결가<br>읽기 전용. 체결강도 100% 초과는 매수 우위</div></li>
+          <li><span class="desc-num">3</span> <div><b>체결 목록</b><br>최근 체결 30건, 시각 내림차순. 매수 적색·매도 청색<br>스와이프: 아래로 당겨 최신 체결 갱신<br><code>ListRow</code></div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<!-- ============ 09.17 랭킹 ============ -->
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.17</div>
+    <div class="ppt-top-title">랭킹</div>
+    <div class="ppt-top-proj">토스인베스트</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">시장 &gt; 랭킹</div>
+    <div class="ppt-meta-id">TSI-RANK-001</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span>랭킹</span><span style="font-size:11px; color:#64748b;">필터</span></div>
+          <div class="mock-body" style="position:relative;">
+            <span class="pointer-badge" style="position:absolute; top:-6px; left:2px; z-index:10;">1-2</span>
+            <span class="pointer-badge" style="position:absolute; top:22px; left:2px; z-index:10;">1-1</span>
+            <div style="display:flex; gap:5px; margin-bottom:11px; flex-wrap:wrap;">
+              <div style="background:var(--accent); color:var(--accent-ink); border-radius:12px; padding:4px 10px; font-size:9px; font-weight:700;">거래대금</div>
+              <div style="border:1px solid #e2e8f0; border-radius:12px; padding:4px 10px; font-size:9px; color:#64748b;">상승률</div>
+              <div style="border:1px solid #e2e8f0; border-radius:12px; padding:4px 10px; font-size:9px; color:#64748b;">하락률</div>
+              <div style="border:1px solid #e2e8f0; border-radius:12px; padding:4px 10px; font-size:9px; color:#64748b;">거래량</div>
+            </div>
+            <div style="font-size:9px; color:#94a3b8; margin-bottom:8px;">KOSPI · 2026-07-29 15:30 기준</div>
+            <span class="pointer-badge" style="position:absolute; top:96px; left:2px; z-index:10;">1-3</span>
+            <div style="display:flex; align-items:center; gap:9px; padding:8px 0; border-bottom:1px solid #f1f5f9;">
+              <span style="width:14px; font-size:11px; font-weight:800; color:var(--accent);">1</span>
+              <div style="flex:1;"><div style="font-size:11.5px; font-weight:700;">삼성전자</div><div style="font-size:9px; color:#94a3b8;">1.72조</div></div>
+              <div style="text-align:right;"><div style="font-size:11px; font-weight:700;">93,800</div><div style="font-size:9px; color:#e11d48;">+3.19%</div></div>
+            </div>
+            <div style="display:flex; align-items:center; gap:9px; padding:8px 0; border-bottom:1px solid #f1f5f9;">
+              <span style="width:14px; font-size:11px; font-weight:800; color:var(--accent);">2</span>
+              <div style="flex:1;"><div style="font-size:11.5px; font-weight:700;">SK하이닉스</div><div style="font-size:9px; color:#94a3b8;">1.08조</div></div>
+              <div style="text-align:right;"><div style="font-size:11px; font-weight:700;">180,000</div><div style="font-size:9px; color:#e11d48;">+1.04%</div></div>
+            </div>
+            <div style="display:flex; align-items:center; gap:9px; padding:8px 0; border-bottom:1px solid #f1f5f9;">
+              <span style="width:14px; font-size:11px; font-weight:800; color:#94a3b8;">3</span>
+              <div style="flex:1;"><div style="font-size:11.5px; font-weight:700;">한미반도체</div><div style="font-size:9px; color:#94a3b8;">6,240억</div></div>
+              <div style="text-align:right;"><div style="font-size:11px; font-weight:700;">128,400</div><div style="font-size:9px; color:#2563eb;">−2.11%</div></div>
+            </div>
+            <div style="display:flex; align-items:center; gap:9px; padding:8px 0; border-bottom:1px solid #f1f5f9;">
+              <span style="width:14px; font-size:11px; font-weight:800; color:#94a3b8;">4</span>
+              <div style="flex:1;"><div style="font-size:11.5px; font-weight:700;">현대차</div><div style="font-size:9px; color:#94a3b8;">4,110억</div></div>
+              <div style="text-align:right;"><div style="font-size:11px; font-weight:700;">248,000</div><div style="font-size:9px; color:#e11d48;">+0.61%</div></div>
+            </div>
+            <div style="display:flex; align-items:center; gap:9px; padding:8px 0; border-bottom:1px solid #f1f5f9;">
+              <span style="width:14px; font-size:11px; font-weight:800; color:#94a3b8;">5</span>
+              <div style="flex:1;"><div style="font-size:11.5px; font-weight:700;">NAVER</div><div style="font-size:9px; color:#94a3b8;">3,870억</div></div>
+              <div style="text-align:right;"><div style="font-size:11px; font-weight:700;">170,000</div><div style="font-size:9px; color:#2563eb;">−0.88%</div></div>
+            </div>
+            <div style="display:flex; align-items:center; gap:9px; padding:8px 0;">
+              <span style="width:14px; font-size:11px; font-weight:800; color:#94a3b8;">6</span>
+              <div style="flex:1;"><div style="font-size:11.5px; font-weight:700;">카카오</div><div style="font-size:9px; color:#94a3b8;">2,940억</div></div>
+              <div style="text-align:right;"><div style="font-size:11px; font-weight:700;">39,000</div><div style="font-size:9px; color:#2563eb;">−4.65%</div></div>
+            </div>
+          </div>
+          <div class="mock-footer">
+            <div class="mock-tab">홈</div>
+            <div class="mock-tab">투자</div>
+            <div class="mock-tab">종목</div>
+            <div class="mock-tab active">시장</div>
+            <div class="mock-tab">기타</div>
+          </div>
+        </div>
+        <div class="mock-caption">랭킹 (TSI-RANK-001)</div>
+      </div>
+
+      <div class="mock mock-partial">
+        <div class="mock-screen">
+          <div style="height:110px; background:#e2e8f0;"></div>
+          <div class="mock-body" style="position:relative; border-top:1px solid #cbd5e1;">
+            <div style="font-size:13px; font-weight:800; margin-bottom:12px;">랭킹 필터</div>
+            <span class="pointer-badge" style="position:absolute; top:52px; left:2px; z-index:10;">2-1</span>
+            <div style="font-size:10px; color:#64748b; margin-bottom:6px;">시장 구분</div>
+            <div style="display:flex; gap:6px; margin-bottom:14px;">
+              <div style="background:var(--accent); color:var(--accent-ink); border-radius:12px; padding:5px 12px; font-size:10px; font-weight:700;">KOSPI</div>
+              <div style="border:1px solid #e2e8f0; border-radius:12px; padding:5px 12px; font-size:10px; color:#64748b;">KOSDAQ</div>
+              <div style="border:1px solid #e2e8f0; border-radius:12px; padding:5px 12px; font-size:10px; color:#64748b;">전체</div>
+            </div>
+            <div style="font-size:10px; color:#64748b; margin-bottom:6px;">표시 건수</div>
+            <div style="display:flex; gap:6px;">
+              <div style="border:1px solid #e2e8f0; border-radius:12px; padding:5px 12px; font-size:10px; color:#64748b;">20위</div>
+              <div style="background:var(--accent); color:var(--accent-ink); border-radius:12px; padding:5px 12px; font-size:10px; font-weight:700;">50위</div>
+              <div style="border:1px solid #e2e8f0; border-radius:12px; padding:5px 12px; font-size:10px; color:#64748b;">100위</div>
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">랭킹 필터 (TSI-RANK-101)</div>
+      </div>
+    </div>
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1-1</span> <div><b>유형 칩</b><br>거래대금·상승률·하락률·거래량. 기본은 거래대금<br>탭: 선택 유형으로 재조회<br><code>ChipGroup</code></div></li>
+          <li><span class="desc-num">1-2</span> <div><b>필터 버튼</b><br>탭: 랭킹 필터 바텀시트 노출 (TSI-RANK-101)</div></li>
+          <li><span class="desc-num">1-3</span> <div><b>랭킹 행</b><br>순위·종목명·기준값·현재가·등락률. 상위 2건은 순위를 강조<br>탭: 종목 상세로 이동 (TSI-STOCK-001)<br><code>ListRow</code></div></li>
+          <li><span class="desc-num">2-1</span> <div><b>필터 옵션 (TSI-RANK-101)</b><br>시장 구분(KOSPI·KOSDAQ·전체)과 표시 건수<br>탭: 선택 즉시 반영 후 시트 닫힘, 목록 재조회<br><code>BottomSheet</code></div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<!-- ============ 09.18 시장지표 ============ -->
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.18</div>
+    <div class="ppt-top-title">시장지표</div>
+    <div class="ppt-top-proj">토스인베스트</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">시장 &gt; 시장지표</div>
+    <div class="ppt-meta-id">TSI-MKT-001</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span>‹ 시장지표</span></div>
+          <div class="mock-body" style="position:relative;">
+            <span class="pointer-badge" style="position:absolute; top:14px; left:2px; z-index:10;">1</span>
+            <div style="display:flex; gap:8px; margin-bottom:12px;">
+              <div style="flex:1; border:2px solid var(--accent); border-radius:10px; padding:11px;">
+                <div style="font-size:10px; color:#64748b;">KOSPI</div>
+                <div style="font-size:16px; font-weight:800; margin-top:2px;">2,684.31</div>
+                <div style="font-size:9.5px; color:#e11d48;">+16.52 (+0.62%)</div>
+              </div>
+              <div style="flex:1; border:1px solid #e2e8f0; border-radius:10px; padding:11px;">
+                <div style="font-size:10px; color:#64748b;">KOSDAQ</div>
+                <div style="font-size:16px; font-weight:800; margin-top:2px;">861.22</div>
+                <div style="font-size:9.5px; color:#2563eb;">−2.68 (−0.31%)</div>
+              </div>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:112px; left:2px; z-index:10;">2</span>
+            <div style="display:flex; gap:5px; margin-bottom:11px;">
+              <div style="background:var(--accent); color:var(--accent-ink); border-radius:12px; padding:4px 10px; font-size:9px; font-weight:700;">1일</div>
+              <div style="border:1px solid #e2e8f0; border-radius:12px; padding:4px 10px; font-size:9px; color:#64748b;">1주</div>
+              <div style="border:1px solid #e2e8f0; border-radius:12px; padding:4px 10px; font-size:9px; color:#64748b;">1개월</div>
+              <div style="border:1px solid #e2e8f0; border-radius:12px; padding:4px 10px; font-size:9px; color:#64748b;">1년</div>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:162px; left:2px; z-index:10;">3</span>
+            <div style="border:1px solid #f1f5f9; border-radius:8px; padding:10px; margin-bottom:12px;">
+              <div style="height:118px; display:flex; align-items:flex-end; gap:2px;">
+                <div style="flex:1; height:52%; background:#e2e8f0;"></div>
+                <div style="flex:1; height:58%; background:#e2e8f0;"></div>
+                <div style="flex:1; height:48%; background:#e2e8f0;"></div>
+                <div style="flex:1; height:63%; background:#e2e8f0;"></div>
+                <div style="flex:1; height:71%; background:#e2e8f0;"></div>
+                <div style="flex:1; height:66%; background:#e2e8f0;"></div>
+                <div style="flex:1; height:78%; background:#e2e8f0;"></div>
+                <div style="flex:1; height:84%; background:#fecdd3;"></div>
+                <div style="flex:1; height:80%; background:#fecdd3;"></div>
+                <div style="flex:1; height:92%; background:#e11d48;"></div>
+              </div>
+              <div style="display:flex; justify-content:space-between; font-size:9px; color:#94a3b8; margin-top:6px;"><span>09:00</span><span>12:00</span><span>15:30</span></div>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:346px; left:2px; z-index:10;">4</span>
+            <div style="font-size:11px; font-weight:700; margin-bottom:7px;">투자자별 매매대금 (KOSPI)</div>
+            <div style="background:#f8fafc; border-radius:9px; padding:10px;">
+              <div style="display:flex; justify-content:space-between; font-size:10px; padding:3px 0;"><span style="color:#94a3b8;">개인</span><span style="color:#2563eb; font-weight:700;">−3,820억</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:10px; padding:3px 0;"><span style="color:#94a3b8;">외국인</span><span style="color:#e11d48; font-weight:700;">+2,410억</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:10px; padding:3px 0;"><span style="color:#94a3b8;">기관</span><span style="color:#e11d48; font-weight:700;">+1,290억</span></div>
+              <div style="font-size:8.5px; color:#94a3b8; margin-top:5px;">시장 전체 · 일별 확정치 기준</div>
+            </div>
+          </div>
+          <div class="mock-footer">
+            <div class="mock-tab">홈</div>
+            <div class="mock-tab">투자</div>
+            <div class="mock-tab">종목</div>
+            <div class="mock-tab active">시장</div>
+            <div class="mock-tab">기타</div>
+          </div>
+        </div>
+        <div class="mock-caption">시장지표 (TSI-MKT-001)</div>
+      </div>
+    </div>
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1</span> <div><b>지수 카드</b><br>KOSPI·KOSDAQ 현재가와 등락. 선택 지수는 accent 테두리<br>탭: 아래 추이 차트를 해당 지수로 전환<br><code>Card</code></div></li>
+          <li><span class="desc-num">2</span> <div><b>기간 칩</b><br>1일·1주·1개월·1년. 기본은 1일<br>탭: 선택 기간으로 추이 재조회<br><code>ChipGroup</code></div></li>
+          <li><span class="desc-num">3</span> <div><b>지수 추이 차트</b><br>선택 지수·기간의 흐름<br>롱프레스: 해당 시점의 지수값 툴팁 표시</div></li>
+          <li><span class="desc-num">4</span> <div><b>투자자별 매매대금</b><br>개인·외국인·기관 순매수 대금. <b>시장 전체·일별 확정치</b>이며 종목 단위가 아니다<br>탭: 종목별 수급으로 이동 (TSI-FLOW-001)</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<!-- ============ 09.19 종목별 수급 ============ -->
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.19</div>
+    <div class="ppt-top-title">종목별 수급</div>
+    <div class="ppt-top-proj">토스인베스트</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">시장 &gt; 종목별 수급</div>
+    <div class="ppt-meta-id">TSI-FLOW-001</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span>종목별 수급</span></div>
+          <div class="mock-body" style="position:relative;">
+            <span class="pointer-badge" style="position:absolute; top:14px; left:2px; z-index:10;">1</span>
+            <div style="border:1px solid #e2e8f0; border-radius:8px; padding:9px 11px; font-size:11px; display:flex; justify-content:space-between; margin-bottom:11px;"><span style="font-weight:700;">삼성전자 005930</span><span style="color:#cbd5e1;">›</span></div>
+            <span class="pointer-badge" style="position:absolute; top:64px; left:2px; z-index:10;">2</span>
+            <div style="display:flex; gap:5px; margin-bottom:11px;">
+              <div style="background:var(--accent); color:var(--accent-ink); border-radius:12px; padding:4px 10px; font-size:9px; font-weight:700;">장중 30분</div>
+              <div style="border:1px solid #e2e8f0; border-radius:12px; padding:4px 10px; font-size:9px; color:#64748b;">일별</div>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:114px; left:2px; z-index:10;">3</span>
+            <div style="border:1px solid #f1f5f9; border-radius:8px; padding:10px; margin-bottom:10px;">
+              <div style="display:flex; gap:10px; font-size:9px; margin-bottom:7px;">
+                <span style="color:#7c3aed; font-weight:700;">■ 외국인</span>
+                <span style="color:#0891b2; font-weight:700;">■ 기관</span>
+              </div>
+              <div style="height:110px; display:flex; align-items:center; gap:4px; border-top:1px dashed #e2e8f0; border-bottom:1px dashed #e2e8f0;">
+                <div style="flex:1; display:flex; flex-direction:column; height:100%; justify-content:center;"><div style="height:26%; background:#7c3aed;"></div><div style="height:14%; background:#0891b2;"></div></div>
+                <div style="flex:1; display:flex; flex-direction:column; height:100%; justify-content:center;"><div style="height:38%; background:#7c3aed;"></div><div style="height:8%; background:#0891b2;"></div></div>
+                <div style="flex:1; display:flex; flex-direction:column-reverse; height:100%; justify-content:center;"><div style="height:18%; background:#7c3aed;"></div><div style="height:22%; background:#0891b2;"></div></div>
+                <div style="flex:1; display:flex; flex-direction:column; height:100%; justify-content:center;"><div style="height:44%; background:#7c3aed;"></div><div style="height:20%; background:#0891b2;"></div></div>
+                <div style="flex:1; display:flex; flex-direction:column; height:100%; justify-content:center;"><div style="height:52%; background:#7c3aed;"></div><div style="height:30%; background:#0891b2;"></div></div>
+                <div style="flex:1; display:flex; flex-direction:column; height:100%; justify-content:center;"><div style="height:34%; background:#7c3aed;"></div><div style="height:12%; background:#0891b2;"></div></div>
+              </div>
+              <div style="display:flex; justify-content:space-between; font-size:9px; color:#94a3b8; margin-top:6px;"><span>09:30</span><span>12:30</span><span>15:30</span></div>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:296px; left:2px; z-index:10;">4</span>
+            <div style="background:#f8fafc; border-radius:8px; padding:9px 11px; font-size:9px; color:#64748b; line-height:1.6; margin-bottom:11px;">
+              장중 30분 회차는 <b>외국인·기관만</b> 제공되며 개인은 집계되지 않습니다. 확정치는 장 마감 후 일별 탭에서 확인하세요.
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:372px; left:2px; z-index:10;">5</span>
+            <div style="display:flex; font-size:9px; color:#94a3b8; padding:5px 0; border-bottom:1px solid #e2e8f0;"><span style="flex:1.2;">회차</span><span style="flex:1; text-align:right;">외국인</span><span style="flex:1; text-align:right;">기관</span></div>
+            <div style="display:flex; font-size:10px; padding:6px 0; border-bottom:1px solid #f1f5f9;"><span style="flex:1.2; color:#64748b;">15:30</span><span style="flex:1; text-align:right; color:#e11d48;">+52.4억</span><span style="flex:1; text-align:right; color:#e11d48;">+30.1억</span></div>
+            <div style="display:flex; font-size:10px; padding:6px 0; border-bottom:1px solid #f1f5f9;"><span style="flex:1.2; color:#64748b;">15:00</span><span style="flex:1; text-align:right; color:#e11d48;">+34.0억</span><span style="flex:1; text-align:right; color:#e11d48;">+12.2억</span></div>
+            <div style="display:flex; font-size:10px; padding:6px 0; border-bottom:1px solid #f1f5f9;"><span style="flex:1.2; color:#64748b;">14:30</span><span style="flex:1; text-align:right; color:#e11d48;">+44.1억</span><span style="flex:1; text-align:right; color:#e11d48;">+20.8억</span></div>
+            <div style="display:flex; font-size:10px; padding:6px 0;"><span style="flex:1.2; color:#64748b;">14:00</span><span style="flex:1; text-align:right; color:#2563eb;">−18.3억</span><span style="flex:1; text-align:right; color:#2563eb;">−22.5억</span></div>
+          </div>
+          <div class="mock-footer">
+            <div class="mock-tab">홈</div>
+            <div class="mock-tab">투자</div>
+            <div class="mock-tab">종목</div>
+            <div class="mock-tab active">시장</div>
+            <div class="mock-tab">기타</div>
+          </div>
+        </div>
+        <div class="mock-caption">종목별 수급 (TSI-FLOW-001)</div>
+      </div>
+    </div>
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1</span> <div><b>종목 선택</b><br>탭: 종목 검색으로 이동 후 선택 결과를 되돌려받는다 (TSI-SEARCH-001)</div></li>
+          <li><span class="desc-num">2</span> <div><b>주기 칩</b><br>장중 30분 회차 · 일별 확정치. 기본은 장중<br>탭: 선택 주기로 재조회<br><code>ChipGroup</code></div></li>
+          <li><span class="desc-num">3</span> <div><b>수급 차트</b><br>외국인·기관 순매수를 0 기준선 위아래로<br>롱프레스: 해당 회차의 금액 툴팁 표시</div></li>
+          <li><span class="desc-num">4</span> <div><b>데이터 한계 고지</b><br>장중 회차에 개인 수급이 없음을 명시<br>일별 탭에서는 문구를 숨긴다</div></li>
+          <li><span class="desc-num">5</span> <div><b>회차별 표</b><br>최신 회차부터 내림차순, 순매수 부호와 색 병기<br>스와이프: 아래로 당겨 최신 회차 갱신<br><code>ListRow</code></div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<!-- ============ 09.20 환율 ============ -->
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.20</div>
+    <div class="ppt-top-title">환율</div>
+    <div class="ppt-top-proj">토스인베스트</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">기타 &gt; 환율</div>
+    <div class="ppt-meta-id">TSI-FX-001</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span>‹ 환율</span><span style="font-size:11px; color:#64748b;">새로고침</span></div>
+          <div class="mock-body" style="position:relative;">
+            <span class="pointer-badge" style="position:absolute; top:-6px; left:2px; z-index:10;">1</span>
+            <div style="font-size:9.5px; color:#94a3b8; margin-bottom:11px;">기준시각 2026-07-29 15:30</div>
+            <span class="pointer-badge" style="position:absolute; top:52px; left:2px; z-index:10;">2</span>
+            <div style="border:1px solid #e2e8f0; border-radius:10px; padding:12px; margin-bottom:8px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div><div style="font-size:11.5px; font-weight:700;">USD / KRW</div><div style="font-size:9px; color:#94a3b8;">미국 달러</div></div>
+                <div style="text-align:right;"><div style="font-size:15px; font-weight:800;">1,382.40</div><div style="font-size:9.5px; color:#e11d48;">+4.20 (+0.30%)</div></div>
+              </div>
+            </div>
+            <div style="border:1px solid #e2e8f0; border-radius:10px; padding:12px; margin-bottom:8px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div><div style="font-size:11.5px; font-weight:700;">JPY / KRW</div><div style="font-size:9px; color:#94a3b8;">일본 엔 100엔</div></div>
+                <div style="text-align:right;"><div style="font-size:15px; font-weight:800;">881.35</div><div style="font-size:9.5px; color:#2563eb;">−2.10 (−0.24%)</div></div>
+              </div>
+            </div>
+            <div style="border:1px solid #e2e8f0; border-radius:10px; padding:12px; margin-bottom:16px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div><div style="font-size:11.5px; font-weight:700;">EUR / KRW</div><div style="font-size:9px; color:#94a3b8;">유로</div></div>
+                <div style="text-align:right;"><div style="font-size:15px; font-weight:800;">1,498.10</div><div style="font-size:9.5px; color:#e11d48;">+1.05 (+0.07%)</div></div>
+              </div>
+            </div>
+            <div style="font-size:11px; font-weight:700; margin-bottom:7px;">환산 계산기</div>
+            <span class="pointer-badge" style="position:absolute; top:330px; left:2px; z-index:10;">3</span>
+            <div style="border:1px solid #e2e8f0; border-radius:8px; padding:10px; display:flex; justify-content:space-between; font-size:11px; margin-bottom:7px;"><span style="color:#94a3b8;">USD</span><span style="font-weight:700;">1,000.00</span></div>
+            <div style="background:#f8fafc; border-radius:8px; padding:10px; display:flex; justify-content:space-between; font-size:11px;"><span style="color:#94a3b8;">KRW</span><span style="font-weight:800;">1,382,400원</span></div>
+            <div style="font-size:8.5px; color:#94a3b8; margin-top:7px; line-height:1.6;">매매기준율 기준 참고값이며 실제 환전 금액과 다를 수 있습니다.</div>
+          </div>
+        </div>
+        <div class="mock-caption">환율 (TSI-FX-001)</div>
+      </div>
+    </div>
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1</span> <div><b>기준시각 · 새로고침</b><br>응답의 기준시각을 그대로 표시한다<br>탭: 전 통화쌍 재조회</div></li>
+          <li><span class="desc-num">2</span> <div><b>통화쌍 행</b><br>USD·JPY·EUR 대 원화. JPY 는 100엔 기준임을 명시<br>탭: 해당 통화를 환산 계산기의 기준 통화로 설정<br><code>Card</code></div></li>
+          <li><span class="desc-num">3</span> <div><b>환산 계산기</b><br>외화 금액 입력 시 원화 즉시 환산<br>입력: 소수 2자리까지, 미입력이면 결과 "—"<br><code>Input</code></div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<!-- ============ 09.21 장운영 캘린더 ============ -->
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.21</div>
+    <div class="ppt-top-title">장운영 캘린더</div>
+    <div class="ppt-top-proj">토스인베스트</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">기타 &gt; 장운영 캘린더</div>
+    <div class="ppt-meta-id">TSI-CAL-001</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span>‹ 장운영 캘린더</span></div>
+          <div class="mock-body" style="position:relative;">
+            <span class="pointer-badge" style="position:absolute; top:14px; left:2px; z-index:10;">1</span>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:11px;">
+              <span style="font-size:11px; color:#64748b;">‹</span>
+              <span style="font-size:12.5px; font-weight:800;">2026년 7월</span>
+              <span style="font-size:11px; color:#64748b;">›</span>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:62px; left:2px; z-index:10;">2</span>
+            <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:3px; font-size:9px; color:#94a3b8; text-align:center; margin-bottom:5px;">
+              <span style="color:#e11d48;">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span style="color:#2563eb;">토</span>
+            </div>
+            <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:3px; font-size:10px; text-align:center;">
+              <span style="padding:6px 0; color:#cbd5e1;">28</span><span style="padding:6px 0; color:#cbd5e1;">29</span><span style="padding:6px 0; color:#cbd5e1;">30</span><span style="padding:6px 0;">1</span><span style="padding:6px 0;">2</span><span style="padding:6px 0;">3</span><span style="padding:6px 0; color:#cbd5e1;">4</span>
+              <span style="padding:6px 0; color:#cbd5e1;">5</span><span style="padding:6px 0;">6</span><span style="padding:6px 0;">7</span><span style="padding:6px 0;">8</span><span style="padding:6px 0;">9</span><span style="padding:6px 0;">10</span><span style="padding:6px 0; color:#cbd5e1;">11</span>
+              <span style="padding:6px 0; color:#cbd5e1;">12</span><span style="padding:6px 0;">13</span><span style="padding:6px 0;">14</span><span style="padding:6px 0;">15</span><span style="padding:6px 0;">16</span><span style="padding:6px 0;">17</span><span style="padding:6px 0; color:#cbd5e1;">18</span>
+              <span style="padding:6px 0; color:#cbd5e1;">19</span><span style="padding:6px 0;">20</span><span style="padding:6px 0;">21</span><span style="padding:6px 0;">22</span><span style="padding:6px 0;">23</span><span style="padding:6px 0;">24</span><span style="padding:6px 0; color:#cbd5e1;">25</span>
+              <span style="padding:6px 0; color:#cbd5e1;">26</span><span style="padding:6px 0;">27</span><span style="padding:6px 0;">28</span><span style="padding:6px 0; background:var(--accent); color:var(--accent-ink); border-radius:5px; font-weight:800;">29</span><span style="padding:6px 0;">30</span><span style="padding:6px 0;">31</span><span style="padding:6px 0; color:#cbd5e1;">1</span>
+            </div>
+            <div style="display:flex; gap:11px; font-size:8.5px; color:#94a3b8; margin:10px 0;">
+              <span>■ 정규장</span><span style="color:#e11d48;">■ 휴장</span><span style="color:#f59e0b;">■ 조기폐장</span>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:326px; left:2px; z-index:10;">3</span>
+            <div style="border:1px solid #e2e8f0; border-radius:10px; padding:12px;">
+              <div style="font-size:11.5px; font-weight:800; margin-bottom:7px;">2026-07-29 수요일</div>
+              <div style="display:flex; justify-content:space-between; font-size:10px; padding:3px 0; border-top:1px solid #f1f5f9;"><span style="color:#94a3b8;">구분</span><span style="font-weight:700;">정규장</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:10px; padding:3px 0; border-top:1px solid #f1f5f9;"><span style="color:#94a3b8;">정규장</span><span style="font-weight:700;">09:00 ~ 15:30</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:10px; padding:3px 0; border-top:1px solid #f1f5f9;"><span style="color:#94a3b8;">장전 시간외</span><span style="font-weight:700;">08:30 ~ 08:40</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:10px; padding:3px 0; border-top:1px solid #f1f5f9;"><span style="color:#94a3b8;">장후 시간외</span><span style="font-weight:700;">15:40 ~ 16:00</span></div>
+            </div>
+            <div style="font-size:8.5px; color:#94a3b8; margin-top:9px; line-height:1.6;">임시 휴장·조기 폐장은 응답값을 그대로 표시하며 임의로 고정하지 않습니다.</div>
+          </div>
+        </div>
+        <div class="mock-caption">장운영 캘린더 (TSI-CAL-001)</div>
+      </div>
+    </div>
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1</span> <div><b>월 이동</b><br>기본은 당월. 조회 범위는 전후 12개월<br>탭: 이전·다음 달로 이동 후 재조회<br>스와이프: 좌우 스와이프로 월 전환</div></li>
+          <li><span class="desc-num">2</span> <div><b>날짜 그리드</b><br>정규장·휴장·조기폐장을 색으로 구분하고 범례를 함께 둔다<br>탭: 해당 날짜 선택, 하단 상세 갱신</div></li>
+          <li><span class="desc-num">3</span> <div><b>선택일 상세</b><br>구분과 정규장·장전·장후 시간외 운영 시간<br>읽기 전용. 휴장일은 시간 행 대신 휴장 사유를 표시</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<!-- ============ 09.22 수수료 ============ -->
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.22</div>
+    <div class="ppt-top-title">수수료</div>
+    <div class="ppt-top-proj">토스인베스트</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">기타 &gt; 수수료</div>
+    <div class="ppt-meta-id">TSI-FEE-001</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span>‹ 수수료</span></div>
+          <div class="mock-body" style="position:relative;">
+            <span class="pointer-badge" style="position:absolute; top:14px; left:2px; z-index:10;">1</span>
+            <div style="border:1px solid #e2e8f0; border-radius:8px; padding:9px 11px; font-size:11px; display:flex; justify-content:space-between; margin-bottom:11px;"><span>위탁계좌 11309999999</span><span style="color:#cbd5e1;">⌄</span></div>
+            <span class="pointer-badge" style="position:absolute; top:64px; left:2px; z-index:10;">2</span>
+            <div style="border:1px solid #e2e8f0; border-radius:10px; margin-bottom:11px;">
+              <div style="display:flex; justify-content:space-between; font-size:10.5px; padding:9px 12px; border-bottom:1px solid #f1f5f9;"><span style="color:#64748b;">매수 수수료율</span><span style="font-weight:700;">0.0140%</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:10.5px; padding:9px 12px; border-bottom:1px solid #f1f5f9;"><span style="color:#64748b;">매도 수수료율</span><span style="font-weight:700;">0.0140%</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:10.5px; padding:9px 12px;"><span style="color:#64748b;">최소 수수료</span><span style="font-weight:700;">없음</span></div>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:180px; left:2px; z-index:10;">3</span>
+            <div style="background:#fff7ed; border-left:3px solid #f59e0b; padding:9px 11px; font-size:9.5px; color:#7c2d12; line-height:1.6; margin-bottom:14px;">수수료율이 0%인 계좌에서도 <b>증권거래세</b>는 발생합니다. 매도 시 거래대금의 0.15%가 부과됩니다.</div>
+            <div style="font-size:11px; font-weight:700; margin-bottom:7px;">예상 비용 계산기</div>
+            <span class="pointer-badge" style="position:absolute; top:274px; left:2px; z-index:10;">4</span>
+            <div style="border:1px solid #e2e8f0; border-radius:8px; padding:10px; display:flex; justify-content:space-between; font-size:11px; margin-bottom:11px;"><span style="color:#94a3b8;">거래금액</span><span style="font-weight:700;">10,000,000원</span></div>
+            <span class="pointer-badge" style="position:absolute; top:330px; left:2px; z-index:10;">5</span>
+            <div style="display:flex; gap:8px;">
+              <div style="flex:1; background:#f8fafc; border-radius:9px; padding:11px;">
+                <div style="font-size:9.5px; color:#e11d48; font-weight:700; margin-bottom:5px;">매수</div>
+                <div style="display:flex; justify-content:space-between; font-size:9.5px; padding:2px 0;"><span style="color:#94a3b8;">수수료</span><span>1,400원</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:9.5px; padding:2px 0;"><span style="color:#94a3b8;">거래세</span><span>0원</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:10px; padding:4px 0 0; border-top:1px solid #e2e8f0; margin-top:3px;"><span style="font-weight:700;">합계</span><span style="font-weight:800;">1,400원</span></div>
+              </div>
+              <div style="flex:1; background:#f8fafc; border-radius:9px; padding:11px;">
+                <div style="font-size:9.5px; color:#2563eb; font-weight:700; margin-bottom:5px;">매도</div>
+                <div style="display:flex; justify-content:space-between; font-size:9.5px; padding:2px 0;"><span style="color:#94a3b8;">수수료</span><span>1,400원</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:9.5px; padding:2px 0;"><span style="color:#94a3b8;">거래세</span><span>15,000원</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:10px; padding:4px 0 0; border-top:1px solid #e2e8f0; margin-top:3px;"><span style="font-weight:700;">합계</span><span style="font-weight:800;">16,400원</span></div>
+              </div>
+            </div>
+            <div style="font-size:8.5px; color:#94a3b8; margin-top:9px; line-height:1.6;">참고용 계산이며 실제 정산 금액과 다를 수 있습니다.</div>
+          </div>
+        </div>
+        <div class="mock-caption">수수료 (TSI-FEE-001)</div>
+      </div>
+    </div>
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1</span> <div><b>계좌 선택</b><br>수수료율은 계좌 단위로 조회한다<br>탭: 계좌 전환 바텀시트 노출 (TSI-ACCT-101)</div></li>
+          <li><span class="desc-num">2</span> <div><b>수수료율 명세</b><br>매수·매도 수수료율과 최소 수수료<br>소수 4자리로 표기하며 0.0000% 도 그대로 노출</div></li>
+          <li><span class="desc-num">3</span> <div><b>거래세 고지 배너</b><br>수수료율 0% 계좌에서도 숨기지 않는다<br>읽기 전용. 상시 노출</div></li>
+          <li><span class="desc-num">4</span> <div><b>거래금액 입력</b><br>0 초과 정수, 최대 9,999,999,999원<br>입력: 유효값이면 즉시 산출, 공백이면 결과 "—"<br><code>Input</code></div></li>
+          <li><span class="desc-num">5</span> <div><b>계산 결과</b><br>매수·매도 각각 수수료·거래세·합계<br>읽기 전용. 하단에 참고용 캡션을 명시</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<!-- ============ 09.23 설정 ============ -->
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.23</div>
+    <div class="ppt-top-title">설정</div>
+    <div class="ppt-top-proj">토스인베스트</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">기타 &gt; 설정</div>
+    <div class="ppt-meta-id">TSI-SET-001</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span>설정</span></div>
+          <div class="mock-body" style="position:relative; background:#f4f4f5;">
+            <span class="pointer-badge" style="position:absolute; top:14px; left:2px; z-index:10;">1-1</span>
+            <div style="background:#fff; border-radius:10px; padding:13px; margin-bottom:10px;">
+              <div style="font-size:12px; font-weight:800;">user01</div>
+              <div style="font-size:10px; color:#94a3b8; margin-top:3px;">세션 만료 2026-08-05 20:44</div>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:81px; left:2px; z-index:10;">1-2</span>
+            <div style="background:#fff; border-radius:10px; margin-bottom:10px;">
+              <div style="display:flex; justify-content:space-between; font-size:12px; padding:12px 13px; border-bottom:1px solid #f1f5f9;"><span>환율</span><span style="color:#cbd5e1;">›</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:12px; padding:12px 13px; border-bottom:1px solid #f1f5f9;"><span>장운영 캘린더</span><span style="color:#cbd5e1;">›</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:12px; padding:12px 13px;"><span>수수료</span><span style="color:#cbd5e1;">›</span></div>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:208px; left:2px; z-index:10;">1-3</span>
+            <div style="background:#fff; border-radius:10px; margin-bottom:10px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; padding:12px 13px; border-bottom:1px solid #f1f5f9;">
+                <span>등락 색상 (한국식)</span>
+                <span style="width:34px; height:19px; border-radius:10px; background:var(--accent); position:relative;"><span style="position:absolute; width:15px; height:15px; border-radius:50%; background:#fff; top:2px; right:2px;"></span></span>
+              </div>
+              <div style="display:flex; justify-content:space-between; font-size:12px; padding:12px 13px;"><span>비밀번호 변경</span><span style="color:#cbd5e1;">›</span></div>
+            </div>
+            <span class="pointer-badge" style="position:absolute; top:250px; left:2px; z-index:10;">1-4</span>
+            <span class="pointer-badge" style="position:absolute; top:299px; left:2px; z-index:10;">1-5</span>
+            <div style="background:#fff; border-radius:10px; padding:13px; text-align:center; font-size:12px; font-weight:700; color:#e11d48;">로그아웃</div>
+          </div>
+          <div class="mock-footer">
+            <div class="mock-tab">홈</div>
+            <div class="mock-tab">투자</div>
+            <div class="mock-tab">종목</div>
+            <div class="mock-tab">시장</div>
+            <div class="mock-tab active">기타</div>
+          </div>
+        </div>
+        <div class="mock-caption">설정 (TSI-SET-001)</div>
+      </div>
+
+      <div class="mock mock-partial">
+        <div class="mock-screen">
+          <div style="height:150px; background:#e2e8f0;"></div>
+          <div class="mock-body" style="position:relative; border-top:1px solid #cbd5e1;">
+            <div style="font-size:13px; font-weight:800; margin-bottom:6px;">로그아웃 하시겠습니까?</div>
+            <div style="font-size:11px; color:#64748b; line-height:1.7;">현재 세션이 종료되며 다시 로그인해야 합니다.</div>
+            <span class="pointer-badge" style="position:absolute; top:74px; left:2px; z-index:10;">2-1</span>
+            <div style="display:flex; gap:8px; margin-top:18px;">
+              <div style="flex:1; border:1px solid #e2e8f0; border-radius:8px; padding:10px; text-align:center; font-size:11px; font-weight:700; color:#64748b;">취소</div>
+              <div style="flex:1; background:#e11d48; color:#fff; border-radius:8px; padding:10px; text-align:center; font-size:11px; font-weight:700;">로그아웃</div>
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">로그아웃 확인 (TSI-SET-101)</div>
+      </div>
+    </div>
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1-1</span> <div><b>계정 카드</b><br>로그인 아이디와 세션 만료 시각. 세션 정보가 없으면 "—"<br>만료 10분 이내면 "곧 만료" 배지<br><code>Card</code></div></li>
+          <li><span class="desc-num">1-2</span> <div><b>기타 메뉴</b><br>탭: 환율로 이동 (TSI-FX-001)<br>탭: 장운영 캘린더로 이동 (TSI-CAL-001)<br>탭: 수수료로 이동 (TSI-FEE-001)<br><code>ListRow</code></div></li>
+          <li><span class="desc-num">1-3</span> <div><b>등락 색상 토글</b><br>기본은 한국식(상승 적색)<br>탭: 한국식·글로벌식 전환, 앱 전체 즉시 반영<br><code>Switch</code></div></li>
+          <li><span class="desc-num">1-4</span> <div><b>비밀번호 변경</b><br>탭: 비밀번호 변경으로 이동 (TSI-AUTH-003)<br><code>ListRow</code></div></li>
+          <li><span class="desc-num">1-5</span> <div><b>로그아웃</b><br>위험 동작이라 적색 텍스트로 구분<br>탭: 로그아웃 확인 바텀시트 노출 (TSI-SET-101)<br><code>Button</code></div></li>
+          <li><span class="desc-num">2-1</span> <div><b>확인 버튼 (TSI-SET-101)</b><br>탭: 취소 시 시트 닫힘, 세션 유지<br>탭: 로그아웃 시 세션 종료 후 로그인으로 히스토리 치환 이동 (TSI-AUTH-001)<br><code>BottomSheet</code></div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+</div>
+</body>
+</html>

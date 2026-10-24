@@ -1,0 +1,64 @@
+{
+  "claims": [
+    {
+      "id": "VALUE-NEVER-PRINTED",
+      "kind": "실패",
+      "rule": "**걸린 줄을 출력하지 않는다**",
+      "test": "test_scan_secrets.py::test_value_never_printed"
+    },
+    {
+      "id": "CLEAN-EXITS-ZERO",
+      "kind": "정상",
+      "rule": "`exit 0` 이어야 커밋한다.",
+      "test": "test_scan_secrets.py::test_clean_change_exits_zero"
+    },
+    {
+      "id": "SCAN-FAILURE-NOT-PASS",
+      "kind": "도구오류",
+      "rule": "`exit 2` 는 스캔을 못 했다는 뜻이라",
+      "test": "test_scan_secrets.py::test_not_a_repo_is_tool_error"
+    },
+    {
+      "id": "ADDED-LINES-ONLY",
+      "kind": "오탐",
+      "rule": "스캐너는 스테이징된 **추가 줄**만 보고",
+      "test": "test_scan_secrets.py::test_only_added_lines_count"
+    },
+    {
+      "id": "PLACEHOLDER-SKIPPED",
+      "kind": "오탐",
+      "rule": "자리표시자나 변수 참조로 보고 넘긴다.",
+      "test": "test_scan_secrets.py::test_placeholders_and_variable_refs_are_not_hits"
+    },
+    {
+      "id": "POSITION-REPORT",
+      "kind": "경계",
+      "rule": "`파일:줄 [패턴]` 과 건수만 낸다.",
+      "test": "test_scan_secrets.py::test_line_numbers_follow_hunks"
+    },
+    {
+      "id": "CREDENTIAL-FILES",
+      "kind": "실패",
+      "rule": "자격증명(oauth_creds·auth.json·PAT)을 어떤 경로로도 커밋하지 않는다",
+      "test": "test_scan_secrets.py::test_credential_file_blocked_by_name_only"
+    },
+    {
+      "id": "FOREIGN-HOST-DIRS",
+      "kind": "실패",
+      "rule": "다른 호스트 디렉터리(`hosts/<다른 호스트>/`)와 `hosts/_legacy-shared/` 를 손으로 고치지 않는다",
+      "test": "test_scan_secrets.py::test_other_host_and_legacy_dirs_blocked"
+    },
+    {
+      "id": "HOST-RESOLUTION",
+      "kind": "경계",
+      "rule": "`AGENTS_MEM_HOST` → `LocalHostName` → `hostname -s`",
+      "test": "test_scan_secrets.py::test_host_resolution_order"
+    },
+    {
+      "id": "TREE-POSITION-ONLY",
+      "kind": "정상",
+      "rule": "`--tree hosts/<호스트>` 를 쓴다. 이때도 줄 번호만 낸다.",
+      "test": "test_scan_secrets.py::test_tree_mode_reports_position_only"
+    }
+  ]
+}

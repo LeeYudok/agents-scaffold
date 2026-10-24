@@ -1,0 +1,20 @@
+{
+  "claims": [
+    {"id": "PLAN-FILL-MISSING", "kind": "정상", "rule": "없는 파일만 채운다", "test": "test_union_sync.py::test_fills_missing_from_first_host_that_has_it"},
+    {"id": "EXTRACT-KEEP-EXISTING", "kind": "정상", "rule": "지우지 않고 덮어쓰지 않는다", "test": "test_union_sync.py::test_writes_new_files_and_keeps_existing"},
+    {"id": "STATE-ALL-SAME", "kind": "정상", "rule": "판정은 셋이 같아야 \"같음\"이다", "test": "test_repo_state.py::test_all_same"},
+    {"id": "STATE-HEAD-DIFF", "kind": "실패", "rule": "판정은 셋이 같아야 \"같음\"이다", "test": "test_repo_state.py::test_head_difference"},
+    {"id": "STATE-DIRTY", "kind": "실패", "rule": "고친 파일이 있는 클론은 건너뛰고", "test": "test_repo_state.py::test_dirty_clone_is_reported"},
+    {"id": "STATE-BEHIND", "kind": "실패", "rule": "HEAD, 추적 파일 수, 목록 해시", "test": "test_repo_state.py::test_behind_origin_is_reported"},
+    {"id": "APPLY-NEEDS-LOCAL", "kind": "실패", "rule": "복사는 `local` 을 허브로 한다", "test": "test_union_sync.py::test_apply_without_local_hub_is_refused"},
+    {"id": "PLAN-CONFLICT", "kind": "경계", "rule": "같은 경로·다른 내용은 충돌이다", "test": "test_union_sync.py::test_conflict_is_reported_and_never_copied"},
+    {"id": "PLAN-DUP", "kind": "경계", "rule": "`NFC/NFD 중복`으로 보고만 한다", "test": "test_union_sync.py::test_same_host_nfc_nfd_pair_is_duplicate_and_nfc_name_is_source"},
+    {"id": "EXTRACT-SAFE-PATH", "kind": "경계", "rule": "지우지 않고 덮어쓰지 않는다", "test": "test_union_sync.py::test_rejects_paths_outside_the_folder"},
+    {"id": "PLAN-NFC", "kind": "오탐", "rule": "한글 파일명은 NFC 로 비교한다", "test": "test_union_sync.py::test_nfd_and_nfc_names_are_the_same_file"},
+    {"id": "PLAN-EXCLUDE-CACHE", "kind": "오탐", "rule": "머신마다 내용이 달라 충돌로만 잡힌다", "test": "test_union_sync.py::test_default_excludes_skip_machine_caches"},
+    {"id": "PLAN-EXTRA-EXCLUDE", "kind": "오탐", "rule": "더 뺄 것은 `--exclude <패턴>` 이다", "test": "test_union_sync.py::test_extra_exclude_pattern"},
+    {"id": "MANIFEST-LINKS", "kind": "오탐", "rule": "표의 `links` 열이 추적 심링크 수다", "test": "test_union_sync.py::test_parse_separates_links"},
+    {"id": "HOST-FAIL", "kind": "도구오류", "rule": "실패하면 별칭부터 의심한다", "test": "test_hosts.py::test_failed_command_raises_with_host_name"},
+    {"id": "HOST-SSH", "kind": "도구오류", "rule": "나머지는 ssh 별칭이다", "test": "test_hosts.py::test_remote_command_goes_through_ssh"}
+  ]
+}

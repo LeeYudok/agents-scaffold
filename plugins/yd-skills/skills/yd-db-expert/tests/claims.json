@@ -1,0 +1,17 @@
+{
+  "claims": [
+    {"id": "CONSTRAINT-IN-DB", "kind": "정상", "rule": "**버그·수동 작업·다른 클라이언트는", "test": "test_db_claims.py::test_db_constraint_catches_bypassing_writer"},
+    {"id": "NULL-COMPARISON", "kind": "경계", "rule": "**`NULL = NULL` 은 참이 아니라 NULL 이다.**", "test": "test_db_claims.py::test_null_equality_is_unknown"},
+    {"id": "NOT-IN-NULL", "kind": "실패", "rule": "**`NOT IN` 서브쿼리에 NULL 이 하나라도 있으면 결과가 통째로 빈다.**", "test": "test_db_claims.py::test_not_in_with_null_returns_nothing"},
+    {"id": "UNIQUE-NULLS", "kind": "경계", "rule": "**`UNIQUE` 는 NULL 끼리 같다고 보지 않는다.**", "test": "test_db_claims.py::test_unique_allows_many_nulls"},
+    {"id": "FK-NOT-INDEXED", "kind": "실패", "rule": "**FK 를 선언해도 자식 컬럼 인덱스는 생기지 않는다**", "test": "test_db_claims.py::test_fk_does_not_create_index"},
+    {"id": "FUNCTION-ON-COLUMN", "kind": "경계", "rule": "**함수를 씌운 조건은 컬럼 인덱스를 못 탄다.**", "test": "test_db_claims.py::test_function_on_column_skips_index"},
+    {"id": "N-PLUS-ONE", "kind": "실패", "rule": "고객 50명의 주문 수를 건마다 세면 문이 51개 나간다.", "test": "test_db_claims.py::test_n_plus_one_statement_count"},
+    {"id": "OFFSET-DRIFT", "kind": "실패", "rule": "**오프셋 페이징은 페이지 사이에 행이 들어오면 같은 행을 두 번 보여준다.**", "test": "test_db_claims.py::test_offset_paging_duplicates_after_insert"},
+    {"id": "KEYSET-TIEBREAK", "kind": "경계", "rule": "**커서의 정렬 키가 유일하지 않으면 동률 행을 건너뛴다.**", "test": "test_db_claims.py::test_keyset_needs_unique_tiebreak"},
+    {"id": "TX-ATOMICITY", "kind": "정상", "rule": "이체의 입금과 출금을 따로 커밋하면 출금이 실패할 때 입금만 남아 돈이 생긴다.", "test": "test_db_claims.py::test_transaction_is_all_or_nothing"},
+    {"id": "CONCAT-INJECTION", "kind": "실패", "rule": "이어 붙인 `x' OR '1'='1` 은 전 행을 돌려주고,", "test": "test_db_claims.py::test_string_concat_is_injectable"},
+    {"id": "PLACEHOLDER-NOT-IDENTIFIER", "kind": "도구오류", "rule": "**플레이스홀더는 값 자리에만 쓸 수 있다.**", "test": "test_db_claims.py::test_placeholder_cannot_bind_identifier"},
+    {"id": "SOFT-DELETE-UNIQUE", "kind": "경계", "rule": "**일반 `UNIQUE` 는 탈퇴한 이메일의 재가입을 막는다.**", "test": "test_db_claims.py::test_soft_delete_needs_partial_unique"}
+  ]
+}

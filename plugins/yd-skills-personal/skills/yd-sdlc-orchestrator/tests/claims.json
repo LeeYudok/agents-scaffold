@@ -1,0 +1,70 @@
+{
+  "claims": [
+    {
+      "id": "PRIOR-FAIL-BLOCKS",
+      "kind": "실패",
+      "rule": "앞 단계의 마지막 기록이 `fail` 이면 뒷 단계는 `pass` 로 적을 수 없다.",
+      "test": "test_stage_evidence.py::test_earlier_failure_blocks_later_pass"
+    },
+    {
+      "id": "RETRY-RECOVERS",
+      "kind": "오탐",
+      "rule": "취약점 발견 시 Phase 2로 되돌려 수정을 지시하되",
+      "test": "test_stage_evidence.py::test_failed_gate_recovered_by_retry_passes"
+    },
+    {
+      "id": "SKIPPED-IS-FAIL",
+      "kind": "실패",
+      "rule": "`skipped` 와 \"추가 예정\" 은 실패로 센다.",
+      "test": "test_stage_evidence.py::test_skipped_stage_counts_as_failure"
+    },
+    {
+      "id": "WRAPPER-BYPASS",
+      "kind": "도구오류",
+      "rule": "**래퍼를 거치지 않은 판정은 통과로 읽지 않습니다.**",
+      "test": "test_stage_evidence.py::test_wrapper_bypass_is_failure"
+    },
+    {
+      "id": "PLANNING-ALL-THREE",
+      "kind": "경계",
+      "rule": "기획 스킬의 검증기 **셋 모두**가 `exit 0` 이어야",
+      "test": "test_stage_evidence.py::test_planning_needs_all_three_validators"
+    },
+    {
+      "id": "SECURITY-RETRY-CAP",
+      "kind": "경계",
+      "rule": "보안 재검증은 최초 1회를 빼고 3회까지다.",
+      "test": "test_stage_evidence.py::test_security_retries_capped_at_three"
+    },
+    {
+      "id": "PASS-NEEDS-ZERO-EXIT",
+      "kind": "실패",
+      "rule": "모두 `exit_code` 0 이어야 한다.",
+      "test": "test_stage_evidence.py::test_pass_with_nonzero_exit_is_failure"
+    },
+    {
+      "id": "RECORD-COMPLETE",
+      "kind": "정상",
+      "rule": "이 검증기가 `exit 0` 일 때만 쓴다.",
+      "test": "test_stage_evidence.py::test_complete_record_passes"
+    },
+    {
+      "id": "HASH-COMMAND",
+      "kind": "정상",
+      "rule": "해시는 `check_stage_evidence.py hash <경로>` 로 구한다.",
+      "test": "test_stage_evidence.py::test_hash_subcommand_matches_sha256"
+    },
+    {
+      "id": "UNREADABLE-EXIT2",
+      "kind": "도구오류",
+      "rule": "기록 파일을 읽지 못하면 검증기는 `exit 2` 를 내며",
+      "test": "test_stage_evidence.py::test_unreadable_input_is_tool_error"
+    },
+    {
+      "id": "ARTIFACT-HASH-RECHECK",
+      "kind": "실패",
+      "rule": "산출물 `artifact` 경로와 `sha256`",
+      "test": "test_stage_evidence.py::test_verify_files_detects_changed_artifact"
+    }
+  ]
+}

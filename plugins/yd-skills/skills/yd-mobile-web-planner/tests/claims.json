@@ -1,0 +1,184 @@
+{
+  "claims": [
+    {
+      "id": "MOCK-CAPTION",
+      "kind": "실패",
+      "rule": "모든 `mock` 에 `mock-caption` 을 붙인다",
+      "test": "test_rules.py::test_single_mock_without_caption_is_flagged"
+    },
+    {
+      "id": "MOCK-CAPTION-OK",
+      "kind": "정상",
+      "rule": "모든 `mock` 에 `mock-caption` 을 붙인다",
+      "test": "test_rules.py::test_captioned_mocks_pass"
+    },
+    {
+      "id": "CIRCLED-NUM",
+      "kind": "실패",
+      "rule": "원문자(①②③) 금지",
+      "test": "test_rules.py::test_circled_desc_num_is_flagged"
+    },
+    {
+      "id": "EVENT-LABEL",
+      "kind": "실패",
+      "rule": "인터랙티브 요소의 설명 항목에는 이벤트 줄이 최소 1줄 있어야 한다",
+      "test": "test_rules.py::test_slide_without_any_event_label"
+    },
+    {
+      "id": "EVENT-LABEL-OK",
+      "kind": "정상",
+      "rule": "이벤트 라벨은 **`탭:` `스와이프:` `롱프레스:` `입력:`** 네 개로 고정한다",
+      "test": "test_rules.py::test_swipe_and_input_labels_count"
+    },
+    {
+      "id": "SCREEN-TYPE",
+      "kind": "실패",
+      "rule": "유형은 `화면` `팝업` `바텀시트` 중 하나 — 모든 행에 반드시 적는다",
+      "test": "test_rules.py::test_row_without_type_is_flagged"
+    },
+    {
+      "id": "SCREEN-DRAWN",
+      "kind": "실패",
+      "rule": "유형이 `화면` 인 ID 는 `09.x` 슬라이드",
+      "test": "test_rules.py::test_screen_typed_but_undrawn_is_flagged"
+    },
+    {
+      "id": "POPUP-NO-SLIDE",
+      "kind": "오탐",
+      "rule": "슬라이드가 없는 팝업·바텀시트도 빠뜨리지 않는다",
+      "test": "test_rules.py::test_popup_row_is_not_required_to_have_slide"
+    },
+    {
+      "id": "TYPE-CELL",
+      "kind": "오탐",
+      "rule": "유형은 유형 칸에만 적는다",
+      "test": "test_rules.py::test_bottomsheet_description_mentioning_screen_is_not_misread"
+    },
+    {
+      "id": "SEQ-MISSING",
+      "kind": "실패",
+      "rule": "상태 변경 트랜잭션당 1장",
+      "test": "test_rules.py::test_missing_sequence_slide_is_flagged"
+    },
+    {
+      "id": "FLOW-MERMAID",
+      "kind": "실패",
+      "rule": "mermaid `flowchart` (`TD` 또는 `LR`) 로 그린다",
+      "test": "test_rules.py::test_flow_without_mermaid"
+    },
+    {
+      "id": "FLOW-IDS",
+      "kind": "실패",
+      "rule": "노드 라벨은 화면명과 화면 ID 를 함께 적는다",
+      "test": "test_rules.py::test_flow_without_ids"
+    },
+    {
+      "id": "SCREEN-LIST-MISSING",
+      "kind": "실패",
+      "rule": "화면 목록 표 — 모든 화면 ID",
+      "test": "test_rules.py::test_missing_screen_list_slide"
+    },
+    {
+      "id": "DANGLING-REF",
+      "kind": "실패",
+      "rule": "정의 없는 ID 를 가리키면 끊어진 참조다",
+      "test": "test_rules.py::test_dangling_reference_is_a_violation"
+    },
+    {
+      "id": "CAPTION-DEF",
+      "kind": "정상",
+      "rule": "`ppt-meta-id` 또는 `mock-caption`",
+      "test": "test_validator.py::test_caption_id_is_a_definition"
+    },
+    {
+      "id": "UNDEFINED-CLASS",
+      "kind": "실패",
+      "rule": "이 표에 없는 클래스를 새로 만들지 않는다",
+      "test": "test_validator.py::test_reports_undefined_sorted"
+    },
+    {
+      "id": "RULESET-LEGACY",
+      "kind": "오탐",
+      "rule": "검증기가 읽어",
+      "test": "test_ruleset.py::test_legacy_doc_demotes_v2_rules_to_advisory"
+    },
+    {
+      "id": "SCAFFOLD-RULESET",
+      "kind": "정상",
+      "rule": "scaffold 가 `<meta name=\"skill-ruleset\">` 로",
+      "test": "test_ruleset.py::test_scaffold_embeds_current_ruleset"
+    },
+    {
+      "id": "BADGE-OVERLAP",
+      "kind": "실패",
+      "rule": "정적 검사(`check_badge_alignment.py`)로 잡히는 것은 **겹침과 순서 역전**까지다",
+      "test": "test_badge_alignment.py::test_reports_badges_closer_than_badge_height"
+    },
+    {
+      "id": "DOC-HISTORY",
+      "kind": "실패",
+      "rule": "Cover 의 Version, History 마지막 행의 Version",
+      "test": "test_version_history.py::test_cover_history_mismatch_flagged"
+    },
+    {
+      "id": "DOC-HISTORY-APPEND",
+      "kind": "정상",
+      "rule": "새 버전 행을",
+      "test": "test_version_history.py::test_regeneration_appends_row_passes"
+    },
+    {
+      "id": "LAYOUT-OVERFLOW",
+      "kind": "실패",
+      "rule": "슬라이드 밖으로 넘친 내용",
+      "test": "test_layout_runtime.py::test_slide_overflow_detected"
+    },
+    {
+      "id": "MOCK-PLACEHOLDER",
+      "kind": "실패",
+      "rule": "`Mockup Content`/`TODO`/`Lorem` 류",
+      "test": "test_mock_content.py::test_placeholder_flagged"
+    },
+    {
+      "id": "MOCK-DENSE-OK",
+      "kind": "오탐",
+      "rule": "도메인 데이터",
+      "test": "test_mock_content.py::test_normal_dense_mock_passes"
+    },
+    {
+      "id": "MOCK-SEQ-CLONE",
+      "kind": "실패",
+      "rule": "시퀀스 보일러플레이트 복제",
+      "test": "test_mock_content.py::test_identical_sequences_flagged"
+    },
+    {
+      "id": "RULES-PAIR",
+      "kind": "실패",
+      "rule": "화면 ID 집합이 어긋나면 검증기가 실패한다",
+      "test": "test_rules.py::test_missing_screen_section_is_a_violation"
+    },
+    {
+      "id": "RULES-PAIR-OK",
+      "kind": "정상",
+      "rule": "화면 ID 집합이 어긋나면 검증기가 실패한다",
+      "test": "test_rules.py::test_valid_doc_has_no_violations"
+    },
+    {
+      "id": "BADGE-TWO-LEVEL",
+      "kind": "정상",
+      "rule": "`pointer-badge` 번호는 2단이다",
+      "test": "test_badge_alignment.py::test_parses_flat_and_two_level"
+    },
+    {
+      "id": "BADGE-TWO-LEVEL-SORT",
+      "kind": "경계",
+      "rule": "`pointer-badge` 번호는 2단이다",
+      "test": "test_badge_alignment.py::test_two_level_sorts_numerically_not_lexically"
+    },
+    {
+      "id": "MOCK-TAB-ARROW",
+      "kind": "실패",
+      "rule": "`탭 ›` 표기",
+      "test": "test_mock_content.py::test_tab_arrow_retype_flagged"
+    }
+  ]
+}

@@ -1,0 +1,112 @@
+{
+ "claims": [
+  {
+   "id": "TYPED-NIL",
+   "kind": "실패",
+   "rule": "`err != nil` 이 **참**이다",
+   "test": "test_go_claims.py::test_typed_nil_makes_error_non_nil"
+  },
+  {
+   "id": "ERRORS-WRAP-W",
+   "kind": "정상",
+   "rule": "`%w` 여야",
+   "test": "test_go_claims.py::test_percent_w_keeps_is_and_as"
+  },
+  {
+   "id": "ERRORS-WRAP-V",
+   "kind": "실패",
+   "rule": "`%v` 로 감싸면 사슬이 끊긴다.",
+   "test": "test_go_claims.py::test_percent_v_breaks_chain"
+  },
+  {
+   "id": "LOOPVAR-122",
+   "kind": "오탐",
+   "rule": "루프 변수 캡처는 Go 1.22부터 반복마다 새 변수라 안전하다.",
+   "test": "test_go_claims.py::test_loopvar_is_per_iteration_in_go122"
+  },
+  {
+   "id": "LOOPVAR-OLD",
+   "kind": "경계",
+   "rule": "**그 이전 버전 코드를",
+   "test": "test_go_claims.py::test_loopvar_is_shared_when_go_mod_says_121"
+  },
+  {
+   "id": "MUX-METHOD-WILDCARD",
+   "kind": "정상",
+   "rule": "메서드와 경로 변수를 표준 mux 가 지원한다.",
+   "test": "test_go_claims.py::test_mux_method_and_wildcard"
+  },
+  {
+   "id": "MUX-SPECIFIC-WINS",
+   "kind": "정상",
+   "rule": "더 구체적인 패턴이 우선한다",
+   "test": "test_go_claims.py::test_mux_specific_pattern_wins"
+  },
+  {
+   "id": "MUX-PATHVALUE-DECODED",
+   "kind": "경계",
+   "rule": "**경로 변수는 디코딩된 값**이다.",
+   "test": "test_go_claims.py::test_mux_pathvalue_is_decoded"
+  },
+  {
+   "id": "EMBED-NO-MATCH",
+   "kind": "도구오류",
+   "rule": "**패턴이 하나도 안 맞으면 컴파일 에러다.**",
+   "test": "test_go_claims.py::test_embed_without_match_fails_build"
+  },
+  {
+   "id": "EMBED-PARENT",
+   "kind": "실패",
+   "rule": "`../` 로 못 올라간다.",
+   "test": "test_go_claims.py::test_embed_cannot_climb_parent"
+  },
+  {
+   "id": "EMBED-HIDDEN",
+   "kind": "경계",
+   "rule": "`.`·`_` 로 시작하는 파일을 건너뛴다.",
+   "test": "test_go_claims.py::test_embed_skips_dot_underscore_unless_all"
+  },
+  {
+   "id": "DEFER-IN-LOOP",
+   "kind": "경계",
+   "rule": "**루프 안의 `defer` 는 함수가 끝날 때까지 실행되지 않는다.**",
+   "test": "test_go_claims.py::test_defer_in_loop_waits_for_function_end"
+  },
+  {
+   "id": "APPEND-ALIAS",
+   "kind": "경계",
+   "rule": "**`append` 결과는 원본과 배열을 공유할 수 있다.**",
+   "test": "test_go_claims.py::test_append_may_share_backing_array"
+  },
+  {
+   "id": "JSON-NIL-SLICE",
+   "kind": "경계",
+   "rule": "JSON 에서 `null` 과 `[]` 는 다르다.",
+   "test": "test_go_claims.py::test_json_nil_slice_is_null"
+  },
+  {
+   "id": "OS-ROOT",
+   "kind": "정상",
+   "rule": "**Go 1.24+ 는 `os.Root` 로 디렉터리 밖 접근을 막는다.**",
+   "test": "test_go_claims.py::test_os_root_rejects_escape"
+  },
+  {
+   "id": "SYMLINK-BYPASS",
+   "kind": "오탐",
+   "rule": "링크는 검사 우회의 표준 수법이다.",
+   "test": "test_go_claims.py::test_symlink_bypasses_lexical_check"
+  },
+  {
+   "id": "VET-STDVERSION-ASTYPE",
+   "kind": "도구오류",
+   "rule": "`go.mod` 의 `go` 버전이 1.26 미만이면 `errors.As` 를 쓴다.",
+   "test": "test_go_claims.py::test_vet_flags_newer_stdlib_api"
+  },
+  {
+   "id": "WG-GO",
+   "kind": "정상",
+   "rule": "Go 1.25+ 는 `wg.Go(func() { ... })`",
+   "test": "test_go_claims.py::test_waitgroup_go_needs_go125"
+  }
+ ]
+}

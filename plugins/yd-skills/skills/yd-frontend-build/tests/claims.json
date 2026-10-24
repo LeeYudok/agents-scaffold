@@ -1,0 +1,15 @@
+{
+  "claims": [
+    {"id": "EXT-URL-LINE", "kind": "실패", "rule": "`파일:줄` 로 보고하고", "test": "test_check_bundle.py::test_external_url_is_reported_with_line"},
+    {"id": "REQ-CONTEXTS", "kind": "실패", "rule": "`src=`/`href=`/`url()`/`@import`/`fetch()`/`import()` 문맥", "test": "test_check_bundle.py::test_requesting_contexts_are_flagged"},
+    {"id": "DOC-LINK-NOISE", "kind": "오탐", "rule": "단순 `grep https://` 는 정상 빌드에서도 여러 건을 뱉는다", "test": "test_check_bundle.py::test_doc_link_in_error_message_is_not_flagged"},
+    {"id": "STRICT-AUDIT", "kind": "경계", "rule": "전수 감사가 필요하면 `--strict` 로 문서 링크까지 전부 본다", "test": "test_check_bundle.py::test_strict_mode_reports_doc_links"},
+    {"id": "ALLOW-HOST", "kind": "정상", "rule": "정당한 예외(자체 도메인 문서 링크 등)는 `--allow-host` 로 넘긴다", "test": "test_check_bundle.py::test_allow_host_exempts"},
+    {"id": "SOURCEMAP-FILE", "kind": "실패", "rule": "`.map` 파일", "test": "test_check_bundle.py::test_map_file_is_reported"},
+    {"id": "SOURCEMAP-COMMENT", "kind": "실패", "rule": "`sourceMappingURL`", "test": "test_check_bundle.py::test_source_mapping_comment_is_reported"},
+    {"id": "BUDGET-OVER", "kind": "실패", "rule": "gzip 기준 번들 예산 초과", "test": "test_check_bundle.py::test_oversized_js_is_reported"},
+    {"id": "BUDGET-GZIP-MEASURE", "kind": "경계", "rule": "초기 JS (gzip)", "test": "test_check_bundle.py::test_gzip_size_is_measured_not_raw"},
+    {"id": "BUDGET-GZIP-HELPER", "kind": "정상", "rule": "gzip 기준 번들 예산 초과", "test": "test_check_bundle.py::test_gzip_size_matches_gzip_module"},
+    {"id": "CLEAN-PASS", "kind": "정상", "rule": "`check_bundle.py` 통과 (외부 URL·소스맵·예산)", "test": "test_check_bundle.py::test_small_bundle_passes"}
+  ]
+}
