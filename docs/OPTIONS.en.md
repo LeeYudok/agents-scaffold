@@ -173,9 +173,9 @@ Two further Codex constraints shape the design:
 
 ## Skill bundles (`--with-personal-skills`)
 
-The default install ships 23 general-purpose skills: the original 10 (`review`, `status`, `handoff`, `docs-sync`, ...)
+The default install ships 24 general-purpose skills: the original 10 (`review`, `status`, `handoff`, `docs-sync`, ...)
 and 13 `yd-*` skills moved over from [LeeYudok/doksam-skills](https://github.com/LeeYudok/doksam-skills) (DB, Go, React,
-TypeScript, builds, screen design, Korean writing, ...). The 11 agents that belong to those `yd-*` skills
+TypeScript, builds, screen design, Korean writing, ...), plus `yd-cve-check` for dependency CVE checks (#79). The 12 agents that belong to those `yd-*` skills
 (`.claude/agents/yd-*.md`) are installed with them (#78).
 
 `--with-personal-skills` merges the opt-in bundle `presets/skills-personal/` after the stack presets — 9 skills

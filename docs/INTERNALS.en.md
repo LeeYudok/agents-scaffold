@@ -13,7 +13,7 @@ The generated `.claude/` tree and the design patterns behind it. Start at the [R
     sdlc-tester.md        AC/TC test-writing agent
     sdlc-verifier.md      pipeline execution + report agent
     agent-evolve.md       self-improving meta agent — refines agents/*.md from run feedback
-    yd-*.md               11 agents for the yd-* skills (#78) — real source files; Codex/agy versions are generated from them
+    yd-*.md               12 agents for the yd-* skills (#78) — real source files; Codex/agy versions are generated from them
   commands/              (legacy on Claude Code — slash commands merged into skills)
     sonar.md             SonarQube analysis (CE task polling, sqp_/squ_ token handling)
     sdlc-cycle.md         5-stage SDLC automation
@@ -42,7 +42,7 @@ The generated `.claude/` tree and the design patterns behind it. Start at the [R
     security-precheck/        pre-audit security sweep → issues → parallel fixes
     docs-sync/                doc currency — claim-by-claim verification + parallel-language sync
     handoff/                  session handoff — issue body when a tracker exists, HANDOFF.md otherwise
-    yd-*/                     13 general skills moved from doksam-skills (DB, Go, React, TS, builds, screen design, writing; Korean only)
+    yd-*/                     14 general skills — 13 moved from doksam-skills + yd-cve-check (#79) (DB, Go, React, TS, builds, screen design, writing, CVE checks; Korean only)
   workflows/             (not auto-loaded — invoked explicitly)
     rules-audit.js           stored Workflow example — scan/verify/repair with human merge gate
   scripts/               (not auto-loaded — invoked explicitly)

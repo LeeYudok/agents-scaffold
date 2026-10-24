@@ -80,8 +80,8 @@ prompt 编写也没关系：
 
 ## 内置技能
 
-默认安装包含 23 个技能：10 个工作流技能（`review`、`status`、`handoff`、`docs-sync`、`skill-evolve` 等），以及涵盖
-数据库、Go、React、TypeScript、构建、界面设计和韩文写作的 13 个 `yd-*` 技能。另有 9 个绑定维护者环境的 `yd-*`
+默认安装包含 24 个技能：10 个工作流技能（`review`、`status`、`handoff`、`docs-sync`、`skill-evolve` 等），以及涵盖
+数据库、Go、React、TypeScript、构建、界面设计和韩文写作和依赖 CVE 检查的 14 个 `yd-*` 技能。另有 9 个绑定维护者环境的 `yd-*`
 技能，仅在传入 `--with-personal-skills` 时安装。`yd-*` 技能仅提供韩文版。列表与编写规范见
 [.claude/skills/README.md](.claude/skills/README.md)。
 

@@ -113,9 +113,9 @@ Codex 側の制約がもう 2 点、設計に効いてきます。
 
 ## スキルバンドル (`--with-personal-skills`)
 
-デフォルトのインストールには汎用スキル 23 個が入る — 既存の 10 個(`review`・`status`・`handoff`・`docs-sync` など)と、
+デフォルトのインストールには汎用スキル 24 個が入る — 既存の 10 個(`review`・`status`・`handoff`・`docs-sync` など)と、
 [LeeYudok/doksam-skills](https://github.com/LeeYudok/doksam-skills) から移した `yd-*` 13 個(DB・Go・React・
-TypeScript・ビルド・画面設計・韓国語ライティングなど)。これらの `yd-*` スキルに付属するエージェント 11 個
+TypeScript・ビルド・画面設計・韓国語ライティングなど)、依存関係の CVE 点検 `yd-cve-check`(#79)。これらの `yd-*` スキルに付属するエージェント 12 個
 (`.claude/agents/yd-*.md`)も一緒にインストールされる(#78)。
 
 `--with-personal-skills` を付けると、メンテナー環境に結びついたオプトインバンドル `presets/skills-personal/` を

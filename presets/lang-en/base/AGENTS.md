@@ -39,7 +39,7 @@ authoring skeleton and conventions.
 | `hooks/` | enforced gates — pre-commit, auto-format, observe-lite, memory reminders. Codex/agy hooks are generated from `settings.json` by `hook-adapter.py` (#65) | [README](.claude/hooks/README.md) |
 | `memory/` | project memory SSOT — MEMORY.md index + type-prefixed files | [README](.claude/memory/README.md) |
 | `rules/` | context-aware rules — `paths:`-scoped conditional loading. agy's `.agents/rules` is generated from here (#63) | [README](.claude/rules/README.md) |
-| `skills/` | situational procedures — review, status, search-first, memory-factcheck, security-precheck, docs-sync, grill-me, handoff, ... plus the general `yd-*` skills (DB, Go, React, TS, builds, screen design, writing; Korean only, #78) — environment-specific `yd-*` skills are opt-in via `--with-personal-skills`. In an installed project this is a symlink to the source `.agents/skills/` (#61) | [README](.claude/skills/README.md) |
+| `skills/` | situational procedures — review, status, search-first, memory-factcheck, security-precheck, docs-sync, grill-me, handoff, ... plus the general `yd-*` skills (DB, Go, React, TS, builds, screen design, writing, dependency CVE checks; Korean only, #78, #79) — environment-specific `yd-*` skills are opt-in via `--with-personal-skills`. In an installed project this is a symlink to the source `.agents/skills/` (#61) | [README](.claude/skills/README.md) |
 | `workflows/` | stored Workflow orchestration scripts (`*.js`) — rules-audit example | [README](.claude/workflows/README.md) |
 | `scripts/` | repo-local helpers — knowledge_graph.py (doc graph + link checker) | [README](.claude/scripts/README.md) |
 

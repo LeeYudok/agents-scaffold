@@ -30,7 +30,7 @@ superpowers `brainstorming`·Ouroboros 와 작업마다 택일하며, 비교는 
 `yd-*` 스킬은 **한국어 전용**이다(`--lang en` 오버레이 없음). 설치할 때 `{{PROJECT_NAME}}` 치환도 하지 않는다.
 에이전트 열이 ○ 인 스킬은 `agents/yd-<이름>.md` 가 있어 이름 있는 에이전트로도 부를 수 있다.
 
-**기본 설치 13개**
+**기본 설치 14개**
 
 | 스킬 | 에이전트 | 언제 쓰나 |
 |---|---|---|
@@ -47,6 +47,7 @@ superpowers `brainstorming`·Ouroboros 와 작업마다 택일하며, 비교는 
 | [yd-sqlite-expert](yd-sqlite-expert/SKILL.md) | ○ | SQLite 고유 문제(읽기 전용 조회·WAL·잠금·동적 테이블명) |
 | [yd-agents-yaml](yd-agents-yaml/SKILL.md) | — | `AGENTS.md` + `AGENTS.yaml` + 검증기 세팅·갱신 |
 | [yd-writer-kr](yd-writer-kr/SKILL.md) | ○ | 이슈·PR·문서·공지를 한국어로 쓰거나 고칠 때 |
+| [yd-cve-check](yd-cve-check/SKILL.md) | ○ | pnpm 의존성 CVE·GHSA·악성 패키지 점검과 보완(온라인 `pnpm audit`·폐쇄망 OSV 덤프, #79) |
 
 doksam-skills 의 `yd-handoff`·`yd-doc-sync`·`yd-memory-factcheck`·`yd-skill-evolve` 는 같은 역할의
 `handoff`·`docs-sync`·`memory-factcheck`·`skill-evolve` 에 합쳤다.

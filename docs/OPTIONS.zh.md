@@ -113,9 +113,9 @@ Codex（codex-cli 0.163.0）与 agy（1.4.2）会在不调用任何工具的情�
 
 ## 技能包（`--with-personal-skills`）
 
-默认安装包含 23 个通用技能：原有的 10 个（`review`、`status`、`handoff`、`docs-sync` 等），以及从
+默认安装包含 24 个通用技能：原有的 10 个（`review`、`status`、`handoff`、`docs-sync` 等），以及从
 [LeeYudok/doksam-skills](https://github.com/LeeYudok/doksam-skills) 迁入的 13 个 `yd-*` 技能（DB、Go、React、
-TypeScript、构建、界面设计、韩文写作等）。这些 `yd-*` 技能附带的 11 个代理（`.claude/agents/yd-*.md`）也一并安装（#78）。
+TypeScript、构建、界面设计、韩文写作等），以及依赖 CVE 检查 `yd-cve-check`（#79）。这些 `yd-*` 技能附带的 12 个代理（`.claude/agents/yd-*.md`）也一并安装（#78）。
 
 `--with-personal-skills` 会在技术栈预设之后合并可选包 `presets/skills-personal/`——9 个技能
 （`yd-agents-mem`、`yd-claude-auth-sync`、`yd-git-sync`、`yd-git-ship`、`yd-doksam-ui`、`yd-finguard`、

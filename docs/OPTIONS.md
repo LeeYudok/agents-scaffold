@@ -162,9 +162,9 @@ Codex 쪽 추가 제약 두 가지도 설계에 영향을 준다.
 
 ## 스킬 묶음 (`--with-personal-skills`)
 
-기본 설치에는 범용 스킬 23개가 들어간다 — 기존 10개(`review`·`status`·`handoff`·`docs-sync` 등)와
+기본 설치에는 범용 스킬 24개가 들어간다 — 기존 10개(`review`·`status`·`handoff`·`docs-sync` 등)와
 [LeeYudok/doksam-skills](https://github.com/LeeYudok/doksam-skills) 에서 옮겨 온 `yd-*` 13개(DB·Go·React·
-TypeScript·빌드·화면설계·글쓰기 등)다. `yd-*` 스킬에 딸린 에이전트 11개(`.claude/agents/yd-*.md`)도 함께 깔린다(#78).
+TypeScript·빌드·화면설계·글쓰기 등), 의존성 CVE 점검 `yd-cve-check`(#79)다. `yd-*` 스킬에 딸린 에이전트 12개(`.claude/agents/yd-*.md`)도 함께 깔린다(#78).
 
 `--with-personal-skills` 를 주면 메인테이너 환경에 묶인 옵트인 묶음 `presets/skills-personal/` 을 스택 프리셋
 다음에 머지한다 — 스킬 9개(`yd-agents-mem`·`yd-claude-auth-sync`·`yd-git-sync`·`yd-git-ship`·`yd-doksam-ui`·

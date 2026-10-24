@@ -13,7 +13,7 @@
     sdlc-tester.md        AC/TC テスト作成エージェント
     sdlc-verifier.md      パイプライン実行 + レポートエージェント
     agent-evolve.md       自己改善メタエージェント — 実行フィードバックから agents/*.md を洗練
-    yd-*.md               yd-* スキルのエージェント 11 個(#78)— 原本の実ファイル、Codex・agy 用はここから生成
+    yd-*.md               yd-* スキルのエージェント 12 個(#78)— 原本の実ファイル、Codex・agy 用はここから生成
   commands/              （Claude Code ではレガシー — スラッシュコマンドは skills に統合）
     sonar.md             SonarQube 分析(CE タスクポーリング、sqp_/squ_ トークン処理)
     sdlc-cycle.md         5段階 SDLC 自動化
@@ -42,7 +42,7 @@
     security-precheck/        監査前セキュリティスイープ → イシュー化 → 並列修正
     docs-sync/                ドキュメント現行化 — 主張ごとの事実照合 + 多言語ペアの同時更新
     handoff/                  セッション引き継ぎ — トラッカーがあれば Issue 本文、なければ HANDOFF.md
-    yd-*/                     doksam-skills から移した汎用スキル 13 個(DB・Go・React・TS・ビルド・画面設計・ライティング、韓国語のみ)
+    yd-*/                     汎用スキル 14 個 — doksam-skills から移した 13 個 + yd-cve-check(#79)(DB・Go・React・TS・ビルド・画面設計・ライティング・CVE 点検、韓国語のみ)
   workflows/             （自動ロードされない — 明示的に呼び出す）
     rules-audit.js           保存型 Workflow の例 — scan/verify/repair、マージは人間ゲート
   scripts/               （自動ロードされない — 明示的に呼び出す）

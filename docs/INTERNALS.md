@@ -13,7 +13,7 @@
     sdlc-tester.md      AC/TC 테스트 작성 에이전트
     sdlc-verifier.md    파이프라인 실행·리포트 에이전트
     agent-evolve.md     자기개선 메타 에이전트 — 실행 피드백으로 agents/*.md 자동 개선
-    yd-*.md             yd-* 스킬 에이전트 11개 (#78) — 원본 실파일, Codex·agy 용은 여기서 생성
+    yd-*.md             yd-* 스킬 에이전트 12개 (#78) — 원본 실파일, Codex·agy 용은 여기서 생성
   commands/            (Claude Code 에서는 레거시 — 슬래시 커맨드가 skills 로 통합됨)
     sonar.md            SonarQube 분석 (CE task 폴링, sqp_/squ_ 구분)
     sdlc-cycle.md       5단계 SDLC 자동화
@@ -42,7 +42,7 @@
     security-precheck/  감사 대비 보안 사전점검 → 이슈 → 병렬 수정
     docs-sync/          문서 현행화 — 주장별 사실 대조 + 다국어 짝 파일 동시 갱신
     handoff/            세션 핸드오프 — 트래커가 있으면 이슈 본문, 없으면 HANDOFF.md
-    yd-*/               doksam-skills 에서 옮긴 범용 스킬 13개 (DB·Go·React·TS·빌드·화면설계·글쓰기 등, 한국어 전용)
+    yd-*/               범용 스킬 14개 — doksam-skills 에서 옮긴 13개 + yd-cve-check(#79) (DB·Go·React·TS·빌드·화면설계·글쓰기·CVE 점검, 한국어 전용)
   workflows/            (자동 로드 아님 — 명시 호출로만 실행)
     rules-audit.js      저장형 Workflow 예제 — 스캔/검증/수정, 머지는 사람 게이트
   scripts/              (자동 로드 아님 — 명시 호출로만 실행)

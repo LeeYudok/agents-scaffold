@@ -13,7 +13,7 @@
     sdlc-tester.md        AC/TC 测试编写 agent
     sdlc-verifier.md      流水线执行 + 报告 agent
     agent-evolve.md       自我改进元 agent —— 根据运行反馈打磨 agents/*.md
-    yd-*.md               yd-* 技能的 11 个 agent（#78）—— 原始文件，Codex/agy 版本由此生成
+    yd-*.md               yd-* 技能的 12 个 agent（#78）—— 原始文件，Codex/agy 版本由此生成
   commands/              （在 Claude Code 上属遗留 — 斜杠命令已并入 skills）
     sonar.md             SonarQube 分析（CE 任务轮询、sqp_/squ_ 令牌处理）
     sdlc-cycle.md         5 阶段 SDLC 自动化
@@ -42,7 +42,7 @@
     security-precheck/        审计前安全排查 → 拆分 issue → 并行修复
     docs-sync/                文档现行化 — 逐条主张核对 + 多语言配对文件同步
     handoff/                  会话交接 — 有追踪器时写入 Issue 正文，否则写 HANDOFF.md
-    yd-*/                     从 doksam-skills 迁入的 13 个通用技能（DB、Go、React、TS、构建、界面设计、写作；仅韩文）
+    yd-*/                     14 个通用技能 —— 从 doksam-skills 迁入的 13 个 + yd-cve-check（#79）（DB、Go、React、TS、构建、界面设计、写作、CVE 检查；仅韩文）
   workflows/             （不会自动加载 — 需显式调用）
     rules-audit.js           存储式 Workflow 示例 —— 扫描/验证/修复，合并由人工把关
   scripts/               （不会自动加载 — 需显式调用）

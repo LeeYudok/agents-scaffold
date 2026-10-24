@@ -82,8 +82,8 @@ Blocked: a .env-type file is staged. Commit is not allowed.
 
 ## 동봉 스킬
 
-기본 설치에 스킬 23개가 들어간다 — 워크플로 스킬 10개(`review`·`status`·`handoff`·`docs-sync`·`skill-evolve` 등)와
-DB·Go·React·TypeScript·빌드·화면설계·한국어 글쓰기를 다루는 `yd-*` 13개다. 메인테이너 환경 전용 `yd-*` 9개는
+기본 설치에 스킬 24개가 들어간다 — 워크플로 스킬 10개(`review`·`status`·`handoff`·`docs-sync`·`skill-evolve` 등)와
+DB·Go·React·TypeScript·빌드·화면설계·한국어 글쓰기·의존성 CVE 점검을 다루는 `yd-*` 14개다. 메인테이너 환경 전용 `yd-*` 9개는
 `--with-personal-skills` 를 줄 때만 설치된다. `yd-*` 스킬은 한국어 전용이다. 목록과 작성 규약은
 [.claude/skills/README.md](.claude/skills/README.md) 참조.
 

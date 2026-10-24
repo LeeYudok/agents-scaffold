@@ -31,7 +31,7 @@ Moved over from [LeeYudok/doksam-skills](https://github.com/LeeYudok/doksam-skil
 The `yd-*` skills are **Korean only** (no `--lang en` overlay), and installation does not substitute
 `{{PROJECT_NAME}}` inside them. Skills marked ○ also have a named agent in `agents/yd-<name>.md`.
 
-**Installed by default (13)**
+**Installed by default (14)**
 
 | Skill | Agent | Use when |
 |---|---|---|
@@ -48,6 +48,7 @@ The `yd-*` skills are **Korean only** (no `--lang en` overlay), and installation
 | [yd-sqlite-expert](yd-sqlite-expert/SKILL.md) | ○ | SQLite-specific issues (read-only queries, WAL, locking, dynamic table names) |
 | [yd-agents-yaml](yd-agents-yaml/SKILL.md) | — | Setting up or updating `AGENTS.md` + `AGENTS.yaml` + validator |
 | [yd-writer-kr](yd-writer-kr/SKILL.md) | ○ | Writing or editing Korean issues, PRs, docs and announcements |
+| [yd-cve-check](yd-cve-check/SKILL.md) | ○ | Checking and fixing pnpm dependencies against known CVE/GHSA/malicious-package data (online `pnpm audit`, offline OSV dump, #79) |
 
 doksam-skills' `yd-handoff`, `yd-doc-sync`, `yd-memory-factcheck` and `yd-skill-evolve` were merged into
 `handoff`, `docs-sync`, `memory-factcheck` and `skill-evolve`, which do the same jobs.

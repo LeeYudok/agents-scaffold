@@ -85,8 +85,8 @@ you're new to prompting:
 
 ## Bundled skills
 
-The default install ships 23 skills: 10 workflow skills (`review`, `status`, `handoff`, `docs-sync`, `skill-evolve`, ...)
-and 13 `yd-*` skills covering databases, Go, React, TypeScript, builds, screen design and Korean writing. Another
+The default install ships 24 skills: 10 workflow skills (`review`, `status`, `handoff`, `docs-sync`, `skill-evolve`, ...)
+and 14 `yd-*` skills covering databases, Go, React, TypeScript, builds, screen design, Korean writing and dependency CVE checks. Another
 9 `yd-*` skills tied to the maintainer's environment are installed only with `--with-personal-skills`. The `yd-*`
 skills are Korean only. See [.claude/skills/README.md](.claude/skills/README.md) for the list and authoring rules.
 
