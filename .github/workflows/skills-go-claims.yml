@@ -1,0 +1,35 @@
+# doksam-skills 에서 이식 (agents-scaffold #78) — 경로를 .claude/skills/ 기준으로 바꿨다.
+# yd-go-expert 의 단언을 Go 1.26 툴체인으로 재현한다 (이슈 #201).
+#
+# 기존 test.yml 은 러너 기본 Go 를 쓰므로 1.25+/1.26+ 단언(wg.Go, errors.AsType)은
+# 건너뛰어진다. 이 잡은 Go 를 고정해 깔고, 건너뜀이 하나라도 있으면 실패시킨다 —
+# 조용히 skip 되어 초록이 되는 것을 막는다.
+name: skills-go-claims
+
+on:
+  pull_request:
+    paths:
+      - ".claude/skills/yd-go-expert/**"
+      - ".github/workflows/skills-go-claims.yml"
+  push:
+    branches: [main]
+    paths:
+      - ".claude/skills/yd-go-expert/**"
+      - ".github/workflows/skills-go-claims.yml"
+
+jobs:
+  go-claims:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+      - name: Reproduce documented Go claims
+        run: |
+          go version
+          python3 -m unittest discover \
+            -s .claude/skills/yd-go-expert/tests \
+            -t .claude/skills/yd-go-expert/tests -v 2>&1 | tee out.txt
+          ! grep -qi skipped out.txt

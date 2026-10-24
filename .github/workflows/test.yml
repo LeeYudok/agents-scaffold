@@ -17,6 +17,14 @@ jobs:
       - name: Run python unit tests
         run: python3 -m unittest discover -s tests -p 'test_*.py' -v
 
+      # 스킬별 테스트(#78) — 각 스킬 폴더의 tests/test_*.py. DB·Go·React·브라우저가 필요한 단언은 여기선 skip 되고
+      # skills-*.yml 의 경로 필터 워크플로가 그 도구를 깔고 skip 없이 돌린다.
+      - name: Run skill tests
+        run: scripts/run-skill-tests.sh
+
+      - name: Run install-skills.sh tests
+        run: bash tests/test_install_skills.sh
+
       - name: Run agents-scaffold.sh bats tests
         run: bats tests/agents-scaffold.bats
 

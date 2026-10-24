@@ -39,7 +39,7 @@
   {
    "id": "FRONTMATTER-KEYS",
    "kind": "실패",
-   "rule": "`name`과 `description` 외의 키를 임의로 추가하지 않는다.",
+   "rule": "원래 없던 키를 임의로 추가하지 않는다.",
    "test": "test_evolve_guard.py::test_extra_frontmatter_key_and_wrong_name"
   },
   {

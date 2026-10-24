@@ -1,0 +1,41 @@
+# doksam-skills 에서 이식 (agents-scaffold #78) — 경로를 .claude/skills/ 기준으로 바꿨다.
+# yd-typescript 의 단언을 실제 typescript·bun 으로 재현한다.
+#
+# npm install 이 필요해서 test.yml(stdlib 전용, 네트워크 없음)에 넣지 않고 별도 잡으로 둔다.
+# 로컬·test.yml 에서는 YD_TS_VERIFY 가 없어 skip 되지만, 이 잡은 환경변수를 켜고
+# 건너뜀이 하나라도 있으면 실패시킨다 — 조용히 skip 되어 초록이 되는 것을 막는다.
+name: skills-ts-claims
+
+on:
+  pull_request:
+    paths:
+      - ".claude/skills/yd-typescript/**"
+      - ".github/workflows/skills-ts-claims.yml"
+  push:
+    branches: [main]
+    paths:
+      - ".claude/skills/yd-typescript/**"
+      - ".github/workflows/skills-ts-claims.yml"
+
+jobs:
+  ts-claims:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.2"
+      - name: Reproduce documented TypeScript and Bun claims
+        env:
+          YD_TS_VERIFY: "1"
+        run: |
+          node --version
+          bun --version
+          python3 -m unittest discover \
+            -s .claude/skills/yd-typescript/tests \
+            -t .claude/skills/yd-typescript/tests -v 2>&1 | tee out.txt
+          ! grep -qi skipped out.txt

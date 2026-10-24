@@ -43,6 +43,13 @@ class CheckText(unittest.TestCase):
         self.assertTrue(any("version" in x for x in p))
         self.assertTrue(any("디렉터리명" in x for x in p))
 
+    def test_key_already_in_base_is_kept(self):
+        # agents-scaffold #78: 기존 스킬에 이미 있던 키(user-invocable 등)는 유지해도 되고, 새 키만 막는다
+        base = skill_md(extra_fm="user-invocable: true\n")
+        self.assertFalse(g.check_text("demo", base, base))
+        added = skill_md(extra_fm="user-invocable: true\nversion: 2\n")
+        self.assertTrue(any("version" in x for x in g.check_text("demo", added, base)))
+
     def test_missing_or_unclosed_frontmatter(self):
         self.assertTrue(g.check_text("demo", "# 제목만\n"))
         self.assertTrue(g.check_text("demo", "---\nname: demo\n# 닫히지 않음\n"))
