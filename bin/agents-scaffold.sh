@@ -674,7 +674,8 @@ run_update() {
     # 파일이 no-op 업데이트에도 전부 "변경됨"으로 잡혀 .new 를 쏟아낸다.
     subbed="$(mktemp)"
     cp "$f" "$subbed"
-    substitute_placeholders "$subbed"
+    # 임시 경로엔 */skills/yd-*/ 가 없어 제외 규칙이 안 걸린다 — 원래 경로로 판정(#78)
+    case "$rel" in */skills/yd-*/*) ;; *) substitute_placeholders "$subbed" ;; esac
     if diff -q "$subbed" "$tgt" >/dev/null 2>&1; then
       rm -f "$subbed"
       unchanged+=("$rel")
