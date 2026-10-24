@@ -34,6 +34,23 @@ jobs:
       - name: Check harness support matrix
         run: python3 scripts/dev/check-harness-matrix.py
 
+  # 스킬 플러그인 마켓플레이스(#82) — 사본 드리프트는 unittest(test_build_plugins)가, 매니페스트 형식은 Claude Code 검증기가 본다.
+  # 검증기는 인증 없이 로컬에서 돈다. 버전은 고정한다(검증 규칙이 바뀌면 PR 로 올린다).
+  plugins:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Check plugin copies against sources
+        run: python3 scripts/dev/build-plugins.py --check
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code@2.1.310
+      - name: Validate marketplace and plugins
+        run: |
+          claude plugin validate .
+          for p in plugins/*/; do claude plugin validate "$p"; done
+
   # 동봉한 dotfiles/ (#76) — 원본 LeeYudok/dotfiles 의 check.yml 과 같은 검사.
   # 하위 디렉터리의 .github/workflows 는 GitHub 가 실행하지 않으므로 여기서 돌린다.
   dotfiles:
