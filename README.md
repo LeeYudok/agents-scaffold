@@ -83,6 +83,18 @@ you're new to prompting:
 - **Team/multi-session safe**: per-session git worktree isolation is the default, so
   parallel work never tramples each other.
 
+## Bundled skills
+
+The default install ships 23 skills: 10 workflow skills (`review`, `status`, `handoff`, `docs-sync`, `skill-evolve`, ...)
+and 13 `yd-*` skills covering databases, Go, React, TypeScript, builds, screen design and Korean writing. Another
+9 `yd-*` skills tied to the maintainer's environment are installed only with `--with-personal-skills`. The `yd-*`
+skills are Korean only. See [.claude/skills/README.md](.claude/skills/README.md) for the list and authoring rules.
+
+This repo is now the source of the `yd-*` skills (#78). `npx skills add leeyudok/doksam-skills` stops receiving
+updates once the original repository is archived. To use them globally, outside a project, clone this repo and run
+`scripts/install-skills.sh` (symlinks into `~/.claude/skills`, `~/.agents/skills` and `~/.gemini/config/skills`;
+supports `--personal`, `--copy` and `--project <dir>`).
+
 ## Why agents-scaffold
 
 Unlike large installable frameworks or agent/skill catalogs, agents-scaffold ships

@@ -78,6 +78,17 @@ prompt 编写也没关系：
 - **团队/多会话安全**：默认按会话隔离 git worktree，并行工作互不
   踩踏。
 
+## 内置技能
+
+默认安装包含 23 个技能：10 个工作流技能（`review`、`status`、`handoff`、`docs-sync`、`skill-evolve` 等），以及涵盖
+数据库、Go、React、TypeScript、构建、界面设计和韩文写作的 13 个 `yd-*` 技能。另有 9 个绑定维护者环境的 `yd-*`
+技能，仅在传入 `--with-personal-skills` 时安装。`yd-*` 技能仅提供韩文版。列表与编写规范见
+[.claude/skills/README.md](.claude/skills/README.md)。
+
+`yd-*` 技能的源头现在是本仓库（#78）。原仓库归档后，`npx skills add leeyudok/doksam-skills` 将不再更新。如需在项目之外
+全局使用，请 clone 本仓库并运行 `scripts/install-skills.sh`（在 `~/.claude/skills`、`~/.agents/skills`、
+`~/.gemini/config/skills` 下创建符号链接；支持 `--personal`、`--copy`、`--project <dir>`）。
+
 ## 为什么选择 agents-scaffold
 
 与大型可安装框架或 agent/skill 目录不同，agents-scaffold 不附带运行时、

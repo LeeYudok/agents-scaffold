@@ -160,6 +160,26 @@ Codex 쪽 추가 제약 두 가지도 설계에 영향을 준다.
 - **`.codex/` 레이어는 프로젝트를 신뢰한 경우에만 로드된다.** 파일을 생성했다고 활성화가
   보장되지 않는다. 그래서 결정적 강제선을 `.git/hooks` + CI 에 둔다.
 
+## 스킬 묶음 (`--with-personal-skills`)
+
+기본 설치에는 범용 스킬 23개가 들어간다 — 기존 10개(`review`·`status`·`handoff`·`docs-sync` 등)와
+[LeeYudok/doksam-skills](https://github.com/LeeYudok/doksam-skills) 에서 옮겨 온 `yd-*` 13개(DB·Go·React·
+TypeScript·빌드·화면설계·글쓰기 등)다. `yd-*` 스킬에 딸린 에이전트 11개(`.claude/agents/yd-*.md`)도 함께 깔린다(#78).
+
+`--with-personal-skills` 를 주면 메인테이너 환경에 묶인 옵트인 묶음 `presets/skills-personal/` 을 스택 프리셋
+다음에 머지한다 — 스킬 9개(`yd-agents-mem`·`yd-claude-auth-sync`·`yd-git-sync`·`yd-git-ship`·`yd-doksam-ui`·
+`yd-finguard`·`yd-sdlc-orchestrator`·`yd-script-editor`·`yd-session-recording`)와 에이전트 4개.
+특정 GitLab·호스트·ui.doksam.com·FinGuard 를 전제하므로 다른 환경에서는 쓰지 않는다.
+
+```bash
+agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --stack go --with-personal-skills
+```
+
+- `yd-*` 스킬은 한국어 전용이다 — `--lang en` 오버레이가 없다.
+- presets 는 원래 `--update` 대상이 아니지만, 이 묶음은 예외다. `--update` 에 `--with-personal-skills` 를
+  주거나 타겟에 그 스킬이 하나라도 있으면 묶음의 파일도 갱신한다(기존 `.new` 규칙 그대로). 기본 설치를
+  `--update` 해도 묶음이 새로 들어가지는 않는다.
+
 ## 언어 (`--lang`)
 
 베이스 트리(agents·rules·skills·commands·`AGENTS.md`·훅/settings 메시지)는 **기본이
@@ -195,6 +215,7 @@ agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --forge github --stack 
 | `--lang <lang>` | `ko`(기본) 또는 `en` |
 | `--stack <목록>` | 쉼표구분 스택 프리셋. 미지정 시 대화형 프롬프트 |
 | `--name <name>` | `{{PROJECT_NAME}}` 치환값. 기본 = 대상 디렉터리명 |
+| `--with-personal-skills` | 메인테이너 환경 전용 `yd-*` 스킬 9개·에이전트 4개도 설치 (아래 참조) |
 | `--yes` | 대화형 프롬프트 생략(비대화 모드) |
 | `--update` | 이미 부트스트랩된 프로젝트의 베이스 파일 최신화 (아래 참조) |
 
@@ -240,3 +261,5 @@ agents-scaffold/bin/agents-scaffold.sh --update /path/to/existing-repo
 |---|---|
 | `{{PROJECT_NAME}}` | `--name` 또는 대상 디렉터리명 |
 | `{{JAVA_VERSION}}` | `1.8` (springboot 프리셋 기본) |
+
+`.claude/skills/yd-*/` 아래 파일은 치환하지 않는다 — `yd-mobile-web-planner` 템플릿이 `{{PROJECT_NAME}}` 을 산출물용 자리표시자로 쓴다(#78).

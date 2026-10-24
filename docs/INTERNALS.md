@@ -13,6 +13,7 @@
     sdlc-tester.md      AC/TC 테스트 작성 에이전트
     sdlc-verifier.md    파이프라인 실행·리포트 에이전트
     agent-evolve.md     자기개선 메타 에이전트 — 실행 피드백으로 agents/*.md 자동 개선
+    yd-*.md             yd-* 스킬 에이전트 11개 (#78) — 원본 실파일, Codex·agy 용은 여기서 생성
   commands/            (Claude Code 에서는 레거시 — 슬래시 커맨드가 skills 로 통합됨)
     sonar.md            SonarQube 분석 (CE task 폴링, sqp_/squ_ 구분)
     sdlc-cycle.md       5단계 SDLC 자동화
@@ -40,7 +41,8 @@
     memory-factcheck/   메모리 사실 검증 — 코드·DB·이슈 대조로 stale 정정
     security-precheck/  감사 대비 보안 사전점검 → 이슈 → 병렬 수정
     docs-sync/          문서 현행화 — 주장별 사실 대조 + 다국어 짝 파일 동시 갱신
-    handoff/            세션 핸드오프 — 재개 가능한 상태를 HANDOFF.md/이슈로 넘김
+    handoff/            세션 핸드오프 — 트래커가 있으면 이슈 본문, 없으면 HANDOFF.md
+    yd-*/               doksam-skills 에서 옮긴 범용 스킬 13개 (DB·Go·React·TS·빌드·화면설계·글쓰기 등, 한국어 전용)
   workflows/            (자동 로드 아님 — 명시 호출로만 실행)
     rules-audit.js      저장형 Workflow 예제 — 스캔/검증/수정, 머지는 사람 게이트
   scripts/              (자동 로드 아님 — 명시 호출로만 실행)
@@ -52,7 +54,9 @@ presets/                프리셋 조각 (복사 덮어쓰기 방식)
   forge-gitlab/         GitLab forge — glab, MR, `Closes #N` 자동 클로즈(머지 후 확인)
   nextjs/ bun/ ...      스택별 조각 (rules + pre-commit.partial.sh + AGENTS.partial.md)
   lang-en/              영어 오버레이 (base/forge-*/stacks/*) — 아래 `--lang` 참조
+  skills-personal/      옵트인 yd-* 스킬 9개·에이전트 4개 — `--with-personal-skills` 때만 머지 (#78)
 bin/                    agents-scaffold.sh 부트스트랩 스크립트
+scripts/                install-skills.sh(스킬 전역 설치)·run-skill-tests.sh(스킬별 테스트) — 설치 후 self-clean
 ```
 
 ## 주요 패턴
@@ -63,3 +67,5 @@ bin/                    agents-scaffold.sh 부트스트랩 스크립트
 - **메모리 SSOT**: `.claude/memory/`(시스템 기본 경로 미사용). 타입접두 `project_`/`feedback_`/`reference_`/`user_`.
 - **paths 스코프 룰**: frontmatter `paths:` 로 해당 파일 작업 시에만 자동 로드.
 - **멀티에이전트 격리**: 병렬 서브에이전트 파일 동시수정 → `isolation: "worktree"`.
+- **설치 순서**: 베이스 복사 → forge 프리셋 → 스택 프리셋 → (`--with-personal-skills`) `presets/skills-personal` → `--lang en` 오버레이 → `{{PROJECT_NAME}}` 치환(`*/skills/yd-*/*` 는 제외 — planner 템플릿 자리표시자 보존) → `.agents/skills` 로 이동·`.claude/skills` 링크 → Codex·agy 에이전트 생성.
+- **스킬 테스트**: 스킬마다 `tests/test_*.py` 와 `tests/claims.json` 을 둔다. `scripts/run-skill-tests.sh` 가 스킬별로 돌리고, `tests/test_skill_contracts.py` 가 claims 형식·참조 경로·트리거 중복을 검사한다.

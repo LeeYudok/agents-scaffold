@@ -89,8 +89,9 @@ SKILL_NAMES=()
 for d in "$REPO_ROOT"/skills/*/; do
   [[ -f "$d/SKILL.md" ]] && SKILL_NAMES+=("$(basename "$d")")
 done
-# Agent Adapter 원본은 각 스킬이 소유한다: skills/<skill>/agents/{claude.md,
-# codex.toml, antigravity.md}. 스킬명은 여기서 하드코딩하지 않는다.
+# Agent Adapter 는 위 생성기가 .skills-dist/skills/<skill>/agents/{claude.md,
+# codex.toml, antigravity.md} 로 만든다(원본은 .claude/agents/<skill>.md 하나, #78).
+# 스킬명은 여기서 하드코딩하지 않는다.
 
 MODE="symlink"     # symlink | copy
 ACTION="install"   # install | uninstall | verify | list
@@ -122,7 +123,7 @@ usage() {
                         <dir>/.agents/skills/            (Codex, Antigravity)
   --skill-only        Skill 만 설치한다 (기본값)
   --with-agent        Skill 과 이름 있는 Agent Adapter 를 함께 설치한다
-                      원본은 skills/<skill>/agents/ 가 소유한다
+                      원본은 .claude/agents/<skill>.md (codex·agy 판은 설치 때 생성)
                         claude.md      -> .claude/agents/<skill>.md
                         codex.toml     -> .codex/agents/<skill_underscored>.toml
                         antigravity.md -> agy 플러그인으로 등록 (전역 설치 시)

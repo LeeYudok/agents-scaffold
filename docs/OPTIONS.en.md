@@ -171,6 +171,27 @@ Two further Codex constraints shape the design:
 - **The `.codex/` layer only loads for a trusted project.** Emitting a file does not guarantee it is
   active, which is why the deterministic enforcement line lives in `.git/hooks` + CI.
 
+## Skill bundles (`--with-personal-skills`)
+
+The default install ships 23 general-purpose skills: the original 10 (`review`, `status`, `handoff`, `docs-sync`, ...)
+and 13 `yd-*` skills moved over from [LeeYudok/doksam-skills](https://github.com/LeeYudok/doksam-skills) (DB, Go, React,
+TypeScript, builds, screen design, Korean writing, ...). The 11 agents that belong to those `yd-*` skills
+(`.claude/agents/yd-*.md`) are installed with them (#78).
+
+`--with-personal-skills` merges the opt-in bundle `presets/skills-personal/` after the stack presets — 9 skills
+(`yd-agents-mem`, `yd-claude-auth-sync`, `yd-git-sync`, `yd-git-ship`, `yd-doksam-ui`, `yd-finguard`,
+`yd-sdlc-orchestrator`, `yd-script-editor`, `yd-session-recording`) and 4 agents. They assume a specific GitLab,
+hosts, ui.doksam.com and FinGuard, so they are not meant for other environments.
+
+```bash
+agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --stack go --with-personal-skills
+```
+
+- `yd-*` skills are Korean only — there is no `--lang en` overlay for them.
+- Presets are normally outside `--update`; this bundle is the exception. With `--with-personal-skills`, or when
+  the target already has any of its skills, `--update` refreshes the bundle too (same `.new` rule). Running
+  `--update` on a default install does not add the bundle.
+
 ## Language (`--lang`)
 
 The base tree (agents, rules, skills, commands, `AGENTS.md`, hook/settings
@@ -209,6 +230,7 @@ Omit `--forge`/`--stack`/`--name` to run interactively — the script will promp
 | `--lang <lang>` | `ko` (default) or `en` |
 | `--stack <list>` | Comma-separated stack presets. Prompts interactively when omitted |
 | `--name <name>` | `{{PROJECT_NAME}}` substitution value. Default = target directory name |
+| `--with-personal-skills` | Also install the 9 `yd-*` skills and 4 agents tied to the maintainer's environment (see below) |
 | `--yes` | Skip interactive prompts (non-interactive mode) |
 | `--update` | Refresh base files of an already-bootstrapped project (see below) |
 
@@ -261,3 +283,5 @@ see **[docs/GITLAB_TEMPLATE.md](GITLAB_TEMPLATE.md)**.
 |---|---|
 | `{{PROJECT_NAME}}` | `--name` value, or the target directory name |
 | `{{JAVA_VERSION}}` | `1.8` (springboot preset default) |
+
+Files under `.claude/skills/yd-*/` are not substituted — the `yd-mobile-web-planner` template uses `{{PROJECT_NAME}}` as a placeholder for its own output (#78).

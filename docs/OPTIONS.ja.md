@@ -111,6 +111,27 @@ Codex 側の制約がもう 2 点、設計に効いてきます。
 - **指示の合計はデフォルト 32KiB 上限**（`project_doc_max_bytes`）。そのため選択したスタックの P0 のみを `AGENTS.md` にインライン化します（`--stack javaweb` で実測 6,869 B — 上限の 21%）。
 - **`.codex/` レイヤは信頼済みプロジェクトでのみロードされます。** ファイルを生成しても有効化は保証されません。だからこそ決定的な強制線は `.git/hooks` + CI に置きます。
 
+## スキルバンドル (`--with-personal-skills`)
+
+デフォルトのインストールには汎用スキル 23 個が入る — 既存の 10 個(`review`・`status`・`handoff`・`docs-sync` など)と、
+[LeeYudok/doksam-skills](https://github.com/LeeYudok/doksam-skills) から移した `yd-*` 13 個(DB・Go・React・
+TypeScript・ビルド・画面設計・韓国語ライティングなど)。これらの `yd-*` スキルに付属するエージェント 11 個
+(`.claude/agents/yd-*.md`)も一緒にインストールされる(#78)。
+
+`--with-personal-skills` を付けると、メンテナー環境に結びついたオプトインバンドル `presets/skills-personal/` を
+スタックプリセットの後にマージする — スキル 9 個(`yd-agents-mem`・`yd-claude-auth-sync`・`yd-git-sync`・
+`yd-git-ship`・`yd-doksam-ui`・`yd-finguard`・`yd-sdlc-orchestrator`・`yd-script-editor`・`yd-session-recording`)と
+エージェント 4 個。特定の GitLab・ホスト・ui.doksam.com・FinGuard を前提とするため、他の環境では使わない。
+
+```bash
+agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --stack go --with-personal-skills
+```
+
+- `yd-*` スキルは韓国語のみ — `--lang en` オーバーレイはない。
+- プリセットは本来 `--update` の対象外だが、このバンドルは例外。`--with-personal-skills` を付けるか、対象に
+  そのスキルが 1 つでもあれば `--update` がバンドルも更新する(既存の `.new` ルールのまま)。デフォルトの
+  インストールを `--update` してもバンドルは追加されない。
+
 ## 言語 (`--lang`)
 
 ベースツリー(エージェント、ルール、スキル、コマンド、`AGENTS.md`、フック/settings の
@@ -149,6 +170,7 @@ agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --forge github --stack 
 | `--lang <lang>` | `ko`(デフォルト)または `en` |
 | `--stack <list>` | カンマ区切りのスタックプリセット。省略時は対話的にプロンプト |
 | `--name <name>` | `{{PROJECT_NAME}}` の置換値。デフォルトは対象ディレクトリ名 |
+| `--with-personal-skills` | メンテナー環境専用の `yd-*` スキル 9 個とエージェント 4 個もインストール(後述) |
 | `--yes` | 対話プロンプトをスキップ(非対話モード) |
 | `--update` | ブートストラップ済みプロジェクトのベースファイルを更新(後述) |
 
@@ -198,3 +220,5 @@ agents-scaffold/bin/agents-scaffold.sh --update /path/to/existing-repo
 |---|---|
 | `{{PROJECT_NAME}}` | `--name` の値、または対象ディレクトリ名 |
 | `{{JAVA_VERSION}}` | `1.8`(springboot プリセットのデフォルト) |
+
+`.claude/skills/yd-*/` 配下のファイルは置換しない — `yd-mobile-web-planner` のテンプレートが `{{PROJECT_NAME}}` を成果物用のプレースホルダーとして使うため(#78)。

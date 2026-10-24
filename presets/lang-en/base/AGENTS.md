@@ -34,12 +34,12 @@ authoring skeleton and conventions.
 
 | Directory | Role | Details |
 | :--- | :--- | :--- |
-| `agents/` | subagent definitions (code-reviewer, security-audit, db-migration, sdlc-*, agent-evolve). Codex `.codex/agents` and agy `.agents/agents` are generated from here (#64) | [README](.claude/agents/README.md) |
+| `agents/` | subagent definitions (code-reviewer, security-audit, db-migration, sdlc-*, agent-evolve, agents for the yd-* skills #78). Codex `.codex/agents` and agy `.agents/agents` are generated from here (#64) | [README](.claude/agents/README.md) |
 | `commands/` | custom slash commands (fix-issue, sdlc-cycle, sonar, knowledge-graph) | [README](.claude/commands/README.md) |
 | `hooks/` | enforced gates — pre-commit, auto-format, observe-lite, memory reminders. Codex/agy hooks are generated from `settings.json` by `hook-adapter.py` (#65) | [README](.claude/hooks/README.md) |
 | `memory/` | project memory SSOT — MEMORY.md index + type-prefixed files | [README](.claude/memory/README.md) |
 | `rules/` | context-aware rules — `paths:`-scoped conditional loading. agy's `.agents/rules` is generated from here (#63) | [README](.claude/rules/README.md) |
-| `skills/` | situational procedures — review, status, search-first, memory-factcheck, security-precheck, docs-sync, grill-me, handoff, ... In an installed project this is a symlink to the source `.agents/skills/` (#61) | [README](.claude/skills/README.md) |
+| `skills/` | situational procedures — review, status, search-first, memory-factcheck, security-precheck, docs-sync, grill-me, handoff, ... plus the general `yd-*` skills (DB, Go, React, TS, builds, screen design, writing; Korean only, #78) — environment-specific `yd-*` skills are opt-in via `--with-personal-skills`. In an installed project this is a symlink to the source `.agents/skills/` (#61) | [README](.claude/skills/README.md) |
 | `workflows/` | stored Workflow orchestration scripts (`*.js`) — rules-audit example | [README](.claude/workflows/README.md) |
 | `scripts/` | repo-local helpers — knowledge_graph.py (doc graph + link checker) | [README](.claude/scripts/README.md) |
 

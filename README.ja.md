@@ -82,6 +82,18 @@ Blocked: a .env-type file is staged. Commit is not allowed.
 - **チーム/マルチセッションでも安全**: セッションごとの git worktree 分離が
   デフォルトなので、並行作業が互いを踏み荒らすことはありません。
 
+## 同梱スキル
+
+デフォルトのインストールにはスキル 23 個が入る — ワークフロースキル 10 個(`review`・`status`・`handoff`・`docs-sync`・
+`skill-evolve` など)と、DB・Go・React・TypeScript・ビルド・画面設計・韓国語ライティングを扱う `yd-*` 13 個。メンテナー
+環境専用の `yd-*` 9 個は `--with-personal-skills` を付けたときだけインストールされる。`yd-*` スキルは韓国語のみ。
+一覧と作成規約は [.claude/skills/README.md](.claude/skills/README.md) を参照。
+
+`yd-*` スキルの原本は今やこのリポジトリだ(#78)。元のリポジトリがアーカイブされると `npx skills add leeyudok/doksam-skills`
+は更新されなくなる。プロジェクトの外でグローバルに使うには、このリポジトリを clone して `scripts/install-skills.sh` を
+実行する(`~/.claude/skills`・`~/.agents/skills`・`~/.gemini/config/skills` にシンボリックリンク。`--personal`・`--copy`・
+`--project <dir>` に対応)。
+
 ## なぜ agents-scaffold か
 
 大規模なインストール型フレームワークやエージェント/スキルのカタログと違い、agents-scaffold は
