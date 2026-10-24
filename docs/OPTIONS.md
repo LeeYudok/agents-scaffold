@@ -113,9 +113,9 @@ Codex(codex-cli 0.163.0)와 agy(1.4.2)는 각 모드 산출물의 AGENTS.md 와 
 1.2.16 에서 해소됐다. 모델이 규칙을 놓쳐도 git hook이 exit 2로 차단한다.
 
 지원 상태의 단일 진실원천은 [`docs/harness-matrix.json`](harness-matrix.json) 이다. 이 표는
-그 manifest 와 대조되며, `scripts/check-harness-matrix.py` 가 CI 에서 검사한다 — `full` 등급이
+그 manifest 와 대조되며, `scripts/dev/check-harness-matrix.py` 가 CI 에서 검사한다 — `full` 등급이
 90일 넘게 재측정되지 않았거나 판정에 근거가 없으면 **빌드가 실패한다**. 재측정은
-`scripts/spike-codex-contract.sh --dynamic`·`scripts/spike-agy-contract.sh --dynamic` 으로 수행한다.
+`scripts/dev/spike-codex-contract.sh --dynamic`·`scripts/dev/spike-agy-contract.sh --dynamic` 으로 수행한다.
 
 **agy 룰 어댑터 (#63).** `--harness agy|all` 이면 `.claude/rules/*.md` 를 `.agents/rules/*.md` 로 생성한다. `paths:` 는
 `trigger: glob` + `globs:`, `paths:` 가 없으면 `trigger: always_on` 이다. 패턴은 agy 1.2.16 실측대로 바꾼다 — 슬래시가 든
@@ -166,7 +166,7 @@ Codex 쪽 추가 제약 두 가지도 설계에 영향을 준다.
 [LeeYudok/doksam-skills](https://github.com/LeeYudok/doksam-skills) 에서 옮겨 온 `yd-*` 13개(DB·Go·React·
 TypeScript·빌드·화면설계·글쓰기 등), 의존성 CVE 점검 `yd-cve-check`(#79)다. `yd-*` 스킬에 딸린 에이전트 12개(`.claude/agents/yd-*.md`)도 함께 깔린다(#78).
 
-`--with-personal-skills` 를 주면 메인테이너 환경에 묶인 옵트인 묶음 `presets/skills-personal/` 을 스택 프리셋
+`--with-personal-skills` 를 주면 메인테이너 환경에 묶인 옵트인 묶음 `presets/skills/personal/` 을 스택 프리셋
 다음에 머지한다 — 스킬 9개(`yd-agents-mem`·`yd-claude-auth-sync`·`yd-git-sync`·`yd-git-ship`·`yd-doksam-ui`·
 `yd-finguard`·`yd-sdlc-orchestrator`·`yd-script-editor`·`yd-session-recording`)와 에이전트 4개.
 특정 GitLab·호스트·ui.doksam.com·FinGuard 를 전제하므로 다른 환경에서는 쓰지 않는다.
@@ -185,7 +185,7 @@ agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --stack go --with-perso
 베이스 트리(agents·rules·skills·commands·`AGENTS.md`·훅/settings 메시지)는 **기본이
 한국어다**(#36 반전 — 한국어가 원본, 영어는 번역 오버레이). `--lang en` 을 주면 영어
 번역을 **가장 마지막에** 얹는다 — 베이스 복사 → forge 프리셋 → 스택 프리셋이 끝난 뒤
-`presets/lang-en/base` + `presets/lang-en/forge-<forge>` + `presets/lang-en/stacks/<stack>`
+`presets/lang/en/base` + `presets/lang/en/forge/<forge>` + `presets/lang/en/stacks/<stack>`
 콘텐츠로 동일 파일을 덮어쓴다.
 
 ```bash

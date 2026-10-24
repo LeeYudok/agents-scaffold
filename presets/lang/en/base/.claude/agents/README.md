@@ -17,7 +17,7 @@ Recommend the `{{PROJECT_NAME}}-ag-*` prefix for newly created agents. Bundled e
 skill's `SKILL.md`, and the agent body just tells the agent to follow that skill. The 12 default agents
 (`yd-blueprint`, `yd-db-expert`, `yd-frontend-build`, `yd-go-expert`, `yd-mobile-web-planner`, `yd-nextjs-implementer`,
 `yd-oracle-expert`, `yd-pg-expert`, `yd-react-expert`, `yd-sqlite-expert`, `yd-writer-kr`, `yd-cve-check`) live here; the 4 opt-in ones
-(`yd-doksam-ui`, `yd-finguard`, `yd-script-editor`, `yd-sdlc-orchestrator`) live in `presets/skills-personal/.claude/agents/`
+(`yd-doksam-ui`, `yd-finguard`, `yd-script-editor`, `yd-sdlc-orchestrator`) live in `presets/skills/personal/.claude/agents/`
 and are added with `--with-personal-skills`. Both sets are real source files, not symlinks, and the Codex/agy
 versions are generated from them by the rules below.
 

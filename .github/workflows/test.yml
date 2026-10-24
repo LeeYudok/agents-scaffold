@@ -20,7 +20,7 @@ jobs:
       # 스킬별 테스트(#78) — 각 스킬 폴더의 tests/test_*.py. DB·Go·React·브라우저가 필요한 단언은 여기선 skip 되고
       # skills-*.yml 의 경로 필터 워크플로가 그 도구를 깔고 skip 없이 돌린다.
       - name: Run skill tests
-        run: scripts/run-skill-tests.sh
+        run: scripts/dev/run-skill-tests.sh
 
       - name: Run install-skills.sh tests
         run: bash tests/test_install_skills.sh
@@ -32,7 +32,7 @@ jobs:
       # 없거나, manifest 와 문서의 CLI 버전이 어긋나면 실패한다. 문서를 자동 수정하지
       # 않는다 — 강등은 사람이 PR 로 반영한다.
       - name: Check harness support matrix
-        run: python3 scripts/check-harness-matrix.py
+        run: python3 scripts/dev/check-harness-matrix.py
 
   # 동봉한 dotfiles/ (#76) — 원본 LeeYudok/dotfiles 의 check.yml 과 같은 검사.
   # 하위 디렉터리의 .github/workflows 는 GitHub 가 실행하지 않으므로 여기서 돌린다.

@@ -59,7 +59,7 @@ SECRETS = [
 ]
 
 
-# 영어 템플릿(presets/lang-en 의 handoff, agents-scaffold #78)의 라벨·섹션 → 한국어 원본 이름.
+# 영어 템플릿(presets/lang/en 의 handoff, agents-scaffold #78)의 라벨·섹션 → 한국어 원본 이름.
 # 검사 규칙은 한국어 이름 하나로만 두고, 읽을 때 영어 라벨을 바꿔 끼운다.
 EN_FIELDS = {"Issue": "이슈", "Written": "작성", "Work issue/PR": "작업 이슈/PR", "Branch": "브랜치",
              "Current handoff": "현재 핸드오프", "Summary": "요약", "Full list": "전체 목록"}

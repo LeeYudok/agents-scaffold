@@ -14,12 +14,12 @@ Usage:
   --forge        Issue/PR forge. github (default) or gitlab. Interactive prompt if unset (default github).
   --stack        Comma-separated stack presets. Interactive prompt if unset.
   --lang         Output language overlay. ko (default) or en. Interactive prompt if unset.
-                 en overlays presets/lang-en/ (base + forge + selected stacks) on top of the
+                 en overlays presets/lang/en/ (base + forge + selected stacks) on top of the
                  English base, after base copy + forge merge + stack merge.
   --name         {{PROJECT_NAME}} substitution value. Default = target directory name.
   --with-personal-skills
                  Also install the opt-in yd-* skills/agents tied to the maintainer's environment
-                 (presets/skills-personal: GitLab agents-mem, host sync, ui.doksam.com, FinGuard, ...).
+                 (presets/skills/personal: GitLab agents-mem, host sync, ui.doksam.com, FinGuard, ...).
                  Korean only. --update refreshes them when the target already has any of them.
   --harness      Target agent harness: claude (default), codex, agy, or all.
                  All three read AGENTS.md natively. Skills live once in .agents/skills
@@ -59,7 +59,7 @@ no download happens. Windows needs Git for Windows (Git Bash); from cmd/PowerShe
 bin\agents-scaffold.cmd. See docs/OFFLINE_INSTALL.en.md.
 
 Flow: copy base (.claude/ + AGENTS.md) -> merge forge preset -> merge selected stack presets
-      -> merge lang-en overlay (if --lang en) -> substitute {{PLACEHOLDER}} -> chmod +x
+      -> merge lang/en overlay (if --lang en) -> substitute {{PLACEHOLDER}} -> chmod +x
       -> in-place: self-clean bin/·presets/·scripts/·dotfiles/·docs/superpowers/·docs/harness-matrix.json.
 EOF
 }
@@ -78,7 +78,7 @@ ASSUME_YES=0
 UPDATE=0
 HARNESS="claude"
 WITH_PERSONAL=0
-PERSONAL_PRESET="presets/skills-personal"   # #78: 옵트인 yd-* 스킬·에이전트 묶음
+PERSONAL_PRESET="presets/skills/personal"   # #78: 옵트인 yd-* 스킬·에이전트 묶음
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -180,6 +180,21 @@ is_repo_private() {
     .claude/memory/*) return 0 ;;
   esac
   return 1
+}
+
+# #81: 스택 프리셋 디렉터리. presets/stacks/<s> 가 없고 옛 레이아웃 presets/<s> 가 있으면(포크가 만든 프리셋)
+#   경고하고 그것을 쓴다. 그룹 디렉터리(forge·lang·skills·stacks)는 스택이 아니다. 없으면 빈 문자열.
+stack_dir() {
+  local s="$1"
+  if [ -d "$SRC/presets/stacks/$s" ]; then
+    printf '%s' "$SRC/presets/stacks/$s"
+    return 0
+  fi
+  case "$s" in forge | lang | skills | stacks) return 0 ;; esac
+  if [ -d "$SRC/presets/$s/.claude" ]; then
+    echo "Warning: presets/$s uses the pre-#81 layout — move it to presets/stacks/$s" >&2
+    printf '%s' "$SRC/presets/$s"
+  fi
 }
 
 # 배포 경로 — 설치용 인덱스는 타깃의 MEMORY.md 가 된다
@@ -821,7 +836,8 @@ case "$LANG_OPT" in
 esac
 
 # 스택 미지정 + 대화형이면 묻는다
-AVAILABLE_STACKS="nextjs, springboot, javaweb, bun, python, go, rust, ruby-rails, dotnet, android, flutter, ops"
+# #81: 스택 목록은 presets/stacks/ 에서 만든다(하드코딩하면 새 프리셋이 안내에서 빠진다)
+AVAILABLE_STACKS="$(find "$SRC/presets/stacks" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; 2>/dev/null | sort | paste -sd, - | sed 's/,/, /g')"
 if [ -z "$STACKS" ] && [ "$ASSUME_YES" -eq 0 ] && [ -t 0 ]; then
   echo "Select stack presets (comma-separated, blank=common only): $AVAILABLE_STACKS" >&2
   printf "stack> " >&2
@@ -912,7 +928,7 @@ merge_preset() {
 }
 
 # 2a) forge 프리셋 머지 (스택보다 먼저 — forge 워크플로 규약을 베이스에 얹는다)
-fdir="$SRC/presets/forge-$FORGE"
+fdir="$SRC/presets/forge/$FORGE"
 if [ -d "$fdir" ]; then
   merge_preset "$fdir"
 else
@@ -926,25 +942,25 @@ IFS=',' read -r -a STACK_ARR <<< "$STACKS"
 for s in "${STACK_ARR[@]:-}"; do
   s="$(echo "$s" | tr -d '[:space:]')"
   [ -z "$s" ] && continue
-  pdir="$SRC/presets/$s"
-  [ -d "$pdir" ] || { echo "Warning: unknown stack '$s' — skipping" >&2; continue; }
+  pdir="$(stack_dir "$s")"
+  [ -n "$pdir" ] || { echo "Warning: unknown stack '$s' — skipping" >&2; continue; }
   merge_preset "$pdir"
 done
 
 # 2b-2) #78: 옵트인 yd-* 스킬 묶음. 스택과 같은 merge_preset 경로라 skills_to_ssot 전에 .claude/skills 로
-#       들어가 .agents/skills 원본으로 옮겨진다. 한국어 전용이라 lang-en 오버레이가 없다.
+#       들어가 .agents/skills 원본으로 옮겨진다. 한국어 전용이라 lang/en 오버레이가 없다.
 if [ "$WITH_PERSONAL" -eq 1 ]; then
   merge_preset "$SRC/$PERSONAL_PRESET"
   echo "== personal skills merged ($PERSONAL_PRESET) ==" >&2
 fi
 
 # 2c) 이슈 #22: 한국어 오버레이 머지. base/forge/stack 머지가 모두 끝난 뒤,
-#     LANG_OPT=en 이면 presets/lang-en/ 아래 대응 디렉터리로 덮어쓴다 (#36 반전:
-#     베이스 = 한국어 원본, 영어가 오버레이). lang-en/base 는 .claude/ 뿐 아니라
+#     LANG_OPT=en 이면 presets/lang/en/ 아래 대응 디렉터리로 덮어쓴다 (#36 반전:
+#     베이스 = 한국어 원본, 영어가 오버레이). lang/en/base 는 .claude/ 뿐 아니라
 #     루트 파일(AGENTS.md 등)도 base/ 바로 아래
 #     두므로 merge_preset (=.claude/ 전용) 이 못 다루는 루트 파일은 별도 복사한다.
 if [ "$LANG_OPT" = "en" ]; then
-  lang_dir="$SRC/presets/lang-en"
+  lang_dir="$SRC/presets/lang/en"
   if [ -d "$lang_dir" ]; then
     lang_base="$lang_dir/base"
     if [ -d "$lang_base" ]; then
@@ -954,14 +970,14 @@ if [ "$LANG_OPT" = "en" ]; then
         cp "$rf" "$TARGET/$(basename "$rf")"
       done
     else
-      echo "Warning: presets/lang-en/base not found — skipping English base overlay" >&2
+      echo "Warning: presets/lang/en/base not found — skipping English base overlay" >&2
     fi
 
-    lang_forge="$lang_dir/forge-$FORGE"
+    lang_forge="$lang_dir/forge/$FORGE"
     if [ -d "$lang_forge" ]; then
       merge_preset "$lang_forge" 1
     else
-      echo "Warning: presets/lang-en/forge-$FORGE not found — skipping English forge overlay" >&2
+      echo "Warning: presets/lang/en/forge/$FORGE not found — skipping English forge overlay" >&2
     fi
 
     for s in "${STACK_ARR[@]:-}"; do
@@ -971,11 +987,11 @@ if [ "$LANG_OPT" = "en" ]; then
       if [ -d "$lang_stack" ]; then
         merge_preset "$lang_stack" 1
       else
-        echo "Warning: presets/lang-en/stacks/$s not found — skipping English stack overlay" >&2
+        echo "Warning: presets/lang/en/stacks/$s not found — skipping English stack overlay" >&2
       fi
     done
   else
-    echo "Warning: presets/lang-en not found — skipping English overlay entirely" >&2
+    echo "Warning: presets/lang/en not found — skipping English overlay entirely" >&2
   fi
 fi
 
@@ -992,9 +1008,9 @@ if [ -f "$agents_md" ] && grep -qF "$p0_marker" "$agents_md"; then
   for s in "${STACK_ARR[@]:-}"; do
     s="$(echo "$s" | tr -d '[:space:]')"
     [ -z "$s" ] && continue
-    partial="$SRC/presets/$s/AGENTS.partial.md"
-    if [ "$LANG_OPT" = "en" ] && [ -f "$SRC/presets/lang-en/stacks/$s/AGENTS.partial.md" ]; then
-      partial="$SRC/presets/lang-en/stacks/$s/AGENTS.partial.md"
+    partial="$(stack_dir "$s")/AGENTS.partial.md"
+    if [ "$LANG_OPT" = "en" ] && [ -f "$SRC/presets/lang/en/stacks/$s/AGENTS.partial.md" ]; then
+      partial="$SRC/presets/lang/en/stacks/$s/AGENTS.partial.md"
     fi
     [ -f "$partial" ] || { echo "Warning: $partial not found — stack P0 not inlined for '$s'" >&2; continue; }
     tmp="$(mktemp)"

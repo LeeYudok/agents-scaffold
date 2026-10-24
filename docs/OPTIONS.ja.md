@@ -90,7 +90,7 @@ git フックは**ハーネスに関係なく常に配線されます**（#21）
 
 Codex（codex-cli 0.163.0）と agy（1.4.2）は、各モード成果物の AGENTS.md とインラインのスタック P0 をツール呼び出しなしで自動的に読み込み、`.agents/skills` のリポジトリ skills のみを発見しました。どちらも `.claude/skills` は発見しません。agy 1.2.7 の headless は `AGENTS.md` も `GEMINI.md` も読み込めませんでしたが、1.2.16 で解消されています。モデルがルールを見落としても git フックが staged `.env` を exit 2 でブロックします。
 
-サポート状況の単一の真実の源は [`docs/harness-matrix.json`](harness-matrix.json) です。この表はその manifest と突き合わされ、CI では `scripts/check-harness-matrix.py` が検査します — `full` 等級が 90 日以上再実測されていない、あるいは判定に根拠がない場合、**ビルドは失敗します**。再実測は `scripts/spike-codex-contract.sh --dynamic` と `scripts/spike-agy-contract.sh --dynamic` で行います。
+サポート状況の単一の真実の源は [`docs/harness-matrix.json`](harness-matrix.json) です。この表はその manifest と突き合わされ、CI では `scripts/dev/check-harness-matrix.py` が検査します — `full` 等級が 90 日以上再実測されていない、あるいは判定に根拠がない場合、**ビルドは失敗します**。再実測は `scripts/dev/spike-codex-contract.sh --dynamic` と `scripts/dev/spike-agy-contract.sh --dynamic` で行います。
 
 **agy ルールアダプタ（#63）。** `--harness agy|all` では `.claude/rules/*.md` を `.agents/rules/*.md` として生成します。`paths:` があれば `trigger: glob` + `globs:`、なければ `trigger: always_on` になります。パターンは agy 1.2.16 の実測どおりに変換します — スラッシュを含む相対パターン（`src/**`）は `**/src/**` に、スラッシュのないパターン（`Dockerfile`・`*.py`）はファイル名に一致するのでそのまま残します。複数のパターンは空白なしのカンマでつなぎます（カンマの後の空白は次のパターンの一部になり、一致しなくなります）。`.claude/rules` が原本で、`--update` 時に再生成し（既存プロジェクトは `--update --harness agy` で初回生成）、原本がなくなった生成物は削除します。生成マークのない同名ファイル（ユーザー所有）には触れません。
 
@@ -118,7 +118,7 @@ Codex 側の制約がもう 2 点、設計に効いてきます。
 TypeScript・ビルド・画面設計・韓国語ライティングなど)、依存関係の CVE 点検 `yd-cve-check`(#79)。これらの `yd-*` スキルに付属するエージェント 12 個
 (`.claude/agents/yd-*.md`)も一緒にインストールされる(#78)。
 
-`--with-personal-skills` を付けると、メンテナー環境に結びついたオプトインバンドル `presets/skills-personal/` を
+`--with-personal-skills` を付けると、メンテナー環境に結びついたオプトインバンドル `presets/skills/personal/` を
 スタックプリセットの後にマージする — スキル 9 個(`yd-agents-mem`・`yd-claude-auth-sync`・`yd-git-sync`・
 `yd-git-ship`・`yd-doksam-ui`・`yd-finguard`・`yd-sdlc-orchestrator`・`yd-script-editor`・`yd-session-recording`)と
 エージェント 4 個。特定の GitLab・ホスト・ui.doksam.com・FinGuard を前提とするため、他の環境では使わない。
@@ -138,7 +138,7 @@ agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --stack go --with-perso
 メッセージ)は**デフォルトで韓国語**です(#36 での反転 — 韓国語が単一の真実源で、
 英語は翻訳オーバーレイ)。`--lang en` は英訳を最後に重ねます — ベースコピー、
 forge プリセット、スタックプリセットの後に適用されるため、同じファイルを
-`presets/lang-en/base` + `presets/lang-en/forge-<forge>` + `presets/lang-en/stacks/<stack>`
+`presets/lang/en/base` + `presets/lang/en/forge/<forge>` + `presets/lang/en/stacks/<stack>`
 の内容で上書きします。
 
 ```bash

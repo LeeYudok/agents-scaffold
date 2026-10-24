@@ -53,7 +53,7 @@ doksam-skills 의 `yd-handoff`·`yd-doc-sync`·`yd-memory-factcheck`·`yd-skill-
 `handoff`·`docs-sync`·`memory-factcheck`·`skill-evolve` 에 합쳤다.
 
 **옵트인 9개** — 메인테이너 환경(특정 GitLab·호스트·ui.doksam.com·FinGuard)을 전제한다. 원본은 이 레포의
-`presets/skills-personal/.claude/skills/` 이고, 설치할 때 `--with-personal-skills` 를 줘야 들어간다.
+`presets/skills/personal/.claude/skills/` 이고, 설치할 때 `--with-personal-skills` 를 줘야 들어간다.
 `yd-sdlc-orchestrator`·`yd-finguard`·`yd-doksam-ui`·`yd-script-editor`(에이전트 동봉), `yd-agents-mem`·
 `yd-git-ship`·`yd-git-sync`·`yd-claude-auth-sync`·`yd-session-recording`.
 
@@ -62,7 +62,7 @@ doksam-skills 의 `yd-handoff`·`yd-doc-sync`·`yd-memory-factcheck`·`yd-skill-
 - frontmatter 는 `name`(폴더명과 같게)과 `description`(트리거 조건을 구체적으로) 필수.
 - 테스트 가능한 단언은 `tests/claims.json` 에 `{id, kind, rule, test}` 로 적는다. `rule` 은 SKILL.md 나
   `references/*.md` 에 **글자 그대로** 있어야 하고, `test` 는 unittest 가 실제로 수집하는 테스트여야 한다.
-- 스킬 테스트는 `tests/test_*.py`. 레포 루트에서 `scripts/run-skill-tests.sh [스킬명]` 으로 돌린다.
+- 스킬 테스트는 `tests/test_*.py`. 레포 루트에서 `scripts/dev/run-skill-tests.sh [스킬명]` 으로 돌린다.
 - `tests/test_skill_contracts.py` 가 claims 형식, 문서가 말한 스크립트 경로의 존재, 스킬 간 description 트리거
   중복을 검사한다. 트리거가 겹치면 description 에 경계("X 는 Y 가 맡는다")를 적어 가른다.
 

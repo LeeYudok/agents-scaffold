@@ -6,7 +6,7 @@
 3. 이미 있는 스킬을 "(추가 예정)" 으로 적어 두지 않았는가.
 4. 스킬 description(트리거)끼리 판별 어휘가 겹치지 않는가 — 겹치면 한 요청에 여러 스킬이 뜬다.
 
-대상: .claude/skills/*(기본)·presets/skills-personal/.claude/skills/*(옵트인). 영어 오버레이는 대상이 아니다.
+대상: .claude/skills/*(기본)·presets/skills/personal/.claude/skills/*(옵트인). 영어 오버레이는 대상이 아니다.
 """
 import ast
 import itertools
@@ -17,7 +17,7 @@ from collections import Counter
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-SKILL_ROOTS = (REPO / ".claude" / "skills", REPO / "presets" / "skills-personal" / ".claude" / "skills")
+SKILL_ROOTS = (REPO / ".claude" / "skills", REPO / "presets" / "skills" / "personal" / ".claude" / "skills")
 KINDS = ("정상", "실패", "경계", "도구오류", "오탐")
 ID_RE = re.compile(r"^[A-Z0-9]+(-[A-Z0-9]+)*$")
 

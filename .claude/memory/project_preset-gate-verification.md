@@ -5,7 +5,7 @@ metadata:
   type: project
 ---
 
-새 스택 프리셋(`presets/<stack>/.claude/hooks/pre-commit.partial.sh`)의 실동작은
+새 스택 프리셋(`presets/stacks/<stack>/.claude/hooks/pre-commit.partial.sh`)의 실동작은
 **PATH 앞에 가짜 툴 바이너리를 깔아** 검증한다. 스크래치 레포를
 `bin/agents-scaffold.sh <dir> --stack <stack>,bun --yes` 로 부트스트랩하고,
 `$SCRATCH/bin/<tool>` 에 서브커맨드별 exit code 를 흉내내는 셸 스크립트를 둔 뒤

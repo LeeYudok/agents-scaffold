@@ -49,14 +49,16 @@
     knowledge_graph.py       .claude 生态图谱 + --check 断链门禁
   settings.json               钩子接线 + 默认 deny 规则
 AGENTS.md                 项目大脑 —— 规则 SSOT（P0/P1/P2 + 工作流）
-presets/                  预设片段（复制覆盖模型）
-  forge-github/           GitHub forge —— gh、PR、`Closes #N` 自动关闭
-  forge-gitlab/           GitLab forge —— glab、MR、`Closes #N` 自动关闭（合并后需确认）
-  nextjs/ bun/ ...        各技术栈片段（规则 + pre-commit.partial.sh）
-  lang-en/                英文覆盖层（base/forge-*/stacks/*）—— 见下文 `--lang`
-  skills-personal/        可选包：9 个 yd-* 技能 + 4 个 agent，仅在 `--with-personal-skills` 时合并（#78）
+presets/                  预设片段（复制覆盖模型，#81 起按类型分组）
+  stacks/<stack>/         各技术栈片段（规则 + pre-commit.partial.sh + AGENTS.partial.md）—— nextjs、bun、ops 等
+  forge/github/           GitHub forge —— gh、PR、`Closes #N` 自动关闭
+  forge/gitlab/           GitLab forge —— glab、MR、`Closes #N` 自动关闭（合并后需确认）
+  lang/en/                英文覆盖层（base/、forge/<forge>/、stacks/<stack>/）—— 见下文 `--lang`
+  skills/personal/        可选包：9 个 yd-* 技能 + 4 个 agent，仅在 `--with-personal-skills` 时合并（#78）
 bin/                      agents-scaffold.sh 引导脚本
-scripts/                  install-skills.sh（全局安装技能）、run-skill-tests.sh（逐技能测试）—— 安装后自清理
+scripts/                  面向用户 —— install-skills.sh（全局安装技能）、make-offline-bundle.sh（离线安装包）
+  dev/                    仅维护者/CI —— run-skill-tests.sh、check-harness-matrix.py、spike-*-contract.sh
+                          （scripts/ 不会被安装，in-place 安装后自清理）
 tests/                    引导脚本的 bats 回归测试套件
 ```
 
@@ -68,5 +70,5 @@ tests/                    引导脚本的 bats 回归测试套件
 - **Memory SSOT**：`.claude/memory/`（不使用系统默认路径）。类型前缀：`project_`/`feedback_`/`reference_`/`user_`。
 - **按路径作用域加载的规则**：frontmatter `paths:` 使规则仅在处理匹配文件时自动加载。
 - **多 agent 隔离**：并行 subagent 可能同时触碰同一文件时，使用 `isolation: "worktree"`。
-- **安装顺序**：基础复制 → forge 预设 → 技术栈预设 → （`--with-personal-skills`）`presets/skills-personal` → `--lang en` 覆盖层 → `{{PROJECT_NAME}}` 替换（跳过 `*/skills/yd-*/*`，保留 planner 模板的占位符）→ 移至 `.agents/skills` 并链接 `.claude/skills` → 生成 Codex/agy agent。
-- **技能测试**：每个技能带有 `tests/test_*.py` 和 `tests/claims.json`。`scripts/run-skill-tests.sh` 逐技能运行；`tests/test_skill_contracts.py` 检查 claims 格式、引用路径和触发词重叠。
+- **安装顺序**：基础复制 → forge 预设 → 技术栈预设 → （`--with-personal-skills`）`presets/skills/personal` → `--lang en` 覆盖层 → `{{PROJECT_NAME}}` 替换（跳过 `*/skills/yd-*/*`，保留 planner 模板的占位符）→ 移至 `.agents/skills` 并链接 `.claude/skills` → 生成 Codex/agy agent。
+- **技能测试**：每个技能带有 `tests/test_*.py` 和 `tests/claims.json`。`scripts/dev/run-skill-tests.sh` 逐技能运行；`tests/test_skill_contracts.py` 检查 claims 格式、引用路径和触发词重叠。

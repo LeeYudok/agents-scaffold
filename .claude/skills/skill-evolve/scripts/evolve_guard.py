@@ -10,7 +10,7 @@ clean     워킹 트리가 비어 있지 않으면 exit 1 (Phase 1).
 check     SKILL.md 가 편집 규칙을 지켰는지 본다 (Phase 3). frontmatter 는 name·description 과 base 에 이미 있던 키뿐이고
           name 이 디렉터리명과 같은지, 이모지가 없는지, Learned warnings 줄이 `- (YYYY-MM-DD) ...`
           형식인지, base 에 있던 경고가 그대로 남았는지.
-verify    테스트(기본: scripts/run-skill-tests.sh, 없으면 scripts/run_tests.sh)를 돌리고, 실패하면 **그 스킬의 SKILL.md 만** 되돌린다 (Phase 4).
+verify    테스트(기본: scripts/dev/run-skill-tests.sh, 없으면 scripts/run_tests.sh)를 돌리고, 실패하면 **그 스킬의 SKILL.md 만** 되돌린다 (Phase 4).
 rollback  그 스킬의 SKILL.md 만 되돌린다. 경로 없는 `git restore .` 는 다른 에이전트의 변경까지 지운다.
 
 종료 코드: 0 통과, 1 규칙 위반·테스트 실패, 2 사용 오류(스킬이 없음, git 저장소가 아님 등).
@@ -43,8 +43,8 @@ def git(repo: Path, *args: str) -> subprocess.CompletedProcess:
 
 
 # 스킬을 찾는 위치(agents-scaffold #78): 기본·옵트인 원본, 설치된 프로젝트의 원본, 예전 doksam-skills 배치.
-SKILL_DIRS = (".claude/skills", "presets/skills-personal/.claude/skills", ".agents/skills", "skills")
-DEFAULT_TEST_CMDS = ("scripts/run-skill-tests.sh", "scripts/run_tests.sh")
+SKILL_DIRS = (".claude/skills", "presets/skills/personal/.claude/skills", ".agents/skills", "skills")
+DEFAULT_TEST_CMDS = ("scripts/dev/run-skill-tests.sh", "scripts/run_tests.sh")
 
 
 def skill_file(repo: Path, skill: str) -> Path:

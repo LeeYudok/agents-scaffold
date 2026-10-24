@@ -90,7 +90,7 @@ git 钩子**与 harness 无关，始终接入**（#21）。Claude Code 的 `PreT
 
 Codex（codex-cli 0.163.0）与 agy（1.4.2）会在不调用任何工具的情况下自动加载各自模式产物中的 AGENTS.md 与内联技术栈 P0，并且只发现 `.agents/skills` 下的仓库 skills；两者都不会发现 `.claude/skills`。agy 1.2.7 的 headless 模式既不加载 `AGENTS.md` 也不加载 `GEMINI.md`，该问题已在 1.2.16 中解决。即使模型遗漏规则，git 钩子仍会以 exit 2 拦截已暂存的 `.env`。
 
-支持状态的单一真实来源是 [`docs/harness-matrix.json`](harness-matrix.json)。本表会与该 manifest 对照，并由 CI 中的 `scripts/check-harness-matrix.py` 检查 — 若某个 `full` 等级超过 90 天未重新实测，或某项判定缺少证据，**构建将失败**。重新实测请运行 `scripts/spike-codex-contract.sh --dynamic` 与 `scripts/spike-agy-contract.sh --dynamic`。
+支持状态的单一真实来源是 [`docs/harness-matrix.json`](harness-matrix.json)。本表会与该 manifest 对照，并由 CI 中的 `scripts/dev/check-harness-matrix.py` 检查 — 若某个 `full` 等级超过 90 天未重新实测，或某项判定缺少证据，**构建将失败**。重新实测请运行 `scripts/dev/spike-codex-contract.sh --dynamic` 与 `scripts/dev/spike-agy-contract.sh --dynamic`。
 
 **agy 规则适配器（#63）。** 使用 `--harness agy|all` 时，会把 `.claude/rules/*.md` 生成为 `.agents/rules/*.md`。有 `paths:` 时变为 `trigger: glob` + `globs:`，没有时变为 `trigger: always_on`。模式按 agy 1.2.16 的实测转换：含斜杠的相对模式（`src/**`）改为 `**/src/**`，不含斜杠的模式（`Dockerfile`、`*.py`）按文件名匹配，保持不变。多个模式用逗号连接且不加空格（逗号后的空格会成为下一个模式的一部分，导致无法匹配）。`.claude/rules` 仍是源；`--update` 会重新生成（已有项目用 `--update --harness agy` 首次生成），并删除源已不存在的生成文件。没有生成标记的同名文件（用户自有）不会被改动。
 
@@ -117,7 +117,7 @@ Codex（codex-cli 0.163.0）与 agy（1.4.2）会在不调用任何工具的情�
 [LeeYudok/doksam-skills](https://github.com/LeeYudok/doksam-skills) 迁入的 13 个 `yd-*` 技能（DB、Go、React、
 TypeScript、构建、界面设计、韩文写作等），以及依赖 CVE 检查 `yd-cve-check`（#79）。这些 `yd-*` 技能附带的 12 个代理（`.claude/agents/yd-*.md`）也一并安装（#78）。
 
-`--with-personal-skills` 会在技术栈预设之后合并可选包 `presets/skills-personal/`——9 个技能
+`--with-personal-skills` 会在技术栈预设之后合并可选包 `presets/skills/personal/`——9 个技能
 （`yd-agents-mem`、`yd-claude-auth-sync`、`yd-git-sync`、`yd-git-ship`、`yd-doksam-ui`、`yd-finguard`、
 `yd-sdlc-orchestrator`、`yd-script-editor`、`yd-session-recording`）和 4 个代理。它们以特定的 GitLab、主机、
 ui.doksam.com 和 FinGuard 为前提，不适用于其他环境。
@@ -135,8 +135,8 @@ agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --stack go --with-perso
 基础目录树（agents、rules、skills、commands、`AGENTS.md`、钩子/settings
 消息）**默认为韩语**（#36 反转——韩语是事实来源，英语是翻译出的覆盖层）。
 `--lang en` 会把英文翻译叠加在最上层，且最后应用——在基础复制、forge 预设、
-技术栈预设之后——用 `presets/lang-en/base` +
-`presets/lang-en/forge-<forge>` + `presets/lang-en/stacks/<stack>` 的内容
+技术栈预设之后——用 `presets/lang/en/base` +
+`presets/lang/en/forge/<forge>` + `presets/lang/en/stacks/<stack>` 的内容
 覆盖同名文件。
 
 ```bash

@@ -154,7 +154,7 @@ guess, so **read each line yourself** and decide.
   paragraphs you did not edit.
 - **Update parallel-language and counterpart files in the same commit (required).** Fixing one
   side leaves the rest stale, and no gate catches it. Use `ls README*.md` to find every
-  language edition, and if there is a language overlay such as `presets/lang-en/`, fix the
+  language edition, and if there is a language overlay such as `presets/lang/en/`, fix the
   corresponding files too. These are not translations but **per-language editions of the same
   facts**, so numbers, versions, paths and table structure stay identical. The source text
   differs per language and blanket replacement breaks, so `grep -n` the replacement target in

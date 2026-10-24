@@ -42,7 +42,7 @@ AGENTS.md 로드 항목만 2026-09-21 재측정: `claude 2.1.278` / `codex-cli 0
 - hook 은 정의 **hash 에 신뢰가 묶임** → 정의 변경 시 재승인 전까지 skip
 - `.codex/rules/*.rules` 는 **명령 실행 정책**(prefix_rule allow/prompt/forbidden)이지 Claude 의 `paths:` 코딩 가이던스와 다름. experimental
 - 공통 `--instructions` 플래그 없음
-- **2026-10-04 실측(0.160.0, #60)** — 재현은 `scripts/spike-codex-contract.sh --dynamic`
+- **2026-10-04 실측(0.160.0, #60)** — 재현은 `scripts/dev/spike-codex-contract.sh --dynamic`
   - 서브에이전트 `.codex/agents/*.toml`(`name`·`description`·`developer_instructions`): 신뢰 프로젝트에서만 등록, 위임 시 `collab_tool_call` 로 developer_instructions 대로 응답
   - 훅 `.codex/hooks.json`(`{"hooks":{"<Event>":[{"hooks":[{"type":"command","command":...}]}]}}`): 신뢰 프로젝트 + 훅 정의 신뢰(`/hooks` 검토) 또는 `--dangerously-bypass-hook-trust` 일 때만 실행. 미신뢰 프로젝트는 우회 플래그로도 미실행
   - 하위 `AGENTS.md` 는 cwd 기준으로만 로드(루트에서 하위 파일을 읽어도 미로드) — 파일 경로 조건부 지침 없음
@@ -54,11 +54,11 @@ AGENTS.md 로드 항목만 2026-09-21 재측정: `claude 2.1.278` / `codex-cli 0
 ## agy (Antigravity)
 - 공식문서 [Rules](https://antigravity.google/docs/rules/): 워크스페이스 `AGENTS.md`/`GEMINI.md`, `.agents/AGENTS.md`, `.agents/rules/*.md`(직계 자식만) 를 파일 위치→워크스페이스 루트로 올라가며 로드. 전역은 `~/.gemini/AGENTS.md`·`~/.gemini/config/rules/*.md`, CLI 전용 `~/.gemini/antigravity-cli/rules/*.md`
 - 공식문서 [Skills](https://antigravity.google/docs/skills): 워크스페이스 `.agents/skills/<name>/`(레거시 `.agent/skills` 호환), CLI 전역 `~/.gemini/antigravity-cli/skills/`. CLI 설정은 `~/.gemini/antigravity-cli/settings.json` — 워크스페이스 `.gemini/settings.json` 은 agy 와 무관
-- **1.2.16 headless(`-p`) 에서 AGENTS.md 로드 확인**(2026-10-04): AGENTS.md 단독 → 암호어 정답, GEMINI.md 대조군 → 정답, 없음 → UNKNOWN. `scripts/spike-agy-contract.sh --dynamic` 으로 스택 P0 인라인·`.agents/skills` 만 등록(`.claude/skills` 미등록)·.env 게이트 exit 2 까지 pass
+- **1.2.16 headless(`-p`) 에서 AGENTS.md 로드 확인**(2026-10-04): AGENTS.md 단독 → 암호어 정답, GEMINI.md 대조군 → 정답, 없음 → UNKNOWN. `scripts/dev/spike-agy-contract.sh --dynamic` 으로 스택 P0 인라인·`.agents/skills` 만 등록(`.claude/skills` 미등록)·.env 게이트 exit 2 까지 pass
 - 1.1.17·1.2.7 headless 는 AGENTS.md·GEMINI.md 모두 미로드였다(원인 미규명, 1.2.16 에서 해소)
 - `-p --output-format stream-json` 의 `step_update` 에서 툴 호출은 `tool_info.name` 이 있는 단계로 센다 — 1.4.x 에 `error_message`·`system_message` 같은 비-툴 단계가 생겨 "`user_input`·`agent_response` 외 = 툴"은 오탐한다(#73)
 - 공통 `--instructions` 플래그 없음 (`--agent`, `--mode`, `plugin` 등)
-- **2026-10-04 실측(1.2.16 headless, #60)** — 재현은 `scripts/spike-agy-contract.sh --dynamic`
+- **2026-10-04 실측(1.2.16 headless, #60)** — 재현은 `scripts/dev/spike-agy-contract.sh --dynamic`
   - 서브에이전트 `.agents/agents/<name>.md`(frontmatter `name`·`description`): 툴 없이 목록에 등록, `--agent <name>` 으로 고르면 본문 지시대로 응답. `agy agents` 서브커맨드는 출력이 비어 판정에 못 쓴다
   - frontmatter 에 Claude 의 `tools: Read, Grep`·`model: sonnet`·`memory` 가 있으면 그 에이전트는 **조용히 미등록**(로그에도 이유 없음) → 스캐폴드는 `name`·`description` 만 생성한다(#64)
   - frontmatter 는 **엄격한 YAML** — 따옴표 없는 값 안의 `: ` 는 파싱 실패로 그 스킬·에이전트가 조용히 빠진다(로그 `--log-file` 에만 `mapping values are not allowed`). search-first 가 이렇게 빠졌다(#67, `tests/test_frontmatter.py` 가 막음). 사용자 전역 스킬(`~/.gemini/config/skills/*`)도 같은 이유로 빠질 수 있다. codex 는 관대해서 증상이 안 보인다

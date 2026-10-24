@@ -117,9 +117,9 @@ only — neither discovers `.claude/skills`. agy 1.2.7 headless loaded neither `
 `.env` with exit 2.
 
 The single source of truth for support status is [`docs/harness-matrix.json`](harness-matrix.json).
-This table is checked against that manifest by `scripts/check-harness-matrix.py` in CI — if a `full`
+This table is checked against that manifest by `scripts/dev/check-harness-matrix.py` in CI — if a `full`
 tier has gone 90 days without re-measurement, or a verdict carries no evidence, **the build fails**.
-Re-measure with `scripts/spike-codex-contract.sh --dynamic` and `scripts/spike-agy-contract.sh --dynamic`.
+Re-measure with `scripts/dev/spike-codex-contract.sh --dynamic` and `scripts/dev/spike-agy-contract.sh --dynamic`.
 
 **agy rules adapter (#63).** With `--harness agy|all`, `.claude/rules/*.md` is generated as `.agents/rules/*.md`.
 `paths:` becomes `trigger: glob` + `globs:`; without `paths:` it becomes `trigger: always_on`. Patterns are converted as
@@ -178,7 +178,7 @@ and 13 `yd-*` skills moved over from [LeeYudok/doksam-skills](https://github.com
 TypeScript, builds, screen design, Korean writing, ...), plus `yd-cve-check` for dependency CVE checks (#79). The 12 agents that belong to those `yd-*` skills
 (`.claude/agents/yd-*.md`) are installed with them (#78).
 
-`--with-personal-skills` merges the opt-in bundle `presets/skills-personal/` after the stack presets — 9 skills
+`--with-personal-skills` merges the opt-in bundle `presets/skills/personal/` after the stack presets — 9 skills
 (`yd-agents-mem`, `yd-claude-auth-sync`, `yd-git-sync`, `yd-git-ship`, `yd-doksam-ui`, `yd-finguard`,
 `yd-sdlc-orchestrator`, `yd-script-editor`, `yd-session-recording`) and 4 agents. They assume a specific GitLab,
 hosts, ui.doksam.com and FinGuard, so they are not meant for other environments.
@@ -198,8 +198,8 @@ The base tree (agents, rules, skills, commands, `AGENTS.md`, hook/settings
 messages) is **Korean by default** (#36 inversion — Korean is the source of
 truth, English is the translated overlay). `--lang en` layers the English
 translation on top, applied last — after the base copy, forge preset, and
-stack presets — so it overrides the same files with `presets/lang-en/base` +
-`presets/lang-en/forge-<forge>` + `presets/lang-en/stacks/<stack>` content.
+stack presets — so it overrides the same files with `presets/lang/en/base` +
+`presets/lang/en/forge/<forge>` + `presets/lang/en/stacks/<stack>` content.
 
 ```bash
 agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --lang en --forge github --stack bun

@@ -49,14 +49,16 @@
     knowledge_graph.py       .claude エコシステムグラフ + --check リンク切れゲート
   settings.json               フック配線 + デフォルト deny ルール
 AGENTS.md                 プロジェクトの頭脳 — ルール SSOT(P0/P1/P2 + ワークフロー)
-presets/                  プリセット断片(コピー上書きモデル)
-  forge-github/           GitHub forge — gh、PR、`Closes #N` 自動クローズ
-  forge-gitlab/           GitLab forge — glab、MR、`Closes #N` 自動クローズ(マージ後に確認)
-  nextjs/ bun/ ...        スタック別断片(rules + pre-commit.partial.sh + AGENTS.partial.md)
-  lang-en/                英語オーバーレイ(base/forge-*/stacks/*)— 後述の `--lang` を参照
-  skills-personal/        オプトインバンドル: yd-* スキル 9 個 + エージェント 4 個、`--with-personal-skills` 時のみマージ(#78)
+presets/                  プリセット断片(コピー上書きモデル、#81 で種類別にまとめた)
+  stacks/<stack>/         スタック別断片(rules + pre-commit.partial.sh + AGENTS.partial.md)— nextjs・bun・ops など
+  forge/github/           GitHub forge — gh、PR、`Closes #N` 自動クローズ
+  forge/gitlab/           GitLab forge — glab、MR、`Closes #N` 自動クローズ(マージ後に確認)
+  lang/en/                英語オーバーレイ(base/・forge/<forge>/・stacks/<stack>/)— 後述の `--lang` を参照
+  skills/personal/        オプトインバンドル: yd-* スキル 9 個 + エージェント 4 個、`--with-personal-skills` 時のみマージ(#78)
 bin/                      agents-scaffold.sh ブートストラップスクリプト
-scripts/                  install-skills.sh(スキルのグローバルインストール)・run-skill-tests.sh(スキル別テスト)— インストール後 self-clean
+scripts/                  ユーザー向け — install-skills.sh(スキルのグローバルインストール)・make-offline-bundle.sh(閉域網バンドル)
+  dev/                    メンテナー・CI 専用 — run-skill-tests.sh・check-harness-matrix.py・spike-*-contract.sh
+                          (scripts/ はインストール対象外で、in-place インストール後に self-clean)
 tests/                    ブートストラップスクリプト用 bats リグレッションスイート
 ```
 
@@ -68,5 +70,5 @@ tests/                    ブートストラップスクリプト用 bats リグ
 - **メモリ SSOT**: `.claude/memory/`(システムデフォルトパスは使用しない)。タイプ接頭辞: `project_`/`feedback_`/`reference_`/`user_`。
 - **paths スコープのルール**: frontmatter の `paths:` により、マッチするファイルの作業中のみルールを自動ロード。
 - **マルチエージェント分離**: 並列サブエージェントが同一ファイルを同時に触る可能性がある場合は `isolation: "worktree"` を使用。
-- **インストール順序**: ベースコピー → forge プリセット → スタックプリセット → (`--with-personal-skills`)`presets/skills-personal` → `--lang en` オーバーレイ → `{{PROJECT_NAME}}` 置換(`*/skills/yd-*/*` は除外 — planner テンプレートのプレースホルダーを保持)→ `.agents/skills` へ移動・`.claude/skills` をリンク → Codex・agy エージェント生成。
-- **スキルテスト**: 各スキルに `tests/test_*.py` と `tests/claims.json` を置く。`scripts/run-skill-tests.sh` がスキル別に実行し、`tests/test_skill_contracts.py` が claims 形式・参照パス・トリガー重複を検査する。
+- **インストール順序**: ベースコピー → forge プリセット → スタックプリセット → (`--with-personal-skills`)`presets/skills/personal` → `--lang en` オーバーレイ → `{{PROJECT_NAME}}` 置換(`*/skills/yd-*/*` は除外 — planner テンプレートのプレースホルダーを保持)→ `.agents/skills` へ移動・`.claude/skills` をリンク → Codex・agy エージェント生成。
+- **スキルテスト**: 各スキルに `tests/test_*.py` と `tests/claims.json` を置く。`scripts/dev/run-skill-tests.sh` がスキル別に実行し、`tests/test_skill_contracts.py` が claims 形式・参照パス・トリガー重複を検査する。

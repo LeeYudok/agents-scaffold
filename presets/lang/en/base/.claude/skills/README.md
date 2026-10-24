@@ -54,7 +54,7 @@ doksam-skills' `yd-handoff`, `yd-doc-sync`, `yd-memory-factcheck` and `yd-skill-
 `handoff`, `docs-sync`, `memory-factcheck` and `skill-evolve`, which do the same jobs.
 
 **Opt-in (9)** — these assume the maintainer's environment (a specific GitLab, hosts, ui.doksam.com, FinGuard).
-Their source is `presets/skills-personal/.claude/skills/` in this repo, and they are installed only with
+Their source is `presets/skills/personal/.claude/skills/` in this repo, and they are installed only with
 `--with-personal-skills`: `yd-sdlc-orchestrator`, `yd-finguard`, `yd-doksam-ui`, `yd-script-editor` (with agents),
 `yd-agents-mem`, `yd-git-ship`, `yd-git-sync`, `yd-claude-auth-sync`, `yd-session-recording`.
 
@@ -63,7 +63,7 @@ Their source is `presets/skills-personal/.claude/skills/` in this repo, and they
 - Frontmatter requires `name` (same as the folder) and `description` (concrete trigger conditions).
 - Put testable assertions in `tests/claims.json` as `{id, kind, rule, test}`. Each `rule` must appear
   **verbatim** in SKILL.md or `references/*.md`, and `test` must be a test that unittest actually collects.
-- Skill tests live in `tests/test_*.py`. Run them from the repo root with `scripts/run-skill-tests.sh [skill]`.
+- Skill tests live in `tests/test_*.py`. Run them from the repo root with `scripts/dev/run-skill-tests.sh [skill]`.
 - `tests/test_skill_contracts.py` checks the claims format, that script paths named in the docs exist, and that
   description triggers do not overlap between skills. When they overlap, state the boundary in the description
   ("X is handled by Y").

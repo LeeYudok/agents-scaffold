@@ -10,7 +10,7 @@ CI 게이트다. 문서를 자동으로 고치지 않는다 — 어긋나면 실
               (full 인데 fail/unverified 가 있으면 안 된다)
   4. 문서 대조 — README 가 주장하는 CLI 버전이 manifest 와 일치하는가
 
-사용:  python3 scripts/check-harness-matrix.py [--today YYYY-MM-DD]
+사용:  python3 scripts/dev/check-harness-matrix.py [--today YYYY-MM-DD]
 """
 import json
 import pathlib
@@ -18,7 +18,7 @@ import re
 import sys
 from datetime import date, datetime
 
-ROOT = pathlib.Path(__file__).resolve().parent.parent
+ROOT = pathlib.Path(__file__).resolve().parents[2]
 MANIFEST = ROOT / "docs" / "harness-matrix.json"
 VERDICTS = {"pass", "partial", "fail", "unverified", "inconclusive", "n/a"}
 TIERS = {"full", "baseline", "experimental", "unsupported"}

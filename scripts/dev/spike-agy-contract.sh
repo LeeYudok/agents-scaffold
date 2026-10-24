@@ -4,7 +4,7 @@
 # agy CLI 의 저장소 계약을 실제로 측정한다. 문서 인용이 아니라 실행 결과가 근거다.
 # 결과는 stdout 에 JSON 으로 출력한다 — docs/harness-matrix.json 의 입력.
 #
-#   scripts/spike-agy-contract.sh [--dynamic]
+#   scripts/dev/spike-agy-contract.sh [--dynamic]
 #
 # --dynamic 을 주면 agy -p(headless)로 실제 모델 호출까지 수행한다(쿼터 소모).
 # 생략하면 정적 검사만 하고 동적 항목은 unverified 로 남긴다.
@@ -15,7 +15,7 @@
 # 그 질의는 inconclusive 다 — 컨텍스트에 자동 로드된 지침만으로 답했을 때만 판정한다.
 set -u
 
-REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 DYNAMIC=0
 [ "${1:-}" = "--dynamic" ] && DYNAMIC=1
 AGY_BIN="${AGY_BIN:-agy}"
