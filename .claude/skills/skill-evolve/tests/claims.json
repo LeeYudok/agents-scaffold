@@ -1,0 +1,82 @@
+{
+ "claims": [
+  {
+   "id": "CLEAN-DIRTY-TREE",
+   "kind": "실패",
+   "rule": "비어 있지 않으면 exit 1 로 변경 목록을 보여 준다.",
+   "test": "test_evolve_guard.py::test_clean_reports_dirty_tree"
+  },
+  {
+   "id": "WARNING-FORMAT",
+   "kind": "정상",
+   "rule": "`Learned warnings` 줄은 `- (YYYY-MM-DD) ...` 형식이어야 하고",
+   "test": "test_evolve_guard.py::test_warning_line_format"
+  },
+  {
+   "id": "WARNING-DATE-CALENDAR",
+   "kind": "경계",
+   "rule": "달력에 없는 날짜는 위반이다.",
+   "test": "test_evolve_guard.py::test_impossible_date_is_rejected"
+  },
+  {
+   "id": "WARNING-PRESERVED",
+   "kind": "실패",
+   "rule": "기준(`--base`, 기본 `HEAD`)에 있던 경고가 사라졌으면 위반이다.",
+   "test": "test_evolve_guard.py::test_removed_warning_is_a_violation_unless_allowed"
+  },
+  {
+   "id": "ALLOW-REMOVAL",
+   "kind": "경계",
+   "rule": "`--allow-removal` 을 붙인다.",
+   "test": "test_evolve_guard.py::test_check_uses_head_as_base_for_preservation"
+  },
+  {
+   "id": "REQUIRE-SECTION",
+   "kind": "경계",
+   "rule": "`--require-section` 으로 섹션이 있는지도 본다.",
+   "test": "test_evolve_guard.py::test_missing_section_is_ok_unless_required"
+  },
+  {
+   "id": "FRONTMATTER-KEYS",
+   "kind": "실패",
+   "rule": "`name`과 `description` 외의 키를 임의로 추가하지 않는다.",
+   "test": "test_evolve_guard.py::test_extra_frontmatter_key_and_wrong_name"
+  },
+  {
+   "id": "NO-EMOJI",
+   "kind": "오탐",
+   "rule": "**이모지 금지**: 산출물 및 스킬 문서 내에 이모지 사용을 엄격히 금지한다.",
+   "test": "test_evolve_guard.py::test_emoji_is_rejected_but_arrows_and_checks_are_not"
+  },
+  {
+   "id": "ROLLBACK-ONLY-EDITED",
+   "kind": "정상",
+   "rule": "경로 없는 `git restore .` 는 다른 변경까지 지운다.",
+   "test": "test_evolve_guard.py::test_rollback_restores_only_that_skill"
+  },
+  {
+   "id": "VERIFY-FAIL-ROLLBACK",
+   "kind": "실패",
+   "rule": "한 번에 하고, 실패하면 exit 1 이다.",
+   "test": "test_evolve_guard.py::test_verify_failure_rolls_back_only_the_edited_skill"
+  },
+  {
+   "id": "VERIFY-PASS-KEEPS",
+   "kind": "정상",
+   "rule": "통과하면 편집을 그대로 둔다.",
+   "test": "test_evolve_guard.py::test_verify_success_keeps_the_edit"
+  },
+  {
+   "id": "VERIFY-RUNNER-MISSING",
+   "kind": "도구오류",
+   "rule": "테스트 실행기를 찾지 못하면 exit 2 이고 편집도 그대로 둔다.",
+   "test": "test_evolve_guard.py::test_verify_with_missing_test_runner_counts_as_failure"
+  },
+  {
+   "id": "USAGE-ERROR",
+   "kind": "도구오류",
+   "rule": "스킬 이름이 없거나 경로를 벗어나면 exit 2 이다.",
+   "test": "test_evolve_guard.py::test_unknown_or_traversal_skill_is_usage_error"
+  }
+ ]
+}

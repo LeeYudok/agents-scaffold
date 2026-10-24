@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>대본 음성</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="../common/styles/base.css">
+  <link rel="stylesheet" href="./styles/player.css">
+  <script type="module" src="./main.ts"></script>
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <h1>대본 음성</h1>
+      <span class="muted" id="sub"></span>
+    </div>
+    <div class="actions">
+      <span class="muted" id="count"></span>
+      <a class="ghost" href="./">대본 에디터</a>
+      <a class="ghost" href="compare">영상 비교</a>
+    </div>
+  </header>
+
+  <main class="plmain">
+    <ol id="tracks" class="tracks"></ol>
+    <p class="foot muted">스페이스바로 재생·일시정지, 좌우 방향키로 5초 이동해요. 파형을 누르면 그 위치로 가요. 한 줄이 끝나면 음성이 있는 다음 줄로 이어서 재생해요.</p>
+  </main>
+</body>
+</html>

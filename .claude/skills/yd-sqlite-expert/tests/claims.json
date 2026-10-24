@@ -1,0 +1,18 @@
+{
+  "claims": [
+    {"id": "RO-WRITE-REJECTED", "kind": "실패", "rule": "쓰기가 실제로 막히는지도 확인한다", "test": "test_sqlite_claims.py::test_ro_rejects_write"},
+    {"id": "RO-ORIGINAL-UNCHANGED", "kind": "정상", "rule": "롤백 저널 DB 는 `mode=ro` 로 조회해도 곁 파일이 생기지 않는다.", "test": "test_sqlite_claims.py::test_ro_leaves_original"},
+    {"id": "RO-WAL-NOT-CLEAN", "kind": "도구오류", "rule": "**WAL 모드 DB 는 `mode=ro`", "test": "test_sqlite_claims.py::test_ro_wal_is_not_clean"},
+    {"id": "IMMUTABLE-NO-SIDECAR", "kind": "정상", "rule": "곁 파일 없이 읽힌다.", "test": "test_sqlite_claims.py::test_immutable_reads_without_sidecars"},
+    {"id": "RW-WAL-SIDECARS", "kind": "실패", "rule": "읽기·쓰기 모드로 열면 조회만 해도 둘 다 생긴다.", "test": "test_sqlite_claims.py::test_rw_open_of_wal_creates_sidecars"},
+    {"id": "URI-QUESTION-MARK", "kind": "경계", "rule": "URI 파일명에서 `?`·`#` 은 구분자다.", "test": "test_sqlite_claims.py::test_unencoded_question_mark_opens_other_file"},
+    {"id": "WAL-COPY-LOSES-DATA", "kind": "실패", "rule": "WAL 모드에서는 본 파일만 복사하면 체크포인트 전에 커밋된 행이", "test": "test_sqlite_claims.py::test_main_file_copy_loses_wal_commits"},
+    {"id": "FK-PER-CONNECTION", "kind": "경계", "rule": "`PRAGMA foreign_keys = ON` 은 **커넥션마다** 켜야 한다.", "test": "test_sqlite_claims.py::test_foreign_keys_are_per_connection"},
+    {"id": "LIKE-ESCAPE", "kind": "오탐", "rule": "이스케이프를 빠뜨리면 사용자가 `%` 만 넣어도 전부 걸린다.", "test": "test_sqlite_claims.py::test_like_wildcards_need_escape"},
+    {"id": "LIKE-ASCII-CASE", "kind": "경계", "rule": "`LIKE` 는 ASCII 만 대소문자를 무시한다.", "test": "test_sqlite_claims.py::test_like_ignores_case_for_ascii_only"},
+    {"id": "INDEX-PREFIX", "kind": "경계", "rule": "복합 인덱스는 **앞 컬럼부터** 쓰인다.", "test": "test_sqlite_claims.py::test_composite_index_needs_leading_column"},
+    {"id": "BUSY-TIMEOUT", "kind": "도구오류", "rule": "없으면 산발적인 `database is locked` 로 나타난다.", "test": "test_sqlite_claims.py::test_busy_timeout_waits_for_lock"},
+    {"id": "TX-BATCH", "kind": "정상", "rule": "기본이 자동 커밋이라 대량 INSERT 가 극단적으로 느리다.", "test": "test_sqlite_claims.py::test_transaction_batches_inserts"},
+    {"id": "USER-VERSION", "kind": "정상", "rule": "`PRAGMA user_version` 으로 스키마 버전을 관리하면", "test": "test_sqlite_claims.py::test_user_version_persists"}
+  ]
+}

@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>대본 수정 에디터</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="../common/styles/base.css">
+  <script type="module" src="./main.ts"></script>
+</head>
+<body>
+  <header class="top" id="top">
+    <div class="brand">
+      <h1>대본 수정 에디터</h1>
+      <span class="muted">내레이션 대본 표를 줄 단위로 고치고 md 파일에 저장해요</span>
+    </div>
+
+    <div class="seg" id="mode" role="group" aria-label="보기 방식">
+      <button type="button" data-mode="compare">비교</button>
+      <button type="button" data-mode="single">단일</button>
+    </div>
+
+    <nav id="tabs" aria-label="대본 파일"></nav>
+
+    <div id="pair" class="pair" hidden>
+      <select id="left" aria-label="왼쪽 대본"></select>
+      <button type="button" id="swap" class="ghost" title="좌우 바꾸기">좌우 바꾸기</button>
+      <select id="right" aria-label="오른쪽 대본"></select>
+      <label class="chk"><input type="checkbox" id="onlydiff"> 차이만 보기</label>
+      <span id="diffcount" class="muted"></span>
+      <button type="button" id="prev" class="ghost">이전 차이</button>
+      <button type="button" id="next" class="ghost">다음 차이</button>
+      <span class="autobox">
+        <select id="automode" aria-label="전체 재생할 쪽">
+          <option value="right">오른쪽</option>
+          <option value="left">왼쪽</option>
+          <option value="alt">번갈아(왼→오)</option>
+        </select>
+        <button type="button" id="autoplay" class="autoplay"></button>
+      </span>
+    </div>
+
+    <div class="actions">
+      <a class="ghost" href="player">대본 음성 듣기</a>
+      <a class="ghost" href="compare">영상 비교</a>
+      <label class="len" title="마지막 줄의 여유 시간을 계산할 때 쓰는 영상 전체 길이">
+        영상 길이(초) <input id="len" type="number" step="0.1" min="1">
+      </label>
+      <span id="total" class="total est" hidden></span>
+      <button id="fit" type="button" class="ghost" hidden>목표 길이에 시각 맞춤</button>
+      <span id="synth" class="synth" hidden></span>
+      <span id="status" class="status" role="status"></span>
+      <button id="reload" type="button" class="ghost">저장본 다시 불러오기</button>
+      <button id="save" type="button" class="primary">저장 (⌘S)</button>
+    </div>
+  </header>
+
+  <div id="banner" class="banner" hidden></div>
+
+  <main>
+    <section id="single" hidden>
+      <details class="before">
+        <summary>AI 프롬프트 · 영상 재제작 지시 <button type="button" id="viewprompt" class="iconbtn" aria-pressed="false"></button><button type="button" id="copyprompt" class="ghost small">복사</button></summary>
+        <textarea id="before" spellcheck="false" aria-label="AI 프롬프트(표 위 마크다운)"></textarea>
+        <div id="beforeview" class="md" hidden></div>
+      </details>
+
+      <table id="grid">
+        <colgroup>
+          <col class="c-n"><col class="c-thumb"><col>
+        </colgroup>
+        <thead>
+          <tr>
+            <th>#</th><th>장면 화면</th><th>시각 · 장면 · 읽기 시간 / 화면 자막 / 자막·대본 / 읽는 말 / AI 프롬프트</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </section>
+
+    <section id="compare" hidden>
+      <table id="cmp">
+        <colgroup><col class="c-n"><col><col class="c-gut"><col></colgroup>
+        <thead>
+          <tr><th>#</th><th id="lname"></th><th class="gh">차이</th><th id="rname"></th></tr>
+        </thead>
+        <tbody id="cmprows"></tbody>
+      </table>
+    </section>
+
+    <p class="foot muted">
+      읽기 시간은 읽는 말의 글자 수(한글·영문·숫자)를 초당 5.86음절로 나눈 대략값이에요. 여유는 다음 줄 시각까지의 간격이고, 1초 이내로 남으면 주의, 넘으면 초과로 표시해요.
+      비교 화면은 같은 번호의 줄끼리 맞추고, 가운데 화살표는 자막·읽는 말만 복사해요(시각·장면은 그대로).
+    </p>
+  </main>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>영상 비교</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="../common/styles/base.css">
+  <link rel="stylesheet" href="./styles/compare.css">
+  <script type="module" src="./main.ts"></script>
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <h1>영상 비교</h1>
+      <span class="muted">재생·정지·이동이 고른 영상 모두에 같이 걸려요. 소리는 하나만 나와요.</span>
+    </div>
+    <div class="actions">
+      <a class="ghost" href="./">대본 에디터</a>
+      <a class="ghost" href="player">대본 음성</a>
+    </div>
+  </header>
+
+  <main class="cmpmain">
+    <section class="bar" aria-label="영상 고르기">
+      <span class="lbl">영상</span>
+      <div id="picks" class="picks"></div>
+      <span id="dir" class="muted small"></span>
+    </section>
+
+    <section class="bar" aria-label="재생">
+      <button type="button" id="play" class="primary">재생 / 정지</button>
+      <div id="sounds" class="sounds" role="group" aria-label="소리"></div>
+      <label class="small">장면 대본
+        <select id="script" aria-label="장면 시각을 가져올 대본"></select>
+      </label>
+    </section>
+
+    <nav id="scenes" class="scenes" aria-label="장면으로 이동"></nav>
+    <div id="grid" class="grid"></div>
+    <p class="foot muted">스페이스바로 재생·정지해요. 장면 버튼은 고른 대본의 줄 시각으로 모든 영상을 옮기고 재생해요. 주소의 <code>?v=</code> 로 고른 영상을 남길 수 있어요.</p>
+  </main>
+</body>
+</html>

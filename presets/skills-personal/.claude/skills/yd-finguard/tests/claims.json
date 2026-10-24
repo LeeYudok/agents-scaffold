@@ -1,0 +1,11 @@
+{
+  "claims": [
+    {"id": "GATE-BLOCKS-ERROR", "kind": "실패", "rule": "차단 심각도 기본값은", "test": "test_run_gate.py::test_blocks_configured_severity"},
+    {"id": "GATE-WARNING-PASSES", "kind": "오탐", "rule": "합의한 심각도에서 실패해야 하며", "test": "test_run_gate.py::test_non_blocking_finding_passes"},
+    {"id": "GATE-BAD-RDJSONL", "kind": "도구오류", "rule": "게이트 실패 또는 검사 도구 불완전", "test": "test_run_gate.py::test_invalid_rdjsonl_is_tool_error"},
+    {"id": "GATE-FINGUARD-EXIT", "kind": "도구오류", "rule": "게이트 실패 또는 검사 도구 불완전", "test": "test_run_gate.py::test_finguard_failure_is_tool_error"},
+    {"id": "SKILL-LIMITS", "kind": "정상", "rule": "탐지된 차단 대상 없음", "test": "test_contract.py::test_source_and_limitations_are_explicit"},
+    {"id": "SKILL-WRAPPER", "kind": "정상", "rule": "반드시 이 스킬의 래퍼를 사용한다", "test": "test_contract.py::test_gate_wrapper_is_the_automation_entrypoint"},
+    {"id": "PIPELINE-CONTRACT", "kind": "정상", "rule": "각 단계의 산출물과 중단", "test": "test_contract.py::test_pipeline_names_inputs_evidence_and_stops"}
+  ]
+}

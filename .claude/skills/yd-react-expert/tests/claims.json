@@ -1,0 +1,118 @@
+{
+ "claims": [
+  {
+   "id": "DERIVED-IN-RENDER",
+   "kind": "정상",
+   "rule": "렌더 중에 계산한다.",
+   "test": "test_react_claims.py::test_derived_state_computed_in_render"
+  },
+  {
+   "id": "STRICT-EFFECT-TWICE",
+   "kind": "경계",
+   "rule": "**StrictMode 에서 effect 는 두 번 실행된다.**",
+   "test": "test_react_claims.py::test_strictmode_runs_effect_twice"
+  },
+  {
+   "id": "STRICT-DEV-ONLY",
+   "kind": "경계",
+   "rule": "개발 빌드에서만 일어나고 프로덕션 빌드는 한 번 실행한다.",
+   "test": "test_react_claims.py::test_strictmode_double_run_is_dev_only"
+  },
+  {
+   "id": "ASYNC-RACE",
+   "kind": "실패",
+   "rule": "**먼저 보낸 응답이 나중에 도착해 화면을 덮는다**",
+   "test": "test_react_claims.py::test_late_response_overwrites_without_cleanup"
+  },
+  {
+   "id": "INDEX-KEY",
+   "kind": "실패",
+   "rule": "상태가 엉뚱한 행에 붙는다.",
+   "test": "test_react_claims.py::test_index_key_misattaches_state"
+  },
+  {
+   "id": "KEY-RESET",
+   "kind": "정상",
+   "rule": "**컴포넌트를 초기화하고 싶을 때 `key` 를 바꾸는 것은 정식 기법이다.**",
+   "test": "test_react_claims.py::test_changing_key_resets_state"
+  },
+  {
+   "id": "INLINE-COMPONENT",
+   "kind": "실패",
+   "rule": "렌더마다 새 타입이다.",
+   "test": "test_react_claims.py::test_inline_component_remounts_each_render"
+  },
+  {
+   "id": "REF-AS-PROP",
+   "kind": "정상",
+   "rule": "**`forwardRef` 가 필요 없다**",
+   "test": "test_react_claims.py::test_ref_is_plain_prop"
+  },
+  {
+   "id": "REF-CLEANUP",
+   "kind": "정상",
+   "rule": "ref 콜백이 정리 함수를 반환할 수 있다.",
+   "test": "test_react_claims.py::test_ref_callback_cleanup_runs"
+  },
+  {
+   "id": "USE-CONDITIONAL",
+   "kind": "정상",
+   "rule": "**`use()`** 로 promise·context 를 조건부로 읽을 수 있다.",
+   "test": "test_react_claims.py::test_use_reads_conditionally"
+  },
+  {
+   "id": "USE-ACTION-STATE-SPA",
+   "kind": "정상",
+   "rule": "서버 액션이 없는",
+   "test": "test_react_claims.py::test_use_action_state_works_in_spa"
+  },
+  {
+   "id": "TEXT-ESCAPED",
+   "kind": "정상",
+   "rule": "JSX 텍스트 노드로 넣으면 자동 이스케이프된다",
+   "test": "test_react_claims.py::test_jsx_text_is_escaped"
+  },
+  {
+   "id": "INNERHTML-RAW",
+   "kind": "실패",
+   "rule": "**`dangerouslySetInnerHTML` 는 기본 금지.**",
+   "test": "test_react_claims.py::test_inner_html_is_not_escaped"
+  },
+  {
+   "id": "JS-URL",
+   "kind": "오탐",
+   "rule": "React 19 는 `javascript:` URL 을 `throw` 하는 스크립트로 바꿔 렌더하지만",
+   "test": "test_react_claims.py::test_react_neutralizes_javascript_url"
+  },
+  {
+   "id": "LINT-MISSING-DEP",
+   "kind": "도구오류",
+   "rule": "`exhaustive-deps` 는 빠진 값을 경고하고",
+   "test": "test_react_claims.py::test_lint_flags_missing_dependency"
+  },
+  {
+   "id": "LINT-HOOK-CONDITIONAL",
+   "kind": "도구오류",
+   "rule": "`rules-of-hooks` 는 조건문 안의 훅을 오류로 막는다.",
+   "test": "test_react_claims.py::test_lint_blocks_conditional_hook"
+  },
+  {
+   "id": "WATERFALL",
+   "kind": "경계",
+   "rule": "`await a(); await b();` 가 흔한 원인이다.",
+   "test": "test_react_claims.py::test_sequential_await_is_slower_than_promise_all"
+  },
+  {
+   "id": "DEFERRED-VALUE",
+   "kind": "정상",
+   "rule": "`useDeferredValue` 로",
+   "test": "test_react_claims.py::test_deferred_value_lags_one_render"
+  },
+  {
+   "id": "MEMO-FRESH-OBJECT",
+   "kind": "오탐",
+   "rule": "자식이 memo 여도 소용없다.",
+   "test": "test_react_claims.py::test_memo_defeated_by_fresh_object"
+  }
+ ]
+}

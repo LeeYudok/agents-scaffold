@@ -1,0 +1,2316 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta name="skill-ruleset" content="2">
+<meta charset="UTF-8">
+<!-- 고정 레이아웃 뷰포트: 모바일 브라우저가 1280px 로 렌더한 전체 페이지를
+     화면 폭에 맞게 축소해, PPT 슬라이드를 세로 스크롤로 넘겨보는 형태가 된다.
+     내부 요소가 px 고정이라 device-width 로 두면 슬라이드 내부가 깨진다. -->
+<meta name="viewport" content="width=1280">
+<title>토스인베스트 화면설계서</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+      primaryColor: '#ffffff',
+      primaryTextColor: '#333333',
+      primaryBorderColor: '#888888',
+      lineColor: '#555555',
+      secondaryColor: '#f4f4f4',
+      tertiaryColor: '#eeeeee'
+    }
+  });
+</script>
+<style>
+/* @import 는 @font-face 를 포함한 모든 규칙보다 앞에 있어야 유효하다 (CSS 스펙) */
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+@font-face {
+  font-family: 'Pretendard';
+  src: url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/woff2/Pretendard-Regular.woff2') format('woff2');
+  font-weight: 400;
+}
+
+:root {
+  --accent: #3182f6;     /* 기본값(주황). 도메인에 맞게 :root 에서만 덮어쓴다 */
+  --accent-ink: #ffffff; /* --accent 배경 위 글자색. 밝은 accent 로 바꿀 땐 어두운 색으로 함께 조정 */
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: 'Pretendard', -apple-system, sans-serif;
+  background: #333; /* Dark background outside slides */
+  padding: 40px;
+}
+
+.docwrap { 
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  max-width: 1400px; 
+  margin: 0 auto; 
+  counter-reset: slide; /* Page No. 자동 표기용 — 슬라이드가 스스로 센다 */
+}
+
+/* Authentic PPT Slide Frame */
+.ppt-slide {
+  counter-increment: slide;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9; /* Standard widescreen PPT */
+  background: #e5e7eb; /* Slide canvas background */
+  border: 1px solid #111;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Top Bar */
+.ppt-top-bar {
+  height: 24px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  border-bottom: 2px solid #ccc;
+}
+.ppt-top-no {
+  background: #737373;
+  color: #ffffff;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  font-weight: 800;
+  font-size: 12px;
+  flex: none;
+}
+.ppt-top-title {
+  padding: 0 14px;
+  color: #333333;
+  font-size: 13px;
+  font-weight: 700;
+  flex: 1;              /* 우측 헤더 칸(화면 Type 등)을 오른쪽 끝으로 민다 */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ppt-top-proj {
+  margin-left: auto;
+  padding-right: 24px;
+  color: #777777;
+  font-size: 14px;
+}
+/* Page No. 박스 — counter 로 자동 표기라 슬라이드 추가/삭제에도 어긋나지 않는다.
+   ppt-top-no(슬라이드 논리 번호)와 역할이 다르다: 이쪽은 물리 페이지다. */
+.ppt-top-bar::after {
+  content: "Page " counter(slide);
+  background: #3f3f46;
+  color: #ffffff;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  font-size: 11px;
+  font-weight: 700;
+  flex: none;
+}
+
+/* (구버전 호환) 별도 헤더 행 — v2 부터는 화면 Type·요구사항 ID 칸을
+   ppt-top-bar 안에 직접 두므로 이 행을 새로 만들지 않는다. 기존 산출물
+   렌더 유지를 위해 정의만 남긴다. ppt-head-label/value 는 v2 에서
+   ppt-top-bar 의 칸으로 계속 쓰인다. */
+.ppt-head-bar {
+  height: 24px;
+  background: #f4f4f5;
+  border-bottom: 1px solid #ccc;
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  color: #555555;
+  flex: none;
+}
+.ppt-head-label {
+  background: #d4d4d8;
+  color: #3f3f46;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-weight: 700;
+  flex: none;
+}
+.ppt-head-value {
+  padding: 0 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 메타 바 — 화면 상세(09.x) 슬라이드 2행 헤더 표의 2행.
+   실무 화면설계서의 헤더 표에서 Location(화면 위치 경로)에 해당한다.
+   이 줄이 있으면 IA 슬라이드를 넘겨보지 않아도 화면 맥락이 잡힌다.
+   ppt-head-bar 와 합쳐 높이 56px 만큼 ppt-content 가 줄지만,
+   목업(zoom 0.9 기준 540px)은 남는 높이 안에 그대로 들어간다. */
+.ppt-meta-bar {
+  height: 24px;
+  background: #f4f4f5;
+  border-bottom: 1px solid #ccc;
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  color: #555555;
+  flex: none;
+}
+.ppt-meta-label {
+  background: #d4d4d8;
+  color: #3f3f46;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-weight: 700;
+  flex: none;
+}
+.ppt-meta-value {
+  padding: 0 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* 화면 ID 칸 — v2 2줄 헤더에서는 "화면 ID" 라벨 바로 뒤(좌측)에 놓인다.
+   우측 정렬이 필요한 구버전 산출물은 마크업 순서(마지막 칸)만으로도
+   어색하지 않게 flex 흐름을 따른다. */
+.ppt-meta-id {
+  padding: 0 12px;
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: #3f3f46;
+  letter-spacing: 0.02em;
+  flex: none;
+}
+
+/* Bottom Footer — 얇은 남색 띠. accent 원색 통짜 바는 목업 CTA 색과
+   경쟁해 시선을 뺏는다 (이슈 #65). 남색 #1e2a5c 는 mock-caption 과 같은
+   고정 프레임색. 좌측 라벨은 CSS content 라 마크업 무변경. */
+.ppt-footer {
+  height: 24px;
+  background: #1e2a5c;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+.ppt-footer::before {
+  content: "화면설계서";
+  color: #aab3d0;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+/* Middle Content Area */
+.ppt-content {
+  flex: 1;
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  margin-bottom: 24px; /* Space for footer */
+}
+
+/* Cover & General Text Content (for non-wireframe slides) */
+.ppt-body-full {
+  flex: 1;
+  background: #ffffff;
+  border: 1px solid #aaa;
+  padding: 40px;
+  overflow-y: auto;
+  position: relative; /* .mermaid 를 absolute 로 채우기 위한 기준 */
+}
+
+/* Mermaid 다이어그램 (IA 슬라이드)
+   mermaid.js 는 생성한 SVG 에 인라인 max-width 를 박아 자체 크기에 가둔다.
+   또 .mermaid 를 flex item 으로 두면 shrink-to-fit 되어 300px 남짓에 머문다.
+   absolute + inset:0 으로 폭·높이를 확정해 주어야 SVG 의 max-height:100% 가
+   해석되고, 비율을 유지한 채 슬라이드를 채운다. 퍼센트 높이만 주면
+   flex 안에서 순환 참조가 생겨 부모가 부풀어 슬라이드 레이아웃이 깨진다.
+   mermaid 가 유일한 자식일 때만 적용한다(텍스트와 혼용 시 겹침 방지). */
+.ppt-body-full > .mermaid:only-child {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mermaid > svg {
+  max-width: 100% !important; /* 인라인 max-width 를 이겨야 한다 */
+  max-height: 100%;
+  width: auto;
+  height: auto;
+}
+
+/* Left Wireframe Canvas */
+.ppt-wireframe {
+  flex: 1;
+  background: #ffffff;
+  border: 1px solid #aaa;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Right Description Panel */
+.ppt-desc-panel {
+  width: 300px;
+  background: #ffffff;
+  border: 1px solid #aaa;
+  display: flex;
+  flex-direction: column;
+}
+/* 실무 화면설계서 룩: 흰 배경 + 진한 밑줄 구분. 회색 블록보다
+   Description 패널이 문서의 본문으로 읽힌다 (이슈 #63). */
+.ppt-desc-header {
+  background: #ffffff;
+  color: #111111;
+  text-align: left;
+  padding: 12px 16px;
+  font-weight: 800;
+  font-size: 15px;
+  border-bottom: 2px solid #3f3f46;
+}
+.ppt-desc-body {
+  padding: 24px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Pointer & Lists */
+.desc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.desc-list li {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  font-size: 14px;
+  color: #333;
+}
+/* 목업 위 pointer-badge 와 1:1 로 짝을 이루는 번호 칩. 같은 accent 칩
+   모양이어야 배지↔설명 대응이 즉시 읽히고, 목업 1개(1·2·3)든 2개
+   이상(1-1)이든 슬라이드 간 표현이 같아진다. nowrap 은 "1-1" 이
+   하이픈에서 줄바꿈되어 두 줄로 깨지는 것을 막는다. */
+.desc-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 20px;
+  padding: 0 5px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 800;
+  font-size: 12px;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex: none;
+  margin-right: 8px;
+}
+
+/* 설명 항목이 많은 슬라이드(8개 이상)는 목록을 압축한다.
+   ppt-desc-body 가 overflow-y:auto 라도 인쇄·정적 열람에는 스크롤이
+   없어 마지막 항목이 잘린 것처럼 보인다 — 항목 수를 감지해 밀도를
+   낮춰 한 화면에 다 들어가게 한다. */
+.ppt-desc-body:has(.desc-list li:nth-child(8)) .desc-list li {
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+/* Pointer Badges on Wireframe */
+/* 배지는 가변 폭이다. "1" 같은 한 글자는 min-width 로 24px 정사각형을
+   유지하고, 2단 번호("2-1")는 내용만큼 늘어난다. 늘어난 폭은 아래
+   목업 2개 이상일 때의 넓은 gutter 안에 들어간다. */
+.pointer-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  width: auto;
+  padding: 0 4px;
+  height: 24px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 800; 
+  font-size: 14px; 
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+/* Mobile Mockup UI (Centered in Wireframe Panel) */
+/* 실기기 비율 320x694 = 2.17:1 (아이폰 17 402x874pt · 갤럭시 S26 384x832dp).
+   라운드 프레임과 섀도는 목업이 "디바이스"로 읽히게 하는 고정 프레임이다.
+   overflow 는 mock-screen 이 담당한다 — 여기 주면 상단 캡션 바가 잘린다. */
+.mock {
+  width: 320px;
+  height: 694px;
+  border: 1px solid #d9dee4;
+  border-radius: 22px;
+  background: #fff;
+  padding: 0;
+  box-shadow: 0 12px 32px rgba(2,32,71,0.12);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  transform: scale(0.9);
+}
+.mock-screen {
+  flex: 1;
+  background: #f4f4f5;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 21px; /* .mock 라운드(22px) - border 1px */
+}
+/* 리얼 상태바 — 9:41 + 신호/배터리 글리프를 CSS 만으로 렌더한다.
+   기존 산출물의 <div class="mock-status"></div> 가 그대로 업그레이드된다. */
+.mock-status {
+  height: 26px;
+  background: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 18px;
+  flex: none;
+}
+.mock-status::before {
+  content: "9:41";
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #111111;
+}
+.mock-status::after {
+  content: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="38" height="10" viewBox="0 0 38 10"><g fill="%23111"><rect x="0" y="6" width="2.5" height="4" rx="0.6"/><rect x="3.7" y="4" width="2.5" height="6" rx="0.6"/><rect x="7.4" y="2" width="2.5" height="8" rx="0.6"/><rect x="11.1" y="0" width="2.5" height="10" rx="0.6"/></g><rect x="18.5" y="0.5" width="15" height="9" rx="2.5" fill="none" stroke="%23111"/><rect x="20" y="2" width="11" height="6" rx="1.2" fill="%23111"/><rect x="34.5" y="3" width="2" height="4" rx="1" fill="%23111"/></svg>');
+  line-height: 0;
+}
+.mock-header {
+  background: #fff;
+  color: #111;
+  font-size: 16px;
+  font-weight: 700;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #e2e8f0;
+}
+/* padding-left 28px 는 pointer-badge 전용 gutter 다.
+   배지를 left:-12px 로 프레임 밖에 두면 mock-body(overflow-y:auto 이므로
+   overflow-x 도 auto 로 계산된다) 와 mock-screen(overflow:hidden) 이
+   절반을 잘라낸다. 배지를 left:2px 로 이 여백 안에 두면 온전히 보이고
+   콘텐츠(28px 부터 시작)와 겹치지도 않는다. 배지 폭 24px + 여유 4px. */
+.mock-body { padding: 16px 16px 16px 28px; flex: 1; background: #fff; overflow-y: auto; }
+/* 목업이 2개 이상이면 배지가 2단 번호("2-1")가 되어 폭이 늘어난다.
+   gutter 를 34px 로 넓혀 배지가 콘텐츠를 가리지 않게 한다. 이 규칙은
+   목업 복수 배치와 같은 :has(.mock ~ .mock) 로 게이트되므로 단일 목업
+   슬라이드의 28px gutter 는 그대로다(이슈 #6 무회귀). */
+.ppt-wireframe:has(.mock ~ .mock) .mock-body { padding-left: 34px; }
+.mock-footer {
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-around;
+  padding: 12px 0;
+  background: #fff;
+}
+.mock-tab { font-size: 10px; color: #94a3b8; text-align: center; text-transform: uppercase; font-weight: 700;}
+.mock-tab.active { color: var(--accent); }
+
+/* Liquid Glass 플로팅 필 탭 바 (iOS 26) — mock-footer 와 같은 자리
+   (mock-body 의 다음 형제)에 두면 margin 으로 떠 있는 알약이 된다.
+   내부는 인라인 아이콘 svg + 활성 버블(인라인 style) 로 채운다.
+   44px 높이는 320px 폭 대비 실기기 비율(약 14%)에 맞춘 값. */
+.mock-footer-pill {
+  position: relative;
+  margin: 0 20px 10px;
+  height: 44px;
+  flex: none;
+  border-radius: 22px;
+  background: rgba(25,28,38,0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.18);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.22);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 6px;
+}
+
+/* 목업 2개 이상 배치 (상태 변화 · 단계 흐름 비교)
+
+   아래 규칙은 전부 :has(.mock ~ .mock) 로 게이트되어 있다 — 형제 목업이
+   실제로 있을 때만 걸리므로 기존 1개 배치 슬라이드의 렌더는 바뀌지 않는다.
+   개수 판정에 :nth-of-type 대신 형제 결합자(~)를 쓴 이유: nth-of-type 은
+   같은 태그명 형제만 세므로 목업 사이에 다른 div 가 끼면 어긋난다.
+
+   scale() 대신 zoom 을 쓰는 이유: transform 은 레이아웃 박스 크기를 바꾸지
+   않아 flex 가 여전히 320px 를 기준으로 배치하고, 넘치는 만큼 이 패널의
+   overflow:hidden 에 잘린다. zoom 은 사용값(used value)에 곱해져 레이아웃에
+   반영된다. zoom 은 서브트리의 모든 px 를 같은 비율로 곱하므로
+   mock-body 의 배지 gutter(padding-left:28px)와 배지(left:2px + width:24px)가
+   함께 줄어 2+24 <= 28 관계가 배율과 무관하게 보존된다 (이슈 #6 참조).
+
+   가용 폭 1060px = 슬라이드 1400 - 테두리 2 - ppt-content padding 24
+                    - desc panel 300 - gap 12 - wireframe 테두리 2
+   가용 높이 687.5px = 787.5(16:9) - 테두리 2 - top bar 24 - meta bar 24
+                       - footer 24 - ppt-content padding 24 - wireframe 테두리 2
+                       (box-sizing:border-box 이므로 각 테두리는 height 에 포함)
+                       단일 목업: scale(0.9) 시 캡션 상단 여유 실측 약 1px — 계산 근거는
+                       694 박스가 687.5 안에서 -3.25px 오프셋, 시각 상단 31.4px.
+   2~3개: 320*0.9 = 288    -> 3*288 + 2*24(gap)   = 912    <= 1060
+   4개  : 320*0.77 = 246.4 -> 4*246.4 + 3*24(gap) = 1057.6 <= 1060
+   5개 이상은 슬라이드를 나눈다. */
+.ppt-wireframe:has(.mock ~ .mock) { gap: 24px; }
+.ppt-wireframe:has(.mock ~ .mock) .mock {
+  flex: none;      /* flex-shrink 로 폭이 찌그러지면 목업 내용 비율이 깨진다 */
+  transform: none; /* 아래 zoom 과 곱해지지 않도록 해제 */
+  zoom: 0.9;
+}
+.ppt-wireframe:has(.mock ~ .mock ~ .mock ~ .mock) .mock { zoom: 0.77; }
+
+/* 목업 라벨 ("기본 상태" / "선택됨"). .mock 이 position:relative 이므로
+   absolute 로 프레임 바로 위에 남색 타이틀 바로 놓는다 — .mock 의 column
+   flex 흐름에도, 위 규칙의 .mock ~ .mock 형제 카운트에도 영향을 주지 않는다.
+   실무 화면설계서의 목업 상단 변형 케이스 바(예: "거주성 문진_Default")를
+   재현한 것이다 (이슈 #63). 남색 #1e2a5c 는 accent 와 무관한 고정 프레임색.
+   top:-34px 는 wireframe 패널 상단 여백(단일 scale 0.9 · 복수 zoom 0.9 모두
+   실측 7px 이상 남는다) 안에 들어가도록 계산된 값 — 더 키우면 패널 밖으로
+   잘린다. */
+.mock-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -34px;
+  padding: 5px 8px;
+  background: #1e2a5c;
+  color: #ffffff;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 부분 목업 — 팝업·바텀시트·토스트처럼 화면 일부만 덮는 요소.
+   .mock 과 함께 쓴다: <div class="mock mock-partial">
+   전체 화면 목업으로 그리면 별개 화면처럼 보이므로, 높이를 줄여
+   "화면 일부를 덮는다" 는 사실 자체를 그림으로 전달한다.
+   위쪽 배경 힌트(회색으로 뭉갠 영역)는 인라인 style 로 채운다.
+   .mock 의 형제이므로 :has(.mock ~ .mock) 규칙에 그대로 걸려
+   zoom 과 gutter 가 전체 목업과 동일하게 적용된다. */
+.mock-partial {
+  height: 320px;
+}
+
+/* Code tags */
+code {
+  background: #f1f5f9;
+  padding: 2px 6px;
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 12px;
+  color: var(--accent);
+  border: 1px solid #e2e8f0;
+}
+
+/* Phosphor Icons (MIT) 인라인 SVG 용 — 이모지 아이콘 대체 */
+.icon {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+  vertical-align: -2px;
+  flex: none;
+}
+</style>
+</head>
+<body>
+<div class="docwrap">
+
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 01</div>
+    <div class="ppt-top-title">Cover</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-body-full" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center;">
+      <h1 style="font-size:48px; color:var(--accent); margin-bottom:16px;">토스인베스트</h1>
+      <h2 style="font-size:32px; color:#1e2a5c; margin-bottom:32px;">모바일 웹 화면설계서</h2>
+      <div style="font-size:16px; color:#52525b; line-height:1.6;">
+        Version: 2.0.0<br>
+        Date: 2026-07-30<br>
+        Author: UX 기획
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 02</div>
+    <div class="ppt-top-title">Document History</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-body-full">
+      <table style="width:100%; border-collapse:collapse; text-align:left;">
+        <thead>
+          <tr style="background:#f4f4f5; border-bottom:2px solid #e2e8f0;">
+            <th style="padding:12px 16px; font-weight:600; font-size:14px; width:80px;">Version</th>
+            <th style="padding:12px 16px; font-weight:600; font-size:14px; width:120px;">Date</th>
+            <th style="padding:12px 16px; font-weight:600; font-size:14px; width:100px;">Author</th>
+            <th style="padding:12px 16px; font-weight:600; font-size:14px;">Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #e2e8f0;">
+            <td style="padding:12px 16px; font-size:14px;">2.0.0</td>
+            <td style="padding:12px 16px; font-size:14px;">2026-07-30</td>
+            <td style="padding:12px 16px; font-size:14px;">UX 기획</td>
+            <td style="padding:12px 16px; font-size:14px;">초안 작성</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 03</div>
+    <div class="ppt-top-title">Index</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-body-full">
+      <table style="width:100%; border-collapse:collapse; text-align:left; font-size:13px;">
+        <thead>
+          <tr style="background:#f4f4f5; border-bottom:2px solid #e2e8f0;">
+            <th style="padding:8px 16px; width:60px;">NO.</th>
+            <th style="padding:8px 16px;">제목</th>
+            <th style="padding:8px 16px; width:120px;">화면 ID</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">09.1</td><td style="padding:8px 16px;">홈</td><td style="padding:8px 16px;">TSI-MAIN-001</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">09.2</td><td style="padding:8px 16px;">로그인</td><td style="padding:8px 16px;">TSI-AUTH-001</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">09.4</td><td style="padding:8px 16px;">QR 로그인 승인</td><td style="padding:8px 16px;">TSI-AUTH-002</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">09.5</td><td style="padding:8px 16px;">비밀번호 변경</td><td style="padding:8px 16px;">TSI-AUTH-003</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">09.6</td><td style="padding:8px 16px;">계좌</td><td style="padding:8px 16px;">TSI-ACCT-001</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">09.8</td><td style="padding:8px 16px;">자산 대시보드</td><td style="padding:8px 16px;">TSI-DASH-001</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">09.9</td><td style="padding:8px 16px;">보유종목</td><td style="padding:8px 16px;">TSI-HOLD-001</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">09.10</td><td style="padding:8px 16px;">보유종목 상세</td><td style="padding:8px 16px;">TSI-HOLD-002</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">09.11</td><td style="padding:8px 16px;">주문내역</td><td style="padding:8px 16px;">TSI-ORDER-001</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">09.12</td><td style="padding:8px 16px;">주문 상세</td><td style="padding:8px 16px;">TSI-ORDER-002</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">09.13</td><td style="padding:8px 16px;">익절/손절</td><td style="padding:8px 16px;">TSI-TGT-001</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">09.14</td><td style="padding:8px 16px;">워치독</td><td style="padding:8px 16px;">TSI-WD-001</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">09.15</td><td style="padding:8px 16px;">워치독 등록</td><td style="padding:8px 16px;">TSI-WD-002</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">09.17</td><td style="padding:8px 16px;">알림 내역</td><td style="padding:8px 16px;">TSI-NOTI-001</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">09.18</td><td style="padding:8px 16px;">종목 검색</td><td style="padding:8px 16px;">TSI-SEARCH-001</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">09.19</td><td style="padding:8px 16px;">종목 상세</td><td style="padding:8px 16px;">TSI-STOCK-001</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">09.20</td><td style="padding:8px 16px;">차트</td><td style="padding:8px 16px;">TSI-CHART-001</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">09.21</td><td style="padding:8px 16px;">호가</td><td style="padding:8px 16px;">TSI-ORDB-001</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">09.22</td><td style="padding:8px 16px;">체결</td><td style="padding:8px 16px;">TSI-TRADE-001</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">09.23</td><td style="padding:8px 16px;">랭킹</td><td style="padding:8px 16px;">TSI-RANK-001</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">09.25</td><td style="padding:8px 16px;">시장지표</td><td style="padding:8px 16px;">TSI-MKT-001</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">09.26</td><td style="padding:8px 16px;">종목별 수급</td><td style="padding:8px 16px;">TSI-FLOW-001</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">09.27</td><td style="padding:8px 16px;">환율</td><td style="padding:8px 16px;">TSI-FX-001</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">09.28</td><td style="padding:8px 16px;">장운영 캘린더</td><td style="padding:8px 16px;">TSI-CAL-001</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">09.29</td><td style="padding:8px 16px;">수수료</td><td style="padding:8px 16px;">TSI-FEE-001</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">09.30</td><td style="padding:8px 16px;">설정</td><td style="padding:8px 16px;">TSI-SET-001</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 04</div>
+    <div class="ppt-top-title">Information Architecture</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-body-full">
+<div class="mermaid">
+flowchart TD
+  subgraph 토스인베스트
+  N0["홈<br/>TSI-MAIN-001"]
+  N1["로그인<br/>TSI-AUTH-001"]
+  N3["QR 로그인 승인<br/>TSI-AUTH-002"]
+  N4["비밀번호 변경<br/>TSI-AUTH-003"]
+  N5["계좌<br/>TSI-ACCT-001"]
+  N7["자산 대시보드<br/>TSI-DASH-001"]
+  N8["보유종목<br/>TSI-HOLD-001"]
+  N9["보유종목 상세<br/>TSI-HOLD-002"]
+  N10["주문내역<br/>TSI-ORDER-001"]
+  N11["주문 상세<br/>TSI-ORDER-002"]
+  N12["익절/손절<br/>TSI-TGT-001"]
+  N13["워치독<br/>TSI-WD-001"]
+  N14["워치독 등록<br/>TSI-WD-002"]
+  N16["알림 내역<br/>TSI-NOTI-001"]
+  N17["종목 검색<br/>TSI-SEARCH-001"]
+  N18["종목 상세<br/>TSI-STOCK-001"]
+  N19["차트<br/>TSI-CHART-001"]
+  N20["호가<br/>TSI-ORDB-001"]
+  N21["체결<br/>TSI-TRADE-001"]
+  N22["랭킹<br/>TSI-RANK-001"]
+  N24["시장지표<br/>TSI-MKT-001"]
+  N25["종목별 수급<br/>TSI-FLOW-001"]
+  N26["환율<br/>TSI-FX-001"]
+  N27["장운영 캘린더<br/>TSI-CAL-001"]
+  N28["수수료<br/>TSI-FEE-001"]
+  N29["설정<br/>TSI-SET-001"]
+
+  end
+</div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 05</div>
+    <div class="ppt-top-title">Screen List</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-body-full">
+      <table style="width:100%; border-collapse:collapse; text-align:left; font-size:12px;">
+        <thead>
+          <tr style="background:#f4f4f5; border-bottom:2px solid #e2e8f0;">
+            <th style="padding:8px 16px; width:120px;">화면 ID</th>
+            <th style="padding:8px 16px; width:150px;">화면명</th>
+            <th style="padding:8px 16px; width:80px;">유형</th>
+            <th style="padding:8px 16px; width:150px;">Location</th>
+            <th style="padding:8px 16px;">주요 내용</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">TSI-MAIN-001</td><td style="padding:8px 16px;">홈</td><td style="padding:8px 16px;">화면</td><td style="padding:8px 16px;">홈</td><td style="padding:8px 16px;">홈 영역</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">TSI-AUTH-001</td><td style="padding:8px 16px;">로그인</td><td style="padding:8px 16px;">화면</td><td style="padding:8px 16px;">로그인</td><td style="padding:8px 16px;">로그인 영역</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">TSI-AUTH-101</td><td style="padding:8px 16px;">세션 만료 안내</td><td style="padding:8px 16px;">팝업</td><td style="padding:8px 16px;">세션 만료 안내</td><td style="padding:8px 16px;">세션 만료 안내 영역</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">TSI-AUTH-002</td><td style="padding:8px 16px;">QR 로그인 승인</td><td style="padding:8px 16px;">화면</td><td style="padding:8px 16px;">QR 로그인 승인</td><td style="padding:8px 16px;">QR 로그인 승인 영역</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">TSI-AUTH-003</td><td style="padding:8px 16px;">비밀번호 변경</td><td style="padding:8px 16px;">화면</td><td style="padding:8px 16px;">비밀번호 변경</td><td style="padding:8px 16px;">비밀번호 변경 영역</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">TSI-ACCT-001</td><td style="padding:8px 16px;">계좌</td><td style="padding:8px 16px;">화면</td><td style="padding:8px 16px;">계좌</td><td style="padding:8px 16px;">계좌 영역</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">TSI-ACCT-101</td><td style="padding:8px 16px;">계좌 전환</td><td style="padding:8px 16px;">바텀시트</td><td style="padding:8px 16px;">계좌 전환</td><td style="padding:8px 16px;">계좌 전환 영역</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">TSI-DASH-001</td><td style="padding:8px 16px;">자산 대시보드</td><td style="padding:8px 16px;">화면</td><td style="padding:8px 16px;">자산 대시보드</td><td style="padding:8px 16px;">자산 대시보드 영역</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">TSI-HOLD-001</td><td style="padding:8px 16px;">보유종목</td><td style="padding:8px 16px;">화면</td><td style="padding:8px 16px;">보유종목</td><td style="padding:8px 16px;">보유종목 영역</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">TSI-HOLD-002</td><td style="padding:8px 16px;">보유종목 상세</td><td style="padding:8px 16px;">화면</td><td style="padding:8px 16px;">보유종목 상세</td><td style="padding:8px 16px;">보유종목 상세 영역</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">TSI-ORDER-001</td><td style="padding:8px 16px;">주문내역</td><td style="padding:8px 16px;">화면</td><td style="padding:8px 16px;">주문내역</td><td style="padding:8px 16px;">주문내역 영역</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">TSI-ORDER-002</td><td style="padding:8px 16px;">주문 상세</td><td style="padding:8px 16px;">화면</td><td style="padding:8px 16px;">주문 상세</td><td style="padding:8px 16px;">주문 상세 영역</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">TSI-TGT-001</td><td style="padding:8px 16px;">익절/손절</td><td style="padding:8px 16px;">화면</td><td style="padding:8px 16px;">익절/손절</td><td style="padding:8px 16px;">익절/손절 영역</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">TSI-WD-001</td><td style="padding:8px 16px;">워치독</td><td style="padding:8px 16px;">화면</td><td style="padding:8px 16px;">워치독</td><td style="padding:8px 16px;">워치독 영역</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">TSI-WD-002</td><td style="padding:8px 16px;">워치독 등록</td><td style="padding:8px 16px;">화면</td><td style="padding:8px 16px;">워치독 등록</td><td style="padding:8px 16px;">워치독 등록 영역</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">TSI-WD-101</td><td style="padding:8px 16px;">워치독 삭제 확인</td><td style="padding:8px 16px;">바텀시트</td><td style="padding:8px 16px;">워치독 삭제 확인</td><td style="padding:8px 16px;">워치독 삭제 확인 영역</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">TSI-NOTI-001</td><td style="padding:8px 16px;">알림 내역</td><td style="padding:8px 16px;">화면</td><td style="padding:8px 16px;">알림 내역</td><td style="padding:8px 16px;">알림 내역 영역</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">TSI-SEARCH-001</td><td style="padding:8px 16px;">종목 검색</td><td style="padding:8px 16px;">화면</td><td style="padding:8px 16px;">종목 검색</td><td style="padding:8px 16px;">종목 검색 영역</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">TSI-STOCK-001</td><td style="padding:8px 16px;">종목 상세</td><td style="padding:8px 16px;">화면</td><td style="padding:8px 16px;">종목 상세</td><td style="padding:8px 16px;">종목 상세 영역</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">TSI-CHART-001</td><td style="padding:8px 16px;">차트</td><td style="padding:8px 16px;">화면</td><td style="padding:8px 16px;">차트</td><td style="padding:8px 16px;">차트 영역</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">TSI-ORDB-001</td><td style="padding:8px 16px;">호가</td><td style="padding:8px 16px;">화면</td><td style="padding:8px 16px;">호가</td><td style="padding:8px 16px;">호가 영역</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">TSI-TRADE-001</td><td style="padding:8px 16px;">체결</td><td style="padding:8px 16px;">화면</td><td style="padding:8px 16px;">체결</td><td style="padding:8px 16px;">체결 영역</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">TSI-RANK-001</td><td style="padding:8px 16px;">랭킹</td><td style="padding:8px 16px;">화면</td><td style="padding:8px 16px;">랭킹</td><td style="padding:8px 16px;">랭킹 영역</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">TSI-RANK-101</td><td style="padding:8px 16px;">랭킹 필터</td><td style="padding:8px 16px;">바텀시트</td><td style="padding:8px 16px;">랭킹 필터</td><td style="padding:8px 16px;">랭킹 필터 영역</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">TSI-MKT-001</td><td style="padding:8px 16px;">시장지표</td><td style="padding:8px 16px;">화면</td><td style="padding:8px 16px;">시장지표</td><td style="padding:8px 16px;">시장지표 영역</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">TSI-FLOW-001</td><td style="padding:8px 16px;">종목별 수급</td><td style="padding:8px 16px;">화면</td><td style="padding:8px 16px;">종목별 수급</td><td style="padding:8px 16px;">종목별 수급 영역</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">TSI-FX-001</td><td style="padding:8px 16px;">환율</td><td style="padding:8px 16px;">화면</td><td style="padding:8px 16px;">환율</td><td style="padding:8px 16px;">환율 영역</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">TSI-CAL-001</td><td style="padding:8px 16px;">장운영 캘린더</td><td style="padding:8px 16px;">화면</td><td style="padding:8px 16px;">장운영 캘린더</td><td style="padding:8px 16px;">장운영 캘린더 영역</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">TSI-FEE-001</td><td style="padding:8px 16px;">수수료</td><td style="padding:8px 16px;">화면</td><td style="padding:8px 16px;">수수료</td><td style="padding:8px 16px;">수수료 영역</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">TSI-SET-001</td><td style="padding:8px 16px;">설정</td><td style="padding:8px 16px;">화면</td><td style="padding:8px 16px;">설정</td><td style="padding:8px 16px;">설정 영역</td></tr><tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 16px;">TSI-SET-101</td><td style="padding:8px 16px;">로그아웃 확인</td><td style="padding:8px 16px;">바텀시트</td><td style="padding:8px 16px;">로그아웃 확인</td><td style="padding:8px 16px;">로그아웃 확인 영역</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 06</div>
+    <div class="ppt-top-title">Service Flow</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-body-full">
+<div class="mermaid">
+flowchart LR
+  A["홈<br/>TSI-MAIN-001"] --> B["계좌<br/>TSI-ACCT-001"]
+  A --> C["시장지표<br/>TSI-MKT-001"]
+  A --> D["종목 상세<br/>TSI-STOCK-001"]
+  B --> E["주문내역<br/>TSI-ORDER-001"]
+</div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 07.1</div>
+    <div class="ppt-top-title">Sequence — 로그인</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-body-full">
+<div class="mermaid">
+sequenceDiagram
+participant U as 사용자
+participant S as 로그인 (TSI-AUTH-001)
+participant A as 서버
+U->>S: 자격증명 제출
+S->>A: 로그인 요청
+alt 성공
+A-->>S: 세션 발급
+S-->>U: 홈으로 이동
+else 실패
+A-->>S: 401 Unauthorized
+S-->>U: 오류 표시
+end
+</div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 07.2</div>
+    <div class="ppt-top-title">Sequence — QR 승인</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-body-full">
+<div class="mermaid">
+sequenceDiagram
+participant U as 사용자
+participant S as QR 승인 (TSI-AUTH-002)
+participant A as 서버
+U->>S: 승인 탭
+S->>A: 챌린지 승인
+A-->>S: 성공
+S-->>U: 홈으로 이동
+</div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 07.3</div>
+    <div class="ppt-top-title">Sequence — 비밀번호 변경</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-body-full">
+<div class="mermaid">
+sequenceDiagram
+participant U as 사용자
+participant S as 비밀번호 변경 (TSI-AUTH-003)
+participant A as 서버
+U->>S: 변경 요청
+S->>A: 비밀번호 갱신
+A-->>S: 전 세션 파기 성공
+S-->>U: 로그인 이동
+</div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 07.4</div>
+    <div class="ppt-top-title">Sequence — 워치독 등록</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-body-full">
+<div class="mermaid">
+sequenceDiagram
+participant U as 사용자
+participant S as 워치독 등록 (TSI-WD-002)
+participant A as 서버
+U->>S: 저장 탭
+S->>A: 조건식 저장
+alt 성공
+A-->>S: 200 OK
+S-->>U: 목록으로 이동
+else 중복
+A-->>S: 409 Conflict
+S-->>U: 오류 표시
+end
+</div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 07.5</div>
+    <div class="ppt-top-title">Sequence — 워치독 삭제</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-body-full">
+<div class="mermaid">
+sequenceDiagram
+participant U as 사용자
+participant S as 워치독 삭제 확인 (TSI-WD-101)
+participant A as 서버
+U->>S: 삭제 탭
+S->>A: 워치독 삭제
+A-->>S: 200 OK
+S-->>U: 토스트 표시 및 목록 갱신
+</div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 08</div>
+    <div class="ppt-top-title">General Rule</div>
+  </div>
+  <div class="ppt-content">
+    <div class="ppt-body-full" style="padding:32px;">
+      <h3 style="font-size:18px; color:var(--accent); margin-bottom:12px;">공통 규칙</h3>
+      <ul style="font-size:14px; line-height:1.6; color:#3f3f46; padding-left:20px;">
+        <li>인증되지 않은 상태로 화면 진입 시 로그인으로 리다이렉트 (TSI-AUTH-001)</li>
+        <li>금액은 원 단위 3자리 콤마 표기, 평가손익 0원은 회색 보합 표시</li>
+        <li>등락 색상은 기본 한국식 (상승 적색, 하락 청색)</li>
+        <li>네트워크 오류 또는 한도 초과 시 30초 후 1회 자동 재시도</li>
+      </ul>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.1</div>
+    <div class="ppt-top-title">홈</div>
+    <div class="ppt-head-label">화면 Type</div>
+    <div class="ppt-head-value">MOBILE WEB</div>
+    <div class="ppt-head-label">요구사항 ID</div>
+    <div class="ppt-head-value">-</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">화면 ID</div>
+    <div class="ppt-meta-id">TSI-MAIN-001</div>
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">홈</div>
+    <div class="ppt-meta-label" style="margin-left:auto;">작업자</div>
+    <div class="ppt-meta-value">UX 기획</div>
+  </div>
+  <div class="ppt-content">
+    
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span><span style="font-size:20px; font-weight:400; margin-right:8px;">&lsaquo;</span>홈</span></div>
+          <div class="mock-body" style="position:relative; background:#f2f4f6; padding:16px;">
+            <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">1</span><span class="pointer-badge" style="position:absolute; top:50px; left:2px; z-index:10;">2</span><span class="pointer-badge" style="position:absolute; top:80px; left:2px; z-index:10;">3</span><span class="pointer-badge" style="position:absolute; top:110px; left:2px; z-index:10;">4</span><span class="pointer-badge" style="position:absolute; top:140px; left:2px; z-index:10;">5</span><span class="pointer-badge" style="position:absolute; top:170px; left:2px; z-index:10;">6</span>
+            <div style="background:#fff; border-radius:16px; padding:16px; box-shadow:0 1px 4px rgba(2,32,71,0.05); margin-top:20px;">
+              Mockup Content for 홈
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">홈 (TSI-MAIN-001)</div>
+      </div>
+    </div>
+    
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1</span> <div><b>계좌 요약 카드 탭</b><br>탭: 계좌로 이동 (TSI-ACCT-001)</div></li><li><span class="desc-num">2</span> <div><b>알림 배지 탭</b><br>탭: 알림 내역으로 이동 (TSI-NOTI-001)</div></li><li><span class="desc-num">3</span> <div><b>지수 요약 탭</b><br>탭: 시장지표로 이동 (TSI-MKT-001)</div></li><li><span class="desc-num">4</span> <div><b>보유 상위 탭</b><br>탭: 보유종목으로 이동 (TSI-HOLD-001)</div></li><li><span class="desc-num">5</span> <div><b>워치독 요약 탭</b><br>탭: 워치독으로 이동 (TSI-WD-001)</div></li><li><span class="desc-num">6</span> <div><b>하단 탭 탭</b><br>탭: 각 탭 최상위 화면으로 전환</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.2</div>
+    <div class="ppt-top-title">로그인</div>
+    <div class="ppt-head-label">화면 Type</div>
+    <div class="ppt-head-value">MOBILE WEB</div>
+    <div class="ppt-head-label">요구사항 ID</div>
+    <div class="ppt-head-value">-</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">화면 ID</div>
+    <div class="ppt-meta-id">TSI-AUTH-001</div>
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">로그인</div>
+    <div class="ppt-meta-label" style="margin-left:auto;">작업자</div>
+    <div class="ppt-meta-value">UX 기획</div>
+  </div>
+  <div class="ppt-content">
+    
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span><span style="font-size:20px; font-weight:400; margin-right:8px;">&lsaquo;</span>로그인</span></div>
+          <div class="mock-body" style="position:relative; background:#f2f4f6; padding:16px;">
+            <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">1-1</span><span class="pointer-badge" style="position:absolute; top:50px; left:2px; z-index:10;">1-2</span><span class="pointer-badge" style="position:absolute; top:80px; left:2px; z-index:10;">1-3</span><span class="pointer-badge" style="position:absolute; top:110px; left:2px; z-index:10;">1-4</span><span class="pointer-badge" style="position:absolute; top:140px; left:2px; z-index:10;">3-1</span>
+            <div style="background:#fff; border-radius:16px; padding:16px; box-shadow:0 1px 4px rgba(2,32,71,0.05); margin-top:20px;">
+              Mockup Content for 로그인
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">로그인 (TSI-AUTH-001)</div>
+      </div>
+    </div>
+    
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1-1</span> <div><b>아이디 입력</b><br>입력: 공백 제거, 기존 오류 문구 초기화</div></li><li><span class="desc-num">1-2</span> <div><b>비밀번호 입력</b><br>입력: 로그인 버튼 활성</div></li><li><span class="desc-num">1-3</span> <div><b>로그인 버튼 탭</b><br>탭: 세션 발급 후 홈으로 이동 (TSI-MAIN-001)</div></li><li><span class="desc-num">1-4</span> <div><b>QR 로그인 탭</b><br>탭: 챌린지 생성 후 QR 노출, 승인 대기 (TSI-AUTH-002)</div></li><li><span class="desc-num">3-1</span> <div><b>확인 버튼 탭</b><br>탭: 로그인으로 히스토리 치환 이동 (TSI-AUTH-101)</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.3</div>
+    <div class="ppt-top-title">세션 만료 안내</div>
+    <div class="ppt-head-label">화면 Type</div>
+    <div class="ppt-head-value">MOBILE WEB</div>
+    <div class="ppt-head-label">요구사항 ID</div>
+    <div class="ppt-head-value">-</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">화면 ID</div>
+    <div class="ppt-meta-id">TSI-AUTH-101</div>
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">세션 만료 안내</div>
+    <div class="ppt-meta-label" style="margin-left:auto;">작업자</div>
+    <div class="ppt-meta-value">UX 기획</div>
+  </div>
+  <div class="ppt-content">
+    
+    <div class="ppt-wireframe">
+      <div class="mock mock-partial">
+        <div class="mock-screen">
+          
+          <div class="mock-header"><span><span style="font-size:20px; font-weight:400; margin-right:8px;">&lsaquo;</span>세션 만료 안내</span></div>
+          <div class="mock-body" style="position:relative; background:#f2f4f6; padding:16px;">
+            <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">3-1</span>
+            <div style="background:#fff; border-radius:16px; padding:16px; box-shadow:0 1px 4px rgba(2,32,71,0.05); margin-top:20px;">
+              Mockup Content for 세션 만료 안내
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">세션 만료 안내 (TSI-AUTH-101)</div>
+      </div>
+    </div>
+    
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">3-1</span> <div><b>확인 버튼 탭</b><br>탭: 로컬 조회 캐시 삭제 후 로그인으로 히스토리 치환 이동 (TSI-AUTH-001)</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.4</div>
+    <div class="ppt-top-title">QR 로그인 승인</div>
+    <div class="ppt-head-label">화면 Type</div>
+    <div class="ppt-head-value">MOBILE WEB</div>
+    <div class="ppt-head-label">요구사항 ID</div>
+    <div class="ppt-head-value">-</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">화면 ID</div>
+    <div class="ppt-meta-id">TSI-AUTH-002</div>
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">QR 로그인 승인</div>
+    <div class="ppt-meta-label" style="margin-left:auto;">작업자</div>
+    <div class="ppt-meta-value">UX 기획</div>
+  </div>
+  <div class="ppt-content">
+    
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span><span style="font-size:20px; font-weight:400; margin-right:8px;">&lsaquo;</span>QR 로그인 승인</span></div>
+          <div class="mock-body" style="position:relative; background:#f2f4f6; padding:16px;">
+            <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">2</span><span class="pointer-badge" style="position:absolute; top:50px; left:2px; z-index:10;">3</span>
+            <div style="background:#fff; border-radius:16px; padding:16px; box-shadow:0 1px 4px rgba(2,32,71,0.05); margin-top:20px;">
+              Mockup Content for QR 로그인 승인
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">QR 로그인 승인 (TSI-AUTH-002)</div>
+      </div>
+    </div>
+    
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">2</span> <div><b>승인 버튼 탭</b><br>탭: 승인 처리, 요청 기기에 세션 발급 후 홈으로 이동 (TSI-MAIN-001)</div></li><li><span class="desc-num">3</span> <div><b>거절 버튼 탭</b><br>탭: 챌린지 폐기, 요청 기기는 로그인 실패 처리 (TSI-AUTH-001)</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.5</div>
+    <div class="ppt-top-title">비밀번호 변경</div>
+    <div class="ppt-head-label">화면 Type</div>
+    <div class="ppt-head-value">MOBILE WEB</div>
+    <div class="ppt-head-label">요구사항 ID</div>
+    <div class="ppt-head-value">-</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">화면 ID</div>
+    <div class="ppt-meta-id">TSI-AUTH-003</div>
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">비밀번호 변경</div>
+    <div class="ppt-meta-label" style="margin-left:auto;">작업자</div>
+    <div class="ppt-meta-value">UX 기획</div>
+  </div>
+  <div class="ppt-content">
+    
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span><span style="font-size:20px; font-weight:400; margin-right:8px;">&lsaquo;</span>비밀번호 변경</span></div>
+          <div class="mock-body" style="position:relative; background:#f2f4f6; padding:16px;">
+            <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">1-1</span><span class="pointer-badge" style="position:absolute; top:50px; left:2px; z-index:10;">1-2</span><span class="pointer-badge" style="position:absolute; top:80px; left:2px; z-index:10;">1-3</span><span class="pointer-badge" style="position:absolute; top:110px; left:2px; z-index:10;">1-4</span>
+            <div style="background:#fff; border-radius:16px; padding:16px; box-shadow:0 1px 4px rgba(2,32,71,0.05); margin-top:20px;">
+              Mockup Content for 비밀번호 변경
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">비밀번호 변경 (TSI-AUTH-003)</div>
+      </div>
+    </div>
+    
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1-1</span> <div><b>현재 비밀번호 입력</b><br>입력: 기존 오류 문구 초기화</div></li><li><span class="desc-num">1-2</span> <div><b>새 비밀번호 입력</b><br>입력: 길이·현재값과의 동일 여부 즉시 검사</div></li><li><span class="desc-num">1-3</span> <div><b>새 비밀번호 확인 입력</b><br>입력: 인라인 오류 표시, 변경 버튼 비활성</div></li><li><span class="desc-num">1-4</span> <div><b>변경 버튼 탭</b><br>탭: 전 세션 무효화 후 로그인으로 이동 (TSI-AUTH-001)</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.6</div>
+    <div class="ppt-top-title">계좌</div>
+    <div class="ppt-head-label">화면 Type</div>
+    <div class="ppt-head-value">MOBILE WEB</div>
+    <div class="ppt-head-label">요구사항 ID</div>
+    <div class="ppt-head-value">-</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">화면 ID</div>
+    <div class="ppt-meta-id">TSI-ACCT-001</div>
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">계좌</div>
+    <div class="ppt-meta-label" style="margin-left:auto;">작업자</div>
+    <div class="ppt-meta-value">UX 기획</div>
+  </div>
+  <div class="ppt-content">
+    
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span><span style="font-size:20px; font-weight:400; margin-right:8px;">&lsaquo;</span>계좌</span></div>
+          <div class="mock-body" style="position:relative; background:#f2f4f6; padding:16px;">
+            <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">1-1</span><span class="pointer-badge" style="position:absolute; top:50px; left:2px; z-index:10;">1-2</span><span class="pointer-badge" style="position:absolute; top:80px; left:2px; z-index:10;">1-3</span>
+            <div style="background:#fff; border-radius:16px; padding:16px; box-shadow:0 1px 4px rgba(2,32,71,0.05); margin-top:20px;">
+              Mockup Content for 계좌
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">계좌 (TSI-ACCT-001)</div>
+      </div>
+    </div>
+    
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1-1</span> <div><b>계좌 헤더 탭</b><br>탭: 계좌 전환 바텀시트 노출 (TSI-ACCT-101)</div></li><li><span class="desc-num">1-2</span> <div><b>자산 요약</b><br>탭: 읽기 전용, 이동 없음</div></li><li><span class="desc-num">1-3</span> <div><b>자산 대시보드 행 탭</b><br>탭: 자산 대시보드로 이동 (TSI-DASH-001)</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.7</div>
+    <div class="ppt-top-title">계좌 전환</div>
+    <div class="ppt-head-label">화면 Type</div>
+    <div class="ppt-head-value">MOBILE WEB</div>
+    <div class="ppt-head-label">요구사항 ID</div>
+    <div class="ppt-head-value">-</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">화면 ID</div>
+    <div class="ppt-meta-id">TSI-ACCT-101</div>
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">계좌 전환</div>
+    <div class="ppt-meta-label" style="margin-left:auto;">작업자</div>
+    <div class="ppt-meta-value">UX 기획</div>
+  </div>
+  <div class="ppt-content">
+    
+    <div class="ppt-wireframe">
+      <div class="mock mock-partial">
+        <div class="mock-screen">
+          
+          <div class="mock-header"><span><span style="font-size:20px; font-weight:400; margin-right:8px;">&lsaquo;</span>계좌 전환</span></div>
+          <div class="mock-body" style="position:relative; background:#f2f4f6; padding:16px;">
+            <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">2-1</span>
+            <div style="background:#fff; border-radius:16px; padding:16px; box-shadow:0 1px 4px rgba(2,32,71,0.05); margin-top:20px;">
+              Mockup Content for 계좌 전환
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">계좌 전환 (TSI-ACCT-101)</div>
+      </div>
+    </div>
+    
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">2-1</span> <div><b>계좌 항목 탭</b><br>탭: 선택 저장, 시트 닫힘, 호출 화면 재조회</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.8</div>
+    <div class="ppt-top-title">자산 대시보드</div>
+    <div class="ppt-head-label">화면 Type</div>
+    <div class="ppt-head-value">MOBILE WEB</div>
+    <div class="ppt-head-label">요구사항 ID</div>
+    <div class="ppt-head-value">-</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">화면 ID</div>
+    <div class="ppt-meta-id">TSI-DASH-001</div>
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">자산 대시보드</div>
+    <div class="ppt-meta-label" style="margin-left:auto;">작업자</div>
+    <div class="ppt-meta-value">UX 기획</div>
+  </div>
+  <div class="ppt-content">
+    
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span><span style="font-size:20px; font-weight:400; margin-right:8px;">&lsaquo;</span>자산 대시보드</span></div>
+          <div class="mock-body" style="position:relative; background:#f2f4f6; padding:16px;">
+            <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">1</span><span class="pointer-badge" style="position:absolute; top:50px; left:2px; z-index:10;">2</span><span class="pointer-badge" style="position:absolute; top:80px; left:2px; z-index:10;">3</span><span class="pointer-badge" style="position:absolute; top:110px; left:2px; z-index:10;">4</span><span class="pointer-badge" style="position:absolute; top:140px; left:2px; z-index:10;">5</span>
+            <div style="background:#fff; border-radius:16px; padding:16px; box-shadow:0 1px 4px rgba(2,32,71,0.05); margin-top:20px;">
+              Mockup Content for 자산 대시보드
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">자산 대시보드 (TSI-DASH-001)</div>
+      </div>
+    </div>
+    
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1</span> <div><b>잔고 카드</b><br>탭: 읽기 전용, 이동 없음</div></li><li><span class="desc-num">2</span> <div><b>평가손익 카드</b><br>탭: 읽기 전용, 이동 없음</div></li><li><span class="desc-num">3</span> <div><b>정렬 선택 탭</b><br>탭: 정렬 시트 노출 후 클라이언트 정렬, 재조회 없음</div></li><li><span class="desc-num">4</span> <div><b>보유 비중 행 탭</b><br>탭: 보유종목 상세로 이동 (TSI-HOLD-002)</div></li><li><span class="desc-num">5</span> <div><b>새로고침 탭</b><br>탭: 잔고·보유 전체 재조회, 진행 중 스켈레톤</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.9</div>
+    <div class="ppt-top-title">보유종목</div>
+    <div class="ppt-head-label">화면 Type</div>
+    <div class="ppt-head-value">MOBILE WEB</div>
+    <div class="ppt-head-label">요구사항 ID</div>
+    <div class="ppt-head-value">-</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">화면 ID</div>
+    <div class="ppt-meta-id">TSI-HOLD-001</div>
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">보유종목</div>
+    <div class="ppt-meta-label" style="margin-left:auto;">작업자</div>
+    <div class="ppt-meta-value">UX 기획</div>
+  </div>
+  <div class="ppt-content">
+    
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span><span style="font-size:20px; font-weight:400; margin-right:8px;">&lsaquo;</span>보유종목</span></div>
+          <div class="mock-body" style="position:relative; background:#f2f4f6; padding:16px;">
+            <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">1-1</span><span class="pointer-badge" style="position:absolute; top:50px; left:2px; z-index:10;">1-2</span><span class="pointer-badge" style="position:absolute; top:80px; left:2px; z-index:10;">1-3</span>
+            <div style="background:#fff; border-radius:16px; padding:16px; box-shadow:0 1px 4px rgba(2,32,71,0.05); margin-top:20px;">
+              Mockup Content for 보유종목
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">보유종목 (TSI-HOLD-001)</div>
+      </div>
+    </div>
+    
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1-1</span> <div><b>정렬 칩 탭</b><br>탭: 클라이언트 정렬 즉시 적용, 재조회 없음</div></li><li><span class="desc-num">1-2</span> <div><b>보유 종목 행 탭</b><br>탭: 보유종목 상세로 이동 (TSI-HOLD-002)</div></li><li><span class="desc-num">1-3</span> <div><b>합계 카드</b><br>탭: 읽기 전용, 이동 없음</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.10</div>
+    <div class="ppt-top-title">보유종목 상세</div>
+    <div class="ppt-head-label">화면 Type</div>
+    <div class="ppt-head-value">MOBILE WEB</div>
+    <div class="ppt-head-label">요구사항 ID</div>
+    <div class="ppt-head-value">-</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">화면 ID</div>
+    <div class="ppt-meta-id">TSI-HOLD-002</div>
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">보유종목 상세</div>
+    <div class="ppt-meta-label" style="margin-left:auto;">작업자</div>
+    <div class="ppt-meta-value">UX 기획</div>
+  </div>
+  <div class="ppt-content">
+    
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span><span style="font-size:20px; font-weight:400; margin-right:8px;">&lsaquo;</span>보유종목 상세</span></div>
+          <div class="mock-body" style="position:relative; background:#f2f4f6; padding:16px;">
+            <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">2-1</span><span class="pointer-badge" style="position:absolute; top:50px; left:2px; z-index:10;">2-2</span><span class="pointer-badge" style="position:absolute; top:80px; left:2px; z-index:10;">2-3</span><span class="pointer-badge" style="position:absolute; top:110px; left:2px; z-index:10;">2-4</span>
+            <div style="background:#fff; border-radius:16px; padding:16px; box-shadow:0 1px 4px rgba(2,32,71,0.05); margin-top:20px;">
+              Mockup Content for 보유종목 상세
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">보유종목 상세 (TSI-HOLD-002)</div>
+      </div>
+    </div>
+    
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">2-1</span> <div><b>종목 헤더</b><br>탭: 읽기 전용, 이동 없음</div></li><li><span class="desc-num">2-2</span> <div><b>보유 상세 5행</b><br>탭: 읽기 전용, 이동 없음</div></li><li><span class="desc-num">2-3</span> <div><b>익절/손절 참고 탭</b><br>탭: 익절/손절로 이동 (TSI-TGT-001)</div></li><li><span class="desc-num">2-4</span> <div><b>종목 정보 보기 탭</b><br>탭: 종목 상세로 이동 (TSI-STOCK-001)</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.11</div>
+    <div class="ppt-top-title">주문내역</div>
+    <div class="ppt-head-label">화면 Type</div>
+    <div class="ppt-head-value">MOBILE WEB</div>
+    <div class="ppt-head-label">요구사항 ID</div>
+    <div class="ppt-head-value">-</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">화면 ID</div>
+    <div class="ppt-meta-id">TSI-ORDER-001</div>
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">주문내역</div>
+    <div class="ppt-meta-label" style="margin-left:auto;">작업자</div>
+    <div class="ppt-meta-value">UX 기획</div>
+  </div>
+  <div class="ppt-content">
+    
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span><span style="font-size:20px; font-weight:400; margin-right:8px;">&lsaquo;</span>주문내역</span></div>
+          <div class="mock-body" style="position:relative; background:#f2f4f6; padding:16px;">
+            <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">1-1</span><span class="pointer-badge" style="position:absolute; top:50px; left:2px; z-index:10;">1-2</span><span class="pointer-badge" style="position:absolute; top:80px; left:2px; z-index:10;">1-3</span>
+            <div style="background:#fff; border-radius:16px; padding:16px; box-shadow:0 1px 4px rgba(2,32,71,0.05); margin-top:20px;">
+              Mockup Content for 주문내역
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">주문내역 (TSI-ORDER-001)</div>
+      </div>
+    </div>
+    
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1-1</span> <div><b>체결·미체결 탭 탭</b><br>탭: 목록 전환, 기간 필터는 유지</div></li><li><span class="desc-num">1-2</span> <div><b>기간 칩 탭</b><br>탭: 선택 기간으로 재조회</div></li><li><span class="desc-num">1-3</span> <div><b>주문 행 탭</b><br>탭: 주문 상세로 이동 (TSI-ORDER-002)</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.12</div>
+    <div class="ppt-top-title">주문 상세</div>
+    <div class="ppt-head-label">화면 Type</div>
+    <div class="ppt-head-value">MOBILE WEB</div>
+    <div class="ppt-head-label">요구사항 ID</div>
+    <div class="ppt-head-value">-</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">화면 ID</div>
+    <div class="ppt-meta-id">TSI-ORDER-002</div>
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">주문 상세</div>
+    <div class="ppt-meta-label" style="margin-left:auto;">작업자</div>
+    <div class="ppt-meta-value">UX 기획</div>
+  </div>
+  <div class="ppt-content">
+    
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span><span style="font-size:20px; font-weight:400; margin-right:8px;">&lsaquo;</span>주문 상세</span></div>
+          <div class="mock-body" style="position:relative; background:#f2f4f6; padding:16px;">
+            <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">2-1</span><span class="pointer-badge" style="position:absolute; top:50px; left:2px; z-index:10;">2-2</span><span class="pointer-badge" style="position:absolute; top:80px; left:2px; z-index:10;">2-3</span>
+            <div style="background:#fff; border-radius:16px; padding:16px; box-shadow:0 1px 4px rgba(2,32,71,0.05); margin-top:20px;">
+              Mockup Content for 주문 상세
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">주문 상세 (TSI-ORDER-002)</div>
+      </div>
+    </div>
+    
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">2-1</span> <div><b>주문 요약 헤더</b><br>탭: 읽기 전용, 이동 없음</div></li><li><span class="desc-num">2-2</span> <div><b>체결 정보</b><br>탭: 읽기 전용, 이동 없음</div></li><li><span class="desc-num">2-3</span> <div><b>비용 상세</b><br>탭: 읽기 전용, 이동 없음</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.13</div>
+    <div class="ppt-top-title">익절/손절</div>
+    <div class="ppt-head-label">화면 Type</div>
+    <div class="ppt-head-value">MOBILE WEB</div>
+    <div class="ppt-head-label">요구사항 ID</div>
+    <div class="ppt-head-value">-</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">화면 ID</div>
+    <div class="ppt-meta-id">TSI-TGT-001</div>
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">익절/손절</div>
+    <div class="ppt-meta-label" style="margin-left:auto;">작업자</div>
+    <div class="ppt-meta-value">UX 기획</div>
+  </div>
+  <div class="ppt-content">
+    
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span><span style="font-size:20px; font-weight:400; margin-right:8px;">&lsaquo;</span>익절/손절</span></div>
+          <div class="mock-body" style="position:relative; background:#f2f4f6; padding:16px;">
+            <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">1</span><span class="pointer-badge" style="position:absolute; top:50px; left:2px; z-index:10;">2</span><span class="pointer-badge" style="position:absolute; top:80px; left:2px; z-index:10;">3</span><span class="pointer-badge" style="position:absolute; top:110px; left:2px; z-index:10;">4</span><span class="pointer-badge" style="position:absolute; top:140px; left:2px; z-index:10;">5</span>
+            <div style="background:#fff; border-radius:16px; padding:16px; box-shadow:0 1px 4px rgba(2,32,71,0.05); margin-top:20px;">
+              Mockup Content for 익절/손절
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">익절/손절 (TSI-TGT-001)</div>
+      </div>
+    </div>
+    
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1</span> <div><b>참고 고지 배너</b><br>탭: 읽기 전용, 닫기 불가</div></li><li><span class="desc-num">2</span> <div><b>ATR 배수 칩 탭</b><br>탭: 선택 배수로 전 종목 재계산, 서버 재조회 없음</div></li><li><span class="desc-num">3</span> <div><b>종목 카드 탭</b><br>탭: 보유종목 상세로 이동 (TSI-HOLD-002)</div></li><li><span class="desc-num">4</span> <div><b>타깃·스탑 게이지</b><br>탭: 읽기 전용, 이동 없음</div></li><li><span class="desc-num">5</span> <div><b>새로고침 탭</b><br>탭: 현재가·ATR 재조회 후 전 종목 재계산</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.14</div>
+    <div class="ppt-top-title">워치독</div>
+    <div class="ppt-head-label">화면 Type</div>
+    <div class="ppt-head-value">MOBILE WEB</div>
+    <div class="ppt-head-label">요구사항 ID</div>
+    <div class="ppt-head-value">-</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">화면 ID</div>
+    <div class="ppt-meta-id">TSI-WD-001</div>
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">워치독</div>
+    <div class="ppt-meta-label" style="margin-left:auto;">작업자</div>
+    <div class="ppt-meta-value">UX 기획</div>
+  </div>
+  <div class="ppt-content">
+    
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span><span style="font-size:20px; font-weight:400; margin-right:8px;">&lsaquo;</span>워치독</span></div>
+          <div class="mock-body" style="position:relative; background:#f2f4f6; padding:16px;">
+            <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">1-1</span><span class="pointer-badge" style="position:absolute; top:50px; left:2px; z-index:10;">1-2</span><span class="pointer-badge" style="position:absolute; top:80px; left:2px; z-index:10;">1-3</span>
+            <div style="background:#fff; border-radius:16px; padding:16px; box-shadow:0 1px 4px rgba(2,32,71,0.05); margin-top:20px;">
+              Mockup Content for 워치독
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">워치독 (TSI-WD-001)</div>
+      </div>
+    </div>
+    
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1-1</span> <div><b>등록 버튼 탭</b><br>탭: 워치독 등록으로 이동 (TSI-WD-002)</div></li><li><span class="desc-num">1-2</span> <div><b>워치독 카드 탭</b><br>탭: 워치독 등록 화면을 수정 모드로 진입 (TSI-WD-002)</div></li><li><span class="desc-num">1-3</span> <div><b>활성 토글 탭</b><br>탭: 활성·비활성 즉시 전환, 비활성은 평가 대상에서 제외</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.15</div>
+    <div class="ppt-top-title">워치독 등록</div>
+    <div class="ppt-head-label">화면 Type</div>
+    <div class="ppt-head-value">MOBILE WEB</div>
+    <div class="ppt-head-label">요구사항 ID</div>
+    <div class="ppt-head-value">-</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">화면 ID</div>
+    <div class="ppt-meta-id">TSI-WD-002</div>
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">워치독 등록</div>
+    <div class="ppt-meta-label" style="margin-left:auto;">작업자</div>
+    <div class="ppt-meta-value">UX 기획</div>
+  </div>
+  <div class="ppt-content">
+    
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span><span style="font-size:20px; font-weight:400; margin-right:8px;">&lsaquo;</span>워치독 등록</span></div>
+          <div class="mock-body" style="position:relative; background:#f2f4f6; padding:16px;">
+            <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">2-1</span><span class="pointer-badge" style="position:absolute; top:50px; left:2px; z-index:10;">2-2</span><span class="pointer-badge" style="position:absolute; top:80px; left:2px; z-index:10;">2-3</span><span class="pointer-badge" style="position:absolute; top:110px; left:2px; z-index:10;">2-4</span>
+            <div style="background:#fff; border-radius:16px; padding:16px; box-shadow:0 1px 4px rgba(2,32,71,0.05); margin-top:20px;">
+              Mockup Content for 워치독 등록
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">워치독 등록 (TSI-WD-002)</div>
+      </div>
+    </div>
+    
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">2-1</span> <div><b>감시 종목 선택 탭</b><br>탭: 종목 검색으로 이동 후 선택 결과 수신 (TSI-SEARCH-001)</div></li><li><span class="desc-num">2-2</span> <div><b>조건 입력</b><br>입력: 인라인 오류, 저장 버튼 비활성</div></li><li><span class="desc-num">2-3</span> <div><b>조건 그룹 추가 탭</b><br>탭: 그룹 추가, 그룹끼리 OR 로 평가</div></li><li><span class="desc-num">2-4</span> <div><b>저장 버튼 탭</b><br>탭: 저장 후 워치독 목록으로 복귀 (TSI-WD-001)</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.16</div>
+    <div class="ppt-top-title">워치독 삭제 확인</div>
+    <div class="ppt-head-label">화면 Type</div>
+    <div class="ppt-head-value">MOBILE WEB</div>
+    <div class="ppt-head-label">요구사항 ID</div>
+    <div class="ppt-head-value">-</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">화면 ID</div>
+    <div class="ppt-meta-id">TSI-WD-101</div>
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">워치독 삭제 확인</div>
+    <div class="ppt-meta-label" style="margin-left:auto;">작업자</div>
+    <div class="ppt-meta-value">UX 기획</div>
+  </div>
+  <div class="ppt-content">
+    
+    <div class="ppt-wireframe">
+      <div class="mock mock-partial">
+        <div class="mock-screen">
+          
+          <div class="mock-header"><span><span style="font-size:20px; font-weight:400; margin-right:8px;">&lsaquo;</span>워치독 삭제 확인</span></div>
+          <div class="mock-body" style="position:relative; background:#f2f4f6; padding:16px;">
+            <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">3-1</span>
+            <div style="background:#fff; border-radius:16px; padding:16px; box-shadow:0 1px 4px rgba(2,32,71,0.05); margin-top:20px;">
+              Mockup Content for 워치독 삭제 확인
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">워치독 삭제 확인 (TSI-WD-101)</div>
+      </div>
+    </div>
+    
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">3-1</span> <div><b>취소 버튼 탭</b><br>탭: 시트 닫힘, 목록 유지</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.17</div>
+    <div class="ppt-top-title">알림 내역</div>
+    <div class="ppt-head-label">화면 Type</div>
+    <div class="ppt-head-value">MOBILE WEB</div>
+    <div class="ppt-head-label">요구사항 ID</div>
+    <div class="ppt-head-value">-</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">화면 ID</div>
+    <div class="ppt-meta-id">TSI-NOTI-001</div>
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">알림 내역</div>
+    <div class="ppt-meta-label" style="margin-left:auto;">작업자</div>
+    <div class="ppt-meta-value">UX 기획</div>
+  </div>
+  <div class="ppt-content">
+    
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span><span style="font-size:20px; font-weight:400; margin-right:8px;">&lsaquo;</span>알림 내역</span></div>
+          <div class="mock-body" style="position:relative; background:#f2f4f6; padding:16px;">
+            <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">1-1</span><span class="pointer-badge" style="position:absolute; top:50px; left:2px; z-index:10;">1-2</span><span class="pointer-badge" style="position:absolute; top:80px; left:2px; z-index:10;">1-3</span><span class="pointer-badge" style="position:absolute; top:110px; left:2px; z-index:10;">2-1</span>
+            <div style="background:#fff; border-radius:16px; padding:16px; box-shadow:0 1px 4px rgba(2,32,71,0.05); margin-top:20px;">
+              Mockup Content for 알림 내역
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">알림 내역 (TSI-NOTI-001)</div>
+      </div>
+    </div>
+    
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1-1</span> <div><b>필터 칩 탭</b><br>탭: 전체·안 읽음 필터 즉시 적용</div></li><li><span class="desc-num">1-2</span> <div><b>알림 행 탭</b><br>탭: 읽음 처리 후 해당 워치독으로 이동 (TSI-WD-001)</div></li><li><span class="desc-num">1-3</span> <div><b>모두 읽음 탭</b><br>탭: 전체 읽음 처리, 홈 배지 즉시 갱신 (TSI-MAIN-001)</div></li><li><span class="desc-num">2-1</span> <div><b>빈 상태 CTA 탭</b><br>탭: 워치독 등록으로 이동 (TSI-WD-002)</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.18</div>
+    <div class="ppt-top-title">종목 검색</div>
+    <div class="ppt-head-label">화면 Type</div>
+    <div class="ppt-head-value">MOBILE WEB</div>
+    <div class="ppt-head-label">요구사항 ID</div>
+    <div class="ppt-head-value">-</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">화면 ID</div>
+    <div class="ppt-meta-id">TSI-SEARCH-001</div>
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">종목 검색</div>
+    <div class="ppt-meta-label" style="margin-left:auto;">작업자</div>
+    <div class="ppt-meta-value">UX 기획</div>
+  </div>
+  <div class="ppt-content">
+    
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span><span style="font-size:20px; font-weight:400; margin-right:8px;">&lsaquo;</span>종목 검색</span></div>
+          <div class="mock-body" style="position:relative; background:#f2f4f6; padding:16px;">
+            <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">1-1</span><span class="pointer-badge" style="position:absolute; top:50px; left:2px; z-index:10;">1-2</span><span class="pointer-badge" style="position:absolute; top:80px; left:2px; z-index:10;">1-3</span><span class="pointer-badge" style="position:absolute; top:110px; left:2px; z-index:10;">2-1</span>
+            <div style="background:#fff; border-radius:16px; padding:16px; box-shadow:0 1px 4px rgba(2,32,71,0.05); margin-top:20px;">
+              Mockup Content for 종목 검색
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">종목 검색 (TSI-SEARCH-001)</div>
+      </div>
+    </div>
+    
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1-1</span> <div><b>검색 입력</b><br>입력: 300ms 디바운스 후 자동 조회</div></li><li><span class="desc-num">1-2</span> <div><b>최근 검색 칩 탭</b><br>탭: 해당 종목 상세로 이동 (TSI-STOCK-001)</div></li><li><span class="desc-num">1-3</span> <div><b>전체 삭제 탭</b><br>탭: 확인 없이 즉시 전체 삭제</div></li><li><span class="desc-num">2-1</span> <div><b>검색 결과 행 탭</b><br>탭: 최근 검색에 추가하고 종목 상세로 이동 (TSI-STOCK-001)</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.19</div>
+    <div class="ppt-top-title">종목 상세</div>
+    <div class="ppt-head-label">화면 Type</div>
+    <div class="ppt-head-value">MOBILE WEB</div>
+    <div class="ppt-head-label">요구사항 ID</div>
+    <div class="ppt-head-value">-</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">화면 ID</div>
+    <div class="ppt-meta-id">TSI-STOCK-001</div>
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">종목 상세</div>
+    <div class="ppt-meta-label" style="margin-left:auto;">작업자</div>
+    <div class="ppt-meta-value">UX 기획</div>
+  </div>
+  <div class="ppt-content">
+    
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span><span style="font-size:20px; font-weight:400; margin-right:8px;">&lsaquo;</span>종목 상세</span></div>
+          <div class="mock-body" style="position:relative; background:#f2f4f6; padding:16px;">
+            <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">1</span><span class="pointer-badge" style="position:absolute; top:50px; left:2px; z-index:10;">2</span><span class="pointer-badge" style="position:absolute; top:80px; left:2px; z-index:10;">3</span><span class="pointer-badge" style="position:absolute; top:110px; left:2px; z-index:10;">4</span>
+            <div style="background:#fff; border-radius:16px; padding:16px; box-shadow:0 1px 4px rgba(2,32,71,0.05); margin-top:20px;">
+              Mockup Content for 종목 상세
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">종목 상세 (TSI-STOCK-001)</div>
+      </div>
+    </div>
+    
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1</span> <div><b>종목 헤더</b><br>탭: 읽기 전용, 이동 없음</div></li><li><span class="desc-num">2</span> <div><b>시세 요약</b><br>탭: 읽기 전용, 이동 없음</div></li><li><span class="desc-num">3</span> <div><b>차트 탭 탭</b><br>탭: 차트로 전환 (TSI-CHART-001)</div></li><li><span class="desc-num">4</span> <div><b>워치독 등록 CTA 탭</b><br>탭: 종목이 채워진 상태로 워치독 등록 진입 (TSI-WD-002)</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.20</div>
+    <div class="ppt-top-title">차트</div>
+    <div class="ppt-head-label">화면 Type</div>
+    <div class="ppt-head-value">MOBILE WEB</div>
+    <div class="ppt-head-label">요구사항 ID</div>
+    <div class="ppt-head-value">-</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">화면 ID</div>
+    <div class="ppt-meta-id">TSI-CHART-001</div>
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">차트</div>
+    <div class="ppt-meta-label" style="margin-left:auto;">작업자</div>
+    <div class="ppt-meta-value">UX 기획</div>
+  </div>
+  <div class="ppt-content">
+    
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span><span style="font-size:20px; font-weight:400; margin-right:8px;">&lsaquo;</span>차트</span></div>
+          <div class="mock-body" style="position:relative; background:#f2f4f6; padding:16px;">
+            <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">1</span><span class="pointer-badge" style="position:absolute; top:50px; left:2px; z-index:10;">2</span><span class="pointer-badge" style="position:absolute; top:80px; left:2px; z-index:10;">3</span><span class="pointer-badge" style="position:absolute; top:110px; left:2px; z-index:10;">4</span>
+            <div style="background:#fff; border-radius:16px; padding:16px; box-shadow:0 1px 4px rgba(2,32,71,0.05); margin-top:20px;">
+              Mockup Content for 차트
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">차트 (TSI-CHART-001)</div>
+      </div>
+    </div>
+    
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1</span> <div><b>주기 칩 탭</b><br>탭: 선택 주기(1분·일·주·월)로 캔들 재조회</div></li><li><span class="desc-num">2</span> <div><b>캔들 영역 롱프레스</b><br>롱프레스: 해당 봉의 시가·고가·저가·종가 툴팁 표시</div></li><li><span class="desc-num">3</span> <div><b>이동평균 범례 탭</b><br>탭: 해당 이동평균선 표시·숨김 전환</div></li><li><span class="desc-num">4</span> <div><b>거래량 영역</b><br>탭: 읽기 전용, 캔들과 x축 공유</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.21</div>
+    <div class="ppt-top-title">호가</div>
+    <div class="ppt-head-label">화면 Type</div>
+    <div class="ppt-head-value">MOBILE WEB</div>
+    <div class="ppt-head-label">요구사항 ID</div>
+    <div class="ppt-head-value">-</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">화면 ID</div>
+    <div class="ppt-meta-id">TSI-ORDB-001</div>
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">호가</div>
+    <div class="ppt-meta-label" style="margin-left:auto;">작업자</div>
+    <div class="ppt-meta-value">UX 기획</div>
+  </div>
+  <div class="ppt-content">
+    
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span><span style="font-size:20px; font-weight:400; margin-right:8px;">&lsaquo;</span>호가</span></div>
+          <div class="mock-body" style="position:relative; background:#f2f4f6; padding:16px;">
+            <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">1</span><span class="pointer-badge" style="position:absolute; top:50px; left:2px; z-index:10;">2</span><span class="pointer-badge" style="position:absolute; top:80px; left:2px; z-index:10;">3</span>
+            <div style="background:#fff; border-radius:16px; padding:16px; box-shadow:0 1px 4px rgba(2,32,71,0.05); margin-top:20px;">
+              Mockup Content for 호가
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">호가 (TSI-ORDB-001)</div>
+      </div>
+    </div>
+    
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1</span> <div><b>호가 행 탭</b><br>탭: 해당 가격을 임계값으로 채워 워치독 등록 진입 (TSI-WD-002)</div></li><li><span class="desc-num">2</span> <div><b>잔량 막대</b><br>탭: 읽기 전용, 잔량 수치를 막대 안에 병기</div></li><li><span class="desc-num">3</span> <div><b>총잔량 요약</b><br>탭: 읽기 전용, 이동 없음</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.22</div>
+    <div class="ppt-top-title">체결</div>
+    <div class="ppt-head-label">화면 Type</div>
+    <div class="ppt-head-value">MOBILE WEB</div>
+    <div class="ppt-head-label">요구사항 ID</div>
+    <div class="ppt-head-value">-</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">화면 ID</div>
+    <div class="ppt-meta-id">TSI-TRADE-001</div>
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">체결</div>
+    <div class="ppt-meta-label" style="margin-left:auto;">작업자</div>
+    <div class="ppt-meta-value">UX 기획</div>
+  </div>
+  <div class="ppt-content">
+    
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span><span style="font-size:20px; font-weight:400; margin-right:8px;">&lsaquo;</span>체결</span></div>
+          <div class="mock-body" style="position:relative; background:#f2f4f6; padding:16px;">
+            <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">1</span><span class="pointer-badge" style="position:absolute; top:50px; left:2px; z-index:10;">2</span><span class="pointer-badge" style="position:absolute; top:80px; left:2px; z-index:10;">3</span>
+            <div style="background:#fff; border-radius:16px; padding:16px; box-shadow:0 1px 4px rgba(2,32,71,0.05); margin-top:20px;">
+              Mockup Content for 체결
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">체결 (TSI-TRADE-001)</div>
+      </div>
+    </div>
+    
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1</span> <div><b>체결량 필터 탭</b><br>탭: 전체·1천주 이상 필터 즉시 적용, 재조회 없음</div></li><li><span class="desc-num">2</span> <div><b>체결 요약</b><br>탭: 읽기 전용, 이동 없음</div></li><li><span class="desc-num">3</span> <div><b>체결 목록 스와이프</b><br>스와이프: 최신 체결 갱신</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.23</div>
+    <div class="ppt-top-title">랭킹</div>
+    <div class="ppt-head-label">화면 Type</div>
+    <div class="ppt-head-value">MOBILE WEB</div>
+    <div class="ppt-head-label">요구사항 ID</div>
+    <div class="ppt-head-value">-</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">화면 ID</div>
+    <div class="ppt-meta-id">TSI-RANK-001</div>
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">랭킹</div>
+    <div class="ppt-meta-label" style="margin-left:auto;">작업자</div>
+    <div class="ppt-meta-value">UX 기획</div>
+  </div>
+  <div class="ppt-content">
+    
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span><span style="font-size:20px; font-weight:400; margin-right:8px;">&lsaquo;</span>랭킹</span></div>
+          <div class="mock-body" style="position:relative; background:#f2f4f6; padding:16px;">
+            <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">1-1</span><span class="pointer-badge" style="position:absolute; top:50px; left:2px; z-index:10;">1-2</span><span class="pointer-badge" style="position:absolute; top:80px; left:2px; z-index:10;">1-3</span>
+            <div style="background:#fff; border-radius:16px; padding:16px; box-shadow:0 1px 4px rgba(2,32,71,0.05); margin-top:20px;">
+              Mockup Content for 랭킹
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">랭킹 (TSI-RANK-001)</div>
+      </div>
+    </div>
+    
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1-1</span> <div><b>유형 칩 탭</b><br>탭: 선택 유형으로 재조회, 필터는 유지</div></li><li><span class="desc-num">1-2</span> <div><b>필터 버튼 탭</b><br>탭: 랭킹 필터 바텀시트 노출 (TSI-RANK-101)</div></li><li><span class="desc-num">1-3</span> <div><b>랭킹 행 탭</b><br>탭: 종목 상세로 이동 (TSI-STOCK-001)</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.24</div>
+    <div class="ppt-top-title">랭킹 필터</div>
+    <div class="ppt-head-label">화면 Type</div>
+    <div class="ppt-head-value">MOBILE WEB</div>
+    <div class="ppt-head-label">요구사항 ID</div>
+    <div class="ppt-head-value">-</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">화면 ID</div>
+    <div class="ppt-meta-id">TSI-RANK-101</div>
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">랭킹 필터</div>
+    <div class="ppt-meta-label" style="margin-left:auto;">작업자</div>
+    <div class="ppt-meta-value">UX 기획</div>
+  </div>
+  <div class="ppt-content">
+    
+    <div class="ppt-wireframe">
+      <div class="mock mock-partial">
+        <div class="mock-screen">
+          
+          <div class="mock-header"><span><span style="font-size:20px; font-weight:400; margin-right:8px;">&lsaquo;</span>랭킹 필터</span></div>
+          <div class="mock-body" style="position:relative; background:#f2f4f6; padding:16px;">
+            <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">2-1</span>
+            <div style="background:#fff; border-radius:16px; padding:16px; box-shadow:0 1px 4px rgba(2,32,71,0.05); margin-top:20px;">
+              Mockup Content for 랭킹 필터
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">랭킹 필터 (TSI-RANK-101)</div>
+      </div>
+    </div>
+    
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">2-1</span> <div><b>필터 옵션 탭</b><br>탭: 선택 즉시 반영, 시트 닫고 목록 재조회 (TSI-RANK-001)</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.25</div>
+    <div class="ppt-top-title">시장지표</div>
+    <div class="ppt-head-label">화면 Type</div>
+    <div class="ppt-head-value">MOBILE WEB</div>
+    <div class="ppt-head-label">요구사항 ID</div>
+    <div class="ppt-head-value">-</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">화면 ID</div>
+    <div class="ppt-meta-id">TSI-MKT-001</div>
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">시장지표</div>
+    <div class="ppt-meta-label" style="margin-left:auto;">작업자</div>
+    <div class="ppt-meta-value">UX 기획</div>
+  </div>
+  <div class="ppt-content">
+    
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span><span style="font-size:20px; font-weight:400; margin-right:8px;">&lsaquo;</span>시장지표</span></div>
+          <div class="mock-body" style="position:relative; background:#f2f4f6; padding:16px;">
+            <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">1</span><span class="pointer-badge" style="position:absolute; top:50px; left:2px; z-index:10;">2</span><span class="pointer-badge" style="position:absolute; top:80px; left:2px; z-index:10;">3</span><span class="pointer-badge" style="position:absolute; top:110px; left:2px; z-index:10;">4</span>
+            <div style="background:#fff; border-radius:16px; padding:16px; box-shadow:0 1px 4px rgba(2,32,71,0.05); margin-top:20px;">
+              Mockup Content for 시장지표
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">시장지표 (TSI-MKT-001)</div>
+      </div>
+    </div>
+    
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1</span> <div><b>지수 카드 탭</b><br>탭: 추이 차트를 해당 지수로 전환</div></li><li><span class="desc-num">2</span> <div><b>기간 칩 탭</b><br>탭: 선택 기간(1일·1주·1개월·1년)으로 추이 재조회</div></li><li><span class="desc-num">3</span> <div><b>추이 차트 롱프레스</b><br>롱프레스: 해당 시점의 지수값 툴팁 표시</div></li><li><span class="desc-num">4</span> <div><b>투자자별 매매대금 탭</b><br>탭: 종목별 수급으로 이동 (TSI-FLOW-001)</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.26</div>
+    <div class="ppt-top-title">종목별 수급</div>
+    <div class="ppt-head-label">화면 Type</div>
+    <div class="ppt-head-value">MOBILE WEB</div>
+    <div class="ppt-head-label">요구사항 ID</div>
+    <div class="ppt-head-value">-</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">화면 ID</div>
+    <div class="ppt-meta-id">TSI-FLOW-001</div>
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">종목별 수급</div>
+    <div class="ppt-meta-label" style="margin-left:auto;">작업자</div>
+    <div class="ppt-meta-value">UX 기획</div>
+  </div>
+  <div class="ppt-content">
+    
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span><span style="font-size:20px; font-weight:400; margin-right:8px;">&lsaquo;</span>종목별 수급</span></div>
+          <div class="mock-body" style="position:relative; background:#f2f4f6; padding:16px;">
+            <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">1</span><span class="pointer-badge" style="position:absolute; top:50px; left:2px; z-index:10;">2</span><span class="pointer-badge" style="position:absolute; top:80px; left:2px; z-index:10;">3</span><span class="pointer-badge" style="position:absolute; top:110px; left:2px; z-index:10;">4</span><span class="pointer-badge" style="position:absolute; top:140px; left:2px; z-index:10;">5</span>
+            <div style="background:#fff; border-radius:16px; padding:16px; box-shadow:0 1px 4px rgba(2,32,71,0.05); margin-top:20px;">
+              Mockup Content for 종목별 수급
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">종목별 수급 (TSI-FLOW-001)</div>
+      </div>
+    </div>
+    
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1</span> <div><b>종목 선택 탭</b><br>탭: 종목 검색으로 이동 후 선택 결과 수신 (TSI-SEARCH-001)</div></li><li><span class="desc-num">2</span> <div><b>주기 칩 탭</b><br>탭: 장중 30분·일별 확정치 전환 후 재조회</div></li><li><span class="desc-num">3</span> <div><b>수급 차트 롱프레스</b><br>롱프레스: 해당 회차의 외국인·기관 금액 툴팁 표시</div></li><li><span class="desc-num">4</span> <div><b>데이터 한계 고지</b><br>탭: 개인 수급 미제공 안내 표시. 일별 주기에서는 숨김</div></li><li><span class="desc-num">5</span> <div><b>회차별 표 스와이프</b><br>스와이프: 최신 회차 갱신</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.27</div>
+    <div class="ppt-top-title">환율</div>
+    <div class="ppt-head-label">화면 Type</div>
+    <div class="ppt-head-value">MOBILE WEB</div>
+    <div class="ppt-head-label">요구사항 ID</div>
+    <div class="ppt-head-value">-</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">화면 ID</div>
+    <div class="ppt-meta-id">TSI-FX-001</div>
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">환율</div>
+    <div class="ppt-meta-label" style="margin-left:auto;">작업자</div>
+    <div class="ppt-meta-value">UX 기획</div>
+  </div>
+  <div class="ppt-content">
+    
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span><span style="font-size:20px; font-weight:400; margin-right:8px;">&lsaquo;</span>환율</span></div>
+          <div class="mock-body" style="position:relative; background:#f2f4f6; padding:16px;">
+            <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">1</span><span class="pointer-badge" style="position:absolute; top:50px; left:2px; z-index:10;">2</span><span class="pointer-badge" style="position:absolute; top:80px; left:2px; z-index:10;">3</span>
+            <div style="background:#fff; border-radius:16px; padding:16px; box-shadow:0 1px 4px rgba(2,32,71,0.05); margin-top:20px;">
+              Mockup Content for 환율
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">환율 (TSI-FX-001)</div>
+      </div>
+    </div>
+    
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1</span> <div><b>기준시각·새로고침 탭</b><br>탭: 전 통화쌍 재조회</div></li><li><span class="desc-num">2</span> <div><b>통화쌍 행 탭</b><br>탭: 해당 통화를 환산 계산기의 기준 통화로 설정</div></li><li><span class="desc-num">3</span> <div><b>환산 금액 입력</b><br>입력: 원화 환산 결과 즉시 산출</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.28</div>
+    <div class="ppt-top-title">장운영 캘린더</div>
+    <div class="ppt-head-label">화면 Type</div>
+    <div class="ppt-head-value">MOBILE WEB</div>
+    <div class="ppt-head-label">요구사항 ID</div>
+    <div class="ppt-head-value">-</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">화면 ID</div>
+    <div class="ppt-meta-id">TSI-CAL-001</div>
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">장운영 캘린더</div>
+    <div class="ppt-meta-label" style="margin-left:auto;">작업자</div>
+    <div class="ppt-meta-value">UX 기획</div>
+  </div>
+  <div class="ppt-content">
+    
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span><span style="font-size:20px; font-weight:400; margin-right:8px;">&lsaquo;</span>장운영 캘린더</span></div>
+          <div class="mock-body" style="position:relative; background:#f2f4f6; padding:16px;">
+            <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">1</span><span class="pointer-badge" style="position:absolute; top:50px; left:2px; z-index:10;">2</span><span class="pointer-badge" style="position:absolute; top:80px; left:2px; z-index:10;">3</span>
+            <div style="background:#fff; border-radius:16px; padding:16px; box-shadow:0 1px 4px rgba(2,32,71,0.05); margin-top:20px;">
+              Mockup Content for 장운영 캘린더
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">장운영 캘린더 (TSI-CAL-001)</div>
+      </div>
+    </div>
+    
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1</span> <div><b>월 이동 탭</b><br>탭: 이전·다음 달로 이동 후 재조회</div></li><li><span class="desc-num">2</span> <div><b>날짜 탭</b><br>탭: 해당 날짜 선택, 하단 상세 갱신</div></li><li><span class="desc-num">3</span> <div><b>선택일 상세</b><br>탭: 읽기 전용, 이동 없음</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.29</div>
+    <div class="ppt-top-title">수수료</div>
+    <div class="ppt-head-label">화면 Type</div>
+    <div class="ppt-head-value">MOBILE WEB</div>
+    <div class="ppt-head-label">요구사항 ID</div>
+    <div class="ppt-head-value">-</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">화면 ID</div>
+    <div class="ppt-meta-id">TSI-FEE-001</div>
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">수수료</div>
+    <div class="ppt-meta-label" style="margin-left:auto;">작업자</div>
+    <div class="ppt-meta-value">UX 기획</div>
+  </div>
+  <div class="ppt-content">
+    
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span><span style="font-size:20px; font-weight:400; margin-right:8px;">&lsaquo;</span>수수료</span></div>
+          <div class="mock-body" style="position:relative; background:#f2f4f6; padding:16px;">
+            <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">1</span><span class="pointer-badge" style="position:absolute; top:50px; left:2px; z-index:10;">2</span><span class="pointer-badge" style="position:absolute; top:80px; left:2px; z-index:10;">3</span><span class="pointer-badge" style="position:absolute; top:110px; left:2px; z-index:10;">4</span><span class="pointer-badge" style="position:absolute; top:140px; left:2px; z-index:10;">5</span>
+            <div style="background:#fff; border-radius:16px; padding:16px; box-shadow:0 1px 4px rgba(2,32,71,0.05); margin-top:20px;">
+              Mockup Content for 수수료
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">수수료 (TSI-FEE-001)</div>
+      </div>
+    </div>
+    
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1</span> <div><b>계좌 선택 탭</b><br>탭: 계좌 전환 바텀시트 노출 (TSI-ACCT-101)</div></li><li><span class="desc-num">2</span> <div><b>수수료율 명세</b><br>탭: 읽기 전용, 이동 없음</div></li><li><span class="desc-num">3</span> <div><b>거래세 고지 배너</b><br>탭: 읽기 전용, 상시 노출</div></li><li><span class="desc-num">4</span> <div><b>거래금액 입력</b><br>입력: 매수·매도 각각 예상 수수료+세금 즉시 산출</div></li><li><span class="desc-num">5</span> <div><b>계산 결과</b><br>탭: 읽기 전용, 참고용 캡션 병기</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.30</div>
+    <div class="ppt-top-title">설정</div>
+    <div class="ppt-head-label">화면 Type</div>
+    <div class="ppt-head-value">MOBILE WEB</div>
+    <div class="ppt-head-label">요구사항 ID</div>
+    <div class="ppt-head-value">-</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">화면 ID</div>
+    <div class="ppt-meta-id">TSI-SET-001</div>
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">설정</div>
+    <div class="ppt-meta-label" style="margin-left:auto;">작업자</div>
+    <div class="ppt-meta-value">UX 기획</div>
+  </div>
+  <div class="ppt-content">
+    
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span><span style="font-size:20px; font-weight:400; margin-right:8px;">&lsaquo;</span>설정</span></div>
+          <div class="mock-body" style="position:relative; background:#f2f4f6; padding:16px;">
+            <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">1-1</span><span class="pointer-badge" style="position:absolute; top:50px; left:2px; z-index:10;">1-2</span><span class="pointer-badge" style="position:absolute; top:80px; left:2px; z-index:10;">1-3</span><span class="pointer-badge" style="position:absolute; top:110px; left:2px; z-index:10;">1-4</span><span class="pointer-badge" style="position:absolute; top:140px; left:2px; z-index:10;">1-5</span>
+            <div style="background:#fff; border-radius:16px; padding:16px; box-shadow:0 1px 4px rgba(2,32,71,0.05); margin-top:20px;">
+              Mockup Content for 설정
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">설정 (TSI-SET-001)</div>
+      </div>
+    </div>
+    
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1-1</span> <div><b>계정 카드</b><br>탭: 읽기 전용, 이동 없음</div></li><li><span class="desc-num">1-2</span> <div><b>환율 행 탭</b><br>탭: 환율로 이동 (TSI-FX-001)</div></li><li><span class="desc-num">1-3</span> <div><b>등락 색상 토글 탭</b><br>탭: 한국식/글로벌식 전환, 앱 전체 즉시 반영</div></li><li><span class="desc-num">1-4</span> <div><b>비밀번호 변경 행 탭</b><br>탭: 비밀번호 변경으로 이동 (TSI-AUTH-003)</div></li><li><span class="desc-num">1-5</span> <div><b>로그아웃 탭</b><br>탭: 로그아웃 확인 바텀시트 노출 (TSI-SET-101)</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+<div class="ppt-slide">
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.31</div>
+    <div class="ppt-top-title">로그아웃 확인</div>
+    <div class="ppt-head-label">화면 Type</div>
+    <div class="ppt-head-value">MOBILE WEB</div>
+    <div class="ppt-head-label">요구사항 ID</div>
+    <div class="ppt-head-value">-</div>
+  </div>
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">화면 ID</div>
+    <div class="ppt-meta-id">TSI-SET-101</div>
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">로그아웃 확인</div>
+    <div class="ppt-meta-label" style="margin-left:auto;">작업자</div>
+    <div class="ppt-meta-value">UX 기획</div>
+  </div>
+  <div class="ppt-content">
+    
+    <div class="ppt-wireframe">
+      <div class="mock mock-partial">
+        <div class="mock-screen">
+          
+          <div class="mock-header"><span><span style="font-size:20px; font-weight:400; margin-right:8px;">&lsaquo;</span>로그아웃 확인</span></div>
+          <div class="mock-body" style="position:relative; background:#f2f4f6; padding:16px;">
+            <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">2-1</span>
+            <div style="background:#fff; border-radius:16px; padding:16px; box-shadow:0 1px 4px rgba(2,32,71,0.05); margin-top:20px;">
+              Mockup Content for 로그아웃 확인
+            </div>
+          </div>
+        </div>
+        <div class="mock-caption">로그아웃 확인 (TSI-SET-101)</div>
+      </div>
+    </div>
+    
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">2-1</span> <div><b>취소 버튼 탭</b><br>탭: 시트 닫힘, 세션 유지</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ppt-footer">토스인베스트 | Ver.2.0.0</div>
+</div>
+
+</div>
+</body>
+</html>

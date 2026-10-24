@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<!-- 고정 레이아웃 뷰포트: 모바일 브라우저가 1280px 로 렌더한 전체 페이지를
+     화면 폭에 맞게 축소해, PPT 슬라이드를 세로 스크롤로 넘겨보는 형태가 된다.
+     내부 요소가 px 고정이라 device-width 로 두면 슬라이드 내부가 깨진다. -->
+<meta name="viewport" content="width=1280">
+<title>Classic PPT Wireframe Template</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+      primaryColor: '#ffffff',
+      primaryTextColor: '#333333',
+      primaryBorderColor: '#888888',
+      lineColor: '#555555',
+      secondaryColor: '#f4f4f4',
+      tertiaryColor: '#eeeeee'
+    }
+  });
+</script>
+<style>
+/* 본문 서체: 네이버 D2Coding 1.4.0 (SIL OFL 1.1). 태그를 고정해 버전이 바뀌어도 산출물 모양이 그대로다.
+   @import 를 다시 쓰게 되면 @font-face 를 포함한 모든 규칙보다 앞에 둔다 (CSS 스펙) */
+@font-face {
+  font-family: 'D2Coding';
+  src: url('https://cdn.jsdelivr.net/gh/naver/d2codingfont@VER1.4.0/site/fonts/D2Coding-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'D2Coding';
+  src: url('https://cdn.jsdelivr.net/gh/naver/d2codingfont@VER1.4.0/site/fonts/D2Coding-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+
+:root {
+  --accent: #ea580c;     /* 기본값(주황). 도메인에 맞게 :root 에서만 덮어쓴다 */
+  --accent-ink: #ffffff; /* --accent 배경 위 글자색. 밝은 accent 로 바꿀 땐 어두운 색으로 함께 조정 */
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: 'D2Coding', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  background: #333; /* Dark background outside slides */
+  padding: 40px;
+}
+
+.docwrap { 
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  max-width: 1400px; 
+  margin: 0 auto; 
+  counter-reset: slide; /* Page No. 자동 표기용 — 슬라이드가 스스로 센다 */
+}
+
+/* Authentic PPT Slide Frame */
+.ppt-slide {
+  counter-increment: slide;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9; /* Standard widescreen PPT */
+  background: #e5e7eb; /* Slide canvas background */
+  border: 1px solid #111;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Top Bar */
+.ppt-top-bar {
+  height: 24px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  border-bottom: 2px solid #ccc;
+}
+.ppt-top-no {
+  background: #737373;
+  color: #ffffff;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  font-weight: 800;
+  font-size: 12px;
+  flex: none;
+}
+.ppt-top-title {
+  padding: 0 14px;
+  color: #333333;
+  font-size: 13px;
+  font-weight: 700;
+  flex: 1;              /* 우측 헤더 칸(화면 Type 등)을 오른쪽 끝으로 민다 */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ppt-top-proj {
+  margin-left: auto;
+  padding-right: 24px;
+  color: #777777;
+  font-size: 14px;
+}
+/* Page No. 박스 — counter 로 자동 표기라 슬라이드 추가/삭제에도 어긋나지 않는다.
+   ppt-top-no(슬라이드 논리 번호)와 역할이 다르다: 이쪽은 물리 페이지다. */
+.ppt-top-bar::after {
+  content: "Page " counter(slide);
+  background: #3f3f46;
+  color: #ffffff;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  font-size: 11px;
+  font-weight: 700;
+  flex: none;
+}
+
+/* (구버전 호환) 별도 헤더 행 — v2 부터는 화면 Type·요구사항 ID 칸을
+   ppt-top-bar 안에 직접 두므로 이 행을 새로 만들지 않는다. 기존 산출물
+   렌더 유지를 위해 정의만 남긴다. ppt-head-label/value 는 v2 에서
+   ppt-top-bar 의 칸으로 계속 쓰인다. */
+.ppt-head-bar {
+  height: 24px;
+  background: #f4f4f5;
+  border-bottom: 1px solid #ccc;
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  color: #555555;
+  flex: none;
+}
+.ppt-head-label {
+  background: #d4d4d8;
+  color: #3f3f46;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-weight: 700;
+  flex: none;
+}
+.ppt-head-value {
+  padding: 0 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 메타 바 — 화면 상세(09.x) 슬라이드 2행 헤더 표의 2행.
+   실무 화면설계서의 헤더 표에서 Location(화면 위치 경로)에 해당한다.
+   이 줄이 있으면 IA 슬라이드를 넘겨보지 않아도 화면 맥락이 잡힌다.
+   ppt-head-bar 와 합쳐 높이 56px 만큼 ppt-content 가 줄지만,
+   목업(zoom 0.9 기준 540px)은 남는 높이 안에 그대로 들어간다. */
+.ppt-meta-bar {
+  height: 24px;
+  background: #f4f4f5;
+  border-bottom: 1px solid #ccc;
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  color: #555555;
+  flex: none;
+}
+.ppt-meta-label {
+  background: #d4d4d8;
+  color: #3f3f46;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-weight: 700;
+  flex: none;
+}
+.ppt-meta-value {
+  padding: 0 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* 화면 ID 칸 — v2 2줄 헤더에서는 "화면 ID" 라벨 바로 뒤(좌측)에 놓인다.
+   우측 정렬이 필요한 구버전 산출물은 마크업 순서(마지막 칸)만으로도
+   어색하지 않게 flex 흐름을 따른다. */
+.ppt-meta-id {
+  padding: 0 12px;
+  font-family: 'D2Coding', 'SFMono-Regular', Consolas, monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: #3f3f46;
+  letter-spacing: 0.02em;
+  flex: none;
+}
+
+/* Bottom Footer — 얇은 남색 띠. accent 원색 통짜 바는 목업 CTA 색과
+   경쟁해 시선을 뺏는다 (이슈 #65). 남색 #1e2a5c 는 mock-caption 과 같은
+   고정 프레임색. 좌측 라벨은 CSS content 라 마크업 무변경. */
+.ppt-footer {
+  height: 24px;
+  background: #1e2a5c;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+.ppt-footer::before {
+  content: "화면설계서";
+  color: #aab3d0;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+/* Middle Content Area */
+.ppt-content {
+  flex: 1;
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  margin-bottom: 24px; /* Space for footer */
+}
+
+/* Cover & General Text Content (for non-wireframe slides) */
+.ppt-body-full {
+  flex: 1;
+  background: #ffffff;
+  border: 1px solid #aaa;
+  padding: 40px;
+  overflow-y: auto;
+  position: relative; /* .mermaid 를 absolute 로 채우기 위한 기준 */
+}
+
+/* Mermaid 다이어그램 (IA 슬라이드)
+   mermaid.js 는 생성한 SVG 에 인라인 max-width 를 박아 자체 크기에 가둔다.
+   또 .mermaid 를 flex item 으로 두면 shrink-to-fit 되어 300px 남짓에 머문다.
+   absolute + inset:0 으로 폭·높이를 확정해 주어야 SVG 의 max-height:100% 가
+   해석되고, 비율을 유지한 채 슬라이드를 채운다. 퍼센트 높이만 주면
+   flex 안에서 순환 참조가 생겨 부모가 부풀어 슬라이드 레이아웃이 깨진다.
+   mermaid 가 유일한 자식일 때만 적용한다(텍스트와 혼용 시 겹침 방지). */
+.ppt-body-full > .mermaid:only-child {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mermaid > svg {
+  max-width: 100% !important; /* 인라인 max-width 를 이겨야 한다 */
+  max-height: 100%;
+  width: auto;
+  height: auto;
+}
+
+/* Left Wireframe Canvas */
+.ppt-wireframe {
+  flex: 1;
+  background: #ffffff;
+  border: 1px solid #aaa;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Right Description Panel */
+.ppt-desc-panel {
+  width: 300px;
+  background: #ffffff;
+  border: 1px solid #aaa;
+  display: flex;
+  flex-direction: column;
+}
+/* 실무 화면설계서 룩: 흰 배경 + 진한 밑줄 구분. 회색 블록보다
+   Description 패널이 문서의 본문으로 읽힌다 (이슈 #63). */
+.ppt-desc-header {
+  background: #ffffff;
+  color: #111111;
+  text-align: left;
+  padding: 12px 16px;
+  font-weight: 800;
+  font-size: 15px;
+  border-bottom: 2px solid #3f3f46;
+}
+.ppt-desc-body {
+  padding: 24px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Pointer & Lists */
+.desc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.desc-list li {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  font-size: 14px;
+  color: #333;
+}
+/* 목업 위 pointer-badge 와 1:1 로 짝을 이루는 번호 칩. 같은 accent 칩
+   모양이어야 배지↔설명 대응이 즉시 읽히고, 목업 1개(1·2·3)든 2개
+   이상(1-1)이든 슬라이드 간 표현이 같아진다. nowrap 은 "1-1" 이
+   하이픈에서 줄바꿈되어 두 줄로 깨지는 것을 막는다. */
+.desc-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 20px;
+  padding: 0 5px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 800;
+  font-size: 12px;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex: none;
+  margin-right: 8px;
+}
+
+/* 설명 항목이 많은 슬라이드(8개 이상)는 목록을 압축한다.
+   ppt-desc-body 가 overflow-y:auto 라도 인쇄·정적 열람에는 스크롤이
+   없어 마지막 항목이 잘린 것처럼 보인다 — 항목 수를 감지해 밀도를
+   낮춰 한 화면에 다 들어가게 한다. */
+.ppt-desc-body:has(.desc-list li:nth-child(8)) .desc-list li {
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+/* Pointer Badges on Wireframe */
+/* 배지는 가변 폭이다. "1" 같은 한 글자는 min-width 로 24px 정사각형을
+   유지하고, 2단 번호("2-1")는 내용만큼 늘어난다. 늘어난 폭은 아래
+   목업 2개 이상일 때의 넓은 gutter 안에 들어간다. */
+.pointer-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  width: auto;
+  padding: 0 4px;
+  height: 24px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 800; 
+  font-size: 14px; 
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+/* 배지↔설명 양방향 탐색. 클래스는 런타임에만 붙고 정적 문서에는 영향이 없다. */
+.is-trace-active {
+  outline: 3px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  outline-offset: 3px;
+}
+
+.is-trace-ping {
+  animation: trace-ping 620ms ease-out;
+}
+
+@keyframes trace-ping {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 55%, transparent); }
+  100% { box-shadow: 0 0 0 14px transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .is-trace-ping { animation: none; }
+}
+
+@media print {
+  .is-trace-active { outline: none; }
+  .is-trace-ping { animation: none; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+}
+
+/* Mobile Mockup UI (Centered in Wireframe Panel) */
+/* 실기기 비율 320x694 = 2.17:1 (아이폰 17 402x874pt · 갤럭시 S26 384x832dp).
+   라운드 프레임과 섀도는 목업이 "디바이스"로 읽히게 하는 고정 프레임이다.
+   overflow 는 mock-screen 이 담당한다 — 여기 주면 상단 캡션 바가 잘린다. */
+.mock {
+  width: 320px;
+  height: 694px;
+  border: 1px solid #d9dee4;
+  border-radius: 22px;
+  background: #fff;
+  padding: 0;
+  box-shadow: 0 12px 32px rgba(2,32,71,0.12);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  transform: scale(0.9);
+}
+.mock-screen {
+  flex: 1;
+  background: #f4f4f5;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 21px; /* .mock 라운드(22px) - border 1px */
+}
+/* 리얼 상태바 — 9:41 + 신호/배터리 글리프를 CSS 만으로 렌더한다.
+   기존 산출물의 <div class="mock-status"></div> 가 그대로 업그레이드된다. */
+.mock-status {
+  height: 26px;
+  background: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 18px;
+  flex: none;
+}
+.mock-status::before {
+  content: "9:41";
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #111111;
+}
+.mock-status::after {
+  content: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="38" height="10" viewBox="0 0 38 10"><g fill="%23111"><rect x="0" y="6" width="2.5" height="4" rx="0.6"/><rect x="3.7" y="4" width="2.5" height="6" rx="0.6"/><rect x="7.4" y="2" width="2.5" height="8" rx="0.6"/><rect x="11.1" y="0" width="2.5" height="10" rx="0.6"/></g><rect x="18.5" y="0.5" width="15" height="9" rx="2.5" fill="none" stroke="%23111"/><rect x="20" y="2" width="11" height="6" rx="1.2" fill="%23111"/><rect x="34.5" y="3" width="2" height="4" rx="1" fill="%23111"/></svg>');
+  line-height: 0;
+}
+.mock-header {
+  position: relative; /* 헤더를 가리키는 pointer-badge 의 좌표 원점 (이슈 #71) */
+  background: #fff;
+  color: #111;
+  font-size: 16px;
+  font-weight: 700;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #e2e8f0;
+}
+/* 헤더를 가리키는 배지는 mock-header 안에 둔다(이슈 #71). mock-body 기준
+   음수 top 은 mock-body 가 스크롤 컨테이너(overflow-y:auto)라서 잘려
+   렌더되지 않는다. 배지가 있는 헤더에만 mock-body 와 같은 gutter 를
+   부여해 배지가 제목 첫 글자를 가리지 않게 한다. */
+.mock-header:has(.pointer-badge) { padding-left: 28px; }
+.mock-footer:has(.pointer-badge) { padding-left: 28px; }
+.ppt-wireframe:has(.mock ~ .mock) .mock-header:has(.pointer-badge) { padding-left: 34px; }
+.ppt-wireframe:has(.mock ~ .mock) .mock-footer:has(.pointer-badge) { padding-left: 34px; }
+/* padding-left 28px 는 pointer-badge 전용 gutter 다.
+   배지를 left:-12px 로 프레임 밖에 두면 mock-body(overflow-y:auto 이므로
+   overflow-x 도 auto 로 계산된다) 와 mock-screen(overflow:hidden) 이
+   절반을 잘라낸다. 배지를 left:2px 로 이 여백 안에 두면 온전히 보이고
+   콘텐츠(28px 부터 시작)와 겹치지도 않는다. 배지 폭 24px + 여유 4px. */
+.mock-body { padding: 16px 16px 16px 28px; flex: 1; background: #fff; overflow-y: auto; }
+/* 목업이 2개 이상이면 배지가 2단 번호("2-1")가 되어 폭이 늘어난다.
+   gutter 를 34px 로 넓혀 배지가 콘텐츠를 가리지 않게 한다. 이 규칙은
+   목업 복수 배치와 같은 :has(.mock ~ .mock) 로 게이트되므로 단일 목업
+   슬라이드의 28px gutter 는 그대로다(이슈 #6 무회귀). */
+.ppt-wireframe:has(.mock ~ .mock) .mock-body { padding-left: 34px; }
+.mock-footer {
+  /* mock-header 와 같은 이유로 좌표 원점이다 (이슈 #71·#137) — 여기 없으면
+     푸터 안의 pointer-badge 가 .mock 기준으로 떠서 화면 최상단에 찍힌다. */
+  position: relative;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-around;
+  padding: 12px 0;
+  background: #fff;
+}
+.mock-tab { font-size: 10px; color: #94a3b8; text-align: center; text-transform: uppercase; font-weight: 700;}
+.mock-tab.active { color: var(--accent); }
+
+/* Liquid Glass 플로팅 필 탭 바 (iOS 26) — mock-footer 와 같은 자리
+   (mock-body 의 다음 형제)에 두면 margin 으로 떠 있는 알약이 된다.
+   내부는 인라인 아이콘 svg + 활성 버블(인라인 style) 로 채운다.
+   44px 높이는 320px 폭 대비 실기기 비율(약 14%)에 맞춘 값. */
+.mock-footer-pill {
+  position: relative;
+  margin: 0 20px 10px;
+  height: 44px;
+  flex: none;
+  border-radius: 22px;
+  background: rgba(25,28,38,0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.18);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.22);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 6px;
+}
+
+/* 목업 2개 이상 배치 (상태 변화 · 단계 흐름 비교)
+
+   아래 규칙은 전부 :has(.mock ~ .mock) 로 게이트되어 있다 — 형제 목업이
+   실제로 있을 때만 걸리므로 기존 1개 배치 슬라이드의 렌더는 바뀌지 않는다.
+   개수 판정에 :nth-of-type 대신 형제 결합자(~)를 쓴 이유: nth-of-type 은
+   같은 태그명 형제만 세므로 목업 사이에 다른 div 가 끼면 어긋난다.
+
+   scale() 대신 zoom 을 쓰는 이유: transform 은 레이아웃 박스 크기를 바꾸지
+   않아 flex 가 여전히 320px 를 기준으로 배치하고, 넘치는 만큼 이 패널의
+   overflow:hidden 에 잘린다. zoom 은 사용값(used value)에 곱해져 레이아웃에
+   반영된다. zoom 은 서브트리의 모든 px 를 같은 비율로 곱하므로
+   mock-body 의 배지 gutter(padding-left:28px)와 배지(left:2px + width:24px)가
+   함께 줄어 2+24 <= 28 관계가 배율과 무관하게 보존된다 (이슈 #6 참조).
+
+   가용 폭 1060px = 슬라이드 1400 - 테두리 2 - ppt-content padding 24
+                    - desc panel 300 - gap 12 - wireframe 테두리 2
+   가용 높이 687.5px = 787.5(16:9) - 테두리 2 - top bar 24 - meta bar 24
+                       - footer 24 - ppt-content padding 24 - wireframe 테두리 2
+                       (box-sizing:border-box 이므로 각 테두리는 height 에 포함)
+                       단일 목업: scale(0.9, 중심 기준) 시 목업 시각 상단은 31.4px —
+                       (687.5-694)/2 = -3.25 레이아웃 오프셋 + 중심 축소. 캡션 top:-32
+                       기준 시각 여유 약 2.7px (이슈 #73 — -34 였을 때 0.85px 로 렌더러
+                       편차에 잘릴 수 있었다).
+   2~3개: 320*0.9 = 288    -> 3*288 + 2*24(gap)   = 912    <= 1060
+   4개  : 320*0.77 = 246.4 -> 4*246.4 + 3*24(gap) = 1057.6 <= 1060
+   5개 이상은 슬라이드를 나눈다. */
+.ppt-wireframe:has(.mock ~ .mock) { gap: 24px; }
+.ppt-wireframe:has(.mock ~ .mock) .mock {
+  flex: none;      /* flex-shrink 로 폭이 찌그러지면 목업 내용 비율이 깨진다 */
+  transform: none; /* 아래 zoom 과 곱해지지 않도록 해제 */
+  zoom: 0.9;
+}
+.ppt-wireframe:has(.mock ~ .mock ~ .mock ~ .mock) .mock { zoom: 0.77; }
+
+/* 목업 라벨 ("기본 상태" / "선택됨"). .mock 이 position:relative 이므로
+   absolute 로 프레임 바로 위에 남색 타이틀 바로 놓는다 — .mock 의 column
+   flex 흐름에도, 위 규칙의 .mock ~ .mock 형제 카운트에도 영향을 주지 않는다.
+   실무 화면설계서의 목업 상단 변형 케이스 바(예: "거주성 문진_Default")를
+   재현한 것이다 (이슈 #63). 남색 #1e2a5c 는 accent 와 무관한 고정 프레임색.
+   top:-32px 는 wireframe 패널 상단 여백 안에 들어가도록 계산된 값 —
+   단일 scale(0.9) 시각 여유 약 2.7px, 복수 zoom(0.9) 약 9px (이슈 #73).
+   더 키우면(-34 이하) 단일 목업에서 여유가 1px 미만이 되어 렌더러 편차에
+   잘린다. */
+.mock-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -32px;
+  padding: 5px 8px;
+  background: #1e2a5c;
+  color: #ffffff;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 부분 목업 — 팝업·바텀시트·토스트처럼 화면 일부만 덮는 요소.
+   .mock 과 함께 쓴다: <div class="mock mock-partial">
+   전체 화면 목업으로 그리면 별개 화면처럼 보이므로, 높이를 줄여
+   "화면 일부를 덮는다" 는 사실 자체를 그림으로 전달한다.
+   위쪽 배경 힌트(회색으로 뭉갠 영역)는 인라인 style 로 채운다.
+   .mock 의 형제이므로 :has(.mock ~ .mock) 규칙에 그대로 걸려
+   zoom 과 gutter 가 전체 목업과 동일하게 적용된다. */
+.mock-partial {
+  height: 320px;
+}
+
+/* Code tags */
+code {
+  background: #f1f5f9;
+  padding: 2px 6px;
+  font-family: 'D2Coding', 'SFMono-Regular', Consolas, monospace;
+  font-size: 12px;
+  color: var(--accent);
+  border: 1px solid #e2e8f0;
+}
+
+/* Phosphor Icons (MIT) 인라인 SVG 용 — 이모지 아이콘 대체 */
+.icon {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+  vertical-align: -2px;
+  flex: none;
+}
+
+/* ============================================================
+   인쇄 · PDF 저장 (A4 가로 · 한 장에 한 슬라이드)
+
+   A4 가로는 297×210mm 로 비율 1.414, 슬라이드는 16:9 로 1.778 이다.
+   폭을 채우면 높이가 167.06mm 라 위아래로 21.47mm 씩 남는다. 이건 결함이
+   아니라 16:9 덱을 A4 로 뽑을 때의 정상 결과다 — 슬라이드 비율 자체를 A4 에
+   맞추지 않는다. 목업 가용 높이(687.5px)와 배지 인라인 top 이 전부 16:9 에서
+   유도된 값이라 비율을 바꾸면 기존 산출물이 전부 어긋난다.
+   ============================================================ */
+@page {
+  size: A4 landscape;
+  /* 16:9 슬라이드(167.06mm)를 210mm 페이지 가운데에 놓기 위한 위 여백.
+     슬라이드 자체에 margin 을 주면 zoom 배율에 같이 눌려 계산이 꼬인다. */
+  margin: 21mm 0 0;
+}
+
+@media print {
+  /* 배경색·배지색이 살아야 한다. 이게 없으면 인쇄 엔진이 배경을 전부
+     날려 목업이 흰 종이에 선만 남는다. */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body {
+    background: #fff;   /* 화면용 어두운 배경은 종이에서 토너 낭비다 */
+    padding: 0;
+  }
+
+  .docwrap {
+    display: block;     /* flex gap 이 페이지 사이에 빈 공간을 만든다 */
+    max-width: none;
+    margin: 0;
+  }
+
+  .ppt-slide {
+    /* 슬라이드를 mm 로 줄이지 않는다. 목업 크기와 배지 인라인 top 이 전부
+       설계 폭 1400px(높이 787.5px)에서 나온 절대 픽셀값이라, 상자만 작게
+       만들면 안쪽 내용은 그대로여서 넘친다 — 실제로 배지가 슬라이드 밖
+       푸터 아래로 튀어나갔다. 원래 크기로 그린 뒤 통째로 축소한다.
+
+       transform 이 아니라 zoom 인 이유: transform 은 레이아웃 상자를 그대로
+       둬서 페이지 나눔이 원본 크기 기준으로 계산된다. zoom 은 상자까지 줄여
+       한 장에 한 슬라이드가 맞는다.
+
+       배율 = 297mm(= 96dpi 에서 1122.52px) / 1400px */
+    width: 1400px;
+    height: 787.5px;
+    zoom: 0.8018;
+    margin: 0;
+    box-shadow: none;
+    break-inside: avoid;
+    break-after: page;
+  }
+
+  /* 마지막 슬라이드 뒤에 빈 페이지가 붙지 않게 한다. */
+  .ppt-slide:last-child {
+    break-after: auto;
+  }
+}
+</style>
+</head>
+<body>
+<div class="docwrap">
+  <!-- Template Content Here -->
+</div>
+<script>
+/* 같은 슬라이드의 pointer-badge와 desc-num을 표기 문자열로 연결한다.
+   JS가 꺼져도 기존 정적 문서는 그대로 읽힌다. */
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.ppt-slide').forEach((slide) => {
+    const badges = new Map();
+    slide.querySelectorAll('.pointer-badge').forEach((badge) => {
+      const key = badge.textContent.trim();
+      if (!badges.has(key)) badges.set(key, badge);
+      badge.tabIndex = 0;
+    });
+
+    slide.querySelectorAll('.desc-num').forEach((number) => {
+      const item = number.closest('li') || number.parentElement;
+      const badge = badges.get(number.textContent.trim());
+      if (!item || !badge) return;
+      item.tabIndex = 0;
+      item.setAttribute('role', 'button');
+      item.setAttribute('aria-label', `설명 ${number.textContent.trim()}의 배지 강조`);
+
+      const activate = () => {
+        badge.classList.add('is-trace-active');
+        item.classList.add('is-trace-active');
+      };
+      const deactivate = () => {
+        badge.classList.remove('is-trace-active');
+        item.classList.remove('is-trace-active');
+      };
+      const ping = () => {
+        badge.classList.remove('is-trace-ping');
+        void badge.offsetWidth;
+        badge.classList.add('is-trace-ping');
+      };
+
+      badge.addEventListener('pointerenter', activate);
+      badge.addEventListener('pointerleave', deactivate);
+      badge.addEventListener('focus', activate);
+      badge.addEventListener('blur', deactivate);
+      item.addEventListener('pointerenter', activate);
+      item.addEventListener('pointerleave', deactivate);
+      item.addEventListener('focus', activate);
+      item.addEventListener('blur', deactivate);
+      item.addEventListener('click', ping);
+      item.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          ping();
+        }
+      });
+    });
+  });
+});
+</script>
+</body>
+</html>

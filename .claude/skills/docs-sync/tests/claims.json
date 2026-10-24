@@ -1,0 +1,21 @@
+{
+  "claims": [
+    {"id": "REMOVED-REF-CURRENT", "kind": "정상", "rule": "지워지거나 옮겨진 경로를 가리키는 줄", "test": "test_find_stale_refs.py::test_removed_since_finds_current_and_history"},
+    {"id": "RENAMED-NEW-PATH", "kind": "정상", "rule": "옮겨진 경로는 `renamed -> 새 경로` 로 알려 준다.", "test": "test_find_stale_refs.py::test_rename_reports_new_path"},
+    {"id": "REPO-CONFIG", "kind": "정상", "rule": "`AGENTS.yaml` 에 적어 두면 스크립트가 읽는다", "test": "test_find_stale_refs.py::test_repo_config_history_and_exclude"},
+    {"id": "EXCLUDE-OPTION", "kind": "정상", "rule": "보존본 제외, 기계 처리용", "test": "test_find_stale_refs.py::test_exclude_option"},
+    {"id": "DEFAULT-HISTORY", "kind": "정상", "rule": "섹션이 없으면 기본값(CHANGELOG·`archive/`", "test": "test_find_stale_refs.py::test_default_history_files"},
+    {"id": "EXIT-CURRENT", "kind": "실패", "rule": "1 은 스크립트가 고장 났다는 뜻이 아니라 고칠 줄이 있다는 뜻이다.", "test": "test_find_stale_refs.py::test_current_findings_exit_1"},
+    {"id": "STRICT-HISTORY", "kind": "실패", "rule": "`--strict` 는 `history` 도 1 로 센다.", "test": "test_find_stale_refs.py::test_history_only_passes_unless_strict"},
+    {"id": "FIRST-SEGMENT", "kind": "경계", "rule": "전체 존재 검사는 첫 경로 조각이 지금 레포에 있는 토큰만 본다", "test": "test_find_stale_refs.py::test_existence_mode_checks_first_segment"},
+    {"id": "TOP-FOLDER-REMOVED", "kind": "경계", "rule": "최상위 폴더를 통째로 지웠다면 반드시 `--removed-since` 로 잡는다.", "test": "test_find_stale_refs.py::test_removed_top_folder_needs_removed_since"},
+    {"id": "DOCS-ONLY", "kind": "경계", "rule": "추적 중인 문서(`*.md`·`*.yaml`·`*.toml`·`AGENTS*`·`CLAUDE*` 등)만 본다.", "test": "test_find_stale_refs.py::test_code_files_are_not_scanned"},
+    {"id": "GLOB-SYNTAX", "kind": "경계", "rule": "`*`·`**`(둘 다 `/` 를 넘는다)·`{a,b}` 를 쓴다.", "test": "test_find_stale_refs.py::test_glob_brace_and_double_star"},
+    {"id": "HISTORY-MARKER", "kind": "경계", "rule": "스크립트의 `current`/`history` 는 낱말 기반 추정이니", "test": "test_find_stale_refs.py::test_history_marker_line_is_history"},
+    {"id": "EXIT-TOOL-ERROR", "kind": "도구오류", "rule": "git·인자 오류는 2 다.", "test": "test_find_stale_refs.py::test_bad_rev_and_bad_regex_exit_2"},
+    {"id": "NO-PYYAML", "kind": "도구오류", "rule": "PyYAML 이 없어도 위 모양(블록 목록·흐름 목록)은 읽는다.", "test": "test_find_stale_refs.py::test_repo_config_without_pyyaml"},
+    {"id": "BROKEN-YAML", "kind": "도구오류", "rule": "깨진 `AGENTS.yaml` 은 경고만 내고 기본값으로 돈다.", "test": "test_find_stale_refs.py::test_broken_agents_yaml_falls_back"},
+    {"id": "SUBPROJECT-TAIL", "kind": "오탐", "rule": "(`ews-v3/web/src` 를 가리키는 `web/src`)를 지운 경로로 오인한다.", "test": "test_find_stale_refs.py::test_subproject_tail_not_reported"},
+    {"id": "NUMBER-ABBREV", "kind": "오탐", "rule": "`docs/12` 같은 번호 축약", "test": "test_find_stale_refs.py::test_number_abbreviation_not_reported"}
+  ]
+}
