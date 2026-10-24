@@ -21,3 +21,6 @@ __pycache__/
 
 # 오프라인 번들 산출물 (#58)
 dist/
+
+# 전역 스킬 설치 원천 — scripts/install-skills.sh 가 매번 다시 만든다 (#78)
+.skills-dist/

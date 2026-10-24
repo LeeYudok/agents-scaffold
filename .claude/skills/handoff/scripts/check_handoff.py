@@ -59,6 +59,32 @@ SECRETS = [
 ]
 
 
+# 영어 템플릿(presets/lang-en 의 handoff, agents-scaffold #78)의 라벨·섹션 → 한국어 원본 이름.
+# 검사 규칙은 한국어 이름 하나로만 두고, 읽을 때 영어 라벨을 바꿔 끼운다.
+EN_FIELDS = {"Issue": "이슈", "Written": "작성", "Work issue/PR": "작업 이슈/PR", "Branch": "브랜치",
+             "Current handoff": "현재 핸드오프", "Summary": "요약", "Full list": "전체 목록"}
+EN_SECTIONS = {"Where things stand": "지금 어디까지", "Verification results (raw)": "검증 결과 (원문)",
+               "Currently running": "실행 중인 것", "Open decisions": "미결 판단",
+               "Next command to run": "다음에 칠 명령", "Gotchas": "함정",
+               "Machine-readable state": YAML_SECTION}
+_EN_FIELD = re.compile(r"^- (%s):" % "|".join(map(re.escape, sorted(EN_FIELDS, key=len, reverse=True))))
+
+
+def normalize(lines: list[str]) -> list[str]:
+    out, fence = [], False
+    for line in lines:
+        if line.startswith("```"):
+            fence = not fence
+        if not fence:
+            m = _EN_FIELD.match(line)
+            if m:
+                line = "- " + EN_FIELDS[m.group(1)] + ":" + line[m.end():]
+            elif line.startswith("## ") and line[3:].strip() in EN_SECTIONS:
+                line = "## " + EN_SECTIONS[line[3:].strip()]
+        out.append(line)
+    return out
+
+
 def fields(lines: list[str], names: list[str]) -> dict[str, tuple[int, str]]:
     out = {}
     for i, line in enumerate(lines, 1):
@@ -362,7 +388,7 @@ def main(argv: list[str]) -> int:
     except (OSError, UnicodeDecodeError) as e:
         print(f"오류: 입력을 읽지 못했다 ({e})", file=sys.stderr)
         return 2
-    lines = text.splitlines()
+    lines = normalize(text.splitlines())
     errors: list[str] = []
     warnings: list[str] = []
     first = next((l for l in lines if l.strip()), "")
@@ -375,7 +401,7 @@ def main(argv: list[str]) -> int:
         f = {"브랜치": (0, f"`{meta['branch']}`"), "HEAD": (0, f"`{meta['head']}`")} if len(meta) == len(YAML_META) else {}
         if args.pair:
             try:
-                check_pair(Path(args.pair).read_text(encoding="utf-8").splitlines(), meta, errors)
+                check_pair(normalize(Path(args.pair).read_text(encoding="utf-8").splitlines()), meta, errors)
             except (OSError, UnicodeDecodeError) as e:
                 print(f"오류: 짝 파일을 읽지 못했다 ({e})", file=sys.stderr)
                 return 2
