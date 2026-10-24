@@ -1,0 +1,203 @@
+"$schema" = 'https://starship.rs/config-schema.json'
+
+# 2줄 프롬프트 · Catppuccin Mocha 팔레트 · Nerd Font 글리프 (이모지 미사용)
+# 글리프는 v2·v3 공통 BMP 영역(U+E000~F8FF)만 쓴다 — v3 전용 5자리(U+F0000~)는 v2 폰트(Termius 등)에서 □로 깨진다
+# 요구: starship >= 1.16 (palettes, os 모듈), Nerd Font 터미널 폰트 (install.sh 2.5 단계)
+
+add_newline = true
+command_timeout = 1000
+palette = "catppuccin_mocha"
+
+format = """
+[╭─](frame)$os$username$hostname$directory$git_branch$git_status$git_state$git_metrics\
+$rust$python$nodejs$bun$java$golang$docker_context$kubernetes$cmd_duration$jobs
+[╰─](frame)$status$character"""
+
+# 오른쪽 프롬프트: 현재 시각 (커맨드 실행 시점 기록용)
+right_format = "$time"
+
+# ── 문자/상태 ──────────────────────────────────────────────
+[character]
+success_symbol = "[❯](bold green)"
+error_symbol = "[❯](bold red)"
+vimcmd_symbol = "[❮](bold green)"
+
+[status]
+disabled = false
+symbol = " "
+success_symbol = ""
+not_found_symbol = " "
+not_executable_symbol = " "
+sigint_symbol = " "
+signal_symbol = " "
+style = "bold red"
+format = '[$symbol$common_meaning$signal_name$maybe_int]($style) '
+
+# ── 호스트/사용자/경로 ──────────────────────────────────────
+[os]
+disabled = false
+style = "subtext0"
+format = "[$symbol]($style) "
+
+[os.symbols]
+Macos = ""
+Linux = ""
+RockyLinux = ""
+RedHatEnterprise = ""
+Ubuntu = ""
+Debian = ""
+Alpine = ""
+Windows = ""
+
+[username]
+show_always = false
+style_user = "bold yellow"
+style_root = "bold red"
+format = "[$user]($style) "
+
+[hostname]
+ssh_only = true
+ssh_symbol = " "
+style = "bold red"
+format = "on [$ssh_symbol$hostname]($style) "
+
+[directory]
+style = "bold sapphire"
+read_only_style = "red"
+truncation_length = 3
+truncate_to_repo = true
+truncation_symbol = "…/"
+read_only = " "
+format = "in [$path]($style)[$read_only]($read_only_style) "
+
+[directory.substitutions]
+"~/workspace" = " ws"
+"Documents" = " Documents"
+"Downloads" = " Downloads"
+
+# ── git ────────────────────────────────────────────────────
+[git_branch]
+symbol = " "
+style = "bold mauve"
+format = "on [$symbol$branch(:$remote_branch)]($style) "
+
+[git_status]
+style = "bold yellow"
+format = '([\[$all_status$ahead_behind\]]($style) )'
+conflicted = "="
+ahead = "⇡${count}"
+behind = "⇣${count}"
+diverged = "⇕⇡${ahead_count}⇣${behind_count}"
+untracked = "?${count}"
+stashed = ""
+modified = "!${count}"
+staged = "+${count}"
+renamed = "»${count}"
+deleted = "✘${count}"
+
+[git_state]
+style = "bold red"
+format = '\([$state( $progress_current/$progress_total)]($style)\) '
+
+[git_metrics]
+disabled = false
+added_style = "green"
+deleted_style = "red"
+format = '([+$added]($added_style) )([-$deleted]($deleted_style) )'
+
+# ── 언어/런타임 (해당 프로젝트에서만 표시) ───────────────────
+[rust]
+symbol = " "
+style = "bold peach"
+format = "via [$symbol($version )]($style)"
+
+[python]
+symbol = " "
+style = "bold yellow"
+format = 'via [$symbol${pyenv_prefix}(${version} )(\($virtualenv\) )]($style)'
+
+[nodejs]
+symbol = " "
+style = "bold green"
+format = "via [$symbol($version )]($style)"
+
+[bun]
+symbol = " "
+style = "bold rosewater"
+format = "via [$symbol($version )]($style)"
+
+[java]
+symbol = " "
+style = "bold red"
+format = "via [$symbol($version )]($style)"
+
+[golang]
+symbol = " "
+style = "bold sky"
+format = "via [$symbol($version )]($style)"
+
+# ── 컨테이너/클러스터 컨텍스트 ──────────────────────────────
+[docker_context]
+symbol = " "
+style = "bold blue"
+format = "via [$symbol$context]($style) "
+only_with_files = true
+
+[kubernetes]
+# 기본 비활성 — k8s 작업 디렉터리에서만 켜려면 detect_folders/detect_files 조정
+disabled = true
+symbol = " "
+style = "bold blue"
+format = 'on [$symbol$context( \($namespace\))]($style) '
+
+# ── 실행 정보 ──────────────────────────────────────────────
+[cmd_duration]
+min_time = 2_000
+show_milliseconds = false
+format = "took [$duration]($style) "
+style = "bold yellow"
+
+[jobs]
+symbol = " "
+style = "bold sky"
+number_threshold = 1
+format = "[$symbol$number]($style) "
+
+[time]
+disabled = false
+time_format = "%H:%M:%S"
+style = "overlay1"
+format = "[$time]($style)"
+
+[package]
+disabled = true
+
+# ── 팔레트 ─────────────────────────────────────────────────
+[palettes.catppuccin_mocha]
+frame = "bold blue"
+rosewater = "#f5e0dc"
+flamingo = "#f2cdcd"
+pink = "#f5c2e7"
+mauve = "#cba6f7"
+red = "#f38ba8"
+maroon = "#eba0ac"
+peach = "#fab387"
+yellow = "#f9e2af"
+green = "#a6e3a1"
+teal = "#94e2d5"
+sky = "#89dceb"
+sapphire = "#74c7ec"
+blue = "#89b4fa"
+lavender = "#b4befe"
+text = "#cdd6f4"
+subtext1 = "#bac2de"
+subtext0 = "#a6adc8"
+overlay2 = "#9399b2"
+overlay1 = "#7f849c"
+overlay0 = "#6c7086"
+surface2 = "#585b70"
+surface1 = "#45475a"
+surface0 = "#313244"
+base = "#1e1e2e"
+mantle = "#181825"
+crust = "#11111b"

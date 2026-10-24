@@ -1,0 +1,25 @@
+.cmpmain { padding: 12px 16px 24px; display: flex; flex-direction: column; gap: 10px; }
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.bar .lbl { font-weight: 600; margin-right: 2px; }
+.small { font-size: 12px; }
+.picks, .sounds { display: flex; flex-wrap: wrap; gap: 6px; }
+.pick { display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--line); background: var(--panel); border-radius: 6px; padding: 3px 8px; font-size: 12px; cursor: pointer; }
+.pick input { margin: 0; }
+.pick.on { border-color: var(--accent); }
+.pick small { color: var(--muted); }
+.sounds button, .scenes button { border: 1px solid var(--line); background: var(--panel); color: var(--text); border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer; }
+.sounds button.on, .scenes button.on { border-color: var(--accent); color: var(--accent); }
+.scenes { display: flex; flex-wrap: wrap; gap: 4px; }
+.scenes button small { color: var(--muted); margin-left: 4px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(480px, 100%), 1fr)); gap: 12px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px; min-width: 0; }
+.card header { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin: 2px 4px 6px; }
+.card header b { white-space: nowrap; }
+.card header span { color: var(--muted); font-size: 12px; text-align: right; }
+.card video { width: 100%; border-radius: 4px; background: #000; display: block; }
+.card .meta { display: flex; justify-content: space-between; font-size: 12px; margin: 6px 4px 0; color: var(--muted); }
+.card .meta a { color: var(--accent); }
+.card.miss video { display: none; }
+.card.miss::after { content: "재생할 수 없는 영상이에요(렌더 중이거나 손상)"; display: block; padding: 80px 0; text-align: center; color: var(--muted); }
+.empty { padding: 40px 0; text-align: center; color: var(--muted); }
+.foot { font-size: 12px; }

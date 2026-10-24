@@ -20,6 +20,10 @@
 스택별 도구(`bun`, `go`, `cargo`, `ruff` 등)는 pre-commit 게이트가 **있을 때만** 쓴다 — 없으면
 해당 검사를 건너뛴다. 사내 미러에서 따로 반입한다.
 
+Git for Windows 설치는 번들 안의 `dotfiles/windows/install-git.cmd` 로 자동화할 수 있다 — 반입한 설치
+파일을 `dotfiles\windows\offline\` 에 두고 실행하면 관리자 권한 없이 무인 설치하고 Git Bash 용 `~/.bashrc` 까지
+맞춘다(서명 검사·SHA-256 출력 포함, 자세한 동작은 [dotfiles/README.md](../dotfiles/README.md) 의 "Windows 폐쇄망").
+
 ## 1. 번들 만들기 (인터넷 PC)
 
 ```bash

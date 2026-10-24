@@ -1,0 +1,20 @@
+{
+  "claims": [
+    {"id": "RULES-LOAD", "kind": "정상", "rule": "`검사` 열은 `scripts/check_writing.py` 가 읽는 정규식이다.", "test": "test_check_writing.py::test_rules_load_and_compile"},
+    {"id": "ROW-THREE-COLS", "kind": "실패", "rule": "이 파일이 금지 표현의 유일한 원본이다.", "test": "test_check_writing.py::test_every_row_has_check_column"},
+    {"id": "ESCAPED-PIPE", "kind": "경계", "rule": "정규식 안의 `|` 는 표 구분자와 겹치므로 `\\|` 로 적는다.", "test": "test_check_writing.py::test_escaped_pipe_is_alternation"},
+    {"id": "BAD-DOC-EXAMPLES", "kind": "실패", "rule": "오류: 금지 표현, 문어체의 ~함·~됨·~있음 종결, ISO 8601 시각, 이모지.", "test": "test_check_writing.py::test_bad_document_examples_fail"},
+    {"id": "FIXED-EXAMPLES", "kind": "오탐", "rule": "고친 문장:", "test": "test_check_writing.py::test_fixed_examples_pass"},
+    {"id": "CHAT-MODE", "kind": "정상", "rule": "채팅: 명사형 종결은 보지 않는다", "test": "test_check_writing.py::test_chat_examples"},
+    {"id": "NOUN-ENDING-DOC-ONLY", "kind": "경계", "rule": "명사형 종결 표는 문어체 산출물(이슈·MR·문서·공지)에만 적용한다.", "test": "test_check_writing.py::test_noun_ending_doc_only"},
+    {"id": "ISO-EMOJI", "kind": "실패", "rule": "ISO 8601 의 `T`·`+09:00` 은 쓰지 않는다.", "test": "test_check_writing.py::test_iso_time_and_emoji"},
+    {"id": "SKIP-ZONES", "kind": "오탐", "rule": "코드 블록·인라인 코드·표·인용·URL 은 보지 않는다.", "test": "test_check_writing.py::test_skipped_zones"},
+    {"id": "HASH-NUMBER", "kind": "경계", "rule": "#418 이슈 관련하여", "test": "test_check_writing.py::test_hash_number_is_not_heading"},
+    {"id": "LONG-SENTENCE", "kind": "경계", "rule": "경고: 60자를 넘는 문장.", "test": "test_check_writing.py::test_long_sentence_warning_and_strict"},
+    {"id": "SELF-CHECK", "kind": "정상", "rule": "문어체 산출물에 ~함·~임·~됨 종결이 없다(채팅은 예외).", "test": "test_check_writing.py::test_skill_docs_pass"},
+    {"id": "SECRET-BLOCK", "kind": "실패", "rule": "시크릿처럼 보이는 문자열이 있으면 스크립트가 멈춘다.", "test": "test_check_writing.py::test_secret_is_not_sent"},
+    {"id": "MISSING-KEY", "kind": "도구오류", "rule": "키가 없으면 이 단계를 건너뛰고 직접 고친다.", "test": "test_check_writing.py::test_missing_key"},
+    {"id": "DOC-STYLE", "kind": "경계", "rule": "~합니다 체도 쓸 수 있다", "test": "test_check_writing.py::test_doc_style_follows_majority_ending"},
+    {"id": "RETRY-ON-ERRORS", "kind": "정상", "rule": "검사기에 오류가 남으면 그 목록을 붙여 한 번 더 고친다.", "test": "test_check_writing.py::test_retry_when_errors_remain"}
+  ]
+}

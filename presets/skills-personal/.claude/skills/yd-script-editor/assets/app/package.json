@@ -1,0 +1,26 @@
+{
+  "name": "yd-script-editor",
+  "private": true,
+  "type": "module",
+  "description": "시연 영상 내레이션 대본 에디터·음성 재생·영상 비교 (yd-script-editor 스킬, TypeScript — node·bun)",
+  "scripts": {
+    "build": "vite build",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "serve": "node src/server/index.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.2",
+    "vitest": "^5.0.3"
+  },
+  "engines": {
+    "node": ">=22.18"
+  },
+  "dependencies": {
+    "dompurify": "^3.4.16",
+    "marked": "^18.0.14",
+    "playwright-core": "^1.62.1"
+  }
+}

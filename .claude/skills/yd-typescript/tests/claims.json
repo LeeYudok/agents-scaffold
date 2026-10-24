@@ -1,0 +1,82 @@
+{
+ "claims": [
+  {
+   "id": "BUN-NO-TYPECHECK",
+   "kind": "경계",
+   "rule": "Bun의 TS 실행·`bun build`는 타입 검사를 하지 않는다.",
+   "test": "test_typescript_claims.py::test_bun_run_and_build_skip_type_check"
+  },
+  {
+   "id": "TSC-CATCHES",
+   "kind": "정상",
+   "rule": "`tsc --noEmit`을 별도로 실행하고",
+   "test": "test_typescript_claims.py::test_tsc_reports_the_error_bun_ignored"
+  },
+  {
+   "id": "TSC-PROJECT-CONFIG",
+   "kind": "도구오류",
+   "rule": "변경한 프로젝트의 `tsconfig.json`으로",
+   "test": "test_typescript_claims.py::test_tsc_rejects_files_next_to_tsconfig"
+  },
+  {
+   "id": "BUN-BUILD-TARGET",
+   "kind": "경계",
+   "rule": "브라우저 산출물은 `--target browser`로 만든다.",
+   "test": "test_typescript_claims.py::test_bun_build_target_defaults_to_browser"
+  },
+  {
+   "id": "BUN-API-IN-BROWSER",
+   "kind": "실패",
+   "rule": "Bun 런타임 API를 브라우저 번들에 섞지 않는다.",
+   "test": "test_typescript_claims.py::test_bun_api_builds_for_browser_but_fails_without_bun"
+  },
+  {
+   "id": "CAST-NOT-VALIDATION",
+   "kind": "실패",
+   "rule": "`as ApiResponse`, `as HTMLElement`, 후위 `!`는 검증이 아니다.",
+   "test": "test_typescript_claims.py::test_cast_compiles_but_value_is_wrong"
+  },
+  {
+   "id": "NONNULL-NOT-VALIDATION",
+   "kind": "실패",
+   "rule": "후위 `!`는 검증이 아니다.",
+   "test": "test_typescript_claims.py::test_non_null_assertion_compiles_but_throws"
+  },
+  {
+   "id": "EXACT-OPTIONAL",
+   "kind": "경계",
+   "rule": "**부재**와 `undefined` 값이 다른 계약이면 `exactOptionalPropertyTypes`를 검토한다.",
+   "test": "test_typescript_claims.py::test_exact_optional_property_types_flags_explicit_undefined"
+  },
+  {
+   "id": "UNCHECKED-INDEX",
+   "kind": "경계",
+   "rule": "배열·인덱스 조회 실패가 의미 있으면 `noUncheckedIndexedAccess`를 켜거나 사용 지점에서 검사한다.",
+   "test": "test_typescript_claims.py::test_no_unchecked_indexed_access_flags_unsafe_index"
+  },
+  {
+   "id": "ASYNC-RACE",
+   "kind": "실패",
+   "rule": "이전 응답이 나중 응답을 덮을 수 있다.",
+   "test": "test_typescript_claims.py::test_late_response_overwrites_without_guard"
+  },
+  {
+   "id": "ASYNC-GUARD",
+   "kind": "정상",
+   "rule": "세대 번호로 최신 결과만 반영한다.",
+   "test": "test_typescript_claims.py::test_generation_guard_keeps_latest"
+  },
+  {
+   "id": "ABORT-CONTROLLER",
+   "kind": "정상",
+   "rule": "요청 취소(`AbortController`)",
+   "test": "test_typescript_claims.py::test_abort_controller_cancels_pending_fetch"
+  },
+  {
+   "id": "EMPTY-BODY-200",
+   "kind": "경계",
+   "rule": "POST 응답이 성공 코드여도 본문이 비었거나 형식이 틀릴 수 있다.",
+   "test": "test_typescript_claims.py::test_ok_status_with_empty_body_fails_to_parse"
+  }
+ ]
+}

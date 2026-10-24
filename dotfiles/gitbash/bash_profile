@@ -1,0 +1,4 @@
+# ~/.bash_profile — Git Bash(Git for Windows) 용. windows/install-git.ps1 이 배치한다.
+# Git Bash 는 로그인 셸로 뜨므로 ~/.bashrc 를 여기서 읽는다.
+# (이 파일이 없으면 Git Bash 가 첫 실행 때 스스로 만들어 되돌리기 대상에서 빠지므로 함께 배치한다)
+[ -f "$HOME/.bashrc" ] && . "$HOME/.bashrc"

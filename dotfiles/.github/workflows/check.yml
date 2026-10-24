@@ -1,0 +1,27 @@
+# PR과 main push에서 로컬과 같은 최소 검사를 실행한다.
+name: 기본 검사
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: 식별자·문법 검사
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: 식별자 검사
+        run: scripts/check-identifiers.sh
+      - name: 문법 검사 도구 설치
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y zsh python3
+      - name: 파일별 문법 검사
+        run: scripts/check-syntax.sh

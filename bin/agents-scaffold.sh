@@ -17,6 +17,10 @@ Usage:
                  en overlays presets/lang-en/ (base + forge + selected stacks) on top of the
                  English base, after base copy + forge merge + stack merge.
   --name         {{PROJECT_NAME}} substitution value. Default = target directory name.
+  --with-personal-skills
+                 Also install the opt-in yd-* skills/agents tied to the maintainer's environment
+                 (presets/skills-personal: GitLab agents-mem, host sync, ui.doksam.com, FinGuard, ...).
+                 Korean only. --update refreshes them when the target already has any of them.
   --harness      Target agent harness: claude (default), codex, agy, or all.
                  All three read AGENTS.md natively. Skills live once in .agents/skills
                  (Codex/agy native) and Claude Code reads them via the symlink
@@ -56,7 +60,7 @@ bin\agents-scaffold.cmd. See docs/OFFLINE_INSTALL.en.md.
 
 Flow: copy base (.claude/ + AGENTS.md) -> merge forge preset -> merge selected stack presets
       -> merge lang-en overlay (if --lang en) -> substitute {{PLACEHOLDER}} -> chmod +x
-      -> in-place: self-clean bin/·presets/·scripts/·docs/superpowers/·docs/harness-matrix.json.
+      -> in-place: self-clean bin/·presets/·scripts/·dotfiles/·docs/superpowers/·docs/harness-matrix.json.
 EOF
 }
 
@@ -73,6 +77,8 @@ NAME=""
 ASSUME_YES=0
 UPDATE=0
 HARNESS="claude"
+WITH_PERSONAL=0
+PERSONAL_PRESET="presets/skills-personal"   # #78: 옵트인 yd-* 스킬·에이전트 묶음
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -83,6 +89,7 @@ while [ $# -gt 0 ]; do
     --harness) HARNESS="$2"; shift 2 ;;
     --yes)   ASSUME_YES=1; shift ;;
     --update) UPDATE=1; shift ;;
+    --with-personal-skills) WITH_PERSONAL=1; shift ;;
     -h|--help) print_help; exit 0 ;;
     --*) echo "Unknown option: $1" >&2; exit 1 ;;
     *)   TARGET="$1"; shift ;;
@@ -154,6 +161,8 @@ substitute_placeholders() {
   local f
   for f in "$@"; do
     [ -f "$f" ] || continue
+    # #78: yd-* 스킬(doksam-skills 출신)은 자기 템플릿에 {{PROJECT_NAME}} 자리표시자를 쓴다 — 치환하면 스킬이 깨진다
+    case "$f" in */skills/yd-*/*) continue ;; esac
     # 바이너리는 건너뜀 — macOS sed 가 illegal byte sequence 로 전체를 죽인다 (#37/#39 일반화)
     LC_ALL=C grep -Iq . "$f" || continue
     # LC_ALL=C: 한국어 베이스(UTF-8 멀티바이트)를 C 로케일 sed 에서도 바이트 단위로 안전 처리
@@ -610,6 +619,25 @@ run_update() {
   fi
   base_files+=("$SRC/AGENTS.md")
 
+  # #78: 옵트인 yd-* 스킬 — --with-personal-skills 이거나 타겟에 그 스킬이 하나라도 있으면 함께 갱신한다.
+  #      (presets 는 원래 --update 대상이 아니다. 옵트인 묶음만 예외로 둔다.)
+  local pdir="$SRC/$PERSONAL_PRESET" want_personal="$WITH_PERSONAL" d
+  if [ "$want_personal" -eq 0 ] && [ -d "$pdir/.claude/skills" ]; then
+    for d in "$pdir"/.claude/skills/*/; do
+      d="$(basename "$d")"
+      if [ -e "$TARGET/.agents/skills/$d" ] || [ -e "$TARGET/.claude/skills/$d" ]; then want_personal=1; break; fi
+    done
+  fi
+  if [ "$want_personal" -eq 1 ] && [ -d "$pdir/.claude" ]; then
+    if git -C "$SRC" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+      while IFS= read -r -d '' f; do base_files+=("$SRC/$f"); done \
+        < <(git -C "$SRC" ls-files -z -- "$PERSONAL_PRESET/.claude")
+    else
+      while IFS= read -r f; do base_files+=("$f"); done \
+        < <(find "$pdir/.claude" -type f ! -path '*/__pycache__/*' ! -name '*.pyc')
+    fi
+  fi
+
   # #61: 스킬 원본은 .agents/skills. 이전이 끝났으면 베이스 스킬도 원본 쪽으로 갱신한다.
   #   단독 문장으로 호출한다 — `&&` 문맥이면 함수 안 set -e 가 꺼진다.
   skills_ssot_for_update
@@ -619,6 +647,7 @@ run_update() {
   for f in "${base_files[@]:-}"; do
     [ -n "$f" ] || continue
     rel="${f#"$SRC"/}"
+    rel="${rel#"$PERSONAL_PRESET"/}"   # #78: 옵트인 묶음은 타겟의 .claude/ 아래로 간다
     if [ "$ssot" -eq 1 ]; then
       case "$rel" in
         .claude/skills/*) rel=".agents/skills/${rel#.claude/skills/}" ;;
@@ -645,7 +674,8 @@ run_update() {
     # 파일이 no-op 업데이트에도 전부 "변경됨"으로 잡혀 .new 를 쏟아낸다.
     subbed="$(mktemp)"
     cp "$f" "$subbed"
-    substitute_placeholders "$subbed"
+    # 임시 경로엔 */skills/yd-*/ 가 없어 제외 규칙이 안 걸린다 — 원래 경로로 판정(#78)
+    case "$rel" in */skills/yd-*/*) ;; *) substitute_placeholders "$subbed" ;; esac
     if diff -q "$subbed" "$tgt" >/dev/null 2>&1; then
       rm -f "$subbed"
       unchanged+=("$rel")
@@ -826,7 +856,7 @@ merge_preset() {
       mkdir -p "$TARGET/$(dirname "$rel")"
       cp "$f" "$TARGET/$rel"
     fi
-  done < <(find "$pdir/.claude" -type f)
+  done < <(find "$pdir/.claude" -type f ! -path '*/__pycache__/*' ! -name '*.pyc')
 }
 
 # 2a) forge 프리셋 머지 (스택보다 먼저 — forge 워크플로 규약을 베이스에 얹는다)
@@ -848,6 +878,13 @@ for s in "${STACK_ARR[@]:-}"; do
   [ -d "$pdir" ] || { echo "Warning: unknown stack '$s' — skipping" >&2; continue; }
   merge_preset "$pdir"
 done
+
+# 2b-2) #78: 옵트인 yd-* 스킬 묶음. 스택과 같은 merge_preset 경로라 skills_to_ssot 전에 .claude/skills 로
+#       들어가 .agents/skills 원본으로 옮겨진다. 한국어 전용이라 lang-en 오버레이가 없다.
+if [ "$WITH_PERSONAL" -eq 1 ]; then
+  merge_preset "$SRC/$PERSONAL_PRESET"
+  echo "== personal skills merged ($PERSONAL_PRESET) ==" >&2
+fi
 
 # 2c) 이슈 #22: 한국어 오버레이 머지. base/forge/stack 머지가 모두 끝난 뒤,
 #     LANG_OPT=en 이면 presets/lang-en/ 아래 대응 디렉터리로 덮어쓴다 (#36 반전:
@@ -980,8 +1017,9 @@ fi
 
 # 5) in-place self-clean (템플릿 흔적 제거)
 if [ "$INPLACE" -eq 1 ]; then
-  echo "== self-clean: removing bin/ presets/ scripts/ docs/superpowers/ docs/harness-matrix.json ==" >&2
-  rm -rf "$TARGET/bin" "$TARGET/presets" "$TARGET/scripts" "$TARGET/docs/superpowers"
+  echo "== self-clean: removing bin/ presets/ scripts/ dotfiles/ docs/superpowers/ docs/harness-matrix.json ==" >&2
+  # dotfiles/ 는 메인테이너의 머신 셸 환경(#76) — 템플릿을 in-place 로 쓰는 프로젝트에 남기지 않는다
+  rm -rf "$TARGET/bin" "$TARGET/presets" "$TARGET/scripts" "$TARGET/dotfiles" "$TARGET/docs/superpowers"
   # scripts/ 와 harness-matrix.json 은 이 저장소의 유지보수 자산이지 사용자 산출물이 아니다 (#37)
   rm -f "$TARGET/docs/harness-matrix.json"
 fi

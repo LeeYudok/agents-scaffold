@@ -13,6 +13,13 @@
 
 신규 생성 시 `{{PROJECT_NAME}}-ag-*` prefix 권장. 동봉 예시: `code-reviewer.md`.
 
+**`yd-*` 에이전트 (#78)**: 같은 이름의 `yd-*` 스킬로 들어가는 입구다 — 행동 규칙은 스킬의 `SKILL.md` 에만 있고,
+에이전트 본문은 그 스킬을 따르라고만 적는다. 기본 12개(`yd-blueprint`·`yd-db-expert`·`yd-frontend-build`·
+`yd-go-expert`·`yd-mobile-web-planner`·`yd-nextjs-implementer`·`yd-oracle-expert`·`yd-pg-expert`·`yd-react-expert`·
+`yd-sqlite-expert`·`yd-writer-kr`·`yd-cve-check`)는 여기에, 옵트인 4개(`yd-doksam-ui`·`yd-finguard`·`yd-script-editor`·
+`yd-sdlc-orchestrator`)는 `presets/skills-personal/.claude/agents/` 에 있고 `--with-personal-skills` 때 들어온다.
+둘 다 심링크가 아닌 실파일 원본이며, Codex·agy 용은 아래 규칙대로 이 파일들에서 생성한다.
+
 **Codex·agy 용 생성물 (#64)**: `--harness codex|agy|all` 이면 이 파일들을 Codex `.codex/agents/<이름>.toml`
 (`developer_instructions` = 본문)과 agy `.agents/agents/<이름>.md`(`name`·`description` 만)로 생성한다. 원본은 여기
 하나다 — 생성물은 고치지 않는다. `name`·`description` 은 한 줄 값이어야 하고, 본문에 `'''` 가 있으면 Codex 용은 건너뛴다.

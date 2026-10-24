@@ -13,6 +13,7 @@
     sdlc-tester.md        AC/TC 测试编写 agent
     sdlc-verifier.md      流水线执行 + 报告 agent
     agent-evolve.md       自我改进元 agent —— 根据运行反馈打磨 agents/*.md
+    yd-*.md               yd-* 技能的 12 个 agent（#78）—— 原始文件，Codex/agy 版本由此生成
   commands/              （在 Claude Code 上属遗留 — 斜杠命令已并入 skills）
     sonar.md             SonarQube 分析（CE 任务轮询、sqp_/squ_ 令牌处理）
     sdlc-cycle.md         5 阶段 SDLC 自动化
@@ -40,7 +41,8 @@
     memory-factcheck/         记忆事实核查 —— 对照代码/DB/issue 验证并修正过期内容
     security-precheck/        审计前安全排查 → 拆分 issue → 并行修复
     docs-sync/                文档现行化 — 逐条主张核对 + 多语言配对文件同步
-    handoff/                  会话交接 — 通过 HANDOFF.md / Issue 传递可恢复的状态
+    handoff/                  会话交接 — 有追踪器时写入 Issue 正文，否则写 HANDOFF.md
+    yd-*/                     14 个通用技能 —— 从 doksam-skills 迁入的 13 个 + yd-cve-check（#79）（DB、Go、React、TS、构建、界面设计、写作、CVE 检查；仅韩文）
   workflows/             （不会自动加载 — 需显式调用）
     rules-audit.js           存储式 Workflow 示例 —— 扫描/验证/修复，合并由人工把关
   scripts/               （不会自动加载 — 需显式调用）
@@ -52,7 +54,9 @@ presets/                  预设片段（复制覆盖模型）
   forge-gitlab/           GitLab forge —— glab、MR、`Closes #N` 自动关闭（合并后需确认）
   nextjs/ bun/ ...        各技术栈片段（规则 + pre-commit.partial.sh）
   lang-en/                英文覆盖层（base/forge-*/stacks/*）—— 见下文 `--lang`
+  skills-personal/        可选包：9 个 yd-* 技能 + 4 个 agent，仅在 `--with-personal-skills` 时合并（#78）
 bin/                      agents-scaffold.sh 引导脚本
+scripts/                  install-skills.sh（全局安装技能）、run-skill-tests.sh（逐技能测试）—— 安装后自清理
 tests/                    引导脚本的 bats 回归测试套件
 ```
 
@@ -64,3 +68,5 @@ tests/                    引导脚本的 bats 回归测试套件
 - **Memory SSOT**：`.claude/memory/`（不使用系统默认路径）。类型前缀：`project_`/`feedback_`/`reference_`/`user_`。
 - **按路径作用域加载的规则**：frontmatter `paths:` 使规则仅在处理匹配文件时自动加载。
 - **多 agent 隔离**：并行 subagent 可能同时触碰同一文件时，使用 `isolation: "worktree"`。
+- **安装顺序**：基础复制 → forge 预设 → 技术栈预设 → （`--with-personal-skills`）`presets/skills-personal` → `--lang en` 覆盖层 → `{{PROJECT_NAME}}` 替换（跳过 `*/skills/yd-*/*`，保留 planner 模板的占位符）→ 移至 `.agents/skills` 并链接 `.claude/skills` → 生成 Codex/agy agent。
+- **技能测试**：每个技能带有 `tests/test_*.py` 和 `tests/claims.json`。`scripts/run-skill-tests.sh` 逐技能运行；`tests/test_skill_contracts.py` 检查 claims 格式、引用路径和触发词重叠。

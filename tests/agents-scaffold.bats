@@ -184,6 +184,7 @@ EOF
   [ ! -d "$copy/bin" ]
   [ ! -d "$copy/presets" ]
   [ ! -d "$copy/docs/superpowers" ]
+  [ ! -e "$copy/dotfiles" ]   # #76: 메인테이너 dotfiles 는 사용자 프로젝트에 남기지 않는다
   # #61: in-place install also moves the template's skills to the .agents/skills source
   [ -L "$copy/.claude/skills" ]
   [ -f "$copy/.agents/skills/review/SKILL.md" ]
@@ -192,6 +193,14 @@ EOF
   [ -d "$REPO_ROOT/bin" ]
   [ -d "$REPO_ROOT/presets" ]
   [ -d "$REPO_ROOT/docs/superpowers" ]
+  [ -f "$REPO_ROOT/dotfiles/install.sh" ]
+}
+
+@test "regular install does not copy dotfiles/ into the target (#76)" {
+  run "$SCRIPT" "$BATS_TEST_TMPDIR" --yes
+  [ "$status" -eq 0 ]
+  [ ! -e "$BATS_TEST_TMPDIR/dotfiles" ]
+  [ -f "$BATS_TEST_TMPDIR/AGENTS.md" ]
 }
 
 # --- 9) 실행권한 ---
@@ -268,7 +277,8 @@ EOF
   run "$SCRIPT" "$BATS_TEST_TMPDIR" --name graphproj --yes
   [ "$status" -eq 0 ]
 
-  ! grep -rq '{{PROJECT_NAME}}' "$BATS_TEST_TMPDIR/.claude"
+  # yd-* 스킬은 자기 템플릿 자리표시자로 {{PROJECT_NAME}} 을 쓰므로 치환 대상이 아니다(#78)
+  [ -z "$(grep -rl --exclude-dir='yd-*' '{{PROJECT_NAME}}' "$BATS_TEST_TMPDIR/.claude" "$BATS_TEST_TMPDIR/.agents" 2>/dev/null)" ]
   grep -q 'graphproj' "$BATS_TEST_TMPDIR/.claude/scripts/knowledge_graph.py"
   grep -q 'graphproj' "$BATS_TEST_TMPDIR/.claude/workflows/rules-audit.js"
 }
@@ -642,7 +652,7 @@ JSP
   [ -f "$t/.agents/skills/handoff/SKILL.md" ]
   [ -f "$t/.claude/skills/handoff/SKILL.md" ]
   # placeholders are substituted in the source (bats ignores a bare `! cmd`, so assert on status)
-  run grep -rl '{{PROJECT_NAME}}' "$t/.agents/skills"
+  run grep -rl --exclude-dir='yd-*' '{{PROJECT_NAME}}' "$t/.agents/skills"
   [ "$status" -eq 1 ]
   # the gate accepts the symlink layout
   cd "$t"
@@ -1234,7 +1244,7 @@ PY
 @test "every stack preset has a P0 section and an AGENTS.partial.md (#21)" {
   for d in "$REPO_ROOT"/presets/*/; do
     name="$(basename "$d")"
-    case "$name" in forge-*|lang-*) continue ;; esac
+    case "$name" in forge-*|lang-*|skills-*) continue ;; esac   # skills-*: 옵트인 스킬 묶음(#78), 스택 아님
     [ -f "$d/AGENTS.partial.md" ] || { echo "missing AGENTS.partial.md: $name"; return 1; }
     rf="$(find "$d/.claude/rules" -name '*.md' -type f | head -1)"
     grep -q '^## P0' "$rf" || { echo "missing ## P0: $rf"; return 1; }
@@ -1459,4 +1469,55 @@ PY
     [ "$status" -eq 0 ]
     [[ "$output" == *".claude/memory/"* ]]
   done
+}
+
+# --- doksam-skills 편입 (#78) ---
+
+DEFAULT_YD="yd-agents-yaml yd-blueprint yd-db-expert yd-pg-expert yd-oracle-expert yd-sqlite-expert yd-go-expert yd-react-expert yd-typescript yd-frontend-build yd-mobile-web-planner yd-nextjs-implementer yd-writer-kr"
+PERSONAL_YD="yd-agents-mem yd-claude-auth-sync yd-git-sync yd-git-ship yd-doksam-ui yd-finguard yd-sdlc-orchestrator yd-script-editor yd-session-recording"
+
+@test "default install ships general yd-* skills and agents, not personal ones (#78)" {
+  run "$SCRIPT" "$BATS_TEST_TMPDIR" --yes
+  [ "$status" -eq 0 ]
+  for s in $DEFAULT_YD; do
+    [ -f "$BATS_TEST_TMPDIR/.agents/skills/$s/SKILL.md" ] || { echo "missing $s"; return 1; }
+  done
+  for s in $PERSONAL_YD; do
+    [ ! -e "$BATS_TEST_TMPDIR/.agents/skills/$s" ] || { echo "personal leaked: $s"; return 1; }
+  done
+  [ -f "$BATS_TEST_TMPDIR/.claude/agents/yd-pg-expert.md" ]
+  [ ! -e "$BATS_TEST_TMPDIR/.claude/agents/yd-finguard.md" ]
+  # 스킬 테스트가 남긴 바이트코드가 섞이지 않는다
+  [ -z "$(find "$BATS_TEST_TMPDIR/.agents/skills" -name __pycache__ -o -name '*.pyc')" ]
+}
+
+@test "yd-* skill templates keep their own {{PROJECT_NAME}} placeholder (#78)" {
+  run "$SCRIPT" "$BATS_TEST_TMPDIR" --name demo --yes
+  [ "$status" -eq 0 ]
+  grep -q '{{PROJECT_NAME}}' "$BATS_TEST_TMPDIR/.agents/skills/yd-mobile-web-planner/SKILL.md"
+  ! grep -rq '{{PROJECT_NAME}}' "$BATS_TEST_TMPDIR/AGENTS.md"
+}
+
+@test "--with-personal-skills adds the opt-in set; --update refreshes it (#78)" {
+  run "$SCRIPT" "$BATS_TEST_TMPDIR" --with-personal-skills --harness all --yes
+  [ "$status" -eq 0 ]
+  for s in $PERSONAL_YD; do
+    [ -f "$BATS_TEST_TMPDIR/.agents/skills/$s/SKILL.md" ] || { echo "missing $s"; return 1; }
+  done
+  [ -f "$BATS_TEST_TMPDIR/.claude/agents/yd-finguard.md" ]
+  [ -f "$BATS_TEST_TMPDIR/.codex/agents/yd-finguard.toml" ]
+  [ -f "$BATS_TEST_TMPDIR/.agents/agents/yd-finguard.md" ]
+
+  rm "$BATS_TEST_TMPDIR/.agents/skills/yd-git-sync/SKILL.md"
+  run "$SCRIPT" --update "$BATS_TEST_TMPDIR"
+  [ "$status" -eq 0 ]
+  [ -f "$BATS_TEST_TMPDIR/.agents/skills/yd-git-sync/SKILL.md" ]
+}
+
+@test "--update does not add the personal set to a default install (#78)" {
+  run "$SCRIPT" "$BATS_TEST_TMPDIR" --yes
+  [ "$status" -eq 0 ]
+  run "$SCRIPT" --update "$BATS_TEST_TMPDIR"
+  [ "$status" -eq 0 ]
+  [ ! -e "$BATS_TEST_TMPDIR/.agents/skills/yd-finguard" ]
 }

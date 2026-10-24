@@ -1,0 +1,53 @@
+# doksam-skills 에서 이식 (agents-scaffold #78) — 경로를 .claude/skills/ 기준으로 바꿨다.
+# yd-pg-expert 문서의 PostgreSQL 단언을 실제 서버에서 재현한다.
+#
+# 단언 재현에는 살아 있는 PostgreSQL 이 필요하다. stdlib 전용인 test.yml 에 서버를
+# 끌어들이지 않으려고 잡을 분리했다 — test.yml 에서는 YD_PG_PSQL 이 없어 skip 된다.
+# 이 잡은 서비스 컨테이너를 붙이므로 skip 이 하나라도 섞이면 실패로 본다.
+# 서버는 잡이 끝나면 버려진다. 운영 클러스터를 가리키지 않는다.
+name: skills-pg
+
+on:
+  pull_request:
+    paths:
+      - ".claude/skills/yd-pg-expert/**"
+      - ".github/workflows/skills-pg.yml"
+  push:
+    branches: [main]
+    paths:
+      - ".claude/skills/yd-pg-expert/**"
+      - ".github/workflows/skills-pg.yml"
+
+jobs:
+  pg:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: verify
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 30
+    env:
+      PGPASSWORD: verify
+      YD_PG_PSQL: psql -X -h localhost -U postgres -d postgres
+    steps:
+      - uses: actions/checkout@v4
+      - name: Show client and server versions
+        run: |
+          psql --version
+          $YD_PG_PSQL -At -c 'SHOW server_version'
+      - name: Reproduce documented claims
+        run: python3 .claude/skills/yd-pg-expert/scripts/verify_pg_claims.py
+      - name: Claim tests (no skips allowed)
+        run: |
+          python3 -m unittest discover \
+            -s .claude/skills/yd-pg-expert/tests \
+            -t .claude/skills/yd-pg-expert/tests -v 2>&1 | tee test.log
+          ! grep -q 'skipped' test.log

@@ -1,0 +1,172 @@
+{
+  "claims": [
+    {
+      "id": "BASE-PATH",
+      "kind": "정상",
+      "rule": "기본 포트 5173 의 `/blueprint/` 가 열린다",
+      "test": "test_blueprint.py::test_scaffold_vite_base_blueprint"
+    },
+    {
+      "id": "CHECK-OK",
+      "kind": "정상",
+      "rule": "`check` 가 `[OK]` 이고 경고를 읽어 처리했다",
+      "test": "test_blueprint.py::test_check_passes_sample"
+    },
+    {
+      "id": "PATH-EXISTS",
+      "kind": "실패",
+      "rule": "검사기가 `git rev-parse --show-toplevel` 기준으로 존재를 확인한다",
+      "test": "test_blueprint.py::test_check_catches_missing_path"
+    },
+    {
+      "id": "UNKNOWN-FIELD",
+      "kind": "실패",
+      "rule": "모르는 필드는 검사기가 거절한다",
+      "test": "test_blueprint.py::test_check_rejects_unknown_field"
+    },
+    {
+      "id": "CELL-ONCE",
+      "kind": "실패",
+      "rule": "`(lane,row)` 칸은 하나뿐",
+      "test": "test_blueprint.py::test_check_rejects_cell_collision"
+    },
+    {
+      "id": "STALE-DATE",
+      "kind": "경계",
+      "rule": "60일이 지나면 검사기가 경고한다",
+      "test": "test_blueprint.py::test_stale_warns_but_passes"
+    },
+    {
+      "id": "BOX-WIDTH",
+      "kind": "경계",
+      "rule": "넘으면 검사기가 경고한다",
+      "test": "test_blueprint.py::test_wide_title_warns_but_passes"
+    },
+    {
+      "id": "NO-OVERWRITE",
+      "kind": "경계",
+      "rule": "기존 폴더를 덮어쓰지 않는다",
+      "test": "test_blueprint.py::test_scaffold_refuses_existing"
+    },
+    {
+      "id": "BUN-MISSING",
+      "kind": "도구오류",
+      "rule": "매니저가 하나도 없으면 `brew install oven-sh/bun/bun`",
+      "test": "test_blueprint.py::test_missing_bun_message"
+    },
+    {
+      "id": "GIT-ROOT",
+      "kind": "도구오류",
+      "rule": "git 저장소 밖이면 `--root` 가 꼭 필요하다",
+      "test": "test_blueprint.py::test_not_git_repo_needs_root"
+    },
+    {
+      "id": "BLANK-LINES",
+      "kind": "오탐",
+      "rule": "줄마다 JSON 한 개를 적는다",
+      "test": "test_blueprint.py::test_blank_lines_are_ignored"
+    },
+    {
+      "id": "LATIN-WIDTH",
+      "kind": "오탐",
+      "rule": "`title` 은 한글 15자, `lines` 는 줄당 17자 안팎",
+      "test": "test_blueprint.py::test_short_latin_title_does_not_warn"
+    },
+    {
+      "id": "LOOPBACK-HOST",
+      "kind": "경계",
+      "rule": "`server.host: \"127.0.0.1\"` 로 고정해 충돌하면 다음 포트로 간다",
+      "test": "test_blueprint.py::test_scaffold_pins_loopback_host"
+    },
+    {
+      "id": "LINKS-HREF",
+      "kind": "실패",
+      "rule": "`links` 는 `[{label, href}]` 로 위쪽 목차 오른쪽에 붙는 이동 링크",
+      "test": "test_blueprint.py::test_links_accept_paths_and_reject_script_urls"
+    },
+    {
+      "id": "PM-NEUTRAL",
+      "kind": "정상",
+      "rule": "`package.json` 의 스크립트는 특정 매니저나 런타임을 부르지 않는다",
+      "test": "test_blueprint.py::test_package_scripts_are_manager_neutral"
+    },
+    {
+      "id": "NODE-FALLBACK",
+      "kind": "경계",
+      "rule": "없으면 node(22.6 이상)로 같은 `check.mjs` 를 돌린다",
+      "test": "test_blueprint.py::test_check_runs_on_node_without_bun"
+    },
+    {
+      "id": "PM-FLAG",
+      "kind": "실패",
+      "rule": "`--pm` 을 주지 않으면 PATH 에서 bun → pnpm → npm 순으로 처음 찾은 것을 쓴다",
+      "test": "test_blueprint.py::test_pm_option_is_validated_and_printed"
+    },
+    {
+      "id": "DEPS-DIR-SHARED",
+      "kind": "정상",
+      "rule": "그 폴더의 `node_modules` 에 없는 패키지만 설치하고, 청사진 폴더에는 설치하지 않는다.",
+      "test": "test_blueprint.py::test_deps_dir_installs_missing_once_and_links"
+    },
+    {
+      "id": "DEPS-DIR-PARENT",
+      "kind": "경계",
+      "rule": "대상이 그 폴더 아래면 링크하지 않는다. Node 가 상위 폴더를 타고 올라가 찾기 때문이다.",
+      "test": "test_blueprint.py::test_deps_dir_parent_needs_no_link"
+    },
+    {
+      "id": "VITE-CACHE-LOCAL",
+      "kind": "경계",
+      "rule": "vite 캐시는 템플릿이 프로젝트 폴더의 `.vite` 에 두므로 공유 `node_modules` 를 써도 섞이지 않는다.",
+      "test": "test_blueprint.py::test_template_cache_dir_stays_in_project"
+    },
+    {
+      "id": "GROUP-BOUNDARY",
+      "kind": "정상",
+      "rule": "노드 몇 개를 점선 경계 상자로 묶는다(한 호스트, 한 pod)",
+      "test": "test_blueprint.py::test_group_and_boundary_edge_are_accepted"
+    },
+    {
+      "id": "LENGTH-WARN",
+      "kind": "경계",
+      "rule": "글 칸은 문장 60자, 한 칸 120자를 넘기면 `check` 가 경고한다.",
+      "test": "test_blueprint.py::test_long_sentence_and_field_warn_but_pass"
+    },
+    {
+      "id": "TIERS-LAYOUT",
+      "kind": "정상",
+      "rule": "계층이 위에서 아래로 쌓이는 구조(화면→서버→데이터)는 `tiers`",
+      "test": "test_blueprint.py::test_tiers_layout_with_to_next_and_tags"
+    },
+    {
+      "id": "TIERS-NO-EDGE",
+      "kind": "실패",
+      "rule": "tiers 는 화살표를 그리지 않는다. edge 를 쓰면 검사기가 거절하고, 띠 사이 연결은 `lane.toNext` 한 줄로 적는다.",
+      "test": "test_blueprint.py::test_tiers_rejects_edges"
+    },
+    {
+      "id": "TO-NEXT",
+      "kind": "실패",
+      "rule": "`toNext` 는 tiers 에서 다음 띠와의 연결 문구",
+      "test": "test_blueprint.py::test_to_next_rules"
+    },
+    {
+      "id": "TIERS-GROUP",
+      "kind": "경계",
+      "rule": "tiers 의 `group` 은 한 띠 안의 이웃 노드만 묶는다.",
+      "test": "test_blueprint.py::test_tiers_group_must_be_one_lane_and_adjacent"
+    },
+    {
+      "id": "TIERS-CROWDED",
+      "kind": "경계",
+      "rule": "띠 하나에 노드가 6개를 넘으면 경고한다.",
+      "test": "test_blueprint.py::test_tiers_warns_on_crowded_band"
+    },
+    {
+      "id": "TAGS-LIMIT",
+      "kind": "실패",
+      "rule": "`tags` 는 3개까지, 각 18자 안이다.",
+      "test": "test_blueprint.py::test_tags_limits"
+    }
+  ]
+}

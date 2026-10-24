@@ -1,0 +1,37 @@
+# doksam-skills 에서 이식 (agents-scaffold #78) — 경로를 .claude/skills/ 기준으로 바꿨다.
+# yd-react-expert 의 단언을 react@19 로 재현한다 (이슈 #201).
+#
+# npm install 이 필요해서 test.yml(stdlib 전용, 네트워크 없음)에 넣지 않고 별도 잡으로 둔다.
+# 로컬·test.yml 에서는 YD_REACT_VERIFY 가 없어 skip 되지만, 이 잡은 환경변수를 켜고
+# 건너뜀이 하나라도 있으면 실패시킨다 — 조용히 skip 되어 초록이 되는 것을 막는다.
+name: skills-react-claims
+
+on:
+  pull_request:
+    paths:
+      - ".claude/skills/yd-react-expert/**"
+      - ".github/workflows/skills-react-claims.yml"
+  push:
+    branches: [main]
+    paths:
+      - ".claude/skills/yd-react-expert/**"
+      - ".github/workflows/skills-react-claims.yml"
+
+jobs:
+  react-claims:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Reproduce documented React claims
+        env:
+          YD_REACT_VERIFY: "1"
+        run: |
+          node --version
+          python3 -m unittest discover \
+            -s .claude/skills/yd-react-expert/tests \
+            -t .claude/skills/yd-react-expert/tests -v 2>&1 | tee out.txt
+          ! grep -qi skipped out.txt

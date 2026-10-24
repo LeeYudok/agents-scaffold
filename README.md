@@ -83,6 +83,18 @@ you're new to prompting:
 - **Team/multi-session safe**: per-session git worktree isolation is the default, so
   parallel work never tramples each other.
 
+## Bundled skills
+
+The default install ships 24 skills: 10 workflow skills (`review`, `status`, `handoff`, `docs-sync`, `skill-evolve`, ...)
+and 14 `yd-*` skills covering databases, Go, React, TypeScript, builds, screen design, Korean writing and dependency CVE checks. Another
+9 `yd-*` skills tied to the maintainer's environment are installed only with `--with-personal-skills`. The `yd-*`
+skills are Korean only. See [.claude/skills/README.md](.claude/skills/README.md) for the list and authoring rules.
+
+This repo is now the source of the `yd-*` skills (#78). `npx skills add leeyudok/doksam-skills` stops receiving
+updates once the original repository is archived. To use them globally, outside a project, clone this repo and run
+`scripts/install-skills.sh` (symlinks into `~/.claude/skills`, `~/.agents/skills` and `~/.gemini/config/skills`;
+supports `--personal`, `--copy` and `--project <dir>`).
+
 ## Why agents-scaffold
 
 Unlike large installable frameworks or agent/skill catalogs, agents-scaffold ships
@@ -108,6 +120,7 @@ result is plain files under version control like any other code in the repo.
 | [docs/OPTIONS.en.md](docs/OPTIONS.en.md) | Every option — 12 stack presets, `--forge`, `--harness`, `--lang`, usage, placeholder substitution, picking a requirements-hardening tool |
 | [docs/INTERNALS.en.md](docs/INTERNALS.en.md) | Internals — the full generated `.claude/` tree, key patterns |
 | [docs/OFFLINE_INSTALL.en.md](docs/OFFLINE_INSTALL.en.md) | Air-gapped & Windows install — offline bundle, Git Bash required, `.cmd` launcher, `python3` setup |
+| [dotfiles/](dotfiles/README.md) | The maintainer's machine shell bootstrap (zsh, starship, Claude/Codex/agy statuslines, air-gapped Windows Git install) — the source of truth since #76 — the old `LeeYudok/dotfiles` repo is archive-only. Unrelated to the scaffold install (Korean) |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Contribution guide |
 
 ## Contributing

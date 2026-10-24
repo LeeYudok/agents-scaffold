@@ -1,0 +1,96 @@
+# ~/.zshrc — Linux 서버용 미니멀 구성. 저장소 dotfiles/zsh/zshrc.linux 가 원본.
+# 구조는 zshrc.macos 와 동일하되, 서버엔 없을 수 있는 도구(starship/eza/zoxide/fzf)는 있을 때만 켠다.
+
+# ── 환경 / PATH ────────────────────────────────────────────
+typeset -U path PATH
+[ -d "$HOME/bin" ] && path=("$HOME/bin" $path)
+[ -d "$HOME/.local/bin" ] && path=("$HOME/.local/bin" $path)
+export EDITOR=vim
+
+# locale — LANG 이 비었거나 C/POSIX 면 zsh 가 한글을 바이트 단위로 세어 입력·삭제 때 커서가 밀린다.
+# 컨테이너·proot 는 ko_KR 이 생성돼 있지 않은 경우가 많아, 설치된 UTF-8 로케일 중 앞선 것을 쓴다.
+if [[ "${LC_ALL:-${LC_CTYPE:-$LANG}}" != *[Uu][Tt][Ff]*8* ]]; then
+  () {
+    local l avail=${${(L)"$(locale -a 2>/dev/null)"}//-/}
+    for l in ko_KR.UTF-8 C.UTF-8 en_US.UTF-8; do
+      if (( ${${(f)avail}[(Ie)${(L)l//-/}]} )); then
+        unset LC_ALL LC_CTYPE
+        export LANG=$l
+        return
+      fi
+    done
+  }
+fi
+
+# ── 히스토리 / 셸 옵션 ─────────────────────────────────────
+HISTFILE=~/.zsh_history
+HISTSIZE=50000
+SAVEHIST=50000
+setopt SHARE_HISTORY HIST_IGNORE_ALL_DUPS HIST_IGNORE_SPACE HIST_REDUCE_BLANKS HIST_VERIFY
+setopt AUTO_CD INTERACTIVE_COMMENTS NO_BEEP
+
+# ── 자동완성 ───────────────────────────────────────────────
+autoload -Uz compinit
+if [[ -n ${ZDOTDIR:-$HOME}/.zcompdump(#qN.mh+24) ]]; then compinit; else compinit -C; fi
+zstyle ':completion:*' menu select
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
+
+bindkey '^[[A' history-beginning-search-backward
+bindkey '^[[B' history-beginning-search-forward
+
+# ── 프롬프트 — starship (없으면 기본 프롬프트로 폴백) ────────
+if command -v starship >/dev/null; then
+  eval "$(starship init zsh)"
+else
+  autoload -Uz colors && colors
+  PROMPT='%F{green}%n@%m%f %F{blue}%~%f %# '
+fi
+
+# ── 있을 때만 켜는 도구 ─────────────────────────────────────
+if command -v zoxide >/dev/null; then
+  export _ZO_DOCTOR=0
+  eval "$(zoxide init zsh --cmd cd)"
+fi
+if command -v fzf >/dev/null; then
+  source <(fzf --zsh) 2>/dev/null || true   # fzf < 0.48 은 --zsh 미지원
+  export FZF_DEFAULT_OPTS="--height 40% --layout=reverse --border --info=inline"
+fi
+
+# ── alias ──────────────────────────────────────────────────
+if command -v eza >/dev/null; then
+  alias ls="eza --icons --group-directories-first"
+  alias ll="eza -l --icons --git --sort=modified"
+  alias la="eza -la --icons --git --group-directories-first"
+else
+  alias ls='ls --color=auto'
+  alias ll='ls -alF'
+  alias la='ls -A'
+fi
+alias grep='grep --color=auto'
+# AI CLI: `claude --yolo`, `agy --yolo` → `--dangerously-skip-permissions`
+_yolo_exec() {
+  local cmd=$1 a
+  local -a args
+  shift
+  for a in "$@"; do
+    [[ "$a" == --yolo ]] && args+=(--dangerously-skip-permissions) || args+=("$a")
+  done
+  command "$cmd" "${args[@]}"
+}
+command -v claude >/dev/null && function claude { _yolo_exec claude "$@"; }
+command -v agy >/dev/null && function agy { _yolo_exec agy "$@"; }
+
+# ── 시크릿 (mode 600, 버전관리 제외) ────────────────────────
+[ -f "$HOME/.secrets.zsh" ] && source "$HOME/.secrets.zsh"
+
+# ── 머신별 alias/함수 (미추적, 템플릿: zsh/zshrc.local.example) ──
+[ -f "$HOME/.zshrc.local" ] && source "$HOME/.zshrc.local"
+
+# ── 플러그인 (syntax-highlighting 은 맨 마지막) ─────────────
+# 패키지(/usr/share)가 우선, 없으면 install.sh 가 sudo 없이 받아 둔 ~/.local/share/zsh/plugins
+for _p in zsh-autosuggestions zsh-syntax-highlighting; do
+  for _f in /usr/share/$_p/$_p.zsh "$HOME/.local/share/zsh/plugins/$_p/$_p.zsh"; do
+    [ -f "$_f" ] && { source "$_f"; break; }
+  done
+done
+unset _p _f

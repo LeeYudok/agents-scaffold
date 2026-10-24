@@ -13,6 +13,7 @@
     sdlc-tester.md        AC/TC テスト作成エージェント
     sdlc-verifier.md      パイプライン実行 + レポートエージェント
     agent-evolve.md       自己改善メタエージェント — 実行フィードバックから agents/*.md を洗練
+    yd-*.md               yd-* スキルのエージェント 12 個(#78)— 原本の実ファイル、Codex・agy 用はここから生成
   commands/              （Claude Code ではレガシー — スラッシュコマンドは skills に統合）
     sonar.md             SonarQube 分析(CE タスクポーリング、sqp_/squ_ トークン処理)
     sdlc-cycle.md         5段階 SDLC 自動化
@@ -40,7 +41,8 @@
     memory-factcheck/         メモリのファクトチェック — 主張をコード/DB/イシューと照合し、古いものを修正
     security-precheck/        監査前セキュリティスイープ → イシュー化 → 並列修正
     docs-sync/                ドキュメント現行化 — 主張ごとの事実照合 + 多言語ペアの同時更新
-    handoff/                  セッション引き継ぎ — 再開可能な状態を HANDOFF.md / Issue で渡す
+    handoff/                  セッション引き継ぎ — トラッカーがあれば Issue 本文、なければ HANDOFF.md
+    yd-*/                     汎用スキル 14 個 — doksam-skills から移した 13 個 + yd-cve-check(#79)(DB・Go・React・TS・ビルド・画面設計・ライティング・CVE 点検、韓国語のみ)
   workflows/             （自動ロードされない — 明示的に呼び出す）
     rules-audit.js           保存型 Workflow の例 — scan/verify/repair、マージは人間ゲート
   scripts/               （自動ロードされない — 明示的に呼び出す）
@@ -52,7 +54,9 @@ presets/                  プリセット断片(コピー上書きモデル)
   forge-gitlab/           GitLab forge — glab、MR、`Closes #N` 自動クローズ(マージ後に確認)
   nextjs/ bun/ ...        スタック別断片(rules + pre-commit.partial.sh + AGENTS.partial.md)
   lang-en/                英語オーバーレイ(base/forge-*/stacks/*)— 後述の `--lang` を参照
+  skills-personal/        オプトインバンドル: yd-* スキル 9 個 + エージェント 4 個、`--with-personal-skills` 時のみマージ(#78)
 bin/                      agents-scaffold.sh ブートストラップスクリプト
+scripts/                  install-skills.sh(スキルのグローバルインストール)・run-skill-tests.sh(スキル別テスト)— インストール後 self-clean
 tests/                    ブートストラップスクリプト用 bats リグレッションスイート
 ```
 
@@ -64,3 +68,5 @@ tests/                    ブートストラップスクリプト用 bats リグ
 - **メモリ SSOT**: `.claude/memory/`(システムデフォルトパスは使用しない)。タイプ接頭辞: `project_`/`feedback_`/`reference_`/`user_`。
 - **paths スコープのルール**: frontmatter の `paths:` により、マッチするファイルの作業中のみルールを自動ロード。
 - **マルチエージェント分離**: 並列サブエージェントが同一ファイルを同時に触る可能性がある場合は `isolation: "worktree"` を使用。
+- **インストール順序**: ベースコピー → forge プリセット → スタックプリセット → (`--with-personal-skills`)`presets/skills-personal` → `--lang en` オーバーレイ → `{{PROJECT_NAME}}` 置換(`*/skills/yd-*/*` は除外 — planner テンプレートのプレースホルダーを保持)→ `.agents/skills` へ移動・`.claude/skills` をリンク → Codex・agy エージェント生成。
+- **スキルテスト**: 各スキルに `tests/test_*.py` と `tests/claims.json` を置く。`scripts/run-skill-tests.sh` がスキル別に実行し、`tests/test_skill_contracts.py` が claims 形式・参照パス・トリガー重複を検査する。

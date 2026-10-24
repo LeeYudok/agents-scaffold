@@ -82,6 +82,18 @@ Blocked: a .env-type file is staged. Commit is not allowed.
 - **チーム/マルチセッションでも安全**: セッションごとの git worktree 分離が
   デフォルトなので、並行作業が互いを踏み荒らすことはありません。
 
+## 同梱スキル
+
+デフォルトのインストールにはスキル 24 個が入る — ワークフロースキル 10 個(`review`・`status`・`handoff`・`docs-sync`・
+`skill-evolve` など)と、DB・Go・React・TypeScript・ビルド・画面設計・韓国語ライティング・依存関係の CVE 点検を扱う `yd-*` 14 個。メンテナー
+環境専用の `yd-*` 9 個は `--with-personal-skills` を付けたときだけインストールされる。`yd-*` スキルは韓国語のみ。
+一覧と作成規約は [.claude/skills/README.md](.claude/skills/README.md) を参照。
+
+`yd-*` スキルの原本は今やこのリポジトリだ(#78)。元のリポジトリがアーカイブされると `npx skills add leeyudok/doksam-skills`
+は更新されなくなる。プロジェクトの外でグローバルに使うには、このリポジトリを clone して `scripts/install-skills.sh` を
+実行する(`~/.claude/skills`・`~/.agents/skills`・`~/.gemini/config/skills` にシンボリックリンク。`--personal`・`--copy`・
+`--project <dir>` に対応)。
+
 ## なぜ agents-scaffold か
 
 大規模なインストール型フレームワークやエージェント/スキルのカタログと違い、agents-scaffold は
@@ -107,6 +119,7 @@ Blocked: a .env-type file is staged. Commit is not allowed.
 | [docs/OPTIONS.ja.md](docs/OPTIONS.ja.md) | 全オプション — スタックプリセット 12 種、`--forge`、`--harness`、`--lang`、使い方、プレースホルダー置換、要件を鍛えるツールの選び方 |
 | [docs/INTERNALS.ja.md](docs/INTERNALS.ja.md) | 内部構造 — 生成される `.claude/` の全ツリー、主要パターン |
 | [docs/OFFLINE_INSTALL.en.md](docs/OFFLINE_INSTALL.en.md) | 閉域網（オフライン）・Windows インストール — オフラインバンドル、Git Bash 必須、`.cmd` ランチャー、`python3` 設定（英語） |
+| [dotfiles/](dotfiles/README.md) | メンテナーのマシン用シェル環境ブートストラップ（zsh・starship・Claude/Codex/agy ステータスライン・閉域網 Windows の Git インストール）— #76 以降はここが原本（SSOT）— 旧 `LeeYudok/dotfiles` はアーカイブ用。scaffold のインストールとは無関係（韓国語） |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | コントリビュートガイド |
 
 ## コントリビュート

@@ -1,0 +1,25 @@
+# Termius 등 Nerd Font v2 환경용: eza 기본 아이콘 중 v3 전용 코드(5자리 U+F0000~, U+E6AD~ 등)를 v2 BMP 글리프로 덮어씀
+filenames:
+  "README": {icon: {glyph: ""}}
+  "README.md": {icon: {glyph: ""}}
+  "README.txt": {icon: {glyph: ""}}
+  "README.rst": {icon: {glyph: ""}}
+  "readme.md": {icon: {glyph: ""}}
+  ".gitignore": {icon: {glyph: ""}}
+  ".gitattributes": {icon: {glyph: ""}}
+  ".gitmodules": {icon: {glyph: ""}}
+  ".zshrc": {icon: {glyph: ""}}
+  ".zprofile": {icon: {glyph: ""}}
+  ".bashrc": {icon: {glyph: ""}}
+  ".bash_profile": {icon: {glyph: ""}}
+  ".profile": {icon: {glyph: ""}}
+extensions:
+  yaml: {icon: {glyph: ""}}
+  yml: {icon: {glyph: ""}}
+  toml: {icon: {glyph: ""}}
+  conf: {icon: {glyph: ""}}
+  ini: {icon: {glyph: ""}}
+  cfg: {icon: {glyph: ""}}
+  svg: {icon: {glyph: ""}}
+  xml: {icon: {glyph: ""}}
+  vue: {icon: {glyph: ""}}

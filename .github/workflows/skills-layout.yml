@@ -1,0 +1,38 @@
+# doksam-skills 에서 이식 (agents-scaffold #78) — 경로를 .claude/skills/ 기준으로 바꿨다.
+# 브라우저가 필요한 레이아웃 회귀 검사만 따로 돌린다 (이슈 #137).
+#
+# 기존 test.yml 은 stdlib 만 쓰는 저장소 전체 테스트라 Chrome 이 없어도
+# 끝까지 돈다 — 그 잡에 브라우저를 끌어들이면 스킬 하나 때문에 전체
+# 파이프라인이 러너의 Chrome 버전에 묶인다. 그래서 잡을 분리했다.
+#
+# 판정 대상은 픽셀이 아니라 구조·좌표다(슬라이드 overflow · 배지 이탈/겹침 ·
+# 설명 패널 잘림). 렌더는 외부 폰트와 mermaid CDN 을 떼고 오프라인으로 한다.
+name: skills-layout
+
+on:
+  pull_request:
+    paths:
+      - ".claude/skills/yd-mobile-web-planner/**"
+      - ".github/workflows/skills-layout.yml"
+  push:
+    branches: [main]
+    paths:
+      - ".claude/skills/yd-mobile-web-planner/**"
+      - ".github/workflows/skills-layout.yml"
+
+jobs:
+  layout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Show Chrome version
+        run: google-chrome --version
+      - name: Render baseline and check layout contracts
+        env:
+          CHROME: google-chrome
+        run: |
+          python3 -m unittest discover \
+            -s .claude/skills/yd-mobile-web-planner/tests \
+            -t .claude/skills/yd-mobile-web-planner/tests \
+            -p test_layout_runtime.py -v

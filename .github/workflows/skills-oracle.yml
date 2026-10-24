@@ -1,0 +1,56 @@
+# doksam-skills 에서 이식 (agents-scaffold #78) — 경로를 .claude/skills/ 기준으로 바꿨다.
+# yd-oracle-expert 의 단언을 실제 Oracle 에서 재현한다.
+#
+# stdlib 전용인 test.yml 에 Oracle 컨테이너를 끌어들이면 스킬 하나 때문에 전체
+# 파이프라인이 이미지 내려받기와 DB 기동 시간에 묶인다. 그래서 잡을 분리했다.
+# 로컬에서는 YD_ORACLE_SQLPLUS 가 없으면 재현 테스트가 skip 되지만, 이 잡은
+# 컨테이너를 띄우므로 skip 이 하나라도 섞이면 실패로 본다.
+name: skills-oracle
+
+on:
+  pull_request:
+    paths:
+      - ".claude/skills/yd-oracle-expert/**"
+      - ".github/workflows/skills-oracle.yml"
+  push:
+    branches: [main]
+    paths:
+      - ".claude/skills/yd-oracle-expert/**"
+      - ".github/workflows/skills-oracle.yml"
+
+jobs:
+  oracle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start throwaway Oracle Free
+        run: |
+          docker run -d --name ydora-verify -e ORACLE_PASSWORD=verify \
+            gvenzl/oracle-free:23-slim-faststart
+      - name: Wait for DATABASE IS READY TO USE!
+        run: |
+          for i in $(seq 1 120); do
+            if docker logs ydora-verify 2>&1 | grep -q 'DATABASE IS READY TO USE!'; then
+              exit 0
+            fi
+            if docker logs ydora-verify 2>&1 | grep -q 'DATABASE SETUP WAS NOT SUCCESSFUL'; then
+              docker logs ydora-verify 2>&1 | tail -50
+              exit 1
+            fi
+            sleep 5
+          done
+          docker logs ydora-verify 2>&1 | tail -50
+          exit 1
+      - name: Reproduce documented claims (no skips allowed)
+        env:
+          YD_ORACLE_SQLPLUS: docker exec -i ydora-verify sqlplus -S -L system/verify@//localhost/FREEPDB1
+        run: |
+          python3 .claude/skills/yd-oracle-expert/scripts/verify_oracle_claims.py
+          python3 -m unittest discover \
+            -s .claude/skills/yd-oracle-expert/tests \
+            -t .claude/skills/yd-oracle-expert/tests -v 2>&1 | tee test.log
+          ! grep -q 'skipped' test.log
+      - name: Stop Oracle
+        if: always()
+        run: docker rm -f ydora-verify

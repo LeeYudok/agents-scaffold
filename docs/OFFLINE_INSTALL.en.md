@@ -20,6 +20,11 @@ Claude Code on Windows also runs hooks and shell commands through Git Bash.
 Stack tools (`bun`, `go`, `cargo`, `ruff`, ...) are used by the pre-commit gate **only when
 present** — missing tools skip their checks. Bring them in separately from your internal mirror.
 
+Git for Windows can be installed with `dotfiles/windows/install-git.cmd` from inside the bundle — put the
+installer you carried in under `dotfiles\windows\offline\` and run it: it installs silently without admin rights and
+sets up `~/.bashrc` for Git Bash (signature check and SHA-256 output included; details in the "Windows 폐쇄망" section of
+[dotfiles/README.md](../dotfiles/README.md), Korean).
+
 ## 1. Build the bundle (connected machine)
 
 ```bash

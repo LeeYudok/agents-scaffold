@@ -80,6 +80,17 @@ Blocked: a .env-type file is staged. Commit is not allowed.
 - **팀/멀티세션 안전**: 세션마다 git worktree 격리 규칙이 기본이라 병렬 작업이 서로를
   덮어쓰지 않는다.
 
+## 동봉 스킬
+
+기본 설치에 스킬 24개가 들어간다 — 워크플로 스킬 10개(`review`·`status`·`handoff`·`docs-sync`·`skill-evolve` 등)와
+DB·Go·React·TypeScript·빌드·화면설계·한국어 글쓰기·의존성 CVE 점검을 다루는 `yd-*` 14개다. 메인테이너 환경 전용 `yd-*` 9개는
+`--with-personal-skills` 를 줄 때만 설치된다. `yd-*` 스킬은 한국어 전용이다. 목록과 작성 규약은
+[.claude/skills/README.md](.claude/skills/README.md) 참조.
+
+`yd-*` 스킬의 원본은 이제 이 레포다(#78). `npx skills add leeyudok/doksam-skills` 는 원래 저장소가 보관되면 더 갱신되지
+않는다. 프로젝트 밖에서 전역으로 쓰려면 이 레포를 clone 해 `scripts/install-skills.sh` 를 실행한다
+(`~/.claude/skills`·`~/.agents/skills`·`~/.gemini/config/skills` 에 심링크, `--personal`·`--copy`·`--project <dir>` 지원).
+
 ## 왜 agents-scaffold 인가
 
 대형 설치형 프레임워크나 에이전트/스킬 카탈로그와 달리, agents-scaffold 은 런타임도 플러그인
@@ -103,6 +114,7 @@ placeholder 를 채우고 안 쓰는 걸 지우면, 결과는 레포의 다른 �
 | [docs/OPTIONS.md](docs/OPTIONS.md) | 전체 옵션 — 스택 프리셋 12종, `--forge`, `--harness`, `--lang`, 사용법, 치환 플레이스홀더, 요구사항 다지기 도구 선택 |
 | [docs/INTERNALS.md](docs/INTERNALS.md) | 내부 구조 — 생성되는 `.claude/` 전체 트리, 주요 패턴 |
 | [docs/OFFLINE_INSTALL.md](docs/OFFLINE_INSTALL.md) | 폐쇄망·Windows 설치 — 오프라인 번들, Git Bash 필수, `.cmd` 런처, `python3` 설정 |
+| [dotfiles/](dotfiles/README.md) | 메인테이너의 머신 셸 환경 부트스트랩(zsh·starship·Claude/Codex/agy statusline·폐쇄망 Windows Git 설치) — 원본(SSOT, #76) — 옛 `LeeYudok/dotfiles` 는 보관용. scaffold 설치와 무관 |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | 기여 가이드 |
 
 ## Contributing

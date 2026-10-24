@@ -78,6 +78,17 @@ prompt 编写也没关系：
 - **团队/多会话安全**：默认按会话隔离 git worktree，并行工作互不
   踩踏。
 
+## 内置技能
+
+默认安装包含 24 个技能：10 个工作流技能（`review`、`status`、`handoff`、`docs-sync`、`skill-evolve` 等），以及涵盖
+数据库、Go、React、TypeScript、构建、界面设计和韩文写作和依赖 CVE 检查的 14 个 `yd-*` 技能。另有 9 个绑定维护者环境的 `yd-*`
+技能，仅在传入 `--with-personal-skills` 时安装。`yd-*` 技能仅提供韩文版。列表与编写规范见
+[.claude/skills/README.md](.claude/skills/README.md)。
+
+`yd-*` 技能的源头现在是本仓库（#78）。原仓库归档后，`npx skills add leeyudok/doksam-skills` 将不再更新。如需在项目之外
+全局使用，请 clone 本仓库并运行 `scripts/install-skills.sh`（在 `~/.claude/skills`、`~/.agents/skills`、
+`~/.gemini/config/skills` 下创建符号链接；支持 `--personal`、`--copy`、`--project <dir>`）。
+
 ## 为什么选择 agents-scaffold
 
 与大型可安装框架或 agent/skill 目录不同，agents-scaffold 不附带运行时、
@@ -102,6 +113,7 @@ prompt 编写也没关系：
 | [docs/OPTIONS.zh.md](docs/OPTIONS.zh.md) | 全部选项 — 12 种技术栈预设、`--forge`、`--harness`、`--lang`、用法、占位符替换、需求打磨工具的挑选 |
 | [docs/INTERNALS.zh.md](docs/INTERNALS.zh.md) | 内部结构 — 生成的完整 `.claude/` 目录树、关键模式 |
 | [docs/OFFLINE_INSTALL.en.md](docs/OFFLINE_INSTALL.en.md) | 内网（离线）与 Windows 安装 — 离线包、必须使用 Git Bash、`.cmd` 启动器、`python3` 设置（英文） |
+| [dotfiles/](dotfiles/README.md) | 维护者的机器 shell 环境引导（zsh、starship、Claude/Codex/agy 状态栏、内网 Windows Git 安装）— 自 #76 起以此为准（SSOT）— 旧仓库 `LeeYudok/dotfiles` 仅作存档。与 scaffold 安装无关（韩文） |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | 贡献指南 |
 
 ## 贡献

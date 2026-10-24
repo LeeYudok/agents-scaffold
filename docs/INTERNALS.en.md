@@ -13,6 +13,7 @@ The generated `.claude/` tree and the design patterns behind it. Start at the [R
     sdlc-tester.md        AC/TC test-writing agent
     sdlc-verifier.md      pipeline execution + report agent
     agent-evolve.md       self-improving meta agent — refines agents/*.md from run feedback
+    yd-*.md               12 agents for the yd-* skills (#78) — real source files; Codex/agy versions are generated from them
   commands/              (legacy on Claude Code — slash commands merged into skills)
     sonar.md             SonarQube analysis (CE task polling, sqp_/squ_ token handling)
     sdlc-cycle.md         5-stage SDLC automation
@@ -40,7 +41,8 @@ The generated `.claude/` tree and the design patterns behind it. Start at the [R
     memory-factcheck/         memory fact-check — verify claims against code/DB/issues, correct stale
     security-precheck/        pre-audit security sweep → issues → parallel fixes
     docs-sync/                doc currency — claim-by-claim verification + parallel-language sync
-    handoff/                  session handoff — resumable state via HANDOFF.md / an issue
+    handoff/                  session handoff — issue body when a tracker exists, HANDOFF.md otherwise
+    yd-*/                     14 general skills — 13 moved from doksam-skills + yd-cve-check (#79) (DB, Go, React, TS, builds, screen design, writing, CVE checks; Korean only)
   workflows/             (not auto-loaded — invoked explicitly)
     rules-audit.js           stored Workflow example — scan/verify/repair with human merge gate
   scripts/               (not auto-loaded — invoked explicitly)
@@ -52,7 +54,9 @@ presets/                  preset fragments (copy-overwrite model)
   forge-gitlab/           GitLab forge — glab, MRs, `Closes #N` auto-close (verify after merge)
   nextjs/ bun/ ...        per-stack fragments (rules + pre-commit.partial.sh + AGENTS.partial.md)
   lang-en/                English overlay (base/forge-*/stacks/*) — see `--lang` below
+  skills-personal/        opt-in bundle: 9 yd-* skills + 4 agents, merged only with `--with-personal-skills` (#78)
 bin/                      agents-scaffold.sh bootstrap script
+scripts/                  install-skills.sh (global skill install), run-skill-tests.sh (per-skill tests) — self-cleaned after install
 tests/                    bats regression suite for the bootstrap script
 ```
 
@@ -64,3 +68,5 @@ tests/                    bats regression suite for the bootstrap script
 - **Memory SSOT**: `.claude/memory/` (the system default path is not used). Type prefixes: `project_`/`feedback_`/`reference_`/`user_`.
 - **Paths-scoped rules**: frontmatter `paths:` auto-loads a rule only while working on matching files.
 - **Multi-agent isolation**: when parallel subagents may touch the same file concurrently, use `isolation: "worktree"`.
+- **Install order**: base copy → forge preset → stack presets → (`--with-personal-skills`) `presets/skills-personal` → `--lang en` overlay → `{{PROJECT_NAME}}` substitution (skips `*/skills/yd-*/*` to keep the planner template's placeholder) → move to `.agents/skills` and link `.claude/skills` → emit Codex/agy agents.
+- **Skill tests**: each skill carries `tests/test_*.py` and `tests/claims.json`. `scripts/run-skill-tests.sh` runs them per skill; `tests/test_skill_contracts.py` checks the claims format, referenced paths and trigger overlap.

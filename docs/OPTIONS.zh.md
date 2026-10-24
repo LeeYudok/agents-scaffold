@@ -111,6 +111,25 @@ Codex（codex-cli 0.163.0）与 agy（1.4.2）会在不调用任何工具的情�
 - **指令合计默认上限 32KiB**（`project_doc_max_bytes`），因此只把所选技术栈的 P0 内联进 `AGENTS.md`（`--stack javaweb` 实测 6,869 B — 占上限的 21%）。
 - **`.codex/` 层仅在项目受信任时加载。** 生成文件并不等于生效，因此决定性的强制线放在 `.git/hooks` + CI。
 
+## 技能包（`--with-personal-skills`）
+
+默认安装包含 24 个通用技能：原有的 10 个（`review`、`status`、`handoff`、`docs-sync` 等），以及从
+[LeeYudok/doksam-skills](https://github.com/LeeYudok/doksam-skills) 迁入的 13 个 `yd-*` 技能（DB、Go、React、
+TypeScript、构建、界面设计、韩文写作等），以及依赖 CVE 检查 `yd-cve-check`（#79）。这些 `yd-*` 技能附带的 12 个代理（`.claude/agents/yd-*.md`）也一并安装（#78）。
+
+`--with-personal-skills` 会在技术栈预设之后合并可选包 `presets/skills-personal/`——9 个技能
+（`yd-agents-mem`、`yd-claude-auth-sync`、`yd-git-sync`、`yd-git-ship`、`yd-doksam-ui`、`yd-finguard`、
+`yd-sdlc-orchestrator`、`yd-script-editor`、`yd-session-recording`）和 4 个代理。它们以特定的 GitLab、主机、
+ui.doksam.com 和 FinGuard 为前提，不适用于其他环境。
+
+```bash
+agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --stack go --with-personal-skills
+```
+
+- `yd-*` 技能仅提供韩文版——没有 `--lang en` 覆盖层。
+- 预设通常不在 `--update` 范围内，此包是例外。传入 `--with-personal-skills`，或目标中已有其中任一技能时，
+  `--update` 也会刷新此包（沿用 `.new` 规则）。对默认安装执行 `--update` 不会新增此包。
+
 ## 语言（`--lang`）
 
 基础目录树（agents、rules、skills、commands、`AGENTS.md`、钩子/settings
@@ -149,6 +168,7 @@ agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --forge github --stack 
 | `--lang <lang>` | `ko`（默认）或 `en` |
 | `--stack <list>` | 逗号分隔的技术栈预设列表。省略时进入交互式提问 |
 | `--name <name>` | `{{PROJECT_NAME}}` 的替换值。默认 = 目标目录名 |
+| `--with-personal-skills` | 额外安装绑定维护者环境的 9 个 `yd-*` 技能和 4 个代理（见下文） |
 | `--yes` | 跳过交互式提问（非交互模式） |
 | `--update` | 刷新已引导项目的基础文件（见下文） |
 
@@ -198,3 +218,5 @@ agents-scaffold/bin/agents-scaffold.sh --update /path/to/existing-repo
 |---|---|
 | `{{PROJECT_NAME}}` | `--name` 的值，或目标目录名 |
 | `{{JAVA_VERSION}}` | `1.8`（springboot 预设默认值） |
+
+`.claude/skills/yd-*/` 下的文件不做替换——`yd-mobile-web-planner` 的模板把 `{{PROJECT_NAME}}` 用作其产出物的占位符（#78）。
