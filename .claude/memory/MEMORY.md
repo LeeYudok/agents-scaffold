@@ -15,3 +15,7 @@
 - [프리셋 게이트 검증법](project_preset-gate-verification.md) — 가짜 툴 바이너리로 exit 분기 실측, bats 엔 툴체인 비의존 케이스만
 - [스킬 스니펫의 조용한 실패](feedback_skill-snippet-silent-failure.md) — `2>/dev/null || true`·`a | tail || b` 가 깨진 플래그·폴백을 숨긴다. 스킬 점검 시 억제 떼고 실행 (#57)
 - [dotfiles 원본은 이 레포](project_dotfiles-ssot.md) — 2026-10-24 부터 `dotfiles/` 가 SSOT, 옛 LeeYudok/dotfiles 는 보관. CI 는 루트 test.yml dotfiles job (#76)
+- [doksam-skills 원본은 이 레포](project_doksam-skills-ssot.md) — 2026-10-24 부터 SSOT. 기본 13(`yd-*`)·옵트인 9(`--with-personal-skills`)·중복 4쌍 병합, 옛 레포·`npx skills add` 경로는 보관 (#78)
+- [계약 레벨 품질 수정](feedback_quality-fix-at-contract-level.md) — 산출물 품질 문제는 템플릿 CSS → 검증기 → SKILL.md 순으로 계약에 넣고 콜드 재생성으로 실증
+- [UI 한쪽 색 띠 금지](feedback_ui-no-accent-stripe.md) — 카드 가장자리 accent stripe 는 "AI 냄새". 상태는 테두리 색·배지 글자로
+- [로컬 HTML 렌더 QA](reference_local-html-render-qa.md) — 생성 HTML 은 headless Chrome 스크린샷으로 검수. 검증기 통과 ≠ 렌더 정상
