@@ -8,10 +8,10 @@ schema_version: '1.0'
 meta:
   name: dotfiles
   description: '새 머신에 zsh·starship·Claude/Codex/Antigravity statusline 을 한 번에 맞추는 개인 dotfiles 부트스트랩'
-  updated: '2026-09-28'
-  repo_url: 'https://github.com/LeeYudok/dotfiles'
+  updated: '2026-10-24'
+  repo_url: 'https://github.com/LeeYudok/agents-scaffold/tree/main/dotfiles'
   tracker: github
-  issue_tracker_url: 'https://github.com/LeeYudok/dotfiles/issues'
+  issue_tracker_url: 'https://github.com/LeeYudok/agents-scaffold/issues'
   issue_rule: '이슈를 먼저 등록하고 번호를 브랜치·커밋 제목(<type>(#N): ...)에 넣는다'
   branch_strategy:
     main: '기본 브랜치. 직접 커밋하지 않는다'
@@ -130,7 +130,7 @@ nodes:
   path: scripts/check-syntax.sh
 - id: ci-check
   type: workflow
-  label: 'PR·main push에서 식별자·문법 검사'
+  label: '원본 저장소 시절 CI 정의(하위 디렉터리라 미실행) — agents-scaffold test.yml 의 dotfiles job 이 대신한다'
   path: .github/workflows/check.yml
 
 # 시험

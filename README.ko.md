@@ -103,7 +103,7 @@ placeholder 를 채우고 안 쓰는 걸 지우면, 결과는 레포의 다른 �
 | [docs/OPTIONS.md](docs/OPTIONS.md) | 전체 옵션 — 스택 프리셋 12종, `--forge`, `--harness`, `--lang`, 사용법, 치환 플레이스홀더, 요구사항 다지기 도구 선택 |
 | [docs/INTERNALS.md](docs/INTERNALS.md) | 내부 구조 — 생성되는 `.claude/` 전체 트리, 주요 패턴 |
 | [docs/OFFLINE_INSTALL.md](docs/OFFLINE_INSTALL.md) | 폐쇄망·Windows 설치 — 오프라인 번들, Git Bash 필수, `.cmd` 런처, `python3` 설정 |
-| [dotfiles/](dotfiles/README.md) | 메인테이너의 머신 셸 환경 부트스트랩(zsh·starship·Claude/Codex/agy statusline·폐쇄망 Windows Git 설치) — `LeeYudok/dotfiles@73225ea` 사본, 원본 레포와 별도 관리. scaffold 설치와 무관 |
+| [dotfiles/](dotfiles/README.md) | 메인테이너의 머신 셸 환경 부트스트랩(zsh·starship·Claude/Codex/agy statusline·폐쇄망 Windows Git 설치) — 원본(SSOT, #76) — 옛 `LeeYudok/dotfiles` 는 보관용. scaffold 설치와 무관 |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | 기여 가이드 |
 
 ## Contributing

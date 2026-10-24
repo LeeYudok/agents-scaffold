@@ -108,7 +108,7 @@ result is plain files under version control like any other code in the repo.
 | [docs/OPTIONS.en.md](docs/OPTIONS.en.md) | Every option — 12 stack presets, `--forge`, `--harness`, `--lang`, usage, placeholder substitution, picking a requirements-hardening tool |
 | [docs/INTERNALS.en.md](docs/INTERNALS.en.md) | Internals — the full generated `.claude/` tree, key patterns |
 | [docs/OFFLINE_INSTALL.en.md](docs/OFFLINE_INSTALL.en.md) | Air-gapped & Windows install — offline bundle, Git Bash required, `.cmd` launcher, `python3` setup |
-| [dotfiles/](dotfiles/README.md) | The maintainer's machine shell bootstrap (zsh, starship, Claude/Codex/agy statuslines, air-gapped Windows Git install) — a copy of `LeeYudok/dotfiles@73225ea`, maintained separately from that repo. Unrelated to the scaffold install (Korean) |
+| [dotfiles/](dotfiles/README.md) | The maintainer's machine shell bootstrap (zsh, starship, Claude/Codex/agy statuslines, air-gapped Windows Git install) — the source of truth since #76 — the old `LeeYudok/dotfiles` repo is archive-only. Unrelated to the scaffold install (Korean) |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Contribution guide |
 
 ## Contributing

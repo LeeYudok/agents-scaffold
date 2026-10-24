@@ -2,7 +2,7 @@
 # dotfiles install — zsh + starship 표준 셸 환경 부트스트랩
 #
 # 사용법:
-#   git clone https://github.com/LeeYudok/dotfiles.git && cd dotfiles && ./install.sh
+#   git clone https://github.com/LeeYudok/agents-scaffold.git && cd agents-scaffold/dotfiles && ./install.sh
 #
 # 동작 (섹션 번호 = 아래 주석 번호 = README 단계 표):
 #   0.   의존성·설정 사전 검사 — 누락·잘못된 설정은 홈 변경 전에 종료. Claude JSON은 객체만 허용. Git Bash/MSYS/Cygwin 미지원

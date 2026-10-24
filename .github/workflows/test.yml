@@ -43,3 +43,12 @@ jobs:
         run: sudo apt-get update -qq && sudo apt-get install -y zsh python3
       - name: 파일별 문법 검사
         run: scripts/check-syntax.sh
+      # dotfiles 원본이 이 레포로 옮겨와(#76) 이 job 이 유일한 게이트다 — 밀폐형 시험(임시 HOME·모의 패키지 관리자)도 돌린다.
+      # test-windows-paths.sh 는 실제 apt·curl 설치를 해서 제외한다(네트워크·sudo 의존).
+      - name: 시험 도구 설치
+        run: sudo apt-get install -y jq
+      - name: 밀폐형 시험
+        run: |
+          for t in test-agy-statusline test-codex-cost-hook test-codex-status-line test-install-safety test-windows-git; do
+            echo "== $t"; bash "scripts/$t.sh"
+          done

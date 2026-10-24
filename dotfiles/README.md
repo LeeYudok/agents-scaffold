@@ -1,5 +1,7 @@
 # dotfiles
 
+> 2026-10-24 부터 원본(SSOT)은 [LeeYudok/agents-scaffold](https://github.com/LeeYudok/agents-scaffold) 의 `dotfiles/` 다(#76). 옛 `LeeYudok/dotfiles` 저장소는 보관용이며 더 고치지 않는다. 이슈·PR 은 agents-scaffold 에 올린다.
+
 zsh + starship 셸 환경과 Claude Code·Antigravity CLI statusline, Codex CLI status line 을 새 머신에 한 번에 맞추는 부트스트랩 저장소. macOS(Homebrew)와 Linux(dnf/apt), Windows(WSL2) 를 같은 `install.sh` 로 설치하고, `uninstall.sh` 로 설치 전 상태까지 되돌린다. Android 는 Termux 에 Debian 을 올려 같은 `install.sh` 를 쓴다 — [Android (Termux + proot-distro)](#android-termux--proot-distro). WSL2 를 쓸 수 없는 폐쇄망 Windows 는 `windows/install-git.cmd` 로 Git 을 오프라인 설치하고 Git Bash 환경을 맞춘다 — [Windows 폐쇄망 (Git Bash)](#windows-폐쇄망-git-bash).
 
 어느 머신에나 그대로 적용할 수 있는 설정만 추적한다. 호스트 alias·내부 URL·API 키·개인 에이전트 지침처럼 머신이나 사람에 묶인 것은 저장소 밖(`~/.zshrc.local`, `~/.secrets.zsh`)에 둔다 — 자세한 경계는 [추적 범위](#추적-범위) 참고. 에이전트·기여자용 상세 규칙은 [AGENTS.md](AGENTS.md).
@@ -15,7 +17,7 @@ dotfiles/
 ├── .gitignore                 # 머신별·시크릿 파일명, 반입용 설치 파일(windows/offline/) 차단
 ├── .gitattributes             # 줄바꿈 고정 — 기본 LF, .ps1/.cmd 는 CRLF 그대로
 ├── .github/
-│   └── workflows/check.yml    # PR·main push 에서 식별자·문법 검사 (CI)
+│   └── workflows/check.yml    # 원본 저장소 시절의 CI 정의 — 지금은 agents-scaffold 의 .github/workflows/test.yml dotfiles job 이 같은 검사를 돌린다
 ├── starship/
 │   └── starship.toml          # Catppuccin Mocha 팔레트 2줄 프롬프트, Nerd Font 글리프 (OS 공통)
 ├── eza/
@@ -56,8 +58,8 @@ dotfiles/
 ## 설치
 
 ```bash
-git clone https://github.com/LeeYudok/dotfiles.git
-cd dotfiles && ./install.sh
+git clone https://github.com/LeeYudok/agents-scaffold.git
+cd agents-scaffold/dotfiles && ./install.sh
 ```
 
 `install.sh` 동작 (스크립트 내 섹션 번호와 동일):
@@ -95,8 +97,8 @@ wsl --install            # PowerShell(관리자). 기본 배포판 Ubuntu 설치
 ```bash
 # WSL 셸 안에서
 sudo apt-get update && sudo apt-get install -y git curl unzip python3
-git clone https://github.com/LeeYudok/dotfiles.git
-cd dotfiles && ./install.sh
+git clone https://github.com/LeeYudok/agents-scaffold.git
+cd agents-scaffold/dotfiles && ./install.sh
 chsh -s "$(command -v zsh)"
 ```
 
@@ -119,8 +121,8 @@ proot-distro login debian
 
 # Debian 안에서 — install.sh 가 sudo 로 패키지를 설치하므로 sudo 도 넣는다
 apt-get update && apt-get install -y sudo git curl unzip python3
-git clone https://github.com/LeeYudok/dotfiles.git
-cd dotfiles && ./install.sh
+git clone https://github.com/LeeYudok/agents-scaffold.git
+cd agents-scaffold/dotfiles && ./install.sh
 ```
 
 이후 과정은 일반 Linux(apt) 와 같다. 다만 2.5 단계가 설치하는 `~/.local/share/fonts` 는 proot 안쪽 폰트 디렉터리라 **화면에는 반영되지 않는다.** 글리프를 그리는 것은 Termux 앱이고, Termux 는 자기 홈의 `~/.termux/font.ttf` 한 파일만 읽는다. 이 파일이 없으면 Android 기본 폰트로 그려 프롬프트·statusline 아이콘이 네모로 깨진다.
@@ -147,7 +149,7 @@ cp ~/.local/share/fonts/D2KodingLigatureNerdFontMono-Regular.ttf "$T/font.ttf"
 
 인터넷이 되는 PC 에서 둘을 받아 USB 등으로 옮긴다.
 
-1. 이 저장소 — GitHub 의 Code → Download ZIP (폐쇄망 PC 에는 아직 git 이 없다). 압축을 푼다.
+1. 이 저장소 — [agents-scaffold](https://github.com/LeeYudok/agents-scaffold) 의 Code → Download ZIP (폐쇄망 PC 에는 아직 git 이 없다). 압축을 풀면 `agents-scaffold-main\dotfiles` 가 이 디렉터리다. agents-scaffold 의 오프라인 번들(`scripts/make-offline-bundle.sh`)에도 이 디렉터리가 들어 있다.
 2. Git for Windows 64비트 설치 파일 하나 — [git-scm.com/downloads/win](https://git-scm.com/downloads/win) 또는 [릴리스 페이지](https://github.com/git-for-windows/git/releases/latest).
    - `Git-<버전>-64-bit.exe` (설치형, 권장) — 시작 메뉴·탐색기 "Git Bash Here"·앱 제거 목록까지 갖춰진다.
    - `PortableGit-<버전>-64-bit.7z.exe` (포터블) — 압축만 풀므로 소프트웨어 설치가 막힌 PC 에서 쓴다.
@@ -346,7 +348,7 @@ API 환산 $1.23 · 이번 턴 +$0.04 · 입력 1.4M(캐시 90%) · 출력 11.3k
 
 ## 갱신 규칙
 
-PR·`main` push에서 식별자·문법 검사를 자동 실행한다. push 전에는 `git add` 후 `git diff --cached`를 검토하고 `scripts/check-identifiers.sh`와 `scripts/check-syntax.sh`를 실행한다(Git·bash·zsh·python3 필요). CI 는 `.github/workflows/check.yml` 이 같은 두 검사를 돌린다. `AGENTS.yaml` 을 고쳤으면 `scripts/check-agents-yaml.sh`(PyYAML 필요)로 검증한다. 식별자 검사는 스테이징된 파일의 정해진 패턴만 확인하므로 직접 검토도 필요하다.
+PR·`main` push에서 식별자·문법 검사를 자동 실행한다. push 전에는 `git add` 후 `git diff --cached`를 검토하고 `scripts/check-identifiers.sh`와 `scripts/check-syntax.sh`를 실행한다(Git·bash·zsh·python3 필요). CI 는 agents-scaffold 루트의 `.github/workflows/test.yml` `dotfiles` job 이 같은 두 검사와 밀폐형 시험(`test-windows-paths.sh` 제외 — 실제 패키지·네트워크 설치)을 돌린다. 하위 디렉터리의 `.github/workflows/check.yml` 은 GitHub 가 실행하지 않는다. `AGENTS.yaml` 을 고쳤으면 `scripts/check-agents-yaml.sh`(PyYAML 필요)로 검증한다. 식별자 검사는 스테이징된 파일의 정해진 패턴만 확인하므로 직접 검토도 필요하다.
 
 - 로컬에서 `~/.zshrc` / `~/.config/starship.toml` / `~/.claude/statusline-command.sh` / `~/.gemini/antigravity-cli/statusline-command.sh` / `~/.codex/cost-hook.py` / (Git Bash) `~/.bashrc` 를 바꾸면 이 저장소에도 반영해 커밋한다.
 - 머신별 일회성 설정(특정 호스트 alias 등)은 `~/.zshrc.local` 에 두고 저장소 zshrc 에는 넣지 않는다. 공통화 가능한 것만 양쪽 zshrc 에 반영.

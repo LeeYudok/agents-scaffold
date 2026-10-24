@@ -54,7 +54,7 @@
 | `AGENTS.yaml` | — | 기계 판독용 사실(구성요소 그래프·명령·정책 요약·함정). 이 문서와 함께 갱신한다 |
 | `scripts/check-identifiers.sh` | — | Git 인덱스의 식별자 패턴 검사. 검출 시 파일명만 출력하고 실패 |
 | `scripts/check-syntax.sh` | — | bash·zsh 파일별 문법 검사와 Python 컴파일 검사 |
-| `.github/workflows/check.yml` | — | PR·main push에서 식별자·문법 검사 실행 |
+| `.github/workflows/check.yml` | — | 원본 저장소 시절 CI 정의. 하위 디렉터리라 실행되지 않는다 — agents-scaffold `.github/workflows/test.yml` 의 `dotfiles` job 이 대신한다 |
 | `scripts/check-agents-yaml.sh` | — | `AGENTS.yaml` 검증기(구조·따옴표 없는 날짜·그래프·경로). agents-yaml 스킬 원본을 수정 없이 복사. python3 + PyYAML 필요 |
 
 홈에 생기는 부산물: `~/.config/dotfiles/backup/`(원본 기록과 설치 manifest), 배치 대상 옆의 `*.bak`(1세대), Linux 에서 sudo 없이 받은 `~/.local/share/zsh/plugins/<name>`, 폰트 디렉터리의 `.nerd-font-<name>-installed` 마커와 `.nerd-font-<name>-files.txt` manifest.
