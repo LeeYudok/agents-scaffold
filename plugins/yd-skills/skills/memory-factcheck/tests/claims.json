@@ -1,0 +1,94 @@
+{
+ "claims": [
+  {
+   "id": "STRUCT-DANGLING",
+   "kind": "실패",
+   "rule": "인덱스가 가리키는 파일 없음",
+   "test": "test_memory_audit.py::test_index_entry_without_file"
+  },
+  {
+   "id": "STRUCT-NOT-INDEXED",
+   "kind": "실패",
+   "rule": "인덱스에 빠진 파일",
+   "test": "test_memory_audit.py::test_file_missing_from_index"
+  },
+  {
+   "id": "STRUCT-FRONTMATTER",
+   "kind": "실패",
+   "rule": "깨진 frontmatter",
+   "test": "test_memory_audit.py::test_bad_frontmatter"
+  },
+  {
+   "id": "STRUCT-BROKEN-LINK",
+   "kind": "실패",
+   "rule": "없는 메모리를 가리키는 `[[링크]]`",
+   "test": "test_memory_audit.py::test_broken_wikilink_and_valid_one"
+  },
+  {
+   "id": "STRUCT-DUP-NAME",
+   "kind": "실패",
+   "rule": "겹치는 `name`",
+   "test": "test_memory_audit.py::test_duplicate_name"
+  },
+  {
+   "id": "NESTED-TYPE",
+   "kind": "정상",
+   "rule": "`type` 은 최상위에 있어도 `metadata.type` 아래에 있어도 인정한다.",
+   "test": "test_memory_audit.py::test_clean_dir_has_no_findings"
+  },
+  {
+   "id": "READ-ONLY",
+   "kind": "정상",
+   "rule": "이 스크립트는 파일을 만들거나 고치거나 지우지 않는다.",
+   "test": "test_memory_audit.py::test_audit_never_modifies_memory"
+  },
+  {
+   "id": "MOVED-PATH-STALE",
+   "kind": "정상",
+   "rule": "옮겨진 경로, 바뀐 수치",
+   "test": "test_memory_audit.py::test_moved_path_is_stale"
+  },
+  {
+   "id": "UNREACHABLE-UNVERIFIED",
+   "kind": "도구오류",
+   "rule": "원본에 닿지 못한 단언은 unverified 로 나온다.",
+   "test": "test_memory_audit.py::test_no_repo_is_unverified_not_fresh"
+  },
+  {
+   "id": "USAGE-ERROR-EXIT2",
+   "kind": "도구오류",
+   "rule": "메모리 디렉터리나 `--repo` 경로가 없으면 exit 2 로 끝난다.",
+   "test": "test_memory_audit.py::test_missing_dir_is_usage_error"
+  },
+  {
+   "id": "ISSUE-NEVER-FRESH",
+   "kind": "경계",
+   "rule": "이슈 번호는 트래커를 조회하지 않으므로 항상 unverified 다.",
+   "test": "test_memory_audit.py::test_issue_numbers_are_never_fresh"
+  },
+  {
+   "id": "NO-CLAIM-NOT-FRESH",
+   "kind": "경계",
+   "rule": "단언이 하나도 없는 메모리도 fresh 가 아니다.",
+   "test": "test_memory_audit.py::test_memory_without_claims_is_not_fresh"
+  },
+  {
+   "id": "FRESH-NEEDS-ALL",
+   "kind": "경계",
+   "rule": "검증 불가 ⇒ unverified.",
+   "test": "test_memory_audit.py::test_fresh_plus_unverified_stays_unverified"
+  },
+  {
+   "id": "NOISE-NOT-CLAIMS",
+   "kind": "오탐",
+   "rule": "코드블록 안의 글과 glob·URL·옵션은 후보에서 뺀다.",
+   "test": "test_memory_audit.py::test_glob_url_option_and_fenced_text_are_not_claims"
+  },
+  {
+   "id": "PERSONAL-OUT-OF-SCOPE",
+   "kind": "오탐",
+   "rule": "**개인 파일은 범위 밖이다**",
+   "test": "test_memory_audit.py::test_personal_files_are_out_of_scope"
+  }
+ ]
+}

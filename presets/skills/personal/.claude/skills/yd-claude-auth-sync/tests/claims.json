@@ -1,0 +1,20 @@
+{
+  "claims": [
+    {"id": "EXTRACT-OAUTH-ONLY", "kind": "정상", "rule": "옮기는 값은 `claudeAiOauth` 하나다", "test": "test_sync_auth.py::test_moves_only_claude_oauth"},
+    {"id": "MERGE-NEW-600", "kind": "정상", "rule": "새 파일은 권한 600 이고", "test": "test_sync_auth.py::test_new_host_gets_file_with_mode_600"},
+    {"id": "MERGE-KEEP-BACKUP", "kind": "정상", "rule": "대상 파일에 있던 다른 키는 그대로 둔다", "test": "test_sync_auth.py::test_keeps_other_keys_and_backs_up"},
+    {"id": "VERIFY-OK", "kind": "정상", "rule": "`verify ok` — 그 호스트에서 `claude -p` 가 응답했다", "test": "test_sync_auth.py::test_verify_reports_ok_on_pong"},
+    {"id": "EXTRACT-MISSING", "kind": "실패", "rule": "원본이 없으면 이 PC 에서 `claude` 로 먼저 로그인한다", "test": "test_sync_auth.py::test_missing_refresh_token_is_refused"},
+    {"id": "VERIFY-FAIL", "kind": "실패", "rule": "하나라도 실패하면 종료 코드는 1 이다", "test": "test_sync_auth.py::test_verify_fails_without_pong"},
+    {"id": "VERIFY-NO-CLAUDE", "kind": "실패", "rule": "`claude 없음` 이면 그 호스트에 설치부터 한다", "test": "test_sync_auth.py::test_missing_claude_is_reported"},
+    {"id": "HOSTS-MISSING", "kind": "실패", "rule": "호스트 목록 파일을 만든다", "test": "test_sync_auth.py::test_missing_hosts_file_explains_where"},
+    {"id": "MERGE-SAME", "kind": "경계", "rule": "`same` — 이미 같은 로그인이다. 아무것도 쓰지 않는다", "test": "test_sync_auth.py::test_same_value_writes_nothing"},
+    {"id": "HOSTS-PARSE", "kind": "경계", "rule": "한 줄에 ssh 별칭 하나다. `#` 뒤는 주석이다", "test": "test_sync_auth.py::test_parse_skips_comments_blanks_and_dupes"},
+    {"id": "HOSTS-ENV", "kind": "경계", "rule": "경로는 `YD_CLAUDE_AUTH_HOSTS` 로 바꿀 수 있다", "test": "test_sync_auth.py::test_env_overrides_default_path"},
+    {"id": "DRY-RUN", "kind": "경계", "rule": "원본 요약(구독 종류, access token 만료 시각)과 대상 호스트를 보여 준다", "test": "test_sync_auth.py::test_dry_run_touches_no_host"},
+    {"id": "NO-TOKEN-OUTPUT", "kind": "오탐", "rule": "토큰 값을 화면·로그·argv 에 내지 않는다", "test": "test_sync_auth.py::test_output_never_shows_token"},
+    {"id": "NO-TOKEN-ARGV", "kind": "오탐", "rule": "스크립트는 토큰을 ssh 표준입력으로만 넘긴다", "test": "test_sync_auth.py::test_merge_command_carries_no_token"},
+    {"id": "SUMMARY-NO-TOKEN", "kind": "오탐", "rule": "값 대신 구독 종류·만료 시각·파일 크기만 본다", "test": "test_sync_auth.py::test_summary_has_no_token"},
+    {"id": "EXTRACT-NOT-JSON", "kind": "도구오류", "rule": "원본은 macOS 면 키체인 `Claude Code-credentials`, 리눅스면 `~/.claude/.credentials.json` 이다", "test": "test_sync_auth.py::test_non_json_is_refused"}
+  ]
+}

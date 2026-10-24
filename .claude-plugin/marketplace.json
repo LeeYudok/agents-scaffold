@@ -1,0 +1,19 @@
+{
+  "name": "agents-scaffold",
+  "owner": {
+    "name": "LeeYudok"
+  },
+  "description": "agents-scaffold 의 yd-* 스킬 묶음(한국어). 프로젝트 규칙·훅·서브에이전트는 플러그인이 아니라 bin/agents-scaffold.sh 설치로 들어간다.",
+  "plugins": [
+    {
+      "name": "yd-skills",
+      "source": "./plugins/yd-skills",
+      "description": "agents-scaffold 의 범용 yd-* 스킬(DB·Go·React·TS·빌드·화면설계·글쓰기·의존성 CVE 점검)과 handoff·docs-sync·memory-factcheck·skill-evolve. 한국어 전용."
+    },
+    {
+      "name": "yd-skills-personal",
+      "source": "./plugins/yd-skills-personal",
+      "description": "agents-scaffold 의 옵트인 yd-* 스킬 — 메인테이너 환경 전용(git-sync·git-ship·claude-auth-sync·finguard·doksam-ui·script-editor·sdlc-orchestrator·session-recording·agents-mem). 한국어 전용."
+    }
+  ]
+}

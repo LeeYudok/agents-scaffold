@@ -57,7 +57,7 @@ setup() {
   next_line="$((marker_line + 1))"
   next_content="$(sed -n "${next_line}p" "$hook")"
   # bun partial 의 첫 줄(주석 헤더)이 마커 바로 다음 줄이어야 함
-  first_partial_line="$(head -1 "$REPO_ROOT/presets/bun/.claude/hooks/pre-commit.partial.sh")"
+  first_partial_line="$(head -1 "$REPO_ROOT/presets/stacks/bun/.claude/hooks/pre-commit.partial.sh")"
   [ "$next_content" = "$first_partial_line" ]
 }
 
@@ -83,8 +83,8 @@ setup() {
 
   # 두 partial 모두 exit 2 (차단) 만 쓰고 exit 0 으로 훅을 조기 종료하지 않는지 확인
   # (partial 자체는 exit 0 을 포함하지 않아야 함 — #6 재발 방지)
-  ! grep -q '^exit 0$' "$REPO_ROOT/presets/bun/.claude/hooks/pre-commit.partial.sh"
-  ! grep -q '^exit 0$' "$REPO_ROOT/presets/python/.claude/hooks/pre-commit.partial.sh"
+  ! grep -q '^exit 0$' "$REPO_ROOT/presets/stacks/bun/.claude/hooks/pre-commit.partial.sh"
+  ! grep -q '^exit 0$' "$REPO_ROOT/presets/stacks/python/.claude/hooks/pre-commit.partial.sh"
 }
 
 # --- 4) 마커 없는 커스텀 base -> append fallback ---
@@ -162,13 +162,13 @@ EOF
 # --- 8) in-place self-clean ---
 
 @test "harness matrix manifest passes its own checker (#37)" {
-  run python3 "$REPO_ROOT/scripts/check-harness-matrix.py"
+  run python3 "$REPO_ROOT/scripts/dev/check-harness-matrix.py"
   [ "$status" -eq 0 ]
 }
 
 @test "harness matrix checker actually fails an expired full tier (#37)" {
   # 게이트가 실제로 막는지 확인한다 — 통과만 보면 무용지물인 검사기를 못 잡는다.
-  run python3 "$REPO_ROOT/scripts/check-harness-matrix.py" --today 2099-01-01
+  run python3 "$REPO_ROOT/scripts/dev/check-harness-matrix.py" --today 2099-01-01
   [ "$status" -eq 1 ]
   [[ "$output" == *"tier=full"* ]]
 }
@@ -185,9 +185,14 @@ EOF
   [ ! -d "$copy/presets" ]
   [ ! -d "$copy/docs/superpowers" ]
   [ ! -e "$copy/dotfiles" ]   # #76: 메인테이너 dotfiles 는 사용자 프로젝트에 남기지 않는다
+  [ ! -e "$copy/plugins" ] && [ ! -e "$copy/.claude-plugin" ]   # #82: 스킬 마켓플레이스는 이 레포 것
   # #61: in-place install also moves the template's skills to the .agents/skills source
   [ -L "$copy/.claude/skills" ]
   [ -f "$copy/.agents/skills/review/SKILL.md" ]
+  # #80: the template repo's own memory is removed and the index becomes the install template
+  [ "$(find "$copy/.claude/memory" -maxdepth 1 -name '[pfr]*_*.md' | wc -l | tr -d ' ')" -eq 0 ]
+  [ ! -e "$copy/.claude/memory/MEMORY.template.md" ]
+  cmp -s "$copy/.claude/memory/MEMORY.md" "$REPO_ROOT/.claude/memory/MEMORY.template.md"
 
   # 원본은 그대로 존재해야 함
   [ -d "$REPO_ROOT/bin" ]
@@ -218,12 +223,12 @@ EOF
 #
 # fixture 사본으로 오버레이 동작 자체만 검증한다 (실콘텐츠와 독립).
 
-@test "--lang en overlays presets/lang-en/base onto target (fixture)" {
+@test "--lang en overlays presets/lang/en/base onto target (fixture)" {
   copy="$BATS_TEST_TMPDIR/repo-copy-lang-en"
   cp -R "$REPO_ROOT" "$copy"
 
-  mkdir -p "$copy/presets/lang-en/base/.claude/rules"
-  echo "ENGLISH DUMMY COMMON RULES" > "$copy/presets/lang-en/base/.claude/rules/common.md"
+  mkdir -p "$copy/presets/lang/en/base/.claude/rules"
+  echo "ENGLISH DUMMY COMMON RULES" > "$copy/presets/lang/en/base/.claude/rules/common.md"
 
   target="$BATS_TEST_TMPDIR/lang-en-target"
   mkdir -p "$target"
@@ -238,8 +243,8 @@ EOF
   copy="$BATS_TEST_TMPDIR/repo-copy-lang-default"
   cp -R "$REPO_ROOT" "$copy"
 
-  mkdir -p "$copy/presets/lang-en/base/.claude/rules"
-  echo "ENGLISH DUMMY COMMON RULES" > "$copy/presets/lang-en/base/.claude/rules/common.md"
+  mkdir -p "$copy/presets/lang/en/base/.claude/rules"
+  echo "ENGLISH DUMMY COMMON RULES" > "$copy/presets/lang/en/base/.claude/rules/common.md"
 
   target="$BATS_TEST_TMPDIR/lang-default-target"
   mkdir -p "$target"
@@ -311,7 +316,7 @@ EOF
   ! diff -q "$REPO_ROOT/.claude/skills/grill-me/SKILL.md" \
       "$BATS_TEST_TMPDIR/.claude/skills/grill-me/SKILL.md" >/dev/null
   # knowledge_graph.py is a code file — never overlaid (no en counterpart may exist)
-  [ ! -f "$REPO_ROOT/presets/lang-en/base/.claude/scripts/knowledge_graph.py" ]
+  [ ! -f "$REPO_ROOT/presets/lang/en/base/.claude/scripts/knowledge_graph.py" ]
 }
 
 # --- 12) knowledge-graph link gate (issue #24) ---
@@ -423,7 +428,7 @@ setup_publish_repo() {
   [ "$status" -eq 0 ]
   grep -q 'Forge 워크플로 — GitLab' "$BATS_TEST_TMPDIR/.claude/rules/forge.md"
   # forge-gitlab preset also overrides the sdlc-cycle/fix-issue commands
-  diff -q "$REPO_ROOT/presets/forge-gitlab/.claude/commands/fix-issue.md" \
+  diff -q "$REPO_ROOT/presets/forge/gitlab/.claude/commands/fix-issue.md" \
       "$BATS_TEST_TMPDIR/.claude/commands/fix-issue.md"
 }
 
@@ -431,7 +436,7 @@ setup_publish_repo() {
   run "$SCRIPT" "$BATS_TEST_TMPDIR" --forge gitlab --lang en --yes
   [ "$status" -eq 0 ]
   # en overlay must differ from the Korean forge preset file
-  ! diff -q "$REPO_ROOT/presets/forge-gitlab/.claude/rules/forge.md" \
+  ! diff -q "$REPO_ROOT/presets/forge/gitlab/.claude/rules/forge.md" \
       "$BATS_TEST_TMPDIR/.claude/rules/forge.md" >/dev/null
 }
 
@@ -1241,14 +1246,66 @@ PY
   [ -f "$t/.claude/memory/MEMORY.md" ]
 }
 
-@test "every stack preset has a P0 section and an AGENTS.partial.md (#21)" {
+@test "installs ship none of the scaffold's own memory files (#80)" {
+  for opts in "" "--lang en" "--with-personal-skills --harness all"; do
+    t="$BATS_TEST_TMPDIR/mem-$RANDOM"
+    mkdir -p "$t"
+    # shellcheck disable=SC2086
+    run "$SCRIPT" "$t" --yes $opts
+    [ "$status" -eq 0 ]
+    [ "$(find "$t/.claude/memory" -maxdepth 1 -name '[pfr]*_*.md' | wc -l | tr -d ' ')" -eq 0 ]
+    [ ! -e "$t/.claude/memory/MEMORY.template.md" ]
+    [ -f "$t/.claude/memory/MEMORY.md" ]
+    [ -f "$t/.claude/memory/README.md" ]
+    ! grep -q 'project_dotfiles-ssot' "$t/.claude/memory/MEMORY.md"
+  done
+}
+
+@test "--update adds no scaffold memory, leaves MEMORY.md alone, reports leaked copies (#80)" {
+  t="$BATS_TEST_TMPDIR/memupd"
+  mkdir -p "$t"
+  run "$SCRIPT" "$t" --yes
+  [ "$status" -eq 0 ]
+  echo "- [mine](project_mine.md) — user entry" >> "$t/.claude/memory/MEMORY.md"
+  # an older install shipped this repo's memory: simulate one byte-identical leaked file
+  cp "$REPO_ROOT/.claude/memory/project_dotfiles-ssot.md" "$t/.claude/memory/"
+  run "$SCRIPT" "$t" --update --yes
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"! .claude/memory/project_dotfiles-ssot.md"* ]]
+  [[ "$output" != *"+ .claude/memory/"* ]]
+  [ ! -e "$t/.claude/memory/MEMORY.md.new" ]
+  grep -q 'project_mine' "$t/.claude/memory/MEMORY.md"
+  [ -f "$t/.claude/memory/project_dotfiles-ssot.md" ]   # reported, never auto-deleted
+  [ "$(find "$t/.claude/memory" -maxdepth 1 -name 'feedback_*.md' | wc -l | tr -d ' ')" -eq 0 ]
+}
+
+@test "stack presets live under presets/stacks; a pre-#81 presets/<stack> still installs with a warning (#81)" {
+  # 모든 스택은 presets/stacks/ 아래에 있고, 그룹 디렉터리 밖에 남은 스택이 없다
   for d in "$REPO_ROOT"/presets/*/; do
+    case "$(basename "$d")" in forge|lang|skills|stacks) ;; *) echo "stray preset dir: $d"; return 1 ;; esac
+  done
+  copy="$BATS_TEST_TMPDIR/repo-copy-oldlayout"
+  cp -R "$REPO_ROOT" "$copy"
+  mv "$copy/presets/stacks/go" "$copy/presets/go"
+  t="$BATS_TEST_TMPDIR/oldlayout-target"
+  mkdir -p "$t"
+  run "$copy/bin/agents-scaffold.sh" "$t" --stack go --yes
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"pre-#81 layout"* ]]
+  [ -f "$t/.claude/rules/go.md" ]
+  # a group directory is not a stack
+  mkdir -p "$BATS_TEST_TMPDIR/grp"
+  run "$SCRIPT" "$BATS_TEST_TMPDIR/grp" --stack forge --yes
+  [[ "$output" == *"unknown stack 'forge'"* ]]
+}
+
+@test "every stack preset has a P0 section and an AGENTS.partial.md (#21)" {
+  for d in "$REPO_ROOT"/presets/stacks/*/; do
     name="$(basename "$d")"
-    case "$name" in forge-*|lang-*|skills-*) continue ;; esac   # skills-*: 옵트인 스킬 묶음(#78), 스택 아님
     [ -f "$d/AGENTS.partial.md" ] || { echo "missing AGENTS.partial.md: $name"; return 1; }
     rf="$(find "$d/.claude/rules" -name '*.md' -type f | head -1)"
     grep -q '^## P0' "$rf" || { echo "missing ## P0: $rf"; return 1; }
-    en="$REPO_ROOT/presets/lang-en/stacks/$name"
+    en="$REPO_ROOT/presets/lang/en/stacks/$name"
     [ -f "$en/AGENTS.partial.md" ] || { echo "missing en AGENTS.partial.md: $name"; return 1; }
     erf="$(find "$en/.claude/rules" -name '*.md' -type f | head -1)"
     grep -q '^## P0' "$erf" || { echo "missing en ## P0: $erf"; return 1; }

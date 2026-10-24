@@ -91,7 +91,7 @@ class CheckHandoff(unittest.TestCase):
         self.assertEqual((code, out.strip()), (0, "위반 0건, 경고 0건"))
 
     def test_english_template_labels_pass(self):
-        # agents-scaffold #78: presets/lang-en 의 영어 템플릿 라벨·섹션도 같은 규칙으로 판정한다
+        # agents-scaffold #78: presets/lang/en 의 영어 템플릿 라벨·섹션도 같은 규칙으로 판정한다
         en = body()
         for ko, eng in (("- 이슈:", "- Issue:"), ("- 작성:", "- Written:"), ("- 작업 이슈/PR:", "- Work issue/PR:"),
                         ("- 브랜치:", "- Branch:"), ("## 지금 어디까지", "## Where things stand"),

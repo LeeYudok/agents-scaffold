@@ -89,6 +89,20 @@ prompt 编写也没关系：
 全局使用，请 clone 本仓库并运行 `scripts/install-skills.sh`（在 `~/.claude/skills`、`~/.agents/skills`、
 `~/.gemini/config/skills` 下创建符号链接；支持 `--personal`、`--copy`、`--project <dir>`）。
 
+**作为插件（#82）。** 本仓库同时也是插件市场。Claude Code 和 Codex 读取同一个
+`.claude-plugin/marketplace.json`：
+
+```bash
+claude plugin marketplace add LeeYudok/agents-scaffold && claude plugin install yd-skills@agents-scaffold
+codex plugin marketplace add LeeYudok/agents-scaffold && codex plugin add yd-skills@agents-scaffold
+```
+
+`yd-skills` 包含 14 个通用 `yd-*` 技能以及 `handoff`、`docs-sync`、`memory-factcheck`、`skill-evolve`；
+`yd-skills-personal` 包含 9 个可选技能。在 Claude Code 中，插件技能名前会加上插件名（`yd-skills:yd-pg-expert`）。
+插件只携带技能。Claude Code 插件不能携带 rules，Codex 插件不能携带子代理，因此项目规则、钩子和子代理仍通过
+`bin/agents-scaffold.sh` 安装。每个插件还带有 Antigravity 清单（`.antigravity-plugin/plugin.json`），依据 agy 文档编写，
+尚未实测。离线或开发场景请使用 `scripts/install-skills.sh`。
+
 ## 为什么选择 agents-scaffold
 
 与大型可安装框架或 agent/skill 目录不同，agents-scaffold 不附带运行时、

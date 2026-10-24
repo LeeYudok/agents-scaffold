@@ -1,0 +1,14 @@
+{
+  "name": "yd-skills",
+  "description": "agents-scaffold 의 범용 yd-* 스킬(DB·Go·React·TS·빌드·화면설계·글쓰기·의존성 CVE 점검)과 handoff·docs-sync·memory-factcheck·skill-evolve. 한국어 전용.",
+  "author": {
+    "name": "LeeYudok"
+  },
+  "homepage": "https://github.com/LeeYudok/agents-scaffold",
+  "repository": "https://github.com/LeeYudok/agents-scaffold",
+  "license": "MIT",
+  "keywords": [
+    "skills",
+    "korean"
+  ]
+}

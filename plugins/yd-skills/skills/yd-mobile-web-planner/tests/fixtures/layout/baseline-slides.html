@@ -1,0 +1,68 @@
+<!-- 레이아웃 회귀 검사용 기준 슬라이드 조각 (이슈 #137).
+
+     head 는 커밋하지 않는다 — scaffold.py 로 template.html 에서 매번 가져온다.
+     그래야 템플릿 CSS 가 바뀔 때 fixture 가 같이 따라오고, 회귀가 실제로
+     검사 대상이 된다. 여기에는 mermaid 와 외부 이미지가 없다 — 네트워크가
+     판정에 개입하지 않아야 한다. -->
+<div class="ppt-slide">
+
+  <div class="ppt-top-bar">
+    <div class="ppt-top-no">NO. 09.1</div>
+    <div class="ppt-top-title">Layout Baseline</div>
+    <div class="ppt-head-label">화면 Type</div>
+    <div class="ppt-head-value">MOBILE WEB</div>
+    <div class="ppt-head-label">요구사항 ID</div>
+    <div class="ppt-head-value">-</div>
+  </div>
+
+  <div class="ppt-meta-bar">
+    <div class="ppt-meta-label">화면 ID</div>
+    <div class="ppt-meta-id">FIX-LAYOUT-001</div>
+    <div class="ppt-meta-label">Location</div>
+    <div class="ppt-meta-value">기준</div>
+    <div class="ppt-meta-label" style="margin-left:auto;">작업자</div>
+    <div class="ppt-meta-value">UX 기획</div>
+  </div>
+
+  <div class="ppt-content">
+
+    <div class="ppt-wireframe">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-status"></div>
+          <div class="mock-header"><span>기준 화면</span></div>
+          <div class="mock-body" style="position:relative; background:#f2f4f6; padding:16px 16px 16px 28px;">
+            <span class="pointer-badge" style="position:absolute; top:20px; left:2px; z-index:10;">1</span>
+            <div style="height:120px; background:#fff; border-radius:12px; border:1px solid #e5e8eb;"></div>
+            <span class="pointer-badge" style="position:absolute; top:170px; left:2px; z-index:10;">2</span>
+            <div style="margin-top:14px; height:180px; background:#fff; border-radius:12px; border:1px solid #e5e8eb;"></div>
+          </div>
+          <div class="mock-footer">
+            <span class="pointer-badge" style="position:absolute; top:9px; left:2px; z-index:10;">3</span>
+            <span style="font-size:11px; font-weight:700; color:#333;">홈</span>
+            <span style="font-size:11px; font-weight:700; color:#8b95a1;">검색</span>
+            <span style="font-size:11px; font-weight:700; color:#8b95a1;">마이</span>
+          </div>
+        </div>
+        <div class="mock-caption">기준 화면 (FIX-LAYOUT-001)</div>
+      </div>
+    </div>
+
+    <div class="ppt-desc-panel">
+      <div class="ppt-desc-header">Description (화면설명)</div>
+      <div class="ppt-desc-body">
+        <ul class="desc-list">
+          <li><span class="desc-num">1</span> <div><b>상단 카드</b><br>탭: 상세로 이동<br><code>Card</code></div></li>
+          <li><span class="desc-num">2</span> <div><b>본문 카드</b><br>스크롤: 목록 연속 노출<br><code>List</code></div></li>
+          <li><span class="desc-num">3</span> <div><b>하단 바</b><br>탭: 주요 액션 실행<br><code>Footer</code></div></li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="ppt-footer">
+    Layout Fixture | Ver.1.0.0
+  </div>
+
+</div>

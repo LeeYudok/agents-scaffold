@@ -19,3 +19,4 @@
 - [계약 레벨 품질 수정](feedback_quality-fix-at-contract-level.md) — 산출물 품질 문제는 템플릿 CSS → 검증기 → SKILL.md 순으로 계약에 넣고 콜드 재생성으로 실증
 - [UI 한쪽 색 띠 금지](feedback_ui-no-accent-stripe.md) — 카드 가장자리 accent stripe 는 "AI 냄새". 상태는 테두리 색·배지 글자로
 - [로컬 HTML 렌더 QA](reference_local-html-render-qa.md) — 생성 HTML 은 headless Chrome 스크린샷으로 검수. 검증기 통과 ≠ 렌더 정상
+- [레포 영역 구분](project_layout-zones.md) — 설치 원본(`.claude`·`presets`)·레포 전용(`bin`·`scripts`·메모리)·플러그인 생성물(`plugins/`)·동봉 제품(`dotfiles/`). `.claude/` 에 레포 전용 파일을 두면 `is_repo_private()` 등록 (#80~#82)

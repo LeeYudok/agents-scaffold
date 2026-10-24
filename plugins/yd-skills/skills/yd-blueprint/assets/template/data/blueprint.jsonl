@@ -1,0 +1,12 @@
+{"kind":"meta","title":"서비스 청사진","eyebrow":"PROJECT · SERVICE BLUEPRINT","summary":"한 줄로 이 프로젝트가 무엇을 하는지 적는다.","badges":["LAN 전용"],"basis":"기준은 코드와 설정입니다. 실선은 동작하는 흐름, 점선은 경계나 미연결입니다.","asOf":"2026-01-01"}
+{"kind":"lane","id":"front","title":"프론트 · 브라우저"}
+{"kind":"lane","id":"back","title":"백엔드 · 서버"}
+{"kind":"node","id":"web","lane":"front","row":0,"title":"화면","lines":["React 화면","게시 파일을 읽는다"],"state":"done","summary":"사용자가 보는 화면입니다.","paths":["README.md"],"next":"모바일 실기 검증이 남았습니다.","gap":"G-01"}
+{"kind":"node","id":"api","lane":"back","row":0,"title":"API","lines":["쓰기는 여기로만","키 검사 후 저장"],"state":"partial","summary":"쓰기 요청을 받아 저장합니다.","paths":["README.md"]}
+{"kind":"edge","from":"web","to":"api","label":"쓰기 POST","type":"write"}
+{"kind":"group","id":"server","title":"서버 한 대","nodes":["api"]}
+{"kind":"flow","title":"요청","body":"사용자가 화면에서 값을 고칩니다."}
+{"kind":"flow","title":"저장","body":"API 가 검증하고 저장합니다."}
+{"kind":"feature","name":"저장","state":"done","now":"값을 검증해 저장한다","remaining":"백업은 아직 없다"}
+{"kind":"gap","id":"G-01","priority":"P1","title":"모바일 검증","state":"missing","now":"실기 확인 전","todo":"실제 기기에서 확인한다","done":"확인 결과를 기록한다","paths":["README.md"]}
+{"kind":"doc","id":"rules","title":"운영 규칙","paragraphs":["규칙 한 문단을 한 항목으로 적는다."]}

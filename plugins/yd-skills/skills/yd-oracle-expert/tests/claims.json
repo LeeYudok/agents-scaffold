@@ -1,0 +1,154 @@
+{
+ "claims": [
+  {
+   "id": "EMPTY-STRING-NULL",
+   "kind": "경계",
+   "rule": "`WHERE s = ''` 는 언제나 0행이다.",
+   "test": "test_oracle_claims.py::test_empty_string_is_null"
+  },
+  {
+   "id": "CONCAT-NULL",
+   "kind": "경계",
+   "rule": "`'a' || NULL` 은 `'a'` 다.",
+   "test": "test_oracle_claims.py::test_concat_with_null_keeps_string"
+  },
+  {
+   "id": "DATE-HAS-TIME",
+   "kind": "실패",
+   "rule": "`WHERE d = DATE '2026-10-04'` 는 자정이 아닌 행을 놓친다.",
+   "test": "test_oracle_claims.py::test_date_equality_misses_time"
+  },
+  {
+   "id": "NLS-DATE-FORMAT",
+   "kind": "도구오류",
+   "rule": "`DD-MON-RR` 세션에서는 `ORA-01861` 이 나고",
+   "test": "test_oracle_claims.py::test_to_date_depends_on_session_format"
+  },
+  {
+   "id": "VARCHAR2-BYTES",
+   "kind": "실패",
+   "rule": "`VARCHAR2(10)` 은 10**바이트**다.",
+   "test": "test_oracle_claims.py::test_varchar2_counts_bytes"
+  },
+  {
+   "id": "VARCHAR2-4000-CAP",
+   "kind": "경계",
+   "rule": "라도 한글 1333자는 들어가고 1334자는 `ORA-12899` 로 거부된다.",
+   "test": "test_oracle_claims.py::test_varchar2_4000_byte_cap"
+  },
+  {
+   "id": "NUMBER-SCALE",
+   "kind": "오탐",
+   "rule": "오류 없이 `123.46` 으로 저장된다.",
+   "test": "test_oracle_claims.py::test_number_scale_rounds_silently"
+  },
+  {
+   "id": "IDENT-UPPERCASE",
+   "kind": "실패",
+   "rule": "따옴표 없는 식별자는 **대문자로 접힌다.**",
+   "test": "test_oracle_claims.py::test_unquoted_identifiers_fold_upper"
+  },
+  {
+   "id": "IDENT-128-BYTES",
+   "kind": "경계",
+   "rule": "한글 이름은 42자째에서 `ORA-00972` 가 난다",
+   "test": "test_oracle_claims.py::test_identifier_limit_is_bytes"
+  },
+  {
+   "id": "LIMIT-UNSUPPORTED",
+   "kind": "실패",
+   "rule": "`LIMIT` 은 없다.",
+   "test": "test_oracle_claims.py::test_limit_is_rejected"
+  },
+  {
+   "id": "ROWNUM-BEFORE-ORDER",
+   "kind": "오탐",
+   "rule": "**`ROWNUM` 은 `ORDER BY` 보다 먼저 붙는다.**",
+   "test": "test_oracle_claims.py::test_rownum_applies_before_order_by"
+  },
+  {
+   "id": "ROWNUM-GT-EMPTY",
+   "kind": "경계",
+   "rule": "`WHERE ROWNUM > 1` 은 언제나 0행이다.",
+   "test": "test_oracle_claims.py::test_rownum_greater_than_one_is_empty"
+  },
+  {
+   "id": "DDL-IMPLICIT-COMMIT",
+   "kind": "실패",
+   "rule": "**DDL 이 `ORA-00955` 로 실패해도 커밋은 이미",
+   "test": "test_oracle_claims.py::test_ddl_commits_prior_dml"
+  },
+  {
+   "id": "READ-CONSISTENCY",
+   "kind": "정상",
+   "rule": "다른 트랜잭션이 커밋하지 않은 변경은 보이지 않고",
+   "test": "test_oracle_claims.py::test_uncommitted_change_is_invisible"
+  },
+  {
+   "id": "SERIALIZABLE-08177",
+   "kind": "실패",
+   "rule": "트랜잭션이 커밋한 행을 고치려 하면 `ORA-08177` 로 실패한다",
+   "test": "test_oracle_claims.py::test_serializable_raises_08177"
+  },
+  {
+   "id": "IN-LIST-LIMIT",
+   "kind": "경계",
+   "rule": "65536번째에서 `ORA-01795` 가 난다",
+   "test": "test_oracle_claims.py::test_in_list_limit_23ai"
+  },
+  {
+   "id": "BOOLEAN-23AI",
+   "kind": "정상",
+   "rule": "있다. `WHERE f` 로 바로 쓴다",
+   "test": "test_oracle_claims.py::test_boolean_column_23ai"
+  },
+  {
+   "id": "NO-FROM-23AI",
+   "kind": "정상",
+   "rule": "`FROM` 없는 `SELECT 1`",
+   "test": "test_oracle_claims.py::test_select_without_from_23ai"
+  },
+  {
+   "id": "IDENTITY-ALWAYS",
+   "kind": "실패",
+   "rule": "컬럼에 값을 직접 넣으면 `ORA-32795` 가 난다",
+   "test": "test_oracle_claims.py::test_identity_always_rejects_value"
+  },
+  {
+   "id": "IDENTITY-RESYNC",
+   "kind": "정상",
+   "rule": "로 시퀀스를 현재 최댓값 다음으로 맞춘다",
+   "test": "test_oracle_claims.py::test_identity_resync_with_limit_value"
+  },
+  {
+   "id": "MERGE-DUP-SOURCE",
+   "kind": "실패",
+   "rule": "대상 한 행을 두 번 고치게 되어 `ORA-30926` 이 난다",
+   "test": "test_oracle_claims.py::test_merge_duplicate_source_key"
+  },
+  {
+   "id": "BIND-CURSOR-SHARING",
+   "kind": "정상",
+   "rule": "바인드 변수로 5번 실행하면 1개다",
+   "test": "test_oracle_claims.py::test_literals_create_distinct_cursors"
+  },
+  {
+   "id": "SQLPLUS-EXIT-CODE",
+   "kind": "도구오류",
+   "rule": "**오류가 나도 종료 코드가 0 이다.**",
+   "test": "test_oracle_claims.py::test_sqlplus_exit_code_hides_errors"
+  },
+  {
+   "id": "SQLPLUS-AMPERSAND",
+   "kind": "도구오류",
+   "rule": "**다음 줄을 값으로 삼켜 버린다**",
+   "test": "test_oracle_claims.py::test_sqlplus_ampersand_swallows_next_line"
+  },
+  {
+   "id": "SQLPLUS-LINE-LIMIT",
+   "kind": "도구오류",
+   "rule": "**한 줄이 4999자를 넘으면 그 줄을 버린다.**",
+   "test": "test_oracle_claims.py::test_sqlplus_drops_long_lines"
+  }
+ ]
+}

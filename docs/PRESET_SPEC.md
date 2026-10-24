@@ -1,13 +1,13 @@
 # 스택 프리셋 명세
 
-이 문서는 `bin/agents-scaffold.sh` 가 소비하는 `presets/<stack>/` 하위 스택 프리셋의
+이 문서는 `bin/agents-scaffold.sh` 가 소비하는 `presets/stacks/<stack>/` 하위 스택 프리셋의
 필수 레이아웃과 동작을 정의한다. 신규 프리셋을 추가하거나 기존 프리셋을 감사하는
 사람을 위한 레퍼런스이며 — 여기를 가리키는 기여 워크플로는 `CONTRIBUTING.md` 참조.
 
 ## 디렉터리 구조
 
 ```
-presets/<stack>/
+presets/stacks/<stack>/
   .claude/
     rules/
       <stack>.md                 # 필수: paths 스코프 룰 파일
@@ -15,7 +15,7 @@ presets/<stack>/
       pre-commit.partial.sh      # 선택: 빌드/린트/테스트 게이트 조각
 ```
 
-`presets/<stack>/.claude/` 하위의 모든 것은 대상 레포의 `.claude/` 로 그대로
+`presets/stacks/<stack>/.claude/` 하위의 모든 것은 대상 레포의 `.claude/` 로 그대로
 복사된다. 단 하나 예외가 있는데, `pre-commit.partial.sh` 라는 이름의 파일은
 독립 파일로 복사되지 않고 대상의 `.claude/hooks/pre-commit.sh` 안으로
 스플라이스(삽입)된다(아래 참조).
@@ -84,7 +84,7 @@ presets/<stack>/
   둔다.
 - **툴 미설치 시**(예: `tsc` 미설치): stderr 에 경고를 출력하고 통과시킨다 —
   누락된 툴링 때문에 커밋을 막지 말 것, 그리고 조기에 exit 하지도 말 것.
-  레퍼런스 패턴은 `presets/bun/.claude/hooks/pre-commit.partial.sh` 참조
+  레퍼런스 패턴은 `presets/stacks/bun/.claude/hooks/pre-commit.partial.sh` 참조
   (`if ... tsc --version >/dev/null 2>&1; then ... else echo "... skipping"
   >&2; fi` — `else` 분기에 `exit` 없음).
 
@@ -95,7 +95,7 @@ presets/<stack>/
   반환하는 명령을 조심할 것(예: 기존 파셜들이 `grep -E 'error TS' || true`
   로 하듯 적절히 `|| true` 를 파이프).
 - 하드코딩된 전역 바이너리보다 프로젝트에 이미 설정된 런타임/툴체인
-  매니저를 우선한다(예: `presets/nextjs/.claude/hooks/pre-commit.partial.sh`
+  매니저를 우선한다(예: `presets/stacks/nextjs/.claude/hooks/pre-commit.partial.sh`
   가 하듯 `npx` 로 폴백하기 전에 `bunx` 를 먼저 시도).
 - 실패 출력은 실용적이고 한정된 크기로 유지한다 — 무제한 로그를 그대로
   덤프하지 말고 긴 컴파일러 출력은 `head -20` 등으로 파이프할 것.
@@ -105,7 +105,7 @@ presets/<stack>/
 
 ## 플레이스홀더
 
-`presets/<stack>/.claude/` 하위 모든 파일은 다음 토큰을 쓸 수 있다. 이들은
+`presets/stacks/<stack>/.claude/` 하위 모든 파일은 다음 토큰을 쓸 수 있다. 이들은
 프리셋 머지 이후 레포 전역(베이스 `.claude/`, `AGENTS.md` 에도)에서 치환된다:
 
 | 토큰 | 치환 값 |
@@ -117,7 +117,7 @@ presets/<stack>/
 `sed` 호출에 치환을 추가하고, 여기와 `README.md` 의 플레이스홀더 표에도
 문서화한다 — 스크립트가 채울 방법을 모르는 임의 토큰을 만들지 말 것.
 
-## 언어 오버레이 (`presets/lang-en/`)
+## 언어 오버레이 (`presets/lang/en/`)
 
 `--lang en` 은 (한국어) 베이스·forge·스택 프리셋 위에 영어 번역을 얹는다 —
 동일한 `merge_preset()` 복사-덮어쓰기 메커니즘을 통해 마지막에 적용되며,
@@ -125,17 +125,17 @@ presets/<stack>/
 가 있어도 훅에 다시 스플라이스되지 않고 무시된다.
 
 ```
-presets/lang-en/
+presets/lang/en/
   base/.claude/...                      # base .claude/ 트리를 미러
   base/AGENTS.md  # 루트 파일, 직접 복사(.claude/ 하위 아님)
-  forge-github/.claude/...              # presets/forge-github/.claude/ 를 미러
-  forge-gitlab/.claude/...              # presets/forge-gitlab/.claude/ 를 미러
-  stacks/<stack>/.claude/rules/<stack>.md  # presets/<stack>/.claude/rules/<stack>.md 를 미러
+  forge/github/.claude/...              # presets/forge/github/.claude/ 를 미러
+  forge/gitlab/.claude/...              # presets/forge/gitlab/.claude/ 를 미러
+  stacks/<stack>/.claude/rules/<stack>.md  # presets/stacks/<stack>/.claude/rules/<stack>.md 를 미러
 ```
 
 번역 기여 규칙:
 
-- `presets/lang-en/` 하위의 모든 파일은 그것이 오버레이하는 한국어 트리에
+- `presets/lang/en/` 하위의 모든 파일은 그것이 오버레이하는 한국어 트리에
   동일한 이름의 대응 파일이 있어야 한다 — 고아 번역 금지.
 - `pre-commit.partial.sh` 는 절대 번역·오버레이하지 않는다 — 이건 산문이
   아니라 셸 코드이며, lang 메커니즘 전체의 바깥에 있다.
@@ -150,23 +150,23 @@ presets/lang-en/
   동일한 코드블록(grep 패턴과 명령은 기능적으로 동일하게 유지 — 화면 표시용
   문자열과 산문만 번역한다).
 - 새 스택이나 forge 프리셋을 추가할 때는 같은 변경 안에서 한국어 파일과
-  그에 대응하는 `presets/lang-en/...` 파일을 함께 추가한다 — 아래 체크리스트
+  그에 대응하는 `presets/lang/en/...` 파일을 함께 추가한다 — 아래 체크리스트
   참조.
 
 ## 신규 프리셋 체크리스트
 
-- [ ] `presets/<stack>/.claude/rules/<stack>.md` 가 유효한 `paths:`
+- [ ] `presets/stacks/<stack>/.claude/rules/<stack>.md` 가 유효한 `paths:`
       프런트매터와 `## P0`/`## P1` 절을 갖추고 존재한다.
 - [ ] 스택에 자동화 가능한 빌드/린트/테스트 단계가 있다면
-      `presets/<stack>/.claude/hooks/pre-commit.partial.sh` 가 존재하고
+      `presets/stacks/<stack>/.claude/hooks/pre-commit.partial.sh` 가 존재하고
       **어디에도 `exit 0` 이 없다**(실패 시 `exit 2` 만, 또는 `exit` 자체가
       없음).
 - [ ] 파셜은 자신의 툴체인이 설치돼 있지 않을 때 깔끔하게 통과한다
       (stderr 에 경고, 막지 않음, 조기 exit 하지 않음).
 - [ ] `docs/OPTIONS.md` 와 `docs/OPTIONS.en.md` 양쪽의 스택 프리셋 표에 행이
       추가됐다(룰 파일 설명 + 게이트 열, 게이트가 없으면 `—`).
-- [ ] `presets/<stack>/.claude/rules/<stack>.md` 의 영어 대응물로
-      `presets/lang-en/stacks/<stack>/.claude/rules/<stack>.md` 가
+- [ ] `presets/stacks/<stack>/.claude/rules/<stack>.md` 의 영어 대응물로
+      `presets/lang/en/stacks/<stack>/.claude/rules/<stack>.md` 가
       추가됐다.
 - [ ] `bin/agents-scaffold.sh <dir> --stack <stack> --name scratch` 로 스크래치
       레포를 부트스트랩해 다음을 확인했다:

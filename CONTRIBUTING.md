@@ -3,7 +3,7 @@
 Thanks for considering a contribution! agents-scaffold is a minimal `.claude/`
 bootstrap template, not a running application — most contributions are Markdown
 (rules, agent/skill definitions) and small shell scripts (hooks,
-`bin/agents-scaffold.sh`, `presets/*/.claude/hooks/pre-commit.partial.sh`).
+`bin/agents-scaffold.sh`, `presets/stacks/*/.claude/hooks/pre-commit.partial.sh`).
 The easiest way to make a first contribution is a **new stack preset** — see
 the section below and the issues labeled
 [`good first issue`](https://github.com/LeeYudok/agents-scaffold/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
@@ -39,13 +39,20 @@ the section below and the issues labeled
 - **Core skeleton** (`.claude/agents/`, `.claude/commands/`, `.claude/hooks/`,
   `.claude/rules/common.md`, `.claude/skills/`, `AGENTS.md`): applies to every consuming repo regardless of stack. Changes
   here have the widest blast radius — keep them stack-agnostic.
-- **Stack presets** (`presets/<stack>/`): opt-in, applied only when a repo
+- **Stack presets** (`presets/stacks/<stack>/`): opt-in, applied only when a repo
   selects that stack via `bin/agents-scaffold.sh --stack <name>`. See
   [docs/PRESET_SPEC.md](docs/PRESET_SPEC.md) for the required layout.
-- **English overlay** (`presets/lang-en/`): the English mirror of the Korean
+- **English overlay** (`presets/lang/en/`): the English mirror of the Korean
   originals. If you change a Korean rule/agent/skill, mirror the change in
-  `presets/lang-en/` in the same PR (and vice versa). Executable scripts are
+  `presets/lang/en/` in the same PR (and vice versa). Executable scripts are
   written in English once and shared — do not duplicate them into the overlay.
+- **This repo's own memory** (`.claude/memory/*.md` other than `README.md` and `MEMORY.template.md`): maintainer
+  notes for this repo. They are never installed (#80). Any other repo-only file you add under `.claude/` must be
+  registered in `is_repo_private()` in `bin/agents-scaffold.sh`.
+- **Skill plugins** (`plugins/`, `.claude-plugin/marketplace.json`): `plugins/*/skills/` is generated. After changing a
+  `yd-*` skill or handoff/docs-sync/memory-factcheck/skill-evolve, run `python3 scripts/dev/build-plugins.py` and commit
+  the copies with the change (#82; CI fails on drift).
+- **Maintainer scripts** (`scripts/dev/`): CI and measurement tools. `scripts/` itself holds only user-facing tools.
 - **Bootstrap script** (`bin/agents-scaffold.sh`): the only piece of logic that
   copies files, applies presets, and substitutes placeholders. Changes here
   affect every mode of consumption — test them with the bats suite.
@@ -57,11 +64,11 @@ the section below and the issues labeled
    `pre-commit.partial.sh` contract (in particular: **never call `exit 0`**
    inside a partial — see the "Why partials must not `exit 0`" section, which
    documents a real regression).
-2. Create `presets/<stack>/.claude/rules/<stack>.md` and, if the stack has an
-   automatable build/lint/test step, `presets/<stack>/.claude/hooks/pre-commit.partial.sh`.
+2. Create `presets/stacks/<stack>/.claude/rules/<stack>.md` and, if the stack has an
+   automatable build/lint/test step, `presets/stacks/<stack>/.claude/hooks/pre-commit.partial.sh`.
    A preset without a meaningful automated gate (e.g. `ops`) may omit the
    partial entirely.
-3. Add the English rule file at `presets/lang-en/stacks/<stack>/.claude/rules/<stack>.md`.
+3. Add the English rule file at `presets/lang/en/stacks/<stack>/.claude/rules/<stack>.md`.
 4. Add a row to the stack preset table in `docs/OPTIONS.md` and `docs/OPTIONS.en.md`
    (rule file + pre-commit gate description).
 5. Bootstrap a scratch repo with `bin/agents-scaffold.sh /tmp/scratch --stack
@@ -79,7 +86,7 @@ the section below and the issues labeled
 ## Style
 
 - Documentation is written in standard, professional Korean (`README.ko.md` and
-  the Korean originals) or English (`README.md` and `presets/lang-en/`) —
+  the Korean originals) or English (`README.md` and `presets/lang/en/`) —
   no emoji as icons or decoration, per this project's visual conventions.
   Contributing in English only is fine — maintainers will help with the
   Korean side if you can't.

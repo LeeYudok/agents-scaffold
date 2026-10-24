@@ -49,14 +49,18 @@ The generated `.claude/` tree and the design patterns behind it. Start at the [R
     knowledge_graph.py       .claude ecosystem graph + --check broken-link gate
   settings.json               hook wiring + default deny rules
 AGENTS.md                 project brain — rule SSOT (P0/P1/P2 + workflow)
-presets/                  preset fragments (copy-overwrite model)
-  forge-github/           GitHub forge — gh, PRs, `Closes #N` auto-close
-  forge-gitlab/           GitLab forge — glab, MRs, `Closes #N` auto-close (verify after merge)
-  nextjs/ bun/ ...        per-stack fragments (rules + pre-commit.partial.sh + AGENTS.partial.md)
-  lang-en/                English overlay (base/forge-*/stacks/*) — see `--lang` below
-  skills-personal/        opt-in bundle: 9 yd-* skills + 4 agents, merged only with `--with-personal-skills` (#78)
+presets/                  preset fragments (copy-overwrite model, grouped by kind in #81)
+  stacks/<stack>/         per-stack fragments (rules + pre-commit.partial.sh + AGENTS.partial.md) — nextjs, bun, ops, ...
+  forge/github/           GitHub forge — gh, PRs, `Closes #N` auto-close
+  forge/gitlab/           GitLab forge — glab, MRs, `Closes #N` auto-close (verify after merge)
+  lang/en/                English overlay (base/, forge/<forge>/, stacks/<stack>/) — see `--lang` below
+  skills/personal/        opt-in bundle: 9 yd-* skills + 4 agents, merged only with `--with-personal-skills` (#78)
 bin/                      agents-scaffold.sh bootstrap script
-scripts/                  install-skills.sh (global skill install), run-skill-tests.sh (per-skill tests) — self-cleaned after install
+plugins/                  skill plugins yd-skills and yd-skills-personal (#82) — skills/ is a copy generated from the source (build-plugins.py)
+.claude-plugin/           marketplace.json — one marketplace for Claude Code and Codex (#82)
+scripts/                  user-facing — install-skills.sh (global skill install), make-offline-bundle.sh (offline bundle)
+  dev/                    maintainer/CI only — run-skill-tests.sh, check-harness-matrix.py, spike-*-contract.sh, build-plugins.py
+                          (scripts/ is never installed and is self-cleaned after an in-place install)
 tests/                    bats regression suite for the bootstrap script
 ```
 
@@ -68,5 +72,5 @@ tests/                    bats regression suite for the bootstrap script
 - **Memory SSOT**: `.claude/memory/` (the system default path is not used). Type prefixes: `project_`/`feedback_`/`reference_`/`user_`.
 - **Paths-scoped rules**: frontmatter `paths:` auto-loads a rule only while working on matching files.
 - **Multi-agent isolation**: when parallel subagents may touch the same file concurrently, use `isolation: "worktree"`.
-- **Install order**: base copy → forge preset → stack presets → (`--with-personal-skills`) `presets/skills-personal` → `--lang en` overlay → `{{PROJECT_NAME}}` substitution (skips `*/skills/yd-*/*` to keep the planner template's placeholder) → move to `.agents/skills` and link `.claude/skills` → emit Codex/agy agents.
-- **Skill tests**: each skill carries `tests/test_*.py` and `tests/claims.json`. `scripts/run-skill-tests.sh` runs them per skill; `tests/test_skill_contracts.py` checks the claims format, referenced paths and trigger overlap.
+- **Install order**: base copy → forge preset → stack presets → (`--with-personal-skills`) `presets/skills/personal` → `--lang en` overlay → `{{PROJECT_NAME}}` substitution (skips `*/skills/yd-*/*` to keep the planner template's placeholder) → move to `.agents/skills` and link `.claude/skills` → emit Codex/agy agents.
+- **Skill tests**: each skill carries `tests/test_*.py` and `tests/claims.json`. `scripts/dev/run-skill-tests.sh` runs them per skill; `tests/test_skill_contracts.py` checks the claims format, referenced paths and trigger overlap.

@@ -1,0 +1,66 @@
+# Machine-readable companion to AGENTS.md: component graph, commands, secrets, policies.
+# Never put secret values here - only file paths and environment KEY NAMES.
+# Quote every date/version ('2026-01-31', '1.10') so YAML does not convert its type.
+# After editing, run: scripts/check-agents-yaml.sh
+schema_version: '1.0'
+
+meta:
+  name: my-repo
+  description: 'One line: what this repository is'
+  owner: someone
+  updated: '2026-01-31'
+  repo_url: 'https://example.com/group/my-repo'
+  tracker: gitlab
+  issue_tracker_url: 'https://example.com/group/my-repo/-/issues'
+  issue_rule: 'Open an issue first; reference #N in branch, commits and MR'
+  branch_strategy:
+    main: 'prod. No direct commits'
+    work: '<feat|fix|docs|chore>/issue-<N>-<slug> -> MR -> squash merge'
+
+environments:
+  local:
+    toolchain: {go: '1.26 (go.mod)'}
+  prod:
+    host: server-name
+    runtime: 'rootless podman + Quadlet'
+  ci: none
+
+nodes:
+- id: app
+  type: go-binary
+  label: 'Main binary'
+  path: cmd/app
+  module: go.mod
+- id: db
+  type: postgres
+  label: 'Application database'
+
+edges:
+- {from: app, to: db, rel: uses_db, env: [DB_HOST, DB_USER, DB_PASSWORD]}
+
+ports:
+- {port: 8080, service: 'app HTTP', scope: local+prod}
+
+commands:
+  local:
+    test: 'go test ./...'
+  checks:
+    agents_yaml: scripts/check-agents-yaml.sh
+
+secret_files:
+- host: local
+  path: '.env'
+  keys: [DB_USER, DB_PASSWORD]
+  used_by: 'app (local run)'
+
+env_keys:
+  app: [DB_HOST, DB_USER, DB_PASSWORD]
+
+policies:
+- {id: agents-yaml-sync, rule: 'Update AGENTS.md and AGENTS.yaml together when components, paths, commands or env keys change; run scripts/check-agents-yaml.sh', source: AGENTS.md}
+
+known_issues: []
+
+docs:
+- {path: AGENTS.md, what: 'Agent instructions (human SoT)'}
+- {path: README.md, what: 'Overview'}

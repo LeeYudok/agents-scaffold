@@ -95,6 +95,21 @@ updates once the original repository is archived. To use them globally, outside 
 `scripts/install-skills.sh` (symlinks into `~/.claude/skills`, `~/.agents/skills` and `~/.gemini/config/skills`;
 supports `--personal`, `--copy` and `--project <dir>`).
 
+**As a plugin (#82).** This repo is also a plugin marketplace. Claude Code and Codex read the same
+`.claude-plugin/marketplace.json`:
+
+```bash
+claude plugin marketplace add LeeYudok/agents-scaffold && claude plugin install yd-skills@agents-scaffold
+codex plugin marketplace add LeeYudok/agents-scaffold && codex plugin add yd-skills@agents-scaffold
+```
+
+`yd-skills` carries the 14 general `yd-*` skills plus `handoff`, `docs-sync`, `memory-factcheck` and `skill-evolve`;
+`yd-skills-personal` carries the 9 opt-in ones. In Claude Code plugin skills are namespaced (`yd-skills:yd-pg-expert`).
+A plugin carries skills only — project rules, hooks and subagents still come from `bin/agents-scaffold.sh`, because Claude
+Code plugins cannot ship rules and Codex plugins cannot ship subagents. Each plugin also has an Antigravity manifest
+(`.antigravity-plugin/plugin.json`), written from the agy docs and not yet measured. Offline or for development, use
+`scripts/install-skills.sh`.
+
 ## Why agents-scaffold
 
 Unlike large installable frameworks or agent/skill catalogs, agents-scaffold ships

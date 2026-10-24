@@ -1,0 +1,5 @@
+{
+  "name": "yd-skills-personal",
+  "description": "agents-scaffold 의 옵트인 yd-* 스킬 — 메인테이너 환경 전용(git-sync·git-ship·claude-auth-sync·finguard·doksam-ui·script-editor·sdlc-orchestrator·session-recording·agents-mem). 한국어 전용.",
+  "skills": "./skills/"
+}

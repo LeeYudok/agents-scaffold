@@ -34,7 +34,7 @@ profiles (7종)  ──펼침──▶  modules (33종)  ◀──참조──  
 | ECC | agents-scaffold 현행 | 비고 |
 |---|---|---|
 | profile | 없음 (전 스택 공통 base + `--stack` 나열) | base `.claude/` 가 사실상 단일 core 프로파일 |
-| module | `presets/<stack>/` 디렉터리 | 의존성·비용 메타데이터 없음, 경로 규약(`rules/<stack>.md` + `pre-commit.partial.sh`)이 암묵 스키마 |
+| module | `presets/stacks/<stack>/` 디렉터리 | 의존성·비용 메타데이터 없음, 경로 규약(`rules/<stack>.md` + `pre-commit.partial.sh`)이 암묵 스키마 |
 | component | `--stack nextjs,ops` 인자 | 별칭 = 디렉터리명 1:1 |
 
 ## 도입 판단 (임계점)

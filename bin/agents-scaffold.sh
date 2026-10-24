@@ -14,12 +14,12 @@ Usage:
   --forge        Issue/PR forge. github (default) or gitlab. Interactive prompt if unset (default github).
   --stack        Comma-separated stack presets. Interactive prompt if unset.
   --lang         Output language overlay. ko (default) or en. Interactive prompt if unset.
-                 en overlays presets/lang-en/ (base + forge + selected stacks) on top of the
+                 en overlays presets/lang/en/ (base + forge + selected stacks) on top of the
                  English base, after base copy + forge merge + stack merge.
   --name         {{PROJECT_NAME}} substitution value. Default = target directory name.
   --with-personal-skills
                  Also install the opt-in yd-* skills/agents tied to the maintainer's environment
-                 (presets/skills-personal: GitLab agents-mem, host sync, ui.doksam.com, FinGuard, ...).
+                 (presets/skills/personal: GitLab agents-mem, host sync, ui.doksam.com, FinGuard, ...).
                  Korean only. --update refreshes them when the target already has any of them.
   --harness      Target agent harness: claude (default), codex, agy, or all.
                  All three read AGENTS.md natively. Skills live once in .agents/skills
@@ -59,7 +59,7 @@ no download happens. Windows needs Git for Windows (Git Bash); from cmd/PowerShe
 bin\agents-scaffold.cmd. See docs/OFFLINE_INSTALL.en.md.
 
 Flow: copy base (.claude/ + AGENTS.md) -> merge forge preset -> merge selected stack presets
-      -> merge lang-en overlay (if --lang en) -> substitute {{PLACEHOLDER}} -> chmod +x
+      -> merge lang/en overlay (if --lang en) -> substitute {{PLACEHOLDER}} -> chmod +x
       -> in-place: self-clean bin/·presets/·scripts/·dotfiles/·docs/superpowers/·docs/harness-matrix.json.
 EOF
 }
@@ -78,7 +78,7 @@ ASSUME_YES=0
 UPDATE=0
 HARNESS="claude"
 WITH_PERSONAL=0
-PERSONAL_PRESET="presets/skills-personal"   # #78: 옵트인 yd-* 스킬·에이전트 묶음
+PERSONAL_PRESET="presets/skills/personal"   # #78: 옵트인 yd-* 스킬·에이전트 묶음
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -168,6 +168,57 @@ substitute_placeholders() {
     # LC_ALL=C: 한국어 베이스(UTF-8 멀티바이트)를 C 로케일 sed 에서도 바이트 단위로 안전 처리
     LC_ALL=C sed -i.bak -e "s/{{PROJECT_NAME}}/$NAME_SED/g" -e "s/{{JAVA_VERSION}}/$JAVA_VERSION/g" "$f"
     rm -f "$f.bak"
+  done
+}
+
+# #80: .claude/ 가운데 이 레포 전용 파일 — 설치·--update 로 배포하지 않는다.
+#   .claude/memory/ 는 이 레포 자체의 메모리다. README.md 와 설치용 인덱스 MEMORY.template.md 만 배포한다.
+#   레포 전용 파일을 .claude/ 에 새로 두면 여기에 등록한다.
+is_repo_private() {
+  case "$1" in
+    .claude/memory/README.md | .claude/memory/MEMORY.template.md) return 1 ;;
+    .claude/memory/*) return 0 ;;
+  esac
+  return 1
+}
+
+# #81: 스택 프리셋 디렉터리. presets/stacks/<s> 가 없고 옛 레이아웃 presets/<s> 가 있으면(포크가 만든 프리셋)
+#   경고하고 그것을 쓴다. 그룹 디렉터리(forge·lang·skills·stacks)는 스택이 아니다. 없으면 빈 문자열.
+stack_dir() {
+  local s="$1"
+  if [ -d "$SRC/presets/stacks/$s" ]; then
+    printf '%s' "$SRC/presets/stacks/$s"
+    return 0
+  fi
+  case "$s" in forge | lang | skills | stacks) return 0 ;; esac
+  if [ -d "$SRC/presets/$s/.claude" ]; then
+    echo "Warning: presets/$s uses the pre-#81 layout — move it to presets/stacks/$s" >&2
+    printf '%s' "$SRC/presets/$s"
+  fi
+}
+
+# 배포 경로 — 설치용 인덱스는 타깃의 MEMORY.md 가 된다
+payload_target_rel() {
+  case "$1" in
+    .claude/memory/MEMORY.template.md) printf '%s' ".claude/memory/MEMORY.md" ;;
+    *) printf '%s' "$1" ;;
+  esac
+}
+
+# 소스 .claude/ 파일 목록(상대경로, NUL 구분). git 소스면 tracked 만(#39), 아니면(tarball) 전부.
+list_claude_files() {
+  if git -C "$SRC" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    git -C "$SRC" ls-files -z -- .claude
+  else
+    (cd "$SRC" && find .claude -type f ! -path '*/__pycache__/*' ! -name '*.pyc' -print0)
+  fi
+}
+
+# 배포 대상만 — 레포 전용 파일을 뺀 목록
+list_base_payload() {
+  local f
+  list_claude_files | while IFS= read -r -d '' f; do
+    is_repo_private "$f" || printf '%s\0' "$f"
   done
 }
 
@@ -610,14 +661,16 @@ run_update() {
 
   # git 소스면 tracked 만 대상(#39) — find 는 untracked 로컬 산출물(observations 등)까지
   # Added 로 실어 나른다. tarball 폴백은 아카이브가 이미 tracked 만 담으므로 find 유지.
-  local base_files=()
-  if git -C "$SRC" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    while IFS= read -r -d '' f; do base_files+=("$SRC/$f"); done \
-      < <(git -C "$SRC" ls-files -z -- .claude)
-  else
-    while IFS= read -r f; do base_files+=("$f"); done < <(find "$SRC/.claude" -type f)
-  fi
+  local base_files=() f
+  while IFS= read -r -d '' f; do base_files+=("$SRC/$f"); done < <(list_base_payload)
   base_files+=("$SRC/AGENTS.md")
+
+  # #80: 예전 설치가 실수로 배포한 이 레포 메모리 — 지금 원본과 바이트가 같은 것만 보고한다(자동 삭제 안 함)
+  local leaked=()
+  while IFS= read -r -d '' f; do
+    is_repo_private "$f" || continue
+    if [ -f "$TARGET/$f" ] && cmp -s "$SRC/$f" "$TARGET/$f"; then leaked+=("$f"); fi
+  done < <(list_claude_files)
 
   # #78: 옵트인 yd-* 스킬 — --with-personal-skills 이거나 타겟에 그 스킬이 하나라도 있으면 함께 갱신한다.
   #      (presets 는 원래 --update 대상이 아니다. 옵트인 묶음만 예외로 둔다.)
@@ -648,6 +701,11 @@ run_update() {
     [ -n "$f" ] || continue
     rel="${f#"$SRC"/}"
     rel="${rel#"$PERSONAL_PRESET"/}"   # #78: 옵트인 묶음은 타겟의 .claude/ 아래로 간다
+    rel="$(payload_target_rel "$rel")"
+    # #80: 메모리 인덱스는 사용자 소유 — 없을 때만 템플릿을 넣고, 있으면 .new 도 만들지 않는다
+    if [ "$rel" = ".claude/memory/MEMORY.md" ] && [ -f "$TARGET/$rel" ]; then
+      continue
+    fi
     if [ "$ssot" -eq 1 ]; then
       case "$rel" in
         .claude/skills/*) rel=".agents/skills/${rel#.claude/skills/}" ;;
@@ -739,6 +797,10 @@ run_update() {
     for rel in "${skipped[@]}"; do echo "  - $rel" >&2; done
   fi
   echo "Unchanged: ${#unchanged[@]}" >&2
+  if [ "${#leaked[@]}" -gt 0 ]; then
+    echo "Scaffold's own memory shipped by an older install (byte-identical to agents-scaffold's copy; review and delete, #80): ${#leaked[@]}" >&2
+    for rel in "${leaked[@]}"; do echo "  ! $rel" >&2; done
+  fi
   echo "== Done. Review .new files with diff and apply manually. ==" >&2
 }
 
@@ -774,7 +836,8 @@ case "$LANG_OPT" in
 esac
 
 # 스택 미지정 + 대화형이면 묻는다
-AVAILABLE_STACKS="nextjs, springboot, javaweb, bun, python, go, rust, ruby-rails, dotnet, android, flutter, ops"
+# #81: 스택 목록은 presets/stacks/ 에서 만든다(하드코딩하면 새 프리셋이 안내에서 빠진다)
+AVAILABLE_STACKS="$(find "$SRC/presets/stacks" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; 2>/dev/null | sort | paste -sd, - | sed 's/,/, /g')"
 if [ -z "$STACKS" ] && [ "$ASSUME_YES" -eq 0 ] && [ -t 0 ]; then
   echo "Select stack presets (comma-separated, blank=common only): $AVAILABLE_STACKS" >&2
   printf "stack> " >&2
@@ -796,21 +859,26 @@ fi
 # 1) 베이스 복사 (in-place 면 이미 있으므로 스킵)
 # git 소스면 tracked 파일만 복사(#39) — cp -R 은 untracked 로컬 산출물
 # (memory/observations 세션로그, __pycache__, 에이전트 메모리)까지 실어 나른다.
-# tarball 원격 설치는 git 메타가 없지만 아카이브 자체가 tracked 만 담으므로 cp -R 유지.
+# tarball 원격 설치는 git 메타가 없으므로 find 목록을 쓴다. 이 레포 전용 파일(#80)은 어느 쪽이든 뺀다.
 if [ "$INPLACE" -eq 0 ]; then
-  if git -C "$SRC" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    git -C "$SRC" ls-files -z -- .claude | while IFS= read -r -d '' bf; do
-      # 기존 파일은 보존 — 커스텀 base 를 가진 프로젝트 위에 덮어쓰지 않는다(갱신은 --update 소관)
-      [ -e "$TARGET/$bf" ] && continue
-      mkdir -p "$TARGET/$(dirname "$bf")"
-      cp "$SRC/$bf" "$TARGET/$bf"
-    done
-  else
-    cp -R "$SRC/.claude" "$TARGET/.claude"
-  fi
+  list_base_payload | while IFS= read -r -d '' bf; do
+    tr="$(payload_target_rel "$bf")"
+    # 기존 파일은 보존 — 커스텀 base 를 가진 프로젝트 위에 덮어쓰지 않는다(갱신은 --update 소관)
+    [ -e "$TARGET/$tr" ] && continue
+    mkdir -p "$TARGET/$(dirname "$tr")"
+    cp "$SRC/$bf" "$TARGET/$tr"
+  done
   # AGENTS.md = SSOT. CLAUDE.md/GEMINI.md 포인터는 두지 않는다 (#54) — Claude Code v2.1.277+·Codex·agy 가
   # 모두 AGENTS.md 를 네이티브로 읽는다 (#60). CLAUDE.md 가 있으면 Claude Code 가 AGENTS.md 를 건너뛴다.
   cp "$SRC/AGENTS.md" "$TARGET/"
+else
+  # #80: 템플릿 레포 자리에서 설치 — 이 레포 메모리를 지우고 인덱스를 설치용 템플릿으로 바꾼다
+  while IFS= read -r -d '' bf; do
+    if is_repo_private "$bf"; then rm -f "$TARGET/$bf"; fi
+  done < <(list_claude_files)
+  if [ -f "$TARGET/.claude/memory/MEMORY.template.md" ]; then
+    mv -f "$TARGET/.claude/memory/MEMORY.template.md" "$TARGET/.claude/memory/MEMORY.md"
+  fi
 fi
 
 # 프리셋 머지 헬퍼 — 프리셋 디렉터리의 .claude/ 하위 파일을 타깃에 복사(덮어쓰기).
@@ -860,7 +928,7 @@ merge_preset() {
 }
 
 # 2a) forge 프리셋 머지 (스택보다 먼저 — forge 워크플로 규약을 베이스에 얹는다)
-fdir="$SRC/presets/forge-$FORGE"
+fdir="$SRC/presets/forge/$FORGE"
 if [ -d "$fdir" ]; then
   merge_preset "$fdir"
 else
@@ -874,25 +942,25 @@ IFS=',' read -r -a STACK_ARR <<< "$STACKS"
 for s in "${STACK_ARR[@]:-}"; do
   s="$(echo "$s" | tr -d '[:space:]')"
   [ -z "$s" ] && continue
-  pdir="$SRC/presets/$s"
-  [ -d "$pdir" ] || { echo "Warning: unknown stack '$s' — skipping" >&2; continue; }
+  pdir="$(stack_dir "$s")"
+  [ -n "$pdir" ] || { echo "Warning: unknown stack '$s' — skipping" >&2; continue; }
   merge_preset "$pdir"
 done
 
 # 2b-2) #78: 옵트인 yd-* 스킬 묶음. 스택과 같은 merge_preset 경로라 skills_to_ssot 전에 .claude/skills 로
-#       들어가 .agents/skills 원본으로 옮겨진다. 한국어 전용이라 lang-en 오버레이가 없다.
+#       들어가 .agents/skills 원본으로 옮겨진다. 한국어 전용이라 lang/en 오버레이가 없다.
 if [ "$WITH_PERSONAL" -eq 1 ]; then
   merge_preset "$SRC/$PERSONAL_PRESET"
   echo "== personal skills merged ($PERSONAL_PRESET) ==" >&2
 fi
 
 # 2c) 이슈 #22: 한국어 오버레이 머지. base/forge/stack 머지가 모두 끝난 뒤,
-#     LANG_OPT=en 이면 presets/lang-en/ 아래 대응 디렉터리로 덮어쓴다 (#36 반전:
-#     베이스 = 한국어 원본, 영어가 오버레이). lang-en/base 는 .claude/ 뿐 아니라
+#     LANG_OPT=en 이면 presets/lang/en/ 아래 대응 디렉터리로 덮어쓴다 (#36 반전:
+#     베이스 = 한국어 원본, 영어가 오버레이). lang/en/base 는 .claude/ 뿐 아니라
 #     루트 파일(AGENTS.md 등)도 base/ 바로 아래
 #     두므로 merge_preset (=.claude/ 전용) 이 못 다루는 루트 파일은 별도 복사한다.
 if [ "$LANG_OPT" = "en" ]; then
-  lang_dir="$SRC/presets/lang-en"
+  lang_dir="$SRC/presets/lang/en"
   if [ -d "$lang_dir" ]; then
     lang_base="$lang_dir/base"
     if [ -d "$lang_base" ]; then
@@ -902,14 +970,14 @@ if [ "$LANG_OPT" = "en" ]; then
         cp "$rf" "$TARGET/$(basename "$rf")"
       done
     else
-      echo "Warning: presets/lang-en/base not found — skipping English base overlay" >&2
+      echo "Warning: presets/lang/en/base not found — skipping English base overlay" >&2
     fi
 
-    lang_forge="$lang_dir/forge-$FORGE"
+    lang_forge="$lang_dir/forge/$FORGE"
     if [ -d "$lang_forge" ]; then
       merge_preset "$lang_forge" 1
     else
-      echo "Warning: presets/lang-en/forge-$FORGE not found — skipping English forge overlay" >&2
+      echo "Warning: presets/lang/en/forge/$FORGE not found — skipping English forge overlay" >&2
     fi
 
     for s in "${STACK_ARR[@]:-}"; do
@@ -919,11 +987,11 @@ if [ "$LANG_OPT" = "en" ]; then
       if [ -d "$lang_stack" ]; then
         merge_preset "$lang_stack" 1
       else
-        echo "Warning: presets/lang-en/stacks/$s not found — skipping English stack overlay" >&2
+        echo "Warning: presets/lang/en/stacks/$s not found — skipping English stack overlay" >&2
       fi
     done
   else
-    echo "Warning: presets/lang-en not found — skipping English overlay entirely" >&2
+    echo "Warning: presets/lang/en not found — skipping English overlay entirely" >&2
   fi
 fi
 
@@ -940,9 +1008,9 @@ if [ -f "$agents_md" ] && grep -qF "$p0_marker" "$agents_md"; then
   for s in "${STACK_ARR[@]:-}"; do
     s="$(echo "$s" | tr -d '[:space:]')"
     [ -z "$s" ] && continue
-    partial="$SRC/presets/$s/AGENTS.partial.md"
-    if [ "$LANG_OPT" = "en" ] && [ -f "$SRC/presets/lang-en/stacks/$s/AGENTS.partial.md" ]; then
-      partial="$SRC/presets/lang-en/stacks/$s/AGENTS.partial.md"
+    partial="$(stack_dir "$s")/AGENTS.partial.md"
+    if [ "$LANG_OPT" = "en" ] && [ -f "$SRC/presets/lang/en/stacks/$s/AGENTS.partial.md" ]; then
+      partial="$SRC/presets/lang/en/stacks/$s/AGENTS.partial.md"
     fi
     [ -f "$partial" ] || { echo "Warning: $partial not found — stack P0 not inlined for '$s'" >&2; continue; }
     tmp="$(mktemp)"
@@ -1017,9 +1085,11 @@ fi
 
 # 5) in-place self-clean (템플릿 흔적 제거)
 if [ "$INPLACE" -eq 1 ]; then
-  echo "== self-clean: removing bin/ presets/ scripts/ dotfiles/ docs/superpowers/ docs/harness-matrix.json ==" >&2
+  echo "== self-clean: removing bin/ presets/ scripts/ dotfiles/ plugins/ .claude-plugin/ docs/superpowers/ docs/harness-matrix.json ==" >&2
   # dotfiles/ 는 메인테이너의 머신 셸 환경(#76) — 템플릿을 in-place 로 쓰는 프로젝트에 남기지 않는다
-  rm -rf "$TARGET/bin" "$TARGET/presets" "$TARGET/scripts" "$TARGET/dotfiles" "$TARGET/docs/superpowers"
+  # plugins/·.claude-plugin/ 은 이 레포의 스킬 마켓플레이스(#82) — 사용자 프로젝트가 마켓플레이스가 되면 안 된다
+  rm -rf "$TARGET/bin" "$TARGET/presets" "$TARGET/scripts" "$TARGET/dotfiles" "$TARGET/docs/superpowers" \
+    "$TARGET/plugins" "$TARGET/.claude-plugin"
   # scripts/ 와 harness-matrix.json 은 이 저장소의 유지보수 자산이지 사용자 산출물이 아니다 (#37)
   rm -f "$TARGET/docs/harness-matrix.json"
 fi

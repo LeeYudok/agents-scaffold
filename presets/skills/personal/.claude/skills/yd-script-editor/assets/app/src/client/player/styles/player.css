@@ -1,0 +1,52 @@
+.plmain { max-width: 980px; }
+
+.tracks { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+
+.track {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: 6px 16px;
+  padding: 16px 18px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  scroll-margin-top: calc(var(--top) + 16px);
+}
+.track.playing { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+.track.target { outline: 2px solid var(--focus); outline-offset: 2px; }
+.track.pending { opacity: 0.6; }
+
+.play {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--accent);
+  color: var(--accent-text);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.play:disabled { background: var(--line); color: var(--muted); cursor: default; }
+.play svg { width: 22px; height: 22px; fill: currentColor; }
+.play .i-pause { display: none; }
+.track.playing .play .i-play { display: none; }
+.track.playing .play .i-pause { display: block; }
+
+.head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; min-width: 0; }
+.num { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--muted); }
+.scene { font-weight: 600; }
+.pill { margin-left: auto; font-size: 11.5px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 1px 9px; white-space: nowrap; }
+.say { grid-column: 2; margin: 0; line-height: 1.55; }
+.speak { grid-column: 2; margin: 0; font-size: 12.5px; color: var(--muted); }
+
+.wave { grid-column: 2; position: relative; height: 68px; margin-top: 4px; cursor: pointer; }
+.pending .wave { cursor: default; }
+.wave canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+.times { grid-column: 2; display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+@media (max-width: 640px) {
+  .track { grid-template-columns: 44px minmax(0, 1fr); padding: 12px; }
+  .play { width: 42px; height: 42px; }
+}

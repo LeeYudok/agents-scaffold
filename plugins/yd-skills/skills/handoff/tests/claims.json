@@ -1,0 +1,208 @@
+{
+  "claims": [
+    {
+      "id": "TS-FORMAT",
+      "kind": "정상",
+      "rule": "시각은 `YYYY-MM-DD HH:MM:SS.mmm`(KST)로 적는다.",
+      "test": "test_check_handoff.py::test_filled_body_passes"
+    },
+    {
+      "id": "TS-PLAIN-DATE-OK",
+      "kind": "오탐",
+      "rule": "시각은 `YYYY-MM-DD HH:MM:SS.mmm`(KST)로 적는다.",
+      "test": "test_check_handoff.py::test_iso_in_prose_rejected_but_plain_date_ok"
+    },
+    {
+      "id": "ISO-REJECTED",
+      "kind": "실패",
+      "rule": "ISO 8601 의 `T`·`+09:00` 은 쓰지 않는다.",
+      "test": "test_check_handoff.py::test_iso_timestamp_rejected"
+    },
+    {
+      "id": "TEMPLATE-ALL-FIELDS",
+      "kind": "실패",
+      "rule": "아래 \"본문 템플릿\" 전 항목을 채워 쓴다.",
+      "test": "test_check_handoff.py::test_missing_section_and_field"
+    },
+    {
+      "id": "PLACEHOLDERS-LEFT",
+      "kind": "실패",
+      "rule": "**게시 전에 검사기를 돌린다.**",
+      "test": "test_check_handoff.py::test_unfilled_template_placeholders"
+    },
+    {
+      "id": "VERIFY-ORIGINAL-TEXT",
+      "kind": "경계",
+      "rule": "검증 게이트를 돌렸다면 **결과 원문**(통과/실패 줄)을 그대로 옮긴다.",
+      "test": "test_check_handoff.py::test_empty_verification_block_rejected"
+    },
+    {
+      "id": "ABSOLUTE-CD",
+      "kind": "실패",
+      "rule": "**명령은 복붙 가능하게**. 실행 디렉터리 포함, 상대경로 금지.",
+      "test": "test_check_handoff.py::test_relative_command_dir_rejected"
+    },
+    {
+      "id": "NO-SECRET-VALUE",
+      "kind": "실패",
+      "rule": "본문에 `.env` 값·토큰·비밀번호를 넣지 않는다.",
+      "test": "test_check_handoff.py::test_secret_reported_by_position_never_value"
+    },
+    {
+      "id": "ENV-REF-NOT-SECRET",
+      "kind": "오탐",
+      "rule": "토큰은 같은 줄에서 변수로만 쓰고",
+      "test": "test_check_handoff.py::test_env_var_references_are_not_secrets"
+    },
+    {
+      "id": "POINTER-FORM",
+      "kind": "정상",
+      "rule": "**포인터만**(이슈 URL·작성 시각·요약·목록 링크)",
+      "test": "test_check_handoff.py::test_pointer_form_passes"
+    },
+    {
+      "id": "POINTER-NO-BODY",
+      "kind": "실패",
+      "rule": "레포에 재개 상태를 평문으로 남기지",
+      "test": "test_check_handoff.py::test_pointer_must_not_carry_body"
+    },
+    {
+      "id": "HANDOFF-MD-POINTER-ONLY",
+      "kind": "실패",
+      "rule": "스크래치 파일의 본문을 옮기지 않는다",
+      "test": "test_check_handoff.py::test_body_in_repo_handoff_md_rejected_when_tracker_exists"
+    },
+    {
+      "id": "FILE-MODE-MARKER",
+      "kind": "경계",
+      "rule": "트래커 없음 — 이 파일이 원본",
+      "test": "test_check_handoff.py::test_file_mode_requires_explicit_marker"
+    },
+    {
+      "id": "EXIT2-NOT-PASS",
+      "kind": "도구오류",
+      "rule": "`exit 2` 는 입력이나 git 을 쓸 수 없었다는 뜻이며 통과가 아니다.",
+      "test": "test_check_handoff.py::test_unreadable_input_is_tool_error"
+    },
+    {
+      "id": "GIT-READONLY",
+      "kind": "정상",
+      "rule": "브랜치와 HEAD 단언은 검사기가 읽기 전용으로 대조한다.",
+      "test": "test_check_handoff.py::test_verify_does_not_change_repo"
+    },
+    {
+      "id": "GIT-AHEAD-WARNS",
+      "kind": "경계",
+      "rule": "기록한 HEAD 보다 브랜치가 앞서 있으면 경고, 기록한 HEAD 가 브랜치의",
+      "test": "test_check_handoff.py::test_branch_ahead_is_warning_only"
+    },
+    {
+      "id": "GIT-DIVERGED",
+      "kind": "실패",
+      "rule": "조상이 아니면 위반이다.",
+      "test": "test_check_handoff.py::test_diverged_head_is_violation"
+    },
+    {
+      "id": "GIT-ASSERTIONS-VERIFIED",
+      "kind": "실패",
+      "rule": "적힌 것 중 **행동을 바꾸는 단언 1~2개**는 실제와 대조한 뒤 움직인다.",
+      "test": "test_check_handoff.py::test_missing_branch_and_unknown_commit"
+    },
+    {
+      "id": "GIT-REPO-REQUIRED",
+      "kind": "도구오류",
+      "rule": "본문(또는 파일 모드의 `HANDOFF.md`)을",
+      "test": "test_check_handoff.py::test_not_a_git_repo_is_tool_error"
+    },
+    {
+      "id": "YAML-QUOTE-DATES",
+      "kind": "실패",
+      "rule": "**날짜·시각·버전은 항상 따옴표로 감싼다.**",
+      "test": "test_check_handoff.py::test_unquoted_date_version_and_bool_rejected"
+    },
+    {
+      "id": "YAML-QUOTED-OK",
+      "kind": "오탐",
+      "rule": "**날짜·시각·버전은 항상 따옴표로 감싼다.**",
+      "test": "test_check_handoff.py::test_quoted_values_and_plain_ints_pass"
+    },
+    {
+      "id": "YAML-REQUIRED-KEYS",
+      "kind": "실패",
+      "rule": "필수 키는 `schema_version`·`meta`·`state`·`last_verification`·`next_steps` 다.",
+      "test": "test_check_handoff.py::test_missing_required_key_rejected"
+    },
+    {
+      "id": "YAML-NEXT-CHECK",
+      "kind": "실패",
+      "rule": "`next_steps` 항목마다 대조할 명령(`check`)을 적는다.",
+      "test": "test_check_handoff.py::test_next_step_needs_check_command"
+    },
+    {
+      "id": "YAML-NO-SECRET",
+      "kind": "실패",
+      "rule": "값에 시크릿을 넣지 않는다.",
+      "test": "test_check_handoff.py::test_secret_in_yaml_rejected_by_position_never_value"
+    },
+    {
+      "id": "YAML-PAIR-DRIFT",
+      "kind": "실패",
+      "rule": "둘은 같은 사실을 가리키므로 함께 갱신한다.",
+      "test": "test_check_handoff.py::test_pair_mismatch_rejected"
+    },
+    {
+      "id": "YAML-PAIR-OK",
+      "kind": "정상",
+      "rule": "둘은 같은 사실을 가리키므로 함께 갱신한다.",
+      "test": "test_check_handoff.py::test_pair_matching_passes"
+    },
+    {
+      "id": "YAML-IN-ISSUE-BODY",
+      "kind": "정상",
+      "rule": "이슈 본문 끝의 `## 기계 판독용 상태` 섹션",
+      "test": "test_check_handoff.py::test_yaml_block_in_issue_body_is_checked"
+    },
+    {
+      "id": "YAML-OPTIONAL",
+      "kind": "경계",
+      "rule": "yaml 이 없는 옛 핸드오프(md only)는 그대로 읽는다.",
+      "test": "test_check_handoff.py::test_body_without_yaml_still_passes"
+    },
+    {
+      "id": "YAML-REAL-PARSE",
+      "kind": "도구오류",
+      "rule": "PyYAML 이 있으면 실제로 파싱한다.",
+      "test": "test_check_handoff.py::test_real_parse_flags_broken_yaml_when_pyyaml_present"
+    },
+    {
+      "id": "YAML-FLOAT-STATE",
+      "kind": "오탐",
+      "rule": "진짜 소수 값(`progress: 0.5`)은 그대로 쓴다.",
+      "test": "test_check_handoff.py::test_real_float_in_state_passes"
+    },
+    {
+      "id": "YAML-DUP-KEY",
+      "kind": "실패",
+      "rule": "같은 키를 두 번 쓰지 않는다.",
+      "test": "test_check_handoff.py::test_duplicate_keys_rejected"
+    },
+    {
+      "id": "YAML-SECTION-NEEDS-BLOCK",
+      "kind": "실패",
+      "rule": "섹션이 있으면 닫힌 ```yaml 블록이 있어야 한다.",
+      "test": "test_check_handoff.py::test_section_without_closed_yaml_block_rejected"
+    },
+    {
+      "id": "YAML-BODY-PAIR",
+      "kind": "실패",
+      "rule": "본문 안 yaml 은 같은 본문의 `작성`·`브랜치`·`HEAD` 와 맞춰 본다.",
+      "test": "test_check_handoff.py::test_yaml_block_drift_from_body_rejected"
+    },
+    {
+      "id": "YAML-NEXT-CHECK-PER-ITEM",
+      "kind": "실패",
+      "rule": "`next_steps` 항목마다 대조할 명령(`check`)을 적는다.",
+      "test": "test_check_handoff.py::test_next_step_check_is_counted_per_item_not_in_total"
+    }
+  ]
+}

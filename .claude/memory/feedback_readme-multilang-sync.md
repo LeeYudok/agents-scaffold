@@ -14,6 +14,6 @@ README 를 수정할 때는 **4종(`README.md` 영문 · `README.ko.md` · `READ
 - `README.md` 는 **영문**이다(#45 — GitHub 첫 화면이 영어여야 비한국어 방문자가 이탈하지 않는다). 한국어 원본은 `README.ko.md`. 작성은 여전히 한국어로 먼저 해도 되지만, 커밋에는 두 파일이 함께 들어간다.
 - 번역이 아니라 **같은 사실의 각 언어판**이다 — 수치·버전·경로·표 구조를 동일하게 유지하고, 문장만 해당 언어답게 쓴다.
 - 언어별로 대응 문자열이 달라 치환이 깨지기 쉬우므로, 4개 파일 각각에서 교체 대상 원문을 먼저 `grep -n` 으로 확인한 뒤 수정한다.
-- 같은 원칙이 `presets/lang-en/` 오버레이에도 적용된다 — ko 베이스 파일을 고쳤으면 대응하는 `presets/lang-en/` 파일도 같은 커밋에서 고친다 (#21 의 `AGENTS.partial.md` 10 + 10 이 그 예).
+- 같은 원칙이 `presets/lang/en/` 오버레이에도 적용된다 — ko 베이스 파일을 고쳤으면 대응하는 `presets/lang/en/` 파일도 같은 커밋에서 고친다 (#21 의 `AGENTS.partial.md` 10 + 10 이 그 예).
 
 관련: [[project_agents-scaffold-multiagent-review]]

@@ -1,0 +1,76 @@
+{
+  "claims": [
+    {
+      "id": "VALID-PASS",
+      "kind": "정상",
+      "rule": "가 `[OK]` 인지",
+      "test": "test_check_agents_yaml.py::test_valid_passes"
+    },
+    {
+      "id": "DATE-QUOTE",
+      "kind": "실패",
+      "rule": "`2026-09-24` 는 date",
+      "test": "test_check_agents_yaml.py::test_unquoted_date"
+    },
+    {
+      "id": "VERSION-QUOTE",
+      "kind": "실패",
+      "rule": "`1.10` 은 float `1.1` 로 조용히 바뀐다",
+      "test": "test_check_agents_yaml.py::test_unquoted_version"
+    },
+    {
+      "id": "EDGE-UNKNOWN",
+      "kind": "실패",
+      "rule": "없는 노드로 가는 엣지",
+      "test": "test_check_agents_yaml.py::test_edge_to_unknown_node"
+    },
+    {
+      "id": "NODE-DUP-ID",
+      "kind": "실패",
+      "rule": "`id`(유일)",
+      "test": "test_check_agents_yaml.py::test_duplicate_node_id"
+    },
+    {
+      "id": "PATH-MISSING",
+      "kind": "실패",
+      "rule": "검증기가 YAML 의 조용한 타입 변환과 부패한 경로를 잡는다.",
+      "test": "test_check_agents_yaml.py::test_missing_path"
+    },
+    {
+      "id": "CMD-FILE",
+      "kind": "실패",
+      "rule": "첫 토큰이 저장소 파일이면 검증기가 존재를 확인한다",
+      "test": "test_check_agents_yaml.py::test_missing_command_file"
+    },
+    {
+      "id": "PORT-INT",
+      "kind": "실패",
+      "rule": "`{port: 정수, service, scope}`",
+      "test": "test_check_agents_yaml.py::test_port_must_be_int"
+    },
+    {
+      "id": "TOP-UNKNOWN",
+      "kind": "실패",
+      "rule": "새 최상위 섹션은 `x-` 접두사로",
+      "test": "test_check_agents_yaml.py::test_unknown_top_level_key"
+    },
+    {
+      "id": "X-ALLOWED",
+      "kind": "오탐",
+      "rule": "저장소 고유 섹션 (예: `x-deliverables`, `x-catalog`)",
+      "test": "test_check_agents_yaml.py::test_x_prefixed_key_allowed"
+    },
+    {
+      "id": "REQ-EDGES",
+      "kind": "실패",
+      "rule": "| `edges` | O |",
+      "test": "test_check_agents_yaml.py::test_missing_required_key"
+    },
+    {
+      "id": "COPY-VERBATIM",
+      "kind": "정상",
+      "rule": "**수정 없이** 복사",
+      "test": "test_check_agents_yaml.py::test_root_copy_matches"
+    }
+  ]
+}

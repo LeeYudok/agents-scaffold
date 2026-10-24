@@ -91,6 +91,21 @@ DB·Go·React·TypeScript·빌드·화면설계·한국어 글쓰기·의존성 
 않는다. 프로젝트 밖에서 전역으로 쓰려면 이 레포를 clone 해 `scripts/install-skills.sh` 를 실행한다
 (`~/.claude/skills`·`~/.agents/skills`·`~/.gemini/config/skills` 에 심링크, `--personal`·`--copy`·`--project <dir>` 지원).
 
+**플러그인으로 (#82).** 이 레포는 플러그인 마켓플레이스이기도 하다. Claude Code 와 Codex 가 같은
+`.claude-plugin/marketplace.json` 을 읽는다.
+
+```bash
+claude plugin marketplace add LeeYudok/agents-scaffold && claude plugin install yd-skills@agents-scaffold
+codex plugin marketplace add LeeYudok/agents-scaffold && codex plugin add yd-skills@agents-scaffold
+```
+
+`yd-skills` 에는 범용 `yd-*` 14개와 `handoff`·`docs-sync`·`memory-factcheck`·`skill-evolve` 가, `yd-skills-personal` 에는
+옵트인 9개가 들어 있다. Claude Code 에서는 플러그인 스킬 이름 앞에 플러그인 이름이 붙는다(`yd-skills:yd-pg-expert`).
+플러그인은 스킬만 싣는다. Claude Code 플러그인은 rules 를, Codex 플러그인은 서브에이전트를 싣지 못하므로 프로젝트 규칙·훅·
+서브에이전트는 여전히 `bin/agents-scaffold.sh` 로 설치한다. 각 플러그인에는 Antigravity 용 매니페스트
+(`.antigravity-plugin/plugin.json`)도 있는데, agy 문서를 보고 만들었고 아직 실측하지 않았다. 폐쇄망이나 개발용으로는
+`scripts/install-skills.sh` 를 쓴다.
+
 ## 왜 agents-scaffold 인가
 
 대형 설치형 프레임워크나 에이전트/스킬 카탈로그와 달리, agents-scaffold 은 런타임도 플러그인

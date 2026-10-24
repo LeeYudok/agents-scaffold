@@ -1,0 +1,26 @@
+{
+  "claims": [
+    {"id": "FK-NOT-INDEXED", "kind": "실패", "rule": "**FK 컬럼에는 인덱스가 자동으로 생기지 않는다.**", "test": "test_pg_claims.py::test_fk_column_is_not_indexed"},
+    {"id": "SEQSCAN-SMALL-TABLE", "kind": "오탐", "rule": "작은 테이블의 `Seq Scan` 은 인덱스 누락이 아니다.", "test": "test_pg_claims.py::test_small_table_seq_scan_is_expected"},
+    {"id": "LOWER-EXPRESSION-INDEX", "kind": "정상", "rule": "`CREATE INDEX ... ON t (lower(name))` 표현식 인덱스를 만든다.", "test": "test_pg_claims.py::test_lower_needs_expression_index"},
+    {"id": "LIKE-PATTERN-OPS", "kind": "경계", "rule": "**C 가 아닌 콜레이션 컬럼의 일반 인덱스는 `LIKE 'abc%'` 에 쓰이지 않는다.**", "test": "test_pg_claims.py::test_like_prefix_needs_pattern_ops"},
+    {"id": "PARTIAL-INDEX", "kind": "경계", "rule": "조회 조건이 인덱스 조건을 함의할 때만 쓰인다.", "test": "test_pg_claims.py::test_partial_index_needs_implied_predicate"},
+    {"id": "TIMESTAMP-DROPS-OFFSET", "kind": "실패", "rule": "`timestamp` 는 입력에 붙은 오프셋을 오류 없이 버린다.", "test": "test_pg_claims.py::test_timestamp_drops_offset"},
+    {"id": "FLOAT-MONEY", "kind": "실패", "rule": "`float8` 은 `0.1 + 0.2 = 0.3` 이 거짓이고", "test": "test_pg_claims.py::test_float_is_not_money"},
+    {"id": "ADD-COLUMN-NO-REWRITE", "kind": "정상", "rule": "| `ADD COLUMN ... NOT NULL DEFAULT 0` (상수 기본값) | 없음 (PostgreSQL 11 부터) |", "test": "test_pg_claims.py::test_add_column_does_not_rewrite"},
+    {"id": "VOLATILE-DEFAULT-REWRITES", "kind": "실패", "rule": "**volatile 기본값을 가진 컬럼 추가는 테이블을 다시 쓴다.**", "test": "test_pg_claims.py::test_volatile_default_rewrites"},
+    {"id": "ALTER-TYPE-REWRITES", "kind": "실패", "rule": "**`int` → `bigint` 는 테이블을 다시 쓴다.**", "test": "test_pg_claims.py::test_int_to_bigint_rewrites"},
+    {"id": "VARCHAR-WIDEN-NO-REWRITE", "kind": "경계", "rule": "| `varchar(10)` → `varchar(20)`, `varchar` → `text` | 없음 |", "test": "test_pg_claims.py::test_varchar_widen_does_not_rewrite"},
+    {"id": "SET-NOT-NULL-SCAN", "kind": "경계", "rule": "검증된 CHECK 가 있으면 PostgreSQL 12 부터 전 행 검사를 건너뛴다.", "test": "test_pg_claims.py::test_set_not_null_scans_without_rewrite"},
+    {"id": "NOT-VALID-CONSTRAINT", "kind": "정상", "rule": "`NOT VALID` 로 추가한 제약은 기존 행을 검사하지 않고 새 행만 막는다.", "test": "test_pg_claims.py::test_not_valid_constraint_checks_new_rows_only"},
+    {"id": "CIC-IN-TRANSACTION", "kind": "도구오류", "rule": "**`CREATE INDEX CONCURRENTLY` 는 트랜잭션 블록 안에서 실패한다** (SQLSTATE `25001`).", "test": "test_pg_claims.py::test_create_index_concurrently_fails_in_transaction"},
+    {"id": "CREATE-INDEX-BLOCKS-WRITES", "kind": "실패", "rule": "일반 `CREATE INDEX` 는 `SHARE` 잠금으로 끝날 때까지 쓰기를 막는다.", "test": "test_pg_claims.py::test_create_index_blocks_writes"},
+    {"id": "EXPLAIN-ANALYZE-EXECUTES", "kind": "실패", "rule": "**`EXPLAIN ANALYZE` 는 문을 실제로 실행한다.**", "test": "test_pg_claims.py::test_explain_analyze_executes_statement"},
+    {"id": "SERIALIZATION-RETRY", "kind": "도구오류", "rule": "`SERIALIZABLE` 은 그중 하나를 SQLSTATE `40001` 로 실패시킨다.", "test": "test_pg_claims.py::test_serializable_raises_40001"},
+    {"id": "READ-COMMITTED-WRITE-SKEW", "kind": "실패", "rule": "오류 없이 둘 다 커밋된다.**", "test": "test_pg_claims.py::test_read_committed_allows_write_skew"},
+    {"id": "LONG-TX-BLOCKS-VACUUM", "kind": "실패", "rule": "**xid 를 받은 채 열려 있는 트랜잭션은 VACUUM 을 막는다.**", "test": "test_pg_claims.py::test_open_transaction_blocks_vacuum"},
+    {"id": "IDLE-RC-NO-VACUUM-BLOCK", "kind": "오탐", "rule": "읽기만 하고 멈춘 Read Committed 트랜잭션은 VACUUM 을 막지 않는다.", "test": "test_pg_claims.py::test_idle_read_committed_does_not_block_vacuum"},
+    {"id": "LOCK-QUEUE", "kind": "도구오류", "rule": "**기다리는 `ALTER` 뒤로 그 테이블의 단순 `SELECT` 까지 줄을 선다.**", "test": "test_pg_claims.py::test_queued_alter_blocks_readers"},
+    {"id": "UNIQUE-NULLS", "kind": "경계", "rule": "`UNIQUE NULLS NOT DISTINCT` (PostgreSQL 15 부터)를 쓴다.", "test": "test_pg_claims.py::test_unique_allows_many_nulls"}
+  ]
+}

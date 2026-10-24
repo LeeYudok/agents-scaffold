@@ -49,14 +49,18 @@
     knowledge_graph.py  .claude 생태계 그래프 + --check 깨진 링크 게이트
   settings.json         hooks 와이어링 + deny 기본값
 AGENTS.md               프로젝트 브레인 — 규칙 SSOT (P0/P1/P2 + 워크플로)
-presets/                프리셋 조각 (복사 덮어쓰기 방식)
-  forge-github/         GitHub forge — gh, PR, `Closes #N` 자동 클로즈
-  forge-gitlab/         GitLab forge — glab, MR, `Closes #N` 자동 클로즈(머지 후 확인)
-  nextjs/ bun/ ...      스택별 조각 (rules + pre-commit.partial.sh + AGENTS.partial.md)
-  lang-en/              영어 오버레이 (base/forge-*/stacks/*) — 아래 `--lang` 참조
-  skills-personal/      옵트인 yd-* 스킬 9개·에이전트 4개 — `--with-personal-skills` 때만 머지 (#78)
+presets/                프리셋 조각 (복사 덮어쓰기 방식, #81 에서 종류별로 묶음)
+  stacks/<stack>/       스택별 조각 (rules + pre-commit.partial.sh + AGENTS.partial.md) — nextjs·bun·ops 등
+  forge/github/         GitHub forge — gh, PR, `Closes #N` 자동 클로즈
+  forge/gitlab/         GitLab forge — glab, MR, `Closes #N` 자동 클로즈(머지 후 확인)
+  lang/en/              영어 오버레이 (base/·forge/<forge>/·stacks/<stack>/) — 아래 `--lang` 참조
+  skills/personal/      옵트인 yd-* 스킬 9개·에이전트 4개 — `--with-personal-skills` 때만 머지 (#78)
 bin/                    agents-scaffold.sh 부트스트랩 스크립트
-scripts/                install-skills.sh(스킬 전역 설치)·run-skill-tests.sh(스킬별 테스트) — 설치 후 self-clean
+plugins/                스킬 플러그인 yd-skills·yd-skills-personal (#82) — skills/ 는 원본에서 생성한 사본(build-plugins.py)
+.claude-plugin/         marketplace.json — Claude Code·Codex 공용 마켓플레이스 (#82)
+scripts/                사용자용 — install-skills.sh(스킬 전역 설치)·make-offline-bundle.sh(폐쇄망 번들)
+  dev/                  메인테이너·CI 전용 — run-skill-tests.sh·check-harness-matrix.py·spike-*-contract.sh·build-plugins.py
+                        (scripts/ 전체가 설치 대상이 아니며 in-place 설치 후 self-clean)
 ```
 
 ## 주요 패턴
@@ -67,5 +71,5 @@ scripts/                install-skills.sh(스킬 전역 설치)·run-skill-tests
 - **메모리 SSOT**: `.claude/memory/`(시스템 기본 경로 미사용). 타입접두 `project_`/`feedback_`/`reference_`/`user_`.
 - **paths 스코프 룰**: frontmatter `paths:` 로 해당 파일 작업 시에만 자동 로드.
 - **멀티에이전트 격리**: 병렬 서브에이전트 파일 동시수정 → `isolation: "worktree"`.
-- **설치 순서**: 베이스 복사 → forge 프리셋 → 스택 프리셋 → (`--with-personal-skills`) `presets/skills-personal` → `--lang en` 오버레이 → `{{PROJECT_NAME}}` 치환(`*/skills/yd-*/*` 는 제외 — planner 템플릿 자리표시자 보존) → `.agents/skills` 로 이동·`.claude/skills` 링크 → Codex·agy 에이전트 생성.
-- **스킬 테스트**: 스킬마다 `tests/test_*.py` 와 `tests/claims.json` 을 둔다. `scripts/run-skill-tests.sh` 가 스킬별로 돌리고, `tests/test_skill_contracts.py` 가 claims 형식·참조 경로·트리거 중복을 검사한다.
+- **설치 순서**: 베이스 복사 → forge 프리셋 → 스택 프리셋 → (`--with-personal-skills`) `presets/skills/personal` → `--lang en` 오버레이 → `{{PROJECT_NAME}}` 치환(`*/skills/yd-*/*` 는 제외 — planner 템플릿 자리표시자 보존) → `.agents/skills` 로 이동·`.claude/skills` 링크 → Codex·agy 에이전트 생성.
+- **스킬 테스트**: 스킬마다 `tests/test_*.py` 와 `tests/claims.json` 을 둔다. `scripts/dev/run-skill-tests.sh` 가 스킬별로 돌리고, `tests/test_skill_contracts.py` 가 claims 형식·참조 경로·트리거 중복을 검사한다.

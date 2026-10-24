@@ -1,0 +1,88 @@
+{
+ "claims": [
+  {
+   "id": "SESSION-NAME-TIME",
+   "kind": "정상",
+   "rule": "`new` 는 시각까지 넣어 같은 날 두 번 녹음해도 파일이 섞이지 않게 한다.",
+   "test": "test_session_ctl.py::test_name_has_date_and_time"
+  },
+  {
+   "id": "SAME-MINUTE-SUFFIX",
+   "kind": "경계",
+   "rule": "같은 분에 또 만들면 -2 를 붙인다",
+   "test": "test_session_ctl.py::test_same_minute_does_not_reuse_directory"
+  },
+  {
+   "id": "GLOSSARY-MERGE",
+   "kind": "정상",
+   "rule": "내장 공용 사전, 개인 전역 사전, 작업 디렉터리의 `glossary.txt` 를 합쳐",
+   "test": "test_session_ctl.py::test_merges_three_layers_and_skips_comments"
+  },
+  {
+   "id": "GLOSSARY-MISSING-SKIPPED",
+   "kind": "경계",
+   "rule": "없는 사전은 건너뛴다.",
+   "test": "test_session_ctl.py::test_missing_local_dictionaries_are_skipped"
+  },
+  {
+   "id": "BUILTIN-NO-PROJECT-NAMES",
+   "kind": "경계",
+   "rule": "**프로젝트·회사 고유명사를 여기에 커밋하지 않는다**",
+   "test": "test_session_ctl.py::test_builtin_dictionary_has_no_project_names"
+  },
+  {
+   "id": "DELTA-BYTE-OFFSET",
+   "kind": "정상",
+   "rule": "다음 회차 오프셋은 stderr 의 next-offset=",
+   "test": "test_session_ctl.py::test_offset_is_byte_based_and_incremental"
+  },
+  {
+   "id": "HALLUCINATION-FULL-LINE",
+   "kind": "오탐",
+   "rule": "줄 전체가 그 문장일 때만 빼므로",
+   "test": "test_session_ctl.py::test_hallucination_lines_are_dropped_and_real_speech_kept"
+  },
+  {
+   "id": "STOP-OWN-PID",
+   "kind": "정상",
+   "rule": "이 명령은 **이 회차가 기록한 PID 에만** 신호를 보낸다.",
+   "test": "test_session_ctl.py::test_stops_only_the_recorded_pid"
+  },
+  {
+   "id": "STOP-PID-REUSE",
+   "kind": "오탐",
+   "rule": "PID 를 재사용한 다른 프로세스는 명령줄을 확인해 건드리지 않고",
+   "test": "test_session_ctl.py::test_reused_pid_of_unrelated_process_is_not_signalled"
+  },
+  {
+   "id": "FFMPEG-SIGINT",
+   "kind": "정상",
+   "rule": "ffmpeg 는 **반드시 SIGINT 로** 종료한다",
+   "test": "test_session_ctl.py::test_ffmpeg_gets_sigint_so_it_can_finalize"
+  },
+  {
+   "id": "RUN-EXIT-127",
+   "kind": "실패",
+   "rule": "명령을 실행하지 못하면 exit 127 이다.",
+   "test": "test_session_ctl.py::test_missing_command_exits_127_without_pidfile"
+  },
+  {
+   "id": "RUN-PIDFILE",
+   "kind": "정상",
+   "rule": "`whisper.pid` 에 PID 를 적은 뒤 끝나길 기다린다.",
+   "test": "test_session_ctl.py::test_records_pid_and_propagates_exit_code"
+  },
+  {
+   "id": "TOOLS-WHISPER-MISSING",
+   "kind": "도구오류",
+   "rule": "whisper-stream 이나 모델이 없으면 exit 1 이다.",
+   "test": "test_session_ctl.py::test_missing_whisper_stops_before_recording"
+  },
+  {
+   "id": "TOOLS-FFMPEG-MISSING",
+   "kind": "도구오류",
+   "rule": "ffmpeg 만 없으면 exit 0 으로 두고 전사만 진행하라고 안내한다.",
+   "test": "test_session_ctl.py::test_ffmpeg_missing_falls_back_to_transcript_only"
+  }
+ ]
+}
