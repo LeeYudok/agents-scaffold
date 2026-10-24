@@ -171,6 +171,42 @@ substitute_placeholders() {
   done
 }
 
+# #80: .claude/ 가운데 이 레포 전용 파일 — 설치·--update 로 배포하지 않는다.
+#   .claude/memory/ 는 이 레포 자체의 메모리다. README.md 와 설치용 인덱스 MEMORY.template.md 만 배포한다.
+#   레포 전용 파일을 .claude/ 에 새로 두면 여기에 등록한다.
+is_repo_private() {
+  case "$1" in
+    .claude/memory/README.md | .claude/memory/MEMORY.template.md) return 1 ;;
+    .claude/memory/*) return 0 ;;
+  esac
+  return 1
+}
+
+# 배포 경로 — 설치용 인덱스는 타깃의 MEMORY.md 가 된다
+payload_target_rel() {
+  case "$1" in
+    .claude/memory/MEMORY.template.md) printf '%s' ".claude/memory/MEMORY.md" ;;
+    *) printf '%s' "$1" ;;
+  esac
+}
+
+# 소스 .claude/ 파일 목록(상대경로, NUL 구분). git 소스면 tracked 만(#39), 아니면(tarball) 전부.
+list_claude_files() {
+  if git -C "$SRC" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    git -C "$SRC" ls-files -z -- .claude
+  else
+    (cd "$SRC" && find .claude -type f ! -path '*/__pycache__/*' ! -name '*.pyc' -print0)
+  fi
+}
+
+# 배포 대상만 — 레포 전용 파일을 뺀 목록
+list_base_payload() {
+  local f
+  list_claude_files | while IFS= read -r -d '' f; do
+    is_repo_private "$f" || printf '%s\0' "$f"
+  done
+}
+
 # #58: 타겟 .gitattributes 에 훅 LF 고정 규칙을 멱등 추가한다.
 #   Windows(core.autocrlf=true)에서 훅이 CRLF 로 체크아웃되면 Git Bash 가 $'\r' 로 죽는다.
 ensure_hook_eol_attributes() {
@@ -610,14 +646,16 @@ run_update() {
 
   # git 소스면 tracked 만 대상(#39) — find 는 untracked 로컬 산출물(observations 등)까지
   # Added 로 실어 나른다. tarball 폴백은 아카이브가 이미 tracked 만 담으므로 find 유지.
-  local base_files=()
-  if git -C "$SRC" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    while IFS= read -r -d '' f; do base_files+=("$SRC/$f"); done \
-      < <(git -C "$SRC" ls-files -z -- .claude)
-  else
-    while IFS= read -r f; do base_files+=("$f"); done < <(find "$SRC/.claude" -type f)
-  fi
+  local base_files=() f
+  while IFS= read -r -d '' f; do base_files+=("$SRC/$f"); done < <(list_base_payload)
   base_files+=("$SRC/AGENTS.md")
+
+  # #80: 예전 설치가 실수로 배포한 이 레포 메모리 — 지금 원본과 바이트가 같은 것만 보고한다(자동 삭제 안 함)
+  local leaked=()
+  while IFS= read -r -d '' f; do
+    is_repo_private "$f" || continue
+    if [ -f "$TARGET/$f" ] && cmp -s "$SRC/$f" "$TARGET/$f"; then leaked+=("$f"); fi
+  done < <(list_claude_files)
 
   # #78: 옵트인 yd-* 스킬 — --with-personal-skills 이거나 타겟에 그 스킬이 하나라도 있으면 함께 갱신한다.
   #      (presets 는 원래 --update 대상이 아니다. 옵트인 묶음만 예외로 둔다.)
@@ -648,6 +686,11 @@ run_update() {
     [ -n "$f" ] || continue
     rel="${f#"$SRC"/}"
     rel="${rel#"$PERSONAL_PRESET"/}"   # #78: 옵트인 묶음은 타겟의 .claude/ 아래로 간다
+    rel="$(payload_target_rel "$rel")"
+    # #80: 메모리 인덱스는 사용자 소유 — 없을 때만 템플릿을 넣고, 있으면 .new 도 만들지 않는다
+    if [ "$rel" = ".claude/memory/MEMORY.md" ] && [ -f "$TARGET/$rel" ]; then
+      continue
+    fi
     if [ "$ssot" -eq 1 ]; then
       case "$rel" in
         .claude/skills/*) rel=".agents/skills/${rel#.claude/skills/}" ;;
@@ -739,6 +782,10 @@ run_update() {
     for rel in "${skipped[@]}"; do echo "  - $rel" >&2; done
   fi
   echo "Unchanged: ${#unchanged[@]}" >&2
+  if [ "${#leaked[@]}" -gt 0 ]; then
+    echo "Scaffold's own memory shipped by an older install (byte-identical to agents-scaffold's copy; review and delete, #80): ${#leaked[@]}" >&2
+    for rel in "${leaked[@]}"; do echo "  ! $rel" >&2; done
+  fi
   echo "== Done. Review .new files with diff and apply manually. ==" >&2
 }
 
@@ -796,21 +843,26 @@ fi
 # 1) 베이스 복사 (in-place 면 이미 있으므로 스킵)
 # git 소스면 tracked 파일만 복사(#39) — cp -R 은 untracked 로컬 산출물
 # (memory/observations 세션로그, __pycache__, 에이전트 메모리)까지 실어 나른다.
-# tarball 원격 설치는 git 메타가 없지만 아카이브 자체가 tracked 만 담으므로 cp -R 유지.
+# tarball 원격 설치는 git 메타가 없으므로 find 목록을 쓴다. 이 레포 전용 파일(#80)은 어느 쪽이든 뺀다.
 if [ "$INPLACE" -eq 0 ]; then
-  if git -C "$SRC" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    git -C "$SRC" ls-files -z -- .claude | while IFS= read -r -d '' bf; do
-      # 기존 파일은 보존 — 커스텀 base 를 가진 프로젝트 위에 덮어쓰지 않는다(갱신은 --update 소관)
-      [ -e "$TARGET/$bf" ] && continue
-      mkdir -p "$TARGET/$(dirname "$bf")"
-      cp "$SRC/$bf" "$TARGET/$bf"
-    done
-  else
-    cp -R "$SRC/.claude" "$TARGET/.claude"
-  fi
+  list_base_payload | while IFS= read -r -d '' bf; do
+    tr="$(payload_target_rel "$bf")"
+    # 기존 파일은 보존 — 커스텀 base 를 가진 프로젝트 위에 덮어쓰지 않는다(갱신은 --update 소관)
+    [ -e "$TARGET/$tr" ] && continue
+    mkdir -p "$TARGET/$(dirname "$tr")"
+    cp "$SRC/$bf" "$TARGET/$tr"
+  done
   # AGENTS.md = SSOT. CLAUDE.md/GEMINI.md 포인터는 두지 않는다 (#54) — Claude Code v2.1.277+·Codex·agy 가
   # 모두 AGENTS.md 를 네이티브로 읽는다 (#60). CLAUDE.md 가 있으면 Claude Code 가 AGENTS.md 를 건너뛴다.
   cp "$SRC/AGENTS.md" "$TARGET/"
+else
+  # #80: 템플릿 레포 자리에서 설치 — 이 레포 메모리를 지우고 인덱스를 설치용 템플릿으로 바꾼다
+  while IFS= read -r -d '' bf; do
+    if is_repo_private "$bf"; then rm -f "$TARGET/$bf"; fi
+  done < <(list_claude_files)
+  if [ -f "$TARGET/.claude/memory/MEMORY.template.md" ]; then
+    mv -f "$TARGET/.claude/memory/MEMORY.template.md" "$TARGET/.claude/memory/MEMORY.md"
+  fi
 fi
 
 # 프리셋 머지 헬퍼 — 프리셋 디렉터리의 .claude/ 하위 파일을 타깃에 복사(덮어쓰기).

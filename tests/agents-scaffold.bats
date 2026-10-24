@@ -188,6 +188,10 @@ EOF
   # #61: in-place install also moves the template's skills to the .agents/skills source
   [ -L "$copy/.claude/skills" ]
   [ -f "$copy/.agents/skills/review/SKILL.md" ]
+  # #80: the template repo's own memory is removed and the index becomes the install template
+  [ "$(find "$copy/.claude/memory" -maxdepth 1 -name '[pfr]*_*.md' | wc -l | tr -d ' ')" -eq 0 ]
+  [ ! -e "$copy/.claude/memory/MEMORY.template.md" ]
+  cmp -s "$copy/.claude/memory/MEMORY.md" "$REPO_ROOT/.claude/memory/MEMORY.template.md"
 
   # 원본은 그대로 존재해야 함
   [ -d "$REPO_ROOT/bin" ]
@@ -1239,6 +1243,39 @@ PY
   [ "$output" = "1" ]
   grep -q '^@.claude/memory/MEMORY.md$' "$t/AGENTS.md"
   [ -f "$t/.claude/memory/MEMORY.md" ]
+}
+
+@test "installs ship none of the scaffold's own memory files (#80)" {
+  for opts in "" "--lang en" "--with-personal-skills --harness all"; do
+    t="$BATS_TEST_TMPDIR/mem-$RANDOM"
+    mkdir -p "$t"
+    # shellcheck disable=SC2086
+    run "$SCRIPT" "$t" --yes $opts
+    [ "$status" -eq 0 ]
+    [ "$(find "$t/.claude/memory" -maxdepth 1 -name '[pfr]*_*.md' | wc -l | tr -d ' ')" -eq 0 ]
+    [ ! -e "$t/.claude/memory/MEMORY.template.md" ]
+    [ -f "$t/.claude/memory/MEMORY.md" ]
+    [ -f "$t/.claude/memory/README.md" ]
+    ! grep -q 'project_dotfiles-ssot' "$t/.claude/memory/MEMORY.md"
+  done
+}
+
+@test "--update adds no scaffold memory, leaves MEMORY.md alone, reports leaked copies (#80)" {
+  t="$BATS_TEST_TMPDIR/memupd"
+  mkdir -p "$t"
+  run "$SCRIPT" "$t" --yes
+  [ "$status" -eq 0 ]
+  echo "- [mine](project_mine.md) — user entry" >> "$t/.claude/memory/MEMORY.md"
+  # an older install shipped this repo's memory: simulate one byte-identical leaked file
+  cp "$REPO_ROOT/.claude/memory/project_dotfiles-ssot.md" "$t/.claude/memory/"
+  run "$SCRIPT" "$t" --update --yes
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"! .claude/memory/project_dotfiles-ssot.md"* ]]
+  [[ "$output" != *"+ .claude/memory/"* ]]
+  [ ! -e "$t/.claude/memory/MEMORY.md.new" ]
+  grep -q 'project_mine' "$t/.claude/memory/MEMORY.md"
+  [ -f "$t/.claude/memory/project_dotfiles-ssot.md" ]   # reported, never auto-deleted
+  [ "$(find "$t/.claude/memory" -maxdepth 1 -name 'feedback_*.md' | wc -l | tr -d ' ')" -eq 0 ]
 }
 
 @test "every stack preset has a P0 section and an AGENTS.partial.md (#21)" {
