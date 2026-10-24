@@ -46,6 +46,13 @@ the section below and the issues labeled
   originals. If you change a Korean rule/agent/skill, mirror the change in
   `presets/lang/en/` in the same PR (and vice versa). Executable scripts are
   written in English once and shared — do not duplicate them into the overlay.
+- **This repo's own memory** (`.claude/memory/*.md` other than `README.md` and `MEMORY.template.md`): maintainer
+  notes for this repo. They are never installed (#80). Any other repo-only file you add under `.claude/` must be
+  registered in `is_repo_private()` in `bin/agents-scaffold.sh`.
+- **Skill plugins** (`plugins/`, `.claude-plugin/marketplace.json`): `plugins/*/skills/` is generated. After changing a
+  `yd-*` skill or handoff/docs-sync/memory-factcheck/skill-evolve, run `python3 scripts/dev/build-plugins.py` and commit
+  the copies with the change (#82; CI fails on drift).
+- **Maintainer scripts** (`scripts/dev/`): CI and measurement tools. `scripts/` itself holds only user-facing tools.
 - **Bootstrap script** (`bin/agents-scaffold.sh`): the only piece of logic that
   copies files, applies presets, and substitutes placeholders. Changes here
   affect every mode of consumption — test them with the bats suite.

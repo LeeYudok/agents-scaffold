@@ -1,6 +1,6 @@
 ---
 name: reference_harness-config-contracts
-description: Claude Code / Codex / agy 세 하네스의 설정·디스커버리 계약 실측 결과와 공식문서 위치, 실측 요령 (2026-10-04 세 하네스 실측, 2026-10-14 문서 대조·2026-10-18 claude 2.1.299·2026-10-19 codex 0.163.0·agy 1.4.2 재측정)
+description: Claude Code / Codex / agy 세 하네스의 설정·디스커버리 계약 실측 결과와 공식문서 위치, 실측 요령 (2026-10-04 세 하네스 실측, 2026-10-14 문서 대조·2026-10-18 claude 2.1.299·2026-10-19 codex 0.163.0·agy 1.4.2 재측정, 2026-10-24 3사 문서·소스 대조 + 플러그인 실측)
 metadata:
   type: reference
 ---
@@ -13,6 +13,7 @@ AGENTS.md 로드 항목만 2026-09-21 재측정: `claude 2.1.278` / `codex-cli 0
 2026-10-04 재측정(#60, 리눅스 로컬): `claude 2.1.289` / `codex-cli 0.160.0` + `gpt-6.1-sol` / `agy 1.2.16` — 지원 대상은 이 세 하네스 최신판으로 고정, Gemini CLI 제외
 2026-10-19 재측정(#73, 맥 로컬): `codex-cli 0.163.0` spike `--dynamic` 판정 0.160.0 과 동일(pass 5·partial 2). `agy 1.4.0` 은 거의 전 항목 inconclusive/fail — spike 가 `user_input`·`agent_response` 외 모든 `step_type` 을 툴로 세고 룰 판정은 `FILES=` 정확 일치라, 툴이 아닌 새 단계 종류가 생기면 같은 패턴으로 무너진다(가짜 agy 로 재현). 판정을 `tool_info.name` 있는 단계만 툴, 룰은 "대상 파일 포함·룰/AGENTS.md 미열람"으로 바꾸고 결과 JSON 에 `step_types_seen` 을 싣게 고침(#73). 고친 spike 로 `agy 1.4.2` 재실측(2회, 2026-10-19 UTC) → 판정 1.2.16 과 동일로 매트릭스 반영. 남은 오탐 두 가지도 고침: `ask_agy_steps` 출력은 `TOOLS=` 헤더가 늘 있어 `[ -s ]` 빈 응답 검사가 안 걸려 빈 응답이 fail 로 떨어졌다(→ `no_reply`), `--agent` 불일치 exit 1 은 `AGENT_UNKNOWN` 으로 미등록 fail. 판정이 바뀌면 `AGY_KEEP_WORK=1` 로 질의 원문(`_*.txt`)을 남기고, 결과 JSON `errors_seen` 에 error_message 단계 원문이 실린다. 주의: spike 의 `measured_at` 은 로컬 날짜라 KST 자정 직후면 UTC 보다 하루 앞선다 — 매트릭스 `last_measured` 는 UTC 날짜로 적는다(CI 의 미래 날짜 검사)
 2026-10-14 문서·소스 대조(#72, 실측 아님): 최신 `claude 2.1.299` / `codex-cli 0.162.1`(npm 10-09) / `agy 1.3.5`. 클라우드 세션에선 developers.openai.com·antigravity.google 이 프록시 차단 → Codex 는 소스(rust-v0.162.1), agy 는 공식 CHANGELOG 로만 대조. 2026-10-18 claude 2.1.299 만 재측정(AGENTS.md 단독 정답·대조군 UNKNOWN, 스킬 링크 YES·링크 없는 대조군 NO)
+2026-10-24 문서·소스 대조(#80~#82): `claude 2.1.310`(npm 10-23) / `codex-cli 0.164.0`(rust-v0.164.0, 10-23) / `agy 1.4.7`(CHANGELOG, 날짜 미상). developers.openai.com·antigravity.google 은 여전히 프록시 차단 → Codex 는 태그 소스, agy 는 GitHub 의 CHANGELOG 원문. 세 하네스 모두 **프로젝트 메모리 디렉터리 규약이 없다**(Claude auto-memory `~/.claude/projects/<p>/memory`, Codex `~/.codex/memories` 전역, agy `~/.gemini/...` 전역) — `.claude/memory/` 는 스캐폴드 규약이라 설치에서 이 레포 메모리를 빼야 했다(#80). 플러그인만으로는 세 하네스를 못 덮는다(Claude 는 rules·루트 CLAUDE.md 불가, Codex 는 서브에이전트 불가) → 복사형 설치기 유지, 플러그인은 스킬 배포용(#82)
 
 ## Claude Code
 - 프로젝트 설정 = `.claude/settings.json` (`.claude.json` 은 유저 전역 상태 파일이지 프로젝트 설정 아님)
@@ -32,6 +33,10 @@ AGENTS.md 로드 항목만 2026-09-21 재측정: `claude 2.1.278` / `codex-cli 0
 - 스킬 frontmatter 는 `name`·`description` 외에 `when_to_use`·`disable-model-invocation`·`paths`·`context: fork`·`effort`·`disallowed-tools` 등 지원(미채택). claude.ai·Skills API 업로드 시엔 `name`·`description`·`license`·`compatibility`·`metadata`·`allowed-tools` 외 키가 오류 — `user-invocable`·`argument-hint` 가 걸린다
 - 서브에이전트 `model` 별칭에 `fable` 추가, 신규 필드 `disallowedTools`·`permissionMode`·`skills`·`isolation: worktree`·`effort`·`omitClaudeMd` 등. 모르는 필드는 오류 없이 무시(2.1.296 부터 `--debug` 가 이름을 찍는다)
 - 2.1.299: `claude -p` 가 settings 검증 오류를 stderr 로 낸다 — 산출물 settings 검증에 쓸 수 있다
+- 2.1.310(2026-10-24 대조): AGENTS.md·rules·skills·agents 탐색 경로 변화 없음. `CLAUDE.local.md` 도 AGENTS.md 로드를 막는다(팀원이 만들면 그 사람만 AGENTS.md 가 빠진다). `autoMemoryDirectory` 는 절대경로·`~/` 만 — 레포 상대경로 불가(문서상, 미실측)
+- **플러그인(2026-10-24 실측, #82)**: 마켓플레이스 `.claude-plugin/marketplace.json`(name·owner·plugins[{name,source:"./plugins/x"}]), 플러그인 `.claude-plugin/plugin.json`(name 만 필수). 실을 수 있는 것: skills·agents·commands·hooks·MCP·LSP·output-styles·workflows·bin(PATH)·settings 일부 — **rules 와 루트 CLAUDE.md 는 불가**. 플러그인 컴포넌트는 `<플러그인>:<이름>` 이름공간(`yd-skills:yd-pg-expert` 로 등록 확인). `version` 을 빼면 커밋 SHA(12자)가 버전이 되어 커밋마다 갱신된다. `claude plugin validate`·`marketplace add <경로>`·`install` 은 인증 없이 돈다(`env -i` 확인). 로컬 경로 `marketplace add` 는 `file://` URL 을 거부한다(경로나 owner/repo·https 만)
+  - 심링크: 설치 캐시 복사 때 스킬 디렉터리·에이전트 파일 심링크 모두 실파일로 풀린다. 그러나 `--plugin-dir` 로 제자리 로드하면 **심링크 스킬 디렉터리는 읽고 심링크 에이전트 파일은 무시**(Agents 0)
+  - 함정: `claude -p --disallowedTools ...,Skill` 처럼 Skill 툴을 막으면 스킬 목록 자체가 컨텍스트에서 빠져 "등록 안 됨"으로 오판한다 — 스킬 등록 질의는 Skill 툴을 남기고 "툴을 쓰지 말라"고 지시한다
 
 ## Codex
 - instructions = `AGENTS.md` + nested `AGENTS.override.md` 계층, **합산 기본 한도 32KiB** (`project_doc_max_bytes`)
@@ -50,6 +55,10 @@ AGENTS.md 로드 항목만 2026-09-21 재측정: `claude 2.1.278` / `codex-cli 0
   - 서브에이전트 이름에 하이픈(`code-reviewer`)이 되고, `developer_instructions` 를 TOML 리터럴 다중행 문자열(`'''`)로 두면 백슬래시·따옴표가 그대로 전달된다(#64)
   - 2026-10-14 소스 대조(rust-v0.162.1, 실측 아님 #72): 핵심 단언 유효. 훅 이벤트는 12종(SessionStart·SessionEnd·UserPromptSubmit·PreToolUse·PostToolUse·PermissionRequest·PreCompact·PostCompact·Stop·SubagentStart·SubagentStop·Interrupt — 0.160.0 에도 이미 있었음), 핸들러는 command 외 `mcp_tool`·`prompt`·`agent`, `config.toml` 인라인 `[hooks]` 도 가능. 훅 신뢰 해시는 정규화된 정의 기준(TOML·JSON 동일) — `hooks.state.<id>.{enabled,trusted_hash}`. `.codex/agents/` 는 하위 폴더까지 재귀 스캔, `[agents.<name>]` 선언·`[agents]` 설정(`max_depth` 등). 루트는 `project_root_markers`(기본 `.git`), 추가 지침 파일명은 `project_doc_fallback_filenames`. 0.160.0→0.162.1 스키마 diff 상 훅·에이전트·스킬·프로젝트 섹션 변경 없음. 재실측은 #73
   - 함정: `codex exec` 는 stdin 이 열려 있으면 `Reading additional input from stdin...` 에서 멈춘다 → `</dev/null`. 사용자 config 를 안 건드리고 신뢰를 주려면 `-c 'projects={"<abs>"={trust_level="trusted"}}'`(인라인 테이블). `-c 'projects."<abs>".trust_level=...'` 는 "unrecognized configuration" 으로 무시된다
+
+- **0.164.0(2026-10-24 소스 대조·실측, #82)**: 스킬은 `.agents/skills` 외에 **`.codex/skills`(신뢰 프로젝트)도 탐색**한다(`ext/skills/src/host_roots.rs`, 0.163.0 도 동일 — 기존 기록 정정). 훅 이벤트 14종(+`PreModelRequest`·`PostModelRequest`, 관찰 전용). 플러그인 매니페스트는 `.codex-plugin/plugin.json` 외에 **`.claude-plugin/plugin.json` 도 읽고**, 마켓플레이스도 `.claude-plugin/marketplace.json` 을 읽는다. 플러그인은 skills·MCP·apps·hooks·commands 를 싣고 **서브에이전트는 못 싣는다**. 플러그인 훅 신뢰는 플러그인 내용에 묶인다. 메모리는 `~/.codex/memories` 전역뿐
+  - 실측: `codex plugin marketplace add <로컬 경로>` → `codex plugin add <p>@<m>` 가 `CODEX_HOME/plugins/cache/<m>/<p>/local/` 로 복사하는데 **심링크를 버린다**(심링크만 있던 skills/ 가 빈 디렉터리) → 플러그인 사본은 실파일이어야 한다(`scripts/dev/build-plugins.py`). 등록 설정은 `config.toml` 의 `[marketplaces.<m>]`·`[plugins."<p>@<m>"] enabled = true`. 세션 안 스킬 등록은 인증이 없어 미실측
+  - `CODEX_HOME` 이 `/tmp` 아래면 PATH 별칭 생성을 거부한다는 경고가 나오지만 동작에는 지장 없다
 
 ## agy (Antigravity)
 - 공식문서 [Rules](https://antigravity.google/docs/rules/): 워크스페이스 `AGENTS.md`/`GEMINI.md`, `.agents/AGENTS.md`, `.agents/rules/*.md`(직계 자식만) 를 파일 위치→워크스페이스 루트로 올라가며 로드. 전역은 `~/.gemini/AGENTS.md`·`~/.gemini/config/rules/*.md`, CLI 전용 `~/.gemini/antigravity-cli/rules/*.md`
@@ -70,6 +79,8 @@ AGENTS.md 로드 항목만 2026-09-21 재측정: `claude 2.1.278` / `codex-cli 0
   - 2026-10-14 CHANGELOG 대조(1.3.5, 실측 아님 #72): 전역 위치에 `~/.gemini/config/{AGENTS.md,GEMINI.md,agents/,hooks.json}` 추가, manifest(`rules.json`·`skills.json`·`agents.json`·`plugins.json`)는 cwd→프로젝트 루트 사이 모든 `.agents/` 에서 로드(1.2.16). 1.3.1 부터 마크다운 에이전트가 `skills:`·`plugins:`·`rules:`·`agents:`·`hooks:` 를 받는다 → 위의 "name·description 외 필드면 조용히 미등록"은 Claude 필드(`tools`·`model`·`memory`)에 대해 **재실측 대상**. 1.3.4: headless `--agent` 이름 불일치 시 exit 1 + 목록 출력(예전엔 기본 에이전트로 조용히 실행). 훅 정의에 `enabled` 키, 커뮤니티 예시엔 평면 `{"enabled":true,"PreToolUse":[...]}` 형식도 보여 래퍼 형식과 대조 필요. 1.3.2 플러그인(skills·MCP·subagents·rules·hooks 번들), 공유 설정 `~/.gemini/config/config.json`. 재실측은 #73
   - **1.4.2 재실측(2026-10-19 UTC, #73)**: `tools`·`model`·`memory` frontmatter 에이전트는 여전히 미등록이고, `--agent` 로 고르면 `error: unknown agent "<name>" (available: …)` + exit 1 — 생성기 형식(`name`·`description` 만) 유지. 훅은 래퍼 형식 `{"<이름>":{...}}` 만 실행되고 평면 `{"enabled":true,"PreInvocation":[...]}` 은 0회, 래퍼 안 `"enabled":false` 면 비활성. 스택 P0 인라인 질의는 2회 중 1회 mypy/ruff 누락(응답 변동). 같은 실행 안에서 glob 룰 질의만 연달아 빈 응답(error_message 단계)이 났고 단독 재실행은 정상 — 빈 응답은 inconclusive 로 보고 그 질의만 다시 돌린다. `--agent` 목록에 사용자 전역 에이전트도 섞여 나온다
   - 하위 `AGENTS.md` 는 cwd 기준으로만 로드 — 공식문서의 "파일을 읽거나 고칠 때 그 폴더부터 올라가며 로드"는 headless 에서 재현되지 않음(읽기·편집·다음 턴 모두 미로드)
+
+  - **1.4.3~1.4.7(2026-10-24 CHANGELOG 대조, 실측 아님)**: 탐색 경로 변화 없음. `agy plugin validate` 가 `hooks/hooks.json`(읽지 않음)·`commands/`·워크플로 md·Claude 식 최상위 `"hooks"` 키(이름이 `hooks` 인 훅 하나로 로드)를 경고 — 스캐폴드의 래퍼 형식 `{"<이름>":{...}}` 이 맞다는 근거. 1.4.4 플러그인과 독립 폴더에 같은 룰·스킬이 있으면 두 번 로드되던 문제 수정. 1.4.5 `plugin.json` 의 `skills` 를 문자열(`"./skills/"`)로 받는다. 1.4.7 훅 입력에 `lastUserInput`. 플러그인 매니페스트는 루트 `plugin.json` 또는 `.antigravity-plugin/`·`.gemini-plugin/` 안, 구성요소는 플러그인 루트(skills·agents·rules·hooks.json·mcp_config.json·bin). manifest 항목은 `{"path", "include_only"}`. 스캐폴드 플러그인의 `.antigravity-plugin/plugin.json` 은 이 문서 기준이며 미실측(#82)
 
 ## Gemini CLI (지원 대상 제외 — #60)
 - 공식문서([gemini-md.md](https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/gemini-md.md)): 기본 컨텍스트 파일명은 `GEMINI.md` 뿐. `AGENTS.md` 는 `.gemini/settings.json` 의 `context.fileName` 에 넣어야 읽는다 → 스캐폴드는 #54 부터 이 설정 파일을 emit 하고 `GEMINI.md` 셤은 없앴다

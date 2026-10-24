@@ -94,6 +94,21 @@ Blocked: a .env-type file is staged. Commit is not allowed.
 実行する(`~/.claude/skills`・`~/.agents/skills`・`~/.gemini/config/skills` にシンボリックリンク。`--personal`・`--copy`・
 `--project <dir>` に対応)。
 
+**プラグインとして (#82)。** このリポジトリはプラグインマーケットプレイスでもある。Claude Code と Codex は同じ
+`.claude-plugin/marketplace.json` を読む。
+
+```bash
+claude plugin marketplace add LeeYudok/agents-scaffold && claude plugin install yd-skills@agents-scaffold
+codex plugin marketplace add LeeYudok/agents-scaffold && codex plugin add yd-skills@agents-scaffold
+```
+
+`yd-skills` には汎用 `yd-*` 14 個と `handoff`・`docs-sync`・`memory-factcheck`・`skill-evolve`、`yd-skills-personal` には
+オプトイン 9 個が入っている。Claude Code ではプラグインのスキル名の前にプラグイン名が付く(`yd-skills:yd-pg-expert`)。
+プラグインが運ぶのはスキルだけだ。Claude Code のプラグインは rules を、Codex のプラグインはサブエージェントを運べないため、
+プロジェクトのルール・フック・サブエージェントは引き続き `bin/agents-scaffold.sh` でインストールする。各プラグインには
+Antigravity 用マニフェスト(`.antigravity-plugin/plugin.json`)もあるが、agy のドキュメントを基に作成したもので未実測。
+閉域網や開発用途では `scripts/install-skills.sh` を使う。
+
 ## なぜ agents-scaffold か
 
 大規模なインストール型フレームワークやエージェント/スキルのカタログと違い、agents-scaffold は

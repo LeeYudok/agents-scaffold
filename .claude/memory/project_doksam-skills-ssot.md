@@ -13,6 +13,6 @@ metadata:
   scaffold 이름을 유지하고 내용은 doksam 판으로 합쳤다. 새 스킬도 이 기준(범용=기본, 특정 환경=옵트인)으로 넣는다.
 - 에이전트는 `.claude/agents/yd-*.md` 실파일 하나가 원본 — 스킬 안 `agents/{codex.toml,antigravity.md}` 는 두지 않는다.
   Codex·agy 판은 설치기 `emit_agents`, 전역 설치는 `scripts/install-skills.sh` 가 생성한다.
-- `npx skills add leeyudok/doksam-skills` 는 옛 레포를 읽으므로 보관 후엔 갱신되지 않는다. 대체는 `scripts/install-skills.sh`.
+- `npx skills add leeyudok/doksam-skills` 는 옛 레포를 읽으므로 보관 후엔 갱신되지 않는다. 대체는 플러그인 `yd-skills@agents-scaffold`(Claude·Codex, #82)와 `scripts/install-skills.sh`(폐쇄망·개발).
 - 함정: 설치기 `{{PROJECT_NAME}}` 치환은 `*/skills/yd-*/` 를 건너뛴다(planner 템플릿 자리표시자 보존).
   `.skills-dist/` 항목은 심링크라 그 안에 쓰면 원본이 바뀐다 — 복사는 `cp -RL`.

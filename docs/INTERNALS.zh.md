@@ -56,8 +56,10 @@ presets/                  预设片段（复制覆盖模型，#81 起按类型�
   lang/en/                英文覆盖层（base/、forge/<forge>/、stacks/<stack>/）—— 见下文 `--lang`
   skills/personal/        可选包：9 个 yd-* 技能 + 4 个 agent，仅在 `--with-personal-skills` 时合并（#78）
 bin/                      agents-scaffold.sh 引导脚本
+plugins/                  技能插件 yd-skills、yd-skills-personal（#82）—— skills/ 是由源头生成的副本（build-plugins.py）
+.claude-plugin/           marketplace.json —— Claude Code 与 Codex 共用的插件市场（#82）
 scripts/                  面向用户 —— install-skills.sh（全局安装技能）、make-offline-bundle.sh（离线安装包）
-  dev/                    仅维护者/CI —— run-skill-tests.sh、check-harness-matrix.py、spike-*-contract.sh
+  dev/                    仅维护者/CI —— run-skill-tests.sh、check-harness-matrix.py、spike-*-contract.sh、build-plugins.py
                           （scripts/ 不会被安装，in-place 安装后自清理）
 tests/                    引导脚本的 bats 回归测试套件
 ```

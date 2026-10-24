@@ -56,8 +56,10 @@ presets/                  preset fragments (copy-overwrite model, grouped by kin
   lang/en/                English overlay (base/, forge/<forge>/, stacks/<stack>/) — see `--lang` below
   skills/personal/        opt-in bundle: 9 yd-* skills + 4 agents, merged only with `--with-personal-skills` (#78)
 bin/                      agents-scaffold.sh bootstrap script
+plugins/                  skill plugins yd-skills and yd-skills-personal (#82) — skills/ is a copy generated from the source (build-plugins.py)
+.claude-plugin/           marketplace.json — one marketplace for Claude Code and Codex (#82)
 scripts/                  user-facing — install-skills.sh (global skill install), make-offline-bundle.sh (offline bundle)
-  dev/                    maintainer/CI only — run-skill-tests.sh, check-harness-matrix.py, spike-*-contract.sh
+  dev/                    maintainer/CI only — run-skill-tests.sh, check-harness-matrix.py, spike-*-contract.sh, build-plugins.py
                           (scripts/ is never installed and is self-cleaned after an in-place install)
 tests/                    bats regression suite for the bootstrap script
 ```

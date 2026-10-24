@@ -56,8 +56,10 @@ presets/                  プリセット断片(コピー上書きモデル、#8
   lang/en/                英語オーバーレイ(base/・forge/<forge>/・stacks/<stack>/)— 後述の `--lang` を参照
   skills/personal/        オプトインバンドル: yd-* スキル 9 個 + エージェント 4 個、`--with-personal-skills` 時のみマージ(#78)
 bin/                      agents-scaffold.sh ブートストラップスクリプト
+plugins/                  スキルプラグイン yd-skills・yd-skills-personal(#82)— skills/ は原本から生成したコピー(build-plugins.py)
+.claude-plugin/           marketplace.json — Claude Code・Codex 共通のマーケットプレイス(#82)
 scripts/                  ユーザー向け — install-skills.sh(スキルのグローバルインストール)・make-offline-bundle.sh(閉域網バンドル)
-  dev/                    メンテナー・CI 専用 — run-skill-tests.sh・check-harness-matrix.py・spike-*-contract.sh
+  dev/                    メンテナー・CI 専用 — run-skill-tests.sh・check-harness-matrix.py・spike-*-contract.sh・build-plugins.py
                           (scripts/ はインストール対象外で、in-place インストール後に self-clean)
 tests/                    ブートストラップスクリプト用 bats リグレッションスイート
 ```
