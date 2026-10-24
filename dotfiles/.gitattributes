@@ -1,0 +1,7 @@
+# 기본은 LF — Windows 에서 core.autocrlf=true 로 받아도 셸 스크립트·~/.bashrc 원본이 CRLF 로 바뀌지 않게 한다
+* text=auto eol=lf
+# cmd.exe 는 LF 배치 파일에서 오동작할 수 있고, PowerShell 스크립트는 Windows 관례를 따른다.
+# ZIP 다운로드로 반입해도 같은 바이트가 되도록 변환하지 않고 CRLF 그대로 저장한다
+*.cmd -text
+*.ps1 -text
+*.exe binary

@@ -184,6 +184,7 @@ EOF
   [ ! -d "$copy/bin" ]
   [ ! -d "$copy/presets" ]
   [ ! -d "$copy/docs/superpowers" ]
+  [ ! -e "$copy/dotfiles" ]   # #76: 메인테이너 dotfiles 는 사용자 프로젝트에 남기지 않는다
   # #61: in-place install also moves the template's skills to the .agents/skills source
   [ -L "$copy/.claude/skills" ]
   [ -f "$copy/.agents/skills/review/SKILL.md" ]
@@ -192,6 +193,14 @@ EOF
   [ -d "$REPO_ROOT/bin" ]
   [ -d "$REPO_ROOT/presets" ]
   [ -d "$REPO_ROOT/docs/superpowers" ]
+  [ -f "$REPO_ROOT/dotfiles/install.sh" ]
+}
+
+@test "regular install does not copy dotfiles/ into the target (#76)" {
+  run "$SCRIPT" "$BATS_TEST_TMPDIR" --yes
+  [ "$status" -eq 0 ]
+  [ ! -e "$BATS_TEST_TMPDIR/dotfiles" ]
+  [ -f "$BATS_TEST_TMPDIR/AGENTS.md" ]
 }
 
 # --- 9) 실행권한 ---

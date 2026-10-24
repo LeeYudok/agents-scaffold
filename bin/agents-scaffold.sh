@@ -56,7 +56,7 @@ bin\agents-scaffold.cmd. See docs/OFFLINE_INSTALL.en.md.
 
 Flow: copy base (.claude/ + AGENTS.md) -> merge forge preset -> merge selected stack presets
       -> merge lang-en overlay (if --lang en) -> substitute {{PLACEHOLDER}} -> chmod +x
-      -> in-place: self-clean bin/·presets/·scripts/·docs/superpowers/·docs/harness-matrix.json.
+      -> in-place: self-clean bin/·presets/·scripts/·dotfiles/·docs/superpowers/·docs/harness-matrix.json.
 EOF
 }
 
@@ -980,8 +980,9 @@ fi
 
 # 5) in-place self-clean (템플릿 흔적 제거)
 if [ "$INPLACE" -eq 1 ]; then
-  echo "== self-clean: removing bin/ presets/ scripts/ docs/superpowers/ docs/harness-matrix.json ==" >&2
-  rm -rf "$TARGET/bin" "$TARGET/presets" "$TARGET/scripts" "$TARGET/docs/superpowers"
+  echo "== self-clean: removing bin/ presets/ scripts/ dotfiles/ docs/superpowers/ docs/harness-matrix.json ==" >&2
+  # dotfiles/ 는 메인테이너의 머신 셸 환경(#76) — 템플릿을 in-place 로 쓰는 프로젝트에 남기지 않는다
+  rm -rf "$TARGET/bin" "$TARGET/presets" "$TARGET/scripts" "$TARGET/dotfiles" "$TARGET/docs/superpowers"
   # scripts/ 와 harness-matrix.json 은 이 저장소의 유지보수 자산이지 사용자 산출물이 아니다 (#37)
   rm -f "$TARGET/docs/harness-matrix.json"
 fi

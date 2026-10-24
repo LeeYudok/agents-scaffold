@@ -102,6 +102,7 @@ prompt 编写也没关系：
 | [docs/OPTIONS.zh.md](docs/OPTIONS.zh.md) | 全部选项 — 12 种技术栈预设、`--forge`、`--harness`、`--lang`、用法、占位符替换、需求打磨工具的挑选 |
 | [docs/INTERNALS.zh.md](docs/INTERNALS.zh.md) | 内部结构 — 生成的完整 `.claude/` 目录树、关键模式 |
 | [docs/OFFLINE_INSTALL.en.md](docs/OFFLINE_INSTALL.en.md) | 内网（离线）与 Windows 安装 — 离线包、必须使用 Git Bash、`.cmd` 启动器、`python3` 设置（英文） |
+| [dotfiles/](dotfiles/README.md) | 维护者的机器 shell 环境引导（zsh、starship、Claude/Codex/agy 状态栏、内网 Windows Git 安装）— `LeeYudok/dotfiles@73225ea` 的副本，与原仓库分开维护。与 scaffold 安装无关（韩文） |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | 贡献指南 |
 
 ## 贡献

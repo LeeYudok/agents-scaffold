@@ -25,3 +25,21 @@ jobs:
       # 않는다 — 강등은 사람이 PR 로 반영한다.
       - name: Check harness support matrix
         run: python3 scripts/check-harness-matrix.py
+
+  # 동봉한 dotfiles/ (#76) — 원본 LeeYudok/dotfiles 의 check.yml 과 같은 검사.
+  # 하위 디렉터리의 .github/workflows 는 GitHub 가 실행하지 않으므로 여기서 돌린다.
+  dotfiles:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dotfiles
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: 식별자 검사
+        run: scripts/check-identifiers.sh
+      - name: 문법 검사 도구 설치
+        run: sudo apt-get update -qq && sudo apt-get install -y zsh python3
+      - name: 파일별 문법 검사
+        run: scripts/check-syntax.sh

@@ -1,0 +1,140 @@
+# ~/.zshrc — macOS (Homebrew 기반). 저장소 dotfiles/zsh/zshrc.macos 가 원본.
+# 구조: 환경/PATH → 히스토리/옵션 → 자동완성 → 툴 초기화 → alias/함수 → 시크릿 → 머신별(.zshrc.local) → 플러그인(맨 끝)
+# 머신 고유 항목(SSH 호스트 alias, 특정 프로젝트 함수 등)은 이 파일이 아니라 ~/.zshrc.local (미추적) 에 둔다.
+
+# ── 환경 ───────────────────────────────────────────────────
+# locale — LC_CTYPE 이 C 로 떨어지면 한글 등 UTF-8 멀티바이트 입력이 깨짐
+export LANG=ko_KR.UTF-8
+export LC_ALL=ko_KR.UTF-8
+export EDITOR=vim
+
+# Homebrew prefix — Apple Silicon /opt/homebrew, Intel /usr/local. brew shellenv 가 이미 설정했으면 그 값을 존중.
+if [[ -z ${HOMEBREW_PREFIX:-} ]]; then
+  if [[ -x /opt/homebrew/bin/brew ]]; then HOMEBREW_PREFIX=/opt/homebrew
+  elif [[ -x /usr/local/bin/brew ]]; then HOMEBREW_PREFIX=/usr/local
+  else HOMEBREW_PREFIX="$(brew --prefix 2>/dev/null || echo /opt/homebrew)"
+  fi
+fi
+export HOMEBREW_PREFIX
+
+# PATH 중복 제거 (typeset -U 로 path 배열이 유일값 유지). 경로는 존재할 때만 추가.
+typeset -U path PATH
+path=("$HOMEBREW_PREFIX/bin" "$HOMEBREW_PREFIX/sbin" $path)
+for _d in \
+  "$HOME/.local/bin" \
+  "$HOME/go/bin" \
+  "$HOMEBREW_PREFIX/opt/rustup/bin" \
+  "$HOME/.antigravity/antigravity/bin" \
+  "$HOME/.antigravity-ide/antigravity-ide/bin"
+do
+  [[ -d $_d ]] && path=("$_d" $path)
+done
+unset _d
+
+# OpenJDK 21 (Homebrew, keg-only) — 설치돼 있을 때만
+if [[ -d "$HOMEBREW_PREFIX/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home" ]]; then
+  export JAVA_HOME="$HOMEBREW_PREFIX/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home"
+  path=("$JAVA_HOME/bin" $path)
+fi
+
+# pnpm — 설치돼 있을 때만
+if [[ -d "$HOME/Library/pnpm" ]]; then
+  export PNPM_HOME="$HOME/Library/pnpm"
+  path=("$PNPM_HOME/bin" $path)
+fi
+
+# pyenv
+export PYENV_ROOT="$HOME/.pyenv"
+[[ -d $PYENV_ROOT/bin ]] && path=("$PYENV_ROOT/bin" $path)
+command -v pyenv >/dev/null && eval "$(pyenv init -)"
+
+# ── 히스토리 / 셸 옵션 ─────────────────────────────────────
+HISTFILE=~/.zsh_history
+HISTSIZE=100000
+SAVEHIST=100000
+setopt SHARE_HISTORY          # 세션 간 히스토리 공유
+setopt HIST_IGNORE_ALL_DUPS   # 중복 명령은 최신 것만
+setopt HIST_IGNORE_SPACE      # 앞에 공백 붙이면 기록 안 함 (시크릿 입력용)
+setopt HIST_REDUCE_BLANKS
+setopt HIST_VERIFY            # !! 확장 시 바로 실행하지 않고 편집줄에 올림
+setopt AUTO_CD                # 디렉터리명만 쳐도 cd
+setopt INTERACTIVE_COMMENTS   # 대화형에서 # 주석 허용
+setopt NO_BEEP
+
+# ── 자동완성 ───────────────────────────────────────────────
+[[ -d "$HOMEBREW_PREFIX/share/zsh/site-functions" ]] && fpath=("$HOMEBREW_PREFIX/share/zsh/site-functions" $fpath)
+autoload -Uz compinit
+# 하루 한 번만 전체 스캔 (그 외엔 캐시) — 셸 기동 속도
+if [[ -n ${ZDOTDIR:-$HOME}/.zcompdump(#qN.mh+24) ]]; then compinit; else compinit -C; fi
+zstyle ':completion:*' menu select
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'   # 대소문자 무시
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+zstyle ':completion:*:descriptions' format '%F{yellow}-- %d --%f'
+
+# 키바인딩 — 히스토리 접두어 검색 (↑/↓ 는 입력한 접두어로 필터)
+bindkey '^[[A' history-beginning-search-backward
+bindkey '^[[B' history-beginning-search-forward
+
+# ── 툴 초기화 (없으면 조용히 건너뜀 — install.sh 1 단계가 설치) ──
+# Starship prompt (설정: ~/.config/starship.toml)
+command -v starship >/dev/null && eval "$(starship init zsh)"
+
+# zoxide (smarter cd) — `cd <keyword>` 로 점프. doctor 경고는 비대화형 false positive 라 끔
+if command -v zoxide >/dev/null; then
+  export _ZO_DOCTOR=0
+  eval "$(zoxide init zsh --cmd cd)"
+fi
+
+# fzf — Ctrl-R 히스토리 검색 / Ctrl-T 파일 / Alt-C 디렉터리
+if command -v fzf >/dev/null; then
+  source <(fzf --zsh)
+  export FZF_DEFAULT_OPTS="--height 40% --layout=reverse --border --info=inline"
+  command -v fd >/dev/null && export FZF_DEFAULT_COMMAND='fd --type f --hidden --exclude .git'
+fi
+
+# bun completions
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
+
+# ── alias (공통) ───────────────────────────────────────────
+alias cafein="caffeinate -di"
+
+# Modern CLI replacements
+if command -v eza >/dev/null; then
+  alias ls="eza --icons --group-directories-first"
+  alias ll="eza -l --icons --git --sort=modified"
+  alias la="eza -la --icons --git --group-directories-first"
+  alias lt="eza --tree --level=2 --icons"
+else
+  alias ll="ls -lG"
+  alias la="ls -laG"
+fi
+command -v bat >/dev/null && alias cat="bat --paging=never"
+# AI CLI: `claude --yolo`, `agy --yolo` → `--dangerously-skip-permissions`
+_yolo_exec() {
+  local cmd=$1 a
+  local -a args
+  shift
+  for a in "$@"; do
+    [[ "$a" == --yolo ]] && args+=(--dangerously-skip-permissions) || args+=("$a")
+  done
+  command "$cmd" "${args[@]}"
+}
+command -v claude >/dev/null && function claude { _yolo_exec claude "$@"; }
+command -v agy >/dev/null && function agy { _yolo_exec agy "$@"; }
+
+# ── 시크릿 (mode 600, 버전관리 제외) ────────────────────────
+# API 키 등 토큰은 전부 이 파일에. zshrc 에는 값을 절대 직접 쓰지 않는다
+[ -f "$HOME/.secrets.zsh" ] && source "$HOME/.secrets.zsh"
+
+# ── 머신별 alias/함수 (미추적) ──────────────────────────────
+# SSH 호스트 alias, 컨테이너 접속 alias, 프로젝트 전용 함수 등은 ~/.zshrc.local 에.
+# 템플릿: 저장소 zsh/zshrc.local.example
+[ -f "$HOME/.zshrc.local" ] && source "$HOME/.zshrc.local"
+
+# ── 플러그인 (순서 고정: autosuggestions → syntax-highlighting 은 맨 마지막) ──
+if [ -f "$HOMEBREW_PREFIX/share/zsh-autosuggestions/zsh-autosuggestions.zsh" ]; then
+  source "$HOMEBREW_PREFIX/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
+  ZSH_AUTOSUGGEST_STRATEGY=(history completion)
+fi
+[ -f "$HOMEBREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ] \
+  && source "$HOMEBREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"

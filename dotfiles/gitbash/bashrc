@@ -1,0 +1,50 @@
+# ~/.bashrc — Git Bash(Git for Windows) 용. windows/install-git.ps1 이 배치한다.
+# 폐쇄망을 전제로 외부 도구는 설치돼 있을 때만 활성화하고, 없으면 Git Bash 기본값을 그대로 쓴다.
+# 머신별 alias/함수·시크릿은 ~/.bashrc.local (미추적, 스크립트가 만들지 않음) 에 둔다.
+
+# 비대화형 셸(스크립트, bash -c)에서는 아무것도 하지 않는다
+case $- in *i*) ;; *) return ;; esac
+
+# ── 환경 ─────────────────────────────────────────────────
+# 한글 파일명·메시지가 깨지지 않게 UTF-8 로케일을 쓴다 (이미 UTF-8 이면 유지)
+case "${LANG:-}" in *UTF-8*|*utf8*) ;; *) export LANG=ko_KR.UTF-8 ;; esac
+export EDITOR="${EDITOR:-vim}"
+export LESS="-R -F -X"
+[ -d "$HOME/bin" ] && PATH="$HOME/bin:$PATH"
+[ -d "$HOME/.local/bin" ] && PATH="$HOME/.local/bin:$PATH"
+
+# git 이 한글 경로를 \355\225\234 처럼 이스케이프하지 않게 한다.
+# ~/.gitconfig 를 건드리지 않으려고 환경변수(GIT_CONFIG_COUNT, git 2.31+)로 이 셸에서만 적용한다.
+if [ -z "${GIT_CONFIG_COUNT:-}" ]; then
+  export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.quotepath GIT_CONFIG_VALUE_0=false
+fi
+
+# ── 히스토리·옵션 ────────────────────────────────────────
+HISTSIZE=50000
+HISTFILESIZE=50000
+HISTCONTROL=ignoreboth:erasedups
+HISTTIMEFORMAT='%F %T '
+shopt -s histappend checkwinsize cdspell
+# 창을 여러 개 띄워도 히스토리를 잃지 않게 명령마다 기록한다
+case "${PROMPT_COMMAND:-}" in *'history -a'*) ;; *) PROMPT_COMMAND="history -a${PROMPT_COMMAND:+; $PROMPT_COMMAND}" ;; esac
+
+# ── 툴 초기화 (있을 때만) ────────────────────────────────
+# starship 이 없으면 Git Bash 기본 프롬프트(브랜치 표시 포함)를 그대로 쓴다
+command -v starship >/dev/null 2>&1 && eval "$(starship init bash)"
+command -v zoxide >/dev/null 2>&1 && eval "$(zoxide init bash --cmd cd)"
+
+# ── alias ────────────────────────────────────────────────
+alias ls='ls --color=auto --show-control-chars'
+alias ll='ls -alF'
+alias la='ls -A'
+alias grep='grep --color=auto'
+alias ..='cd ..'
+alias ...='cd ../..'
+alias gs='git status -sb'
+alias gl='git log --oneline --graph --decorate -20'
+alias gd='git diff'
+# Windows 탐색기로 현재 디렉터리 열기
+alias open='explorer.exe'
+
+# ── 머신별 ───────────────────────────────────────────────
+if [ -f "$HOME/.bashrc.local" ]; then . "$HOME/.bashrc.local"; fi

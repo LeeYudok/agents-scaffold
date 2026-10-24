@@ -1,0 +1,24 @@
+# ~/.zshrc.local — 머신별 alias/함수 (미추적). zshrc.macos / zshrc.linux 가 플러그인 직전에 source 한다.
+# 이 파일은 저장소 템플릿(zsh/zshrc.local.example). 복사해서 쓴다: cp zsh/zshrc.local.example ~/.zshrc.local
+# 아래 예시는 전부 주석 처리돼 있다. 필요한 것만 풀고 <...> 를 그 머신 값으로 바꾼다.
+# 시크릿 값은 여기가 아니라 ~/.secrets.zsh (mode 600) 에.
+# 실제 호스트명·IP·내부 URL 을 채운 사본은 저장소에 커밋하지 않는다.
+
+# ── SSH 호스트 (~/.ssh/config 의 Host 항목, 키 인증) ─────────
+# alias <host>="ssh <host>"
+
+# ── 컨테이너 ───────────────────────────────────────────────
+# alias <name>='podman exec -it <container> bash'
+
+# ── 프로젝트별 환경 ─────────────────────────────────────────
+# 경로가 있을 때만 설정해 두면 같은 파일을 여러 머신에서 써도 조용히 건너뛴다.
+# [[ -x "$HOME/<path>/bin/python" ]] && export <TOOL>_PYTHON="$HOME/<path>/bin/python"
+
+# ── 함수 ───────────────────────────────────────────────────
+# 키가 필요한 CLI 는 값을 환경에 남기지 않도록 함수 안에서만 주입한다.
+# <name>() {
+#   local key
+#   key="$(<시크릿 저장소에서 키를 읽는 명령>)" || return
+#   [[ -n "$key" ]] || { print -u2 '키를 가져오지 못했습니다.'; return 1; }
+#   <ENV_KEY>="$key" command <cli> "$@"
+# }

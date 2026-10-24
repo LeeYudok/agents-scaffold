@@ -1,0 +1,321 @@
+# AGENTS.md 의 기계 판독용 짝: 구성요소 그래프, 명령, 정책 요약, 알려진 함정.
+# 시크릿 값은 절대 넣지 않는다 — 파일 경로와 환경변수 키 이름만.
+# 날짜·버전은 항상 따옴표로 감싼다('2026-01-31', '1.10'). YAML 이 타입을 조용히 바꾼다.
+# 서술이 충돌하면 실제 코드 > AGENTS.md > 이 파일 순으로 따른다.
+# 고친 뒤에는 scripts/check-agents-yaml.sh 로 검증한다.
+schema_version: '1.0'
+
+meta:
+  name: dotfiles
+  description: '새 머신에 zsh·starship·Claude/Codex/Antigravity statusline 을 한 번에 맞추는 개인 dotfiles 부트스트랩'
+  updated: '2026-09-28'
+  repo_url: 'https://github.com/LeeYudok/dotfiles'
+  tracker: github
+  issue_tracker_url: 'https://github.com/LeeYudok/dotfiles/issues'
+  issue_rule: '이슈를 먼저 등록하고 번호를 브랜치·커밋 제목(<type>(#N): ...)에 넣는다'
+  branch_strategy:
+    main: '기본 브랜치. 직접 커밋하지 않는다'
+    work: '<feat|fix|docs|chore>/issue-<N>-<slug> -> PR'
+  public_repository: true
+  language: '커밋 메시지·문서·주석은 한국어, 표준 문어체'
+
+environments:
+  macos:
+    arch: 'Apple Silicon / Intel'
+    package_manager: brew
+    zshrc: zsh/zshrc.macos
+  linux:
+    package_manager: 'dnf (RHEL/Rocky) 또는 apt-get (Debian)'
+    zshrc: zsh/zshrc.linux
+  wsl2:
+    notes: 'Linux 경로를 그대로 쓴다. /proc/version 의 microsoft 로 감지, Nerd Font 단계는 안내만'
+  windows-offline:
+    notes: '인터넷·WSL2 불가. Git 오프라인 설치 + Git Bash 설정만. zsh·starship·statusline 없음'
+  unsupported:
+    - 'Git Bash/MSYS/Cygwin 에서 install.sh (0 단계에서 중단)'
+  ci: 'GitHub Actions: PR·main push에서 식별자·문법 검사'
+
+nodes:
+# 진입점
+- id: install
+  type: bash-script
+  label: '부트스트랩. 0 의존성 검사 → 1 패키지 → 2 starship.toml·eza theme.yml → 2.5 Nerd Fonts → 3 zshrc → 4 Claude statusline → 5 Codex → 6 Antigravity → 7 chsh 안내'
+  path: install.sh
+- id: uninstall
+  type: bash-script
+  label: 'install.sh 의 역연산. --purge, --keep-backup'
+  path: uninstall.sh
+- id: install-git
+  type: powershell-script
+  label: '폐쇄망 Windows 부트스트랩. 사전 검사(서명) → Git 오프라인 설치 → PATH → Windows Terminal fragment·바로가기 → bashrc'
+  path: windows/install-git.ps1
+  files: [windows/install-git.cmd]
+- id: uninstall-git
+  type: powershell-script
+  label: 'install-git.ps1 의 역연산. -Purge, -KeepBackup'
+  path: windows/uninstall-git.ps1
+  files: [windows/uninstall-git.cmd]
+
+# 배치되는 설정 파일
+- id: starship-toml
+  type: config
+  label: '프롬프트 정의. Catppuccin Mocha, 2줄, Nerd Font 글리프. starship 1.22 호환'
+  path: starship/starship.toml
+  deploy_to: '~/.config/starship.toml'
+- id: eza-theme
+  type: config
+  label: 'eza 아이콘 덮어쓰기. v3 전용 코드를 v2·v3 공통 글리프로'
+  path: eza/theme.yml
+  deploy_to: '~/.config/eza/theme.yml'
+- id: zshrc-macos
+  type: config
+  label: 'Darwin 용 zshrc. HOMEBREW_PREFIX 자동 감지'
+  path: zsh/zshrc.macos
+  deploy_to: '~/.zshrc'
+- id: zshrc-linux
+  type: config
+  label: 'Linux 용 미니멀 zshrc. 도구가 없으면 기본값으로 폴백'
+  path: zsh/zshrc.linux
+  deploy_to: '~/.zshrc'
+- id: zshrc-local-example
+  type: template
+  label: '~/.zshrc.local 템플릿. 배치하지 않는다. placeholder 만'
+  path: zsh/zshrc.local.example
+- id: claude-statusline
+  type: bash-script
+  label: 'Claude Code statusLine JSON(stdin) → 두 줄 출력'
+  path: claude/statusline-command.sh
+  deploy_to: '~/.claude/statusline-command.sh'
+- id: codex-status-line
+  type: python-script
+  label: 'check/apply/restore. ~/.codex/config.toml 의 [tui] status_line 키만 줄 단위 편집'
+  path: codex/status-line.py
+- id: codex-cost-hook
+  type: python-script
+  label: 'Codex Stop 훅. rollout 의 token_count 를 API 단가로 환산해 systemMessage 출력. 단가표 보유'
+  path: codex/cost-hook.py
+  deploy_to: '~/.codex/cost-hook.py'
+- id: codex-hooks
+  type: python-script
+  label: 'check/apply/restore. ~/.codex/hooks.json 의 Stop 에 비용 훅 항목 하나만 추가/제거'
+  path: codex/hooks.py
+- id: agy-statusline
+  type: bash-script
+  label: 'Antigravity CLI 상태 JSON(stdin) → 두 줄 출력. 남은 비율을 사용률로 바꿔 표시'
+  path: agy/statusline-command.sh
+  deploy_to: '~/.gemini/antigravity-cli/statusline-command.sh'
+- id: agy-settings
+  type: python-script
+  label: 'check/apply/restore. settings.json 의 statusLine 키만(type/command/enabled) 편집'
+  path: agy/settings.py
+- id: gitbash-bashrc
+  type: config
+  label: 'Git Bash 용 bashrc. UTF-8·core.quotepath(환경변수로만)·히스토리·alias'
+  path: gitbash/bashrc
+  deploy_to: '~/.bashrc'
+- id: gitbash-bash-profile
+  type: config
+  label: '로그인 셸이 ~/.bashrc 를 읽게 한다'
+  path: gitbash/bash_profile
+  deploy_to: '~/.bash_profile'
+
+# 검사 자동화
+- id: check-identifiers
+  type: bash-script
+  label: 'Git 인덱스의 식별자 패턴 검사. 검출 시 파일명만 출력'
+  path: scripts/check-identifiers.sh
+- id: check-syntax
+  type: bash-script
+  label: 'bash·zsh 파일별 문법 검사와 Python 컴파일 검사'
+  path: scripts/check-syntax.sh
+- id: ci-check
+  type: workflow
+  label: 'PR·main push에서 식별자·문법 검사'
+  path: .github/workflows/check.yml
+
+# 시험
+- id: test-install-safety
+  type: test
+  label: '임시 HOME·모의 apt/dnf/sudo로 반복 제거·파일 보존·Claude 사전 검사·설치 기록·플러그인 tarball 폴백·purge 검증'
+  path: scripts/test-install-safety.sh
+- id: test-codex-status-line
+  type: test
+  label: 'status-line.py 임시 HOME 왕복. status_line 순서까지 검증'
+  path: scripts/test-codex-status-line.sh
+- id: test-codex-cost-hook
+  type: test
+  label: 'cost-hook.py 금액 계산(고정 rollout)과 hooks.py 임시 HOME 왕복'
+  path: scripts/test-codex-cost-hook.sh
+- id: test-agy-statusline
+  type: test
+  label: 'agy/settings.py 임시 HOME 왕복과 고정 payload 렌더'
+  path: scripts/test-agy-statusline.sh
+- id: test-windows-git
+  type: test
+  label: 'windows/·gitbash/ 정적 시험. 인코딩·줄바꿈·bash 문법·pwsh 구문 분석(있을 때)'
+  path: scripts/test-windows-git.sh
+- id: test-windows-paths
+  type: test
+  label: 'Git Bash 거부(어느 OS 나)와 WSL 폰트 건너뛰기(Linux 에서만)'
+  path: scripts/test-windows-paths.sh
+
+# 홈에 있는 사용자 소유 파일 (이 저장소가 만들지도 지우지도 않는다)
+- id: home-claude-settings
+  type: user-config
+  label: '~/.claude/settings.json — statusLine 키만 merge'
+- id: home-codex-config
+  type: user-config
+  label: '~/.codex/config.toml — [tui] status_line 키만 merge'
+- id: home-codex-hooks
+  type: user-config
+  label: '~/.codex/hooks.json — 공유 파일. 비용 훅 항목 하나만 넣고 뺀다'
+- id: home-agy-settings
+  type: user-config
+  label: '~/.gemini/antigravity-cli/settings.json — statusLine 키만 merge'
+- id: home-backup
+  type: state-dir
+  label: '~/.config/dotfiles/backup — 원본 기록(.orig/.absent)과 설치 manifest'
+
+# 외부 의존
+- id: brew
+  type: package-manager
+  label: 'Homebrew (macOS 필수)'
+- id: dnf-apt
+  type: package-manager
+  label: 'dnf 또는 apt-get (Linux)'
+- id: package-query
+  type: cli
+  label: 'Linux 플러그인 설치 여부 조회: dnf는 rpm, apt-get은 dpkg-query (0 단계 필수 검사)'
+- id: starship-installer
+  type: external-url
+  label: 'https://starship.rs/install.sh — 배포판 패키지가 없을 때'
+- id: nerd-fonts
+  type: external-url
+  label: 'GitHub ryanoasis/nerd-fonts 릴리스 zip (JetBrainsMono, D2Coding)'
+- id: cli-tool-releases
+  type: external-url
+  label: 'GitHub 릴리스 바이너리 (zoxide, fzf, eza) — Linux 에서 ~/.local/bin 에 설치'
+- id: zsh-plugin-tarballs
+  type: external-url
+  label: 'GitHub zsh-users 태그 tarball (zsh-autosuggestions v0.7.1, zsh-syntax-highlighting 0.8.0) — Linux 에서 sudo 불가·패키지 설치 실패 시 ~/.local/share/zsh/plugins 에 설치'
+- id: jq
+  type: cli
+  label: 'statusline 스크립트가 JSON 파싱에 사용'
+- id: python3
+  type: cli
+  label: 'codex/·agy/ 의 merge 도구와 비용 훅 실행'
+- id: git-for-windows
+  type: offline-installer
+  label: '반입한 Git for Windows 설치 파일 (windows/offline/, 미추적)'
+
+edges:
+- {from: test-install-safety, to: install, rel: tests}
+- {from: test-install-safety, to: uninstall, rel: tests}
+- {from: install, to: package-query, rel: requires}
+- {from: ci-check, to: check-identifiers, rel: invokes}
+- {from: ci-check, to: check-syntax, rel: invokes}
+- {from: install, to: starship-toml, rel: deploys}
+- {from: install, to: eza-theme, rel: deploys}
+- {from: install, to: zshrc-macos, rel: deploys, env: [HOME]}
+- {from: install, to: zshrc-linux, rel: deploys, env: [HOME]}
+- {from: install, to: claude-statusline, rel: deploys}
+- {from: install, to: codex-cost-hook, rel: deploys}
+- {from: install, to: agy-statusline, rel: deploys}
+- {from: install, to: codex-status-line, rel: invokes}
+- {from: install, to: codex-hooks, rel: invokes}
+- {from: install, to: agy-settings, rel: invokes}
+- {from: install, to: home-claude-settings, rel: merges_key}
+- {from: install, to: home-backup, rel: writes, env: [HOME]}
+- {from: install, to: brew, rel: uses}
+- {from: install, to: dnf-apt, rel: uses}
+- {from: install, to: starship-installer, rel: downloads}
+- {from: install, to: nerd-fonts, rel: downloads, env: [DOTFILES_PROC_VERSION]}
+- {from: install, to: cli-tool-releases, rel: downloads}
+- {from: install, to: zsh-plugin-tarballs, rel: downloads}
+- {from: install, to: python3, rel: requires}
+- {from: uninstall, to: home-backup, rel: reads}
+- {from: uninstall, to: codex-status-line, rel: invokes}
+- {from: uninstall, to: codex-hooks, rel: invokes}
+- {from: uninstall, to: agy-settings, rel: invokes}
+- {from: codex-status-line, to: home-codex-config, rel: merges_key}
+- {from: codex-hooks, to: home-codex-hooks, rel: merges_entry}
+- {from: codex-cost-hook, to: home-codex-config, rel: reads}
+- {from: agy-settings, to: home-agy-settings, rel: merges_key}
+- {from: claude-statusline, to: jq, rel: requires}
+- {from: agy-statusline, to: jq, rel: requires}
+- {from: install-git, to: git-for-windows, rel: installs}
+- {from: install-git, to: gitbash-bashrc, rel: deploys, env: [USERPROFILE, LOCALAPPDATA, APPDATA]}
+- {from: install-git, to: gitbash-bash-profile, rel: deploys}
+- {from: uninstall-git, to: git-for-windows, rel: removes}
+- {from: test-codex-status-line, to: codex-status-line, rel: tests}
+- {from: test-codex-cost-hook, to: codex-cost-hook, rel: tests}
+- {from: test-codex-cost-hook, to: codex-hooks, rel: tests}
+- {from: test-agy-statusline, to: agy-settings, rel: tests}
+- {from: test-agy-statusline, to: agy-statusline, rel: tests}
+- {from: test-windows-git, to: install-git, rel: tests}
+- {from: test-windows-git, to: gitbash-bashrc, rel: tests}
+- {from: test-windows-paths, to: install, rel: tests}
+
+commands:
+  syntax:
+    all: scripts/check-syntax.sh
+  roundtrip:
+    install_twice: 'T="$(mktemp -d)"; HOME="$T" ./install.sh && HOME="$T" ./install.sh'
+    uninstall_clean: 'HOME="$T" ./uninstall.sh && find "$T" -type f -not -path "*/Library/Caches/*"'
+  tests:
+    install_safety: scripts/test-install-safety.sh
+    claude_statusline: 'echo ''{"workspace":{"current_dir":"/tmp"},"model":{"display_name":"test"}}'' | bash claude/statusline-command.sh'
+    codex_status_line: scripts/test-codex-status-line.sh
+    codex_cost_hook: scripts/test-codex-cost-hook.sh
+    agy_statusline: scripts/test-agy-statusline.sh
+    windows_git: scripts/test-windows-git.sh
+    windows_paths: scripts/test-windows-paths.sh
+  checks:
+    agents_yaml: scripts/check-agents-yaml.sh
+    identifier_scan: scripts/check-identifiers.sh
+
+secret_files: []
+
+env_keys:
+  install: [HOME, DOTFILES_PROC_VERSION]
+  uninstall: [HOME]
+  codex-status-line: [HOME]
+  codex-hooks: [HOME]
+  codex-cost-hook: [HOME]
+  agy-settings: [HOME]
+  install-git: [USERPROFILE, LOCALAPPDATA, APPDATA, TEMP, SystemRoot, Path]
+
+policies:
+- {id: public-repo, rule: '어느 머신에나 적용 가능한 것만 커밋. 호스트명·IP·내부 URL·토큰·사용자명 경로 금지', source: AGENTS.md}
+- {id: idempotent, rule: 'install.sh·uninstall.sh 는 재실행해도 결과가 같다', source: AGENTS.md}
+- {id: fail-before-change, rule: '0 단계 실패 시 홈에 아무것도 만들지 않는다. 새 전제 조건은 0 단계에. Claude JSON은 객체인지 검사, Linux는 rpm/dpkg-query 필수', source: AGENTS.md}
+- {id: deploy-file-only, rule: '홈 파일 배치는 deploy_file 로만(.orig/.absent → .bak → 복사). cp 직접 호출 금지', source: AGENTS.md, files: [install.sh]}
+- {id: settings-key-merge, rule: 'Claude/Antigravity settings.json 은 statusLine 키만, 원자적 쓰기·mode 보존, 깨진 JSON 이면 중단', source: AGENTS.md, files: [install.sh, agy/settings.py]}
+- {id: codex-config-key-merge, rule: 'config.toml 은 [tui] status_line 줄만 교체, 나머지 바이트 보존. 로직은 status-line.py 한 곳', source: AGENTS.md, files: [codex/status-line.py]}
+- {id: hooks-json-shared, rule: 'hooks.json 은 통째로 복원하지 않고 비용 훅 항목만 넣고 뺀다', source: AGENTS.md, files: [codex/hooks.py]}
+- {id: cost-hook-never-blocks, rule: 'cost-hook.py 는 어떤 오류든 exit 0. 단가표를 고치면 출처 URL·확인 날짜 주석도 갱신', source: AGENTS.md, files: [codex/cost-hook.py]}
+- {id: no-dir-for-absent-tool, rule: 'Codex·Antigravity 를 쓰지 않는 머신에서는 ~/.codex, ~/.gemini 를 만들지 않는다', source: AGENTS.md, files: [install.sh]}
+- {id: wsl-home-only, rule: 'WSL 에서는 $HOME 밖을 건드리지 않는다. 폰트는 안내만', source: AGENTS.md, files: [install.sh]}
+- {id: remove-only-installed, rule: '--purge 는 manifest 에 기록된 패키지·폰트 파일·플러그인 디렉터리만 제거. 플러그인·EPEL은 새로 설치한 것만 기록. tarball 플러그인은 plugin-installed.txt 에 기록된 ~/.local/share/zsh/plugins 아래 경로만 지운다. 기록 없는 파일·백업·Claude 설정·Codex 훅은 보존', source: AGENTS.md, files: [uninstall.sh]}
+- {id: user-files-untouched, rule: '~/.zshrc.local, ~/.secrets.zsh, ~/.claude/CLAUDE.md 는 만들지도 지우지도 않는다', source: AGENTS.md}
+- {id: install-uninstall-pair, rule: 'install.sh 가 새로 만드는 것은 같은 변경에서 uninstall.sh 에 역연산', source: AGENTS.md, files: [install.sh, uninstall.sh]}
+- {id: step-numbering-sync, rule: 'install.sh 섹션 번호·헤더 주석·README 단계 표는 같은 번호', source: AGENTS.md, files: [install.sh, README.md]}
+- {id: zshrc-structure, rule: '두 zshrc 는 같은 섹션 순서, 도구는 있을 때만, zsh-syntax-highlighting 은 맨 마지막', source: AGENTS.md, files: [zsh/zshrc.macos, zsh/zshrc.linux]}
+- {id: windows-encoding, rule: '.ps1 은 UTF-8 BOM·CRLF, .cmd 는 ASCII·CRLF, gitbash/ 는 LF. PowerShell 5.1 문법만', source: AGENTS.md, files: [.gitattributes]}
+- {id: offline-windows, rule: '인터넷에서 받지 않는다. 설치한 Git·추가한 PATH 항목만 기록·제거. Windows Terminal 은 fragment 로만', source: AGENTS.md, files: [windows/install-git.ps1, windows/uninstall-git.ps1]}
+- {id: prompt-glyphs, rule: '프롬프트 심볼은 Nerd Font 글리프만, 이모지 금지. v2·v3 공통 BMP(U+E000~F8FF)만, v3 전용 5자리(U+F0000~) 금지', source: AGENTS.md, files: [starship/starship.toml, eza/theme.yml]}
+- {id: docs-sync, rule: '동작을 바꾸면 README 해당 절과 스크립트 헤더 주석을 같은 커밋에서 갱신', source: AGENTS.md}
+- {id: agents-yaml-sync, rule: '구성요소·경로·명령·환경변수가 바뀌면 AGENTS.md 와 AGENTS.yaml 을 함께 고치고 scripts/check-agents-yaml.sh 를 돌린다', source: AGENTS.md}
+
+known_issues:
+- {id: trap-return-leaks, summary: 'bash 의 trap ... RETURN 은 함수 밖으로 새어 이후 모든 함수 리턴에 발화한다. 임시 디렉터리 정리는 단일 지점에서', source: AGENTS.md, files: [install.sh]}
+- {id: ps51-bom, summary: 'Windows PowerShell 5.1 은 BOM 없는 .ps1 의 한글을 cp949 로 읽어 구문까지 깨진다', source: AGENTS.md, files: [scripts/test-windows-git.sh]}
+- {id: gitbash-autocreates-profile, summary: '~/.bash_profile 이 없으면 Git Bash 가 스스로 만들어 역연산에서 빠진다. 그래서 함께 배치한다', source: AGENTS.md, files: [gitbash/bash_profile]}
+- {id: nerd-font-v2-terminals, summary: 'Termius 등 일부 터미널은 Nerd Font v2 계열 폰트를 내장해 v3 전용 5자리 글리프(U+F0000~)가 깨진다. starship·eza 글리프는 BMP 영역만 쓴다', source: AGENTS.md, files: [starship/starship.toml, eza/theme.yml]}
+- {id: roundtrip-downloads-fonts, summary: '임시 HOME 왕복은 Nerd Font 를 실제로 받는다(수십 MB). 폰트 무관 변경이면 .nerd-font-<name>-installed 마커로 건너뛴다', source: AGENTS.md}
+- {id: macos-brew-cache, summary: 'macOS 임시 HOME 왕복 뒤 Library/Caches 에 brew 캐시가 남는다. 잔여 파일 검사에서 제외', source: AGENTS.md}
+- {id: identifier-scan-self-match, summary: '패턴을 정의하는 검사 스크립트만 제외한다. git add 후 실행하며 검출·Git 오류는 실패한다', source: AGENTS.md}
+
+docs:
+- {path: AGENTS.md, what: '에이전트 지침 (사람용 SoT)'}
+- {path: README.md, what: '사용자용 설치·사용법, 단계 표'}

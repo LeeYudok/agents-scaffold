@@ -1,0 +1,27 @@
+# CodeGraph 로컬 인덱스
+.codegraph/
+
+# 머신별·시크릿 파일 — 실수로 저장소 안에 복사해도 추적되지 않게 한다
+.zshrc.local
+zshrc.local
+.secrets.zsh
+.bashrc.local
+.env
+.env.*
+*.bak
+
+# 개인 에이전트 지침·설정 (원천은 각 도구의 홈 디렉터리)
+claude/CLAUDE.md
+claude/settings.json
+claude/settings.local.json
+codex/config.toml
+agy/settings.json
+
+# 폐쇄망 반입용 Git for Windows 설치 파일 (windows/offline/ 에 두고 쓴다 — 저장소에는 올리지 않는다)
+windows/offline/
+
+# python 산출물 (py_compile 검증)
+__pycache__/
+
+# OS 산출물
+.DS_Store
