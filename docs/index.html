@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>agents-scaffold — enforce AI coding agent rules with a pre-commit gate</title>
-<meta name="description" content="Fork-and-fill bootstrap for AI coding agents. One command drops a .claude/ setup, tiered rules (P0/P1/P2), stack presets and an enforced pre-commit gate into your repo. Claude Code first, Codex and other AGENTS.md harnesses supported.">
+<title>agents-scaffold — guardrails for Claude Code, Codex and Antigravity, enforced by a git pre-commit gate</title>
+<meta name="description" content="Guardrails for AI coding agents. One command installs AGENTS.md, path-scoped rules, skills, subagents, hooks and a real git pre-commit gate for Claude Code, Codex and Antigravity. 12 stack presets, 24 skills, offline and Windows install, plugin marketplace. Plain files, no runtime.">
 <link rel="canonical" href="https://leeyudok.github.io/agents-scaffold/">
 <meta property="og:type" content="website">
-<meta property="og:title" content="agents-scaffold — enforce AI coding agent rules with a pre-commit gate">
+<meta property="og:title" content="agents-scaffold — guardrails for Claude Code, Codex and Antigravity, enforced by a git pre-commit gate">
 <meta property="og:description" content="AI coding agents break your rules. This blocks the commit instead of asking nicely.">
 <meta property="og:url" content="https://leeyudok.github.io/agents-scaffold/">
 <meta property="og:image" content="https://leeyudok.github.io/agents-scaffold/assets/social-preview.png">
@@ -49,12 +49,13 @@
 <div class="wrap">
 <header>
   <h1>agents-scaffold</h1>
-  <p class="sub">Fork-and-fill bootstrap for AI coding agents — MIT</p>
+  <p class="sub">Guardrails for Claude Code, Codex and Antigravity — MIT</p>
 </header>
 
 <p class="lede"><em>AI coding agents break your rules.</em><br>This blocks the commit instead of asking nicely.</p>
-<p class="sub">One command drops a <code>.claude/</code> setup and a pre-commit gate into your repo.
-No framework, no runtime, no registry to install from — what you get is plain files you own outright.</p>
+<p class="sub">One command installs an <code>AGENTS.md</code> project brain, path-scoped rules, skills, subagents,
+hooks and a composed pre-commit gate into your repo — for Claude Code, Codex and Antigravity at once.
+No framework, no runtime, no registry — plain files you own outright.</p>
 
 <a class="cta" href="https://github.com/LeeYudok/agents-scaffold">View on GitHub</a>
 <a class="cta" href="https://github.com/LeeYudok/agents-scaffold#quickstart">Quickstart</a>
@@ -64,6 +65,8 @@ No framework, no runtime, no registry to install from — what you get is plain 
   <li>You re-explain the same rules every session — what you told the agent yesterday is gone today.</li>
   <li>An agent staged your <code>.env</code>, or produced a commit with type errors still in it.</li>
   <li>Every teammate has a different <code>CLAUDE.md</code>, so results depend on whose session it was.</li>
+  <li>Your team mixes Claude Code, Codex and Antigravity, and you want one set of rules for all of them.</li>
+  <li>You work on an air-gapped network or Windows, and most agent setups assume neither.</li>
 </ul>
 <p>Rules that live only in a document get ignored eventually. This scaffold turns them into a gate
 that blocks the commit, and plants it in the repo.</p>
@@ -82,9 +85,9 @@ what stops it, so it holds whichever AI tool you use, and it holds when a human 
 <h2>Harness support</h2>
 <table>
   <tr><th>Harness</th><th>Measured</th><th>baseline</th><th>full</th></tr>
-  <tr><td>Claude Code</td><td>2.1.289</td><td>holds</td><td>rules, skills, subagents, hooks</td></tr>
-  <tr><td>Codex</td><td>codex-cli 0.160.0 / GPT-6.1 Sol</td><td>holds</td><td>skills, subagents, hooks (no path-scoped rules — stays baseline)</td></tr>
-  <tr><td>Antigravity</td><td>agy 1.2.16</td><td>holds</td><td>full — skills, glob rules, subagents, hooks</td></tr>
+  <tr><td>Claude Code</td><td>2.1.299</td><td>holds</td><td>rules, skills, subagents, hooks</td></tr>
+  <tr><td>Codex</td><td>codex-cli 0.163.0</td><td>holds</td><td>skills, subagents, hooks (no path-scoped rules — stays baseline)</td></tr>
+  <tr><td>Antigravity</td><td>agy 1.4.2</td><td>holds</td><td>full — skills, glob rules, subagents, hooks</td></tr>
 </table>
 <p><strong>baseline</strong> means the <code>AGENTS.md</code> policy body plus a real
 <code>.git/hooks/pre-commit</code> gate and CI — it holds on every harness, and it holds when a
@@ -96,9 +99,11 @@ that CI fails when a claim goes 90 days without re-measurement.</p>
 <h2>What's in the box</h2>
 <ul>
   <li><strong>Tiered rules</strong> — P0 (stop work), P1 (blocks the PR), P2 (review note), wired into hooks rather than prose.</li>
-  <li><strong>Path-scoped rules</strong> — a rule loads only when Claude reads a matching file, so context stays cheap.</li>
-  <li><strong>10 stack presets</strong> — Next.js, Bun, Python, Go, Rust, Spring Boot, Java Web, Android, Flutter, Ops — composed into one pre-commit gate.</li>
-  <li><strong>Subagents and skills</strong> — code review, security audit, DB migration safety, SDLC role split, self-improving skill/agent definitions.</li>
+  <li><strong>Path-scoped rules</strong> — a rule loads only when the agent touches a matching file, so context stays cheap.</li>
+  <li><strong>12 stack presets</strong> — Next.js, Spring Boot, Java Web, Bun, Python, Go, Rust, Ruby on Rails, .NET, Android, Flutter, Ops — composed into one pre-commit gate. GitHub or GitLab, Korean or English.</li>
+  <li><strong>24 skills and subagents</strong> — code review, security audit, DB migration safety, SDLC role split, PostgreSQL/Oracle/SQLite, Go, React, TypeScript, dependency CVE checks, self-improving skill/agent definitions.</li>
+  <li><strong>Air-gapped and Windows</strong> — an offline bundle installs with no network; Windows runs through Git Bash.</li>
+  <li><strong>Plugin marketplace</strong> — <code>claude plugin marketplace add LeeYudok/agents-scaffold</code> (Codex reads the same marketplace).</li>
   <li><strong>Project memory</strong> — learnings accumulate under <code>.claude/memory/</code> and load next session.</li>
 </ul>
 
