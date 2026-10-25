@@ -8,7 +8,7 @@
 - [제목](project_xxx.md) — 한 줄 훅
 -->
 
-- [하네스 설정 계약 실측](reference_harness-config-contracts.md) — Claude/Codex/agy 의 설정·디스커버리 경로와 함정(32KiB, trust boundary, PreToolUse 는 강제선 아님, 세 하네스 모두 AGENTS.md 네이티브 로드하나 Claude 는 CLAUDE.md 있으면 무시, 스킬은 Codex·agy=.agents/skills·Claude=.claude/skills, Codex·agy 서브에이전트·훅·경로별 지침 경로와 신뢰 조건, PreCompact 는 prompt 훅 미지원, 2026-10-14 3사 문서 대조) + 실측 요령
+- [하네스 설정 계약 실측](reference_harness-config-contracts.md) — Claude/Codex/agy 의 설정·디스커버리 경로와 함정(32KiB, trust boundary, PreToolUse 는 강제선 아님, 세 하네스 모두 AGENTS.md 네이티브 로드하나 Claude 는 CLAUDE.md 있으면 무시, 스킬은 Codex·agy=.agents/skills·Claude=.claude/skills, Codex·agy 서브에이전트·훅·경로별 지침 경로와 신뢰 조건, PreCompact 는 prompt 훅 미지원, 2026-10-24 3사 문서 대조·플러그인 실측(Claude·Codex 공용 .claude-plugin, Codex 는 심링크를 버림, Codex 는 .codex/skills 도 탐색)) + 실측 요령(클라우드 프록시는 레포 설정 쓰기 차단)
 - [이슈 #20 3자 교차리뷰 결론](project_agents-scaffold-multiagent-review.md) — compile-time emitter 확정, 해시검증 폐기→P0 reachability, 남은 후속 a~c
 - [README 다국어 동시 수정](feedback_readme-multilang-sync.md) — README.md 고치면 en/zh/ja 3종도 같은 커밋에서. 언어 간 일치를 검사하는 자동 게이트가 없다
 - [이슈 클레임·바운티 정책](project_issue-claim-and-bounty-policy.md) — 외부 `/attempt` 코멘트와 유료 작업 제안에 대한 확정 대응
