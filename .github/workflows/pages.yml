@@ -1,0 +1,46 @@
+# GitHub Pages — docs/ 가 바뀐 main push 때만 배포한다 (#100).
+# 예전 legacy 브랜치 배포는 main push 마다 돌았다. 빌드는 legacy 와 같은 Jekyll(jekyll-build-pages)이라
+# docs/*.md → *.html 렌더링(OPTIONS.html 등)과 llms.txt·assets 서빙 결과가 그대로다.
+# 사이트를 고치지 않고 다시 배포하려면 Actions 탭에서 이 워크플로를 수동 실행(workflow_dispatch)한다.
+name: pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/configure-pages@v5
+      - uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./docs
+          destination: ./_site
+      - uses: actions/upload-pages-artifact@v3
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
