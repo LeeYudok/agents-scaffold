@@ -51,7 +51,7 @@ agents-scaffold/bin/agents-scaffold.sh /path/to/repo --harness all --stack pytho
 | **프롬프트가 아니라 git 이 강제** | `.git/hooks/pre-commit` 이 스테이징된 `.env`/시크릿, 빌드 깨짐, 타입·린트 에러를 막는다. 어떤 AI 도구를 쓰든, 사람이 직접 커밋하든 똑같이 걸린다. |
 | **원본 하나, 에이전트 셋** | `AGENTS.md` 가 단일 진실원천이고, Claude Code·Codex·Antigravity 모두 이를 네이티브로 읽는다. 스킬은 `.agents/skills/` 에 한 벌만 둔다. Codex 서브에이전트(`.codex/agents/*.toml`)와 Antigravity 룰·서브에이전트·훅은 `.claude/` 에서 생성한다. |
 | **가정이 아니라 실측** | 하네스에 관한 주장은 모두 [docs/harness-matrix.json](docs/harness-matrix.json) 의 실측으로 뒷받침된다 — Claude Code 와 Antigravity 는 **full** 등급, Codex 는 **baseline** 등급. 실측이 만료되면 CI 가 실패한다. |
-| **스택 프리셋 12종** | Next.js, Spring Boot, Java web(JSP), Bun, Python, Go, Rust, Ruby on Rails, .NET, Android, Flutter, ops — 각각 룰과 자체 build/lint/test 게이트를 더한다. forge 는 GitHub 또는 GitLab, 출력 언어는 한국어 또는 영어. |
+| **스택 프리셋 13종** | Next.js, Spring Boot, Java web(JSP), Bun, Python, Go, Rust, Ruby on Rails, .NET, PHP Laravel, Android, Flutter, ops — 각각 룰과 자체 build/lint/test 게이트를 더한다. forge 는 GitHub 또는 GitLab, 출력 언어는 한국어 또는 영어. |
 | **paths 스코프 룰** | 에이전트가 매칭 파일을 만질 때만 룰이 로드된다. 모든 컨벤션을 미리 싣지 않으니 컨텍스트가 가볍다. |
 | **기본 스킬 24개** | 워크플로(review, status, handoff, docs-sync, 보안 사전점검 등)와 `yd-*` 전문 스킬: PostgreSQL, Oracle, SQLite, 관계형 설계, Go, React, TypeScript, Vite/pnpm 빌드, 모바일 화면설계, **의존성 CVE 점검**(온라인은 `pnpm audit`, 오프라인은 OSV 덤프). |
 | **폐쇄망·Windows 지원** | 오프라인 번들은 네트워크 없이 설치된다. Windows 는 Git Bash 와 `.cmd` 런처로 돌아간다([docs/OFFLINE_INSTALL.md](docs/OFFLINE_INSTALL.md)). |
@@ -132,7 +132,7 @@ codex plugin marketplace add LeeYudok/agents-scaffold && codex plugin add yd-ski
 
 | 문서 | 내용 |
 |---|---|
-| [docs/OPTIONS.md](docs/OPTIONS.md) | 전체 옵션 — 스택 프리셋 12종, `--forge`, `--harness`, `--lang`, `--update`, `--with-personal-skills`, 치환 플레이스홀더 |
+| [docs/OPTIONS.md](docs/OPTIONS.md) | 전체 옵션 — 스택 프리셋 13종, `--forge`, `--harness`, `--lang`, `--update`, `--with-personal-skills`, 치환 플레이스홀더 |
 | [docs/INTERNALS.md](docs/INTERNALS.md) | 내부 구조 — 생성되는 전체 트리, 레포 구성, 주요 패턴 |
 | [docs/OFFLINE_INSTALL.md](docs/OFFLINE_INSTALL.md) | 폐쇄망·Windows 설치 — 오프라인 번들, Git Bash, `.cmd` 런처, `python3` 설정 |
 | [docs/PRESET_SPEC.md](docs/PRESET_SPEC.md) | 스택 프리셋 규격 |

@@ -1416,6 +1416,70 @@ PY
   [ -f "$BATS_TEST_TMPDIR/.claude/rules/bun.md" ]
 }
 
+# --- 21) php-laravel 프리셋 (#8) ---
+
+@test "php-laravel stack merges rules and splices partial after marker" {
+  run "$SCRIPT" "$BATS_TEST_TMPDIR" --stack php-laravel --yes
+  [ "$status" -eq 0 ]
+  grep -q 'Laravel' "$BATS_TEST_TMPDIR/.claude/rules/php-laravel.md"
+  grep -q '^## P0' "$BATS_TEST_TMPDIR/.claude/rules/php-laravel.md"
+  marker_line="$(grep -n 'STACK CHECKS' "$BATS_TEST_TMPDIR/.claude/hooks/pre-commit.sh" | head -1 | cut -d: -f1)"
+  gate_line="$(grep -n 'php-laravel: secrets' "$BATS_TEST_TMPDIR/.claude/hooks/pre-commit.sh" | head -1 | cut -d: -f1)"
+  [ "$gate_line" -gt "$marker_line" ]
+  # 스택 P0 가 AGENTS.md 본문에 인라인됐는지 (#21)
+  grep -q 'php-laravel' "$BATS_TEST_TMPDIR/AGENTS.md"
+}
+
+@test "php-laravel gate blocks a staged auth.json and Passport key (#8)" {
+  target="$BATS_TEST_TMPDIR/laravelgate"
+  mkdir -p "$target"
+  run "$SCRIPT" "$target" --stack php-laravel --yes
+  [ "$status" -eq 0 ]
+
+  cd "$target"
+  git init -q -b main
+  git config user.name t; git config user.email t@e.c
+  # composer.json 이 있어야 게이트가 켜진다. 키 검사는 툴 확인보다 앞이라 러너의 php·composer 와 무관하다.
+  printf '{"name":"t/app"}\n' > composer.json
+  git add composer.json
+  printf '{"http-basic":{}}\n' > auth.json
+  git add -f auth.json
+  run bash .claude/hooks/pre-commit.sh
+  [ "$status" -eq 2 ]
+  [[ "$output" == *"auth.json"* ]]
+
+  git reset -q auth.json
+  mkdir -p storage
+  printf 'key\n' > storage/oauth-private.key
+  git add -f storage/oauth-private.key
+  run bash .claude/hooks/pre-commit.sh
+  [ "$status" -eq 2 ]
+}
+
+@test "php-laravel gate is a no-op without composer.json (#8)" {
+  target="$BATS_TEST_TMPDIR/laravelnoop"
+  mkdir -p "$target"
+  run "$SCRIPT" "$target" --stack php-laravel --yes
+  [ "$status" -eq 0 ]
+
+  cd "$target"
+  git init -q -b main
+  git config user.name t; git config user.email t@e.c
+  printf 'hello\n' > README.md
+  git add README.md
+  run bash .claude/hooks/pre-commit.sh
+  [ "$status" -eq 0 ]
+}
+
+@test "php-laravel combined with another stack: both gates run (#6 regression class)" {
+  run "$SCRIPT" "$BATS_TEST_TMPDIR" --stack php-laravel,bun --yes
+  [ "$status" -eq 0 ]
+  grep -q 'php-laravel: secrets' "$BATS_TEST_TMPDIR/.claude/hooks/pre-commit.sh"
+  grep -q 'tsc' "$BATS_TEST_TMPDIR/.claude/hooks/pre-commit.sh"
+  [ -f "$BATS_TEST_TMPDIR/.claude/rules/php-laravel.md" ]
+  [ -f "$BATS_TEST_TMPDIR/.claude/rules/bun.md" ]
+}
+
 # --- 오프라인 번들 · Windows 줄끝 (#58) ---
 
 @test "offline bundle installs from extracted tree without network (#58)" {

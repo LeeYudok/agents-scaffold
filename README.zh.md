@@ -51,7 +51,7 @@ agents-scaffold/bin/agents-scaffold.sh /path/to/repo --harness all --stack pytho
 | **由 git 强制，而非靠提示词** | `.git/hooks/pre-commit` 会拦截暂存的 `.env`/密钥、失败的构建、类型和 lint 错误。无论你用哪个 AI 工具，乃至人手动提交，它都一样生效。 |
 | **一个源头，三个代理** | `AGENTS.md` 是单一事实来源（SSOT），Claude Code、Codex 和 Antigravity 都原生读取它。技能只在 `.agents/skills/` 存放一份；Codex 子代理（`.codex/agents/*.toml`）以及 Antigravity 的规则、子代理和钩子都由 `.claude/` 生成。 |
 | **实测，而非假设** | 每一条关于 harness 的说法都有 [docs/harness-matrix.json](docs/harness-matrix.json) 中的实测记录支撑 — Claude Code 和 Antigravity 达到 **full** 级别，Codex 为 **baseline**。实测记录过期时 CI 会失败。 |
-| **12 种技术栈预设** | Next.js、Spring Boot、Java web（JSP）、Bun、Python、Go、Rust、Ruby on Rails、.NET、Android、Flutter、ops — 每种都会添加规则和各自的 build/lint/test 门禁。支持 GitHub 或 GitLab forge，输出可选韩文或英文。 |
+| **13 种技术栈预设** | Next.js、Spring Boot、Java web（JSP）、Bun、Python、Go、Rust、Ruby on Rails、.NET、PHP Laravel、Android、Flutter、ops — 每种都会添加规则和各自的 build/lint/test 门禁。支持 GitHub 或 GitLab forge，输出可选韩文或英文。 |
 | **按路径作用域加载的规则** | 规则只在代理触碰匹配文件时才加载，上下文保持精简，而不是一开始就灌入全部约定。 |
 | **开箱即用的 24 个技能** | 工作流技能（review、status、handoff、docs-sync、安全预检等）加上 `yd-*` 专家技能：PostgreSQL、Oracle、SQLite、关系型设计、Go、React、TypeScript、Vite/pnpm 构建、移动端界面设计，以及**依赖 CVE 检查**（在线用 `pnpm audit`，离线用 OSV 数据转储）。 |
 | **支持内网与 Windows** | 离线包无需网络即可安装；Windows 通过 Git Bash 和 `.cmd` 启动器运行（[docs/OFFLINE_INSTALL.en.md](docs/OFFLINE_INSTALL.en.md)）。 |
@@ -130,7 +130,7 @@ Codex 插件不能携带子代理。每个插件还带有 Antigravity 清单（`
 
 | 文档 | 内容 |
 |---|---|
-| [docs/OPTIONS.zh.md](docs/OPTIONS.zh.md) | 全部选项 — 12 种技术栈预设、`--forge`、`--harness`、`--lang`、`--update`、`--with-personal-skills`、占位符替换 |
+| [docs/OPTIONS.zh.md](docs/OPTIONS.zh.md) | 全部选项 — 13 种技术栈预设、`--forge`、`--harness`、`--lang`、`--update`、`--with-personal-skills`、占位符替换 |
 | [docs/INTERNALS.zh.md](docs/INTERNALS.zh.md) | 内部结构 — 生成的完整目录树、仓库布局、关键模式 |
 | [docs/OFFLINE_INSTALL.en.md](docs/OFFLINE_INSTALL.en.md) | 内网与 Windows 安装 — 离线包、Git Bash、`.cmd` 启动器、`python3` 设置（英文） |
 | [docs/PRESET_SPEC.md](docs/PRESET_SPEC.md) | 技术栈预设格式（韩文） |

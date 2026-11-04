@@ -51,7 +51,7 @@ agents-scaffold/bin/agents-scaffold.sh /path/to/repo --harness all --stack pytho
 | **プロンプトではなく git で強制** | `.git/hooks/pre-commit` が、ステージングされた `.env`/シークレット、壊れたビルド、型エラー・lint エラーをブロックします。どの AI ツールを使っても、人が手でコミットしても同じように掛かります。 |
 | **ソースは 1 つ、エージェントは 3 つ** | `AGENTS.md` が単一の真実の源(SSOT)で、Claude Code・Codex・Antigravity のすべてがネイティブに読みます。スキルは `.agents/skills/` に一度だけ置き、Codex のサブエージェント(`.codex/agents/*.toml`)と Antigravity のルール・サブエージェント・フックは `.claude/` から生成します。 |
 | **想定ではなく実測** | ハーネスに関する主張はすべて [docs/harness-matrix.json](docs/harness-matrix.json) の実測で裏付けられています — Claude Code と Antigravity は **full** ティア、Codex は **baseline**。実測の有効期限が切れると CI が失敗します。 |
-| **スタックプリセット 12 種** | Next.js、Spring Boot、Java web(JSP)、Bun、Python、Go、Rust、Ruby on Rails、.NET、Android、Flutter、ops — それぞれがルールと独自の build/lint/test ゲートを追加します。forge は GitHub か GitLab、出力は韓国語か英語。 |
+| **スタックプリセット 13 種** | Next.js、Spring Boot、Java web(JSP)、Bun、Python、Go、Rust、Ruby on Rails、.NET、PHP Laravel、Android、Flutter、ops — それぞれがルールと独自の build/lint/test ゲートを追加します。forge は GitHub か GitLab、出力は韓国語か英語。 |
 | **paths スコープのルール** | ルールはエージェントがマッチするファイルを触っている間だけロードされるため、すべての規約を先頭ロードせずコンテキストがスリムに保たれます。 |
 | **すぐ使えるスキル 24 個** | ワークフロー(review、status、handoff、docs-sync、セキュリティ事前点検 など)に加え、`yd-*` 専門スキル: PostgreSQL、Oracle、SQLite、リレーショナル設計、Go、React、TypeScript、Vite/pnpm ビルド、モバイル画面設計、そして**依存関係の CVE 点検**(オンラインは `pnpm audit`、オフラインは OSV ダンプ)。 |
 | **閉域網と Windows に対応** | オフラインバンドルはネットワークなしでインストールでき、Windows は Git Bash と `.cmd` ランチャーで動きます([docs/OFFLINE_INSTALL.en.md](docs/OFFLINE_INSTALL.en.md))。 |
@@ -132,7 +132,7 @@ codex plugin marketplace add LeeYudok/agents-scaffold && codex plugin add yd-ski
 
 | ドキュメント | 内容 |
 |---|---|
-| [docs/OPTIONS.ja.md](docs/OPTIONS.ja.md) | 全オプション — スタックプリセット 12 種、`--forge`、`--harness`、`--lang`、`--update`、`--with-personal-skills`、プレースホルダー置換 |
+| [docs/OPTIONS.ja.md](docs/OPTIONS.ja.md) | 全オプション — スタックプリセット 13 種、`--forge`、`--harness`、`--lang`、`--update`、`--with-personal-skills`、プレースホルダー置換 |
 | [docs/INTERNALS.ja.md](docs/INTERNALS.ja.md) | 内部構造 — 生成される全ツリー、リポジトリ構成、主要パターン |
 | [docs/OFFLINE_INSTALL.en.md](docs/OFFLINE_INSTALL.en.md) | 閉域網・Windows インストール — オフラインバンドル、Git Bash、`.cmd` ランチャー、`python3` 設定(英語) |
 | [docs/PRESET_SPEC.md](docs/PRESET_SPEC.md) | スタックプリセットの形式(韓国語) |

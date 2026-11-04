@@ -51,7 +51,7 @@ so your edits are never overwritten. Full options: [docs/OPTIONS.en.md](docs/OPT
 | **Enforced by git, not by prompts** | `.git/hooks/pre-commit` blocks staged `.env`/secrets, broken builds, type and lint errors. It holds whichever AI tool you use — and when a human commits by hand. |
 | **One source, three agents** | `AGENTS.md` is the single source of truth; Claude Code, Codex and Antigravity all read it natively. Skills live once in `.agents/skills/`; Codex subagents (`.codex/agents/*.toml`), Antigravity rules, subagents and hooks are generated from `.claude/`. |
 | **Measured, not assumed** | Every harness claim is backed by a live measurement in [docs/harness-matrix.json](docs/harness-matrix.json) — Claude Code and Antigravity at the **full** tier, Codex at **baseline**. CI fails when a measurement expires. |
-| **12 stack presets** | Next.js, Spring Boot, Java web (JSP), Bun, Python, Go, Rust, Ruby on Rails, .NET, Android, Flutter, ops — each adds rules and its own build/lint/test gate. GitHub or GitLab forge, Korean or English output. |
+| **13 stack presets** | Next.js, Spring Boot, Java web (JSP), Bun, Python, Go, Rust, Ruby on Rails, .NET, PHP Laravel, Android, Flutter, ops — each adds rules and its own build/lint/test gate. GitHub or GitLab forge, Korean or English output. |
 | **Path-scoped rules** | A rule loads only while the agent touches matching files, so context stays lean instead of front-loading every convention. |
 | **24 skills out of the box** | Workflow (review, status, handoff, docs-sync, security pre-check, ...) plus `yd-*` expert skills: PostgreSQL, Oracle, SQLite, relational design, Go, React, TypeScript, Vite/pnpm builds, mobile screen design, and **dependency CVE checks** (`pnpm audit` online, OSV dump offline). |
 | **Air-gapped and Windows ready** | An offline bundle installs with no network; Windows runs through Git Bash with a `.cmd` launcher ([docs/OFFLINE_INSTALL.en.md](docs/OFFLINE_INSTALL.en.md)). |
@@ -132,7 +132,7 @@ clone this repo and run `scripts/install-skills.sh` (symlinks into `~/.claude/sk
 
 | Doc | What's in it |
 |---|---|
-| [docs/OPTIONS.en.md](docs/OPTIONS.en.md) | Every option — 12 stack presets, `--forge`, `--harness`, `--lang`, `--update`, `--with-personal-skills`, placeholder substitution |
+| [docs/OPTIONS.en.md](docs/OPTIONS.en.md) | Every option — 13 stack presets, `--forge`, `--harness`, `--lang`, `--update`, `--with-personal-skills`, placeholder substitution |
 | [docs/INTERNALS.en.md](docs/INTERNALS.en.md) | Internals — the full generated tree, repository layout, key patterns |
 | [docs/OFFLINE_INSTALL.en.md](docs/OFFLINE_INSTALL.en.md) | Air-gapped and Windows install — offline bundle, Git Bash, `.cmd` launcher, `python3` setup |
 | [docs/PRESET_SPEC.md](docs/PRESET_SPEC.md) | Stack preset format (Korean) |
