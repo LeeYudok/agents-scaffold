@@ -12,9 +12,9 @@ AI 코딩 에이전트는 규칙을 어긴다. 이 도구는 부탁하지 않고
 명령 한 번이면 `AGENTS.md` 프로젝트 브레인, paths 스코프 룰, 스킬, 서브에이전트, 훅, 합성된
 pre-commit 게이트가 레포에 깔린다. 프레임워크도 런타임도 레지스트리도 없다 — 결과물은 전부 **당신이 소유하는 평범한 파일**이다.
 
-![데모: 원커맨드 부트스트랩 → 생성된 .claude/ 트리 → pre-commit 게이트가 .env 커밋을 차단](docs/assets/demo.gif)
+![데모: 명령 한 번으로 Claude Code·Codex·Antigravity 가드레일 설치 → 생성된 AGENTS.md·.claude·.codex·.agents 트리 → 실제 git 훅이 .env 커밋을 차단](docs/assets/demo.gif)
 
-_30초 데모: 명령 한 번 → `.claude/` 완성 → 시크릿 커밋은 게이트가 차단. 재현은 `vhs docs/assets/demo.tape`._
+_30초 데모: 명령 한 번 → `AGENTS.md` 와 Claude Code·Codex·Antigravity 층 → 시크릿 커밋은 실제 git 훅이 차단. 재현은 `vhs docs/assets/demo.tape`._
 
 ## 이런 적 있으면 이 도구다
 

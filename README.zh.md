@@ -12,9 +12,9 @@ AI 编码代理不守规则。这个工具不是好言相劝，而是直接拦�
 一条命令，就把作为项目大脑的 `AGENTS.md`、按路径作用域加载的规则、技能、子代理、钩子以及组合而成的
 pre-commit 门禁装进你的仓库。没有框架、没有运行时、没有注册中心 — **你得到的是完全归你所有的普通文件。**
 
-![演示：一条命令完成引导、生成的 .claude/ 目录树，以及 pre-commit 门禁拦截暂存的 .env](docs/assets/demo.gif)
+![演示：一条命令为 Claude Code、Codex 和 Antigravity 安装护栏，生成的 AGENTS.md/.claude/.codex/.agents 目录树，以及真实的 git 钩子拦截暂存的 .env](docs/assets/demo.gif)
 
-_30 秒演示：一条命令 → 填充完毕的 `.claude/` → 门禁拦截了一次泄露密钥的提交。可用 `vhs docs/assets/demo.tape` 复现。_
+_30 秒演示：一条命令 → `AGENTS.md` 加上 Claude Code、Codex 和 Antigravity 各自的层 → 真实的 git 钩子拦截了一次泄露密钥的提交。可用 `vhs docs/assets/demo.tape` 复现。_
 
 ## 如果你遇到过这些，就该用它
 

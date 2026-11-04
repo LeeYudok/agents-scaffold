@@ -17,13 +17,13 @@
   <text x="84" y="238" fill="#f0883e" font-size="44" font-weight="700">AI coding agents break your rules.</text>
   <text x="84" y="296" fill="#e6edf3" font-size="44" font-weight="700">This blocks the commit instead of asking nicely.</text>
 
-  <text x="84" y="360" fill="#8b949e" font-size="26">One command drops a .claude/ setup and a pre-commit gate into your repo.</text>
+  <text x="84" y="360" fill="#8b949e" font-size="26">One command drops AGENTS.md, rules, skills, hooks and a git gate into your repo.</text>
   <text x="84" y="398" fill="#8b949e" font-size="26">No framework, no runtime — plain files you own outright.</text>
 
   <rect x="84" y="436" width="1112" height="112" rx="10" fill="#010409" stroke="#30363d"/>
   <text x="112" y="480" fill="#7ee787" font-size="24" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">$ git add .env &amp;&amp; git commit -m "feat: add config"</text>
   <text x="112" y="520" fill="#ff7b72" font-size="24" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">Blocked: a .env-type file is staged. Commit is not allowed.</text>
 
-  <text x="84" y="600" fill="#6e7681" font-size="22">P0 / P1 / P2 tiers  ·  10 stack presets</text>
+  <text x="84" y="600" fill="#6e7681" font-size="22">Claude Code  ·  Codex  ·  Antigravity  ·  13 stack presets</text>
   <text x="1196" y="600" fill="#6e7681" font-size="22" text-anchor="end">github.com/LeeYudok/agents-scaffold  ·  MIT</text>
 </svg>
