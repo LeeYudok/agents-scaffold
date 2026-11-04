@@ -15,6 +15,10 @@ Claude Code(v2.1.277+)·Codex·Antigravity(agy) 모두 이 파일을 네이티�
 `AGENTS.<NAME>.md` 에 둔다. `.claude/scripts/personal-layer.sh on <NAME>` 이 그 파일을 Claude Code
 (`CLAUDE.local.md`)·Codex(`AGENTS.override.md`)·agy(`.agents/rules/personal-<name>.md`)에 더하고, 생성물은
 `.git/info/exclude` 로 커밋에서 뺀다. 개인 지침은 이 파일에 **더하기만** 한다 — 충돌하면 이 파일이 이긴다. (#92)
+세션의 첫 응답을 쓰기 전에 **반드시** 루트의 `AGENTS.*.md` 목록을 툴로 확인한다(예: `ls AGENTS.*.md`, `AGENTS.override.md` 는 Codex 생성물이라 뺀다) — 질문이 간단해도 건너뛰지 않는다. `AGENTS.<NAME>.md` 가 하나라도 있으면 **매 세션 첫 응답에서 사용자가 누구인지 먼저 묻는다**(후보: 그 파일들의
+`<NAME>`, 그리고 "해당 없음"). 답을 받기 전에는 어떤 개인 지침도 따르지 않는다 — 레이어가 켜져 있어 내용이 이미 컨텍스트에
+있어도 같다. 확인되면 그 파일을 세션 끝까지 따르고(레이어가 꺼져 있으면 파일을 직접 읽고 `on <NAME>` 을 안내한다),
+다른 사람이면 개인 지침을 무시한다. 한 세션에서 한 번만 묻는다. (#94)
 
 ## 응답 언어
 

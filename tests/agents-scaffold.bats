@@ -1704,3 +1704,13 @@ personal_repo() {
   [ ! -e CLAUDE.local.md ]
 }
 
+@test "AGENTS.md templates ask who the user is when a personal layer exists (#94)" {
+  grep -q '매 세션 첫 응답에서 사용자가 누구인지 먼저 묻는다' "$REPO_ROOT/AGENTS.md"
+  grep -q 'the first reply of every session asks who the user is' "$REPO_ROOT/presets/lang/en/base/AGENTS.md"
+  # 생성된 Codex 사본에도 같은 규칙이 실린다(AGENTS.md 를 통째로 복사하므로)
+  d="$BATS_TEST_TMPDIR/layer-ask"; mkdir -p "$d" && git -C "$d" init -q
+  cp "$REPO_ROOT/AGENTS.md" "$d/AGENTS.md"; printf '# mine\n' > "$d/AGENTS.TEST.md"
+  cd "$d" && bash "$REPO_ROOT/.claude/scripts/personal-layer.sh" on TEST >/dev/null
+  grep -q '매 세션 첫 응답에서 사용자가 누구인지 먼저 묻는다' AGENTS.override.md
+}
+
