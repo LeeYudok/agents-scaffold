@@ -12,9 +12,9 @@ AI coding agents break your rules. This blocks the commit instead of asking nice
 One command installs an `AGENTS.md` project brain, path-scoped rules, skills, subagents, hooks and a composed
 pre-commit gate into your repo. No framework, no runtime, no registry — **plain files you own outright.**
 
-![Demo: one-command bootstrap, the generated .claude/ tree, and the pre-commit gate blocking a staged .env](docs/assets/demo.gif)
+![Demo: one command installs guardrails for Claude Code, Codex and Antigravity, the generated AGENTS.md/.claude/.codex/.agents tree, and the real git hook blocking a staged .env](docs/assets/demo.gif)
 
-_30-second demo: one command → a filled `.claude/` → the gate blocks a secret commit. Reproduce with `vhs docs/assets/demo.tape`._
+_30-second demo: one command → `AGENTS.md` plus Claude Code, Codex and Antigravity layers → the real git hook blocks a secret commit. Reproduce with `vhs docs/assets/demo.tape`._
 
 ## You want this if
 

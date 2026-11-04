@@ -12,9 +12,9 @@ AI コーディングエージェントはルールを破ります。お願い�
 コマンド 1 回で、プロジェクトの頭脳となる `AGENTS.md`、paths スコープのルール、スキル、サブエージェント、フック、
 合成された pre-commit ゲートがリポジトリに入ります。フレームワークもランタイムもレジストリもありません — **完全にあなたのものである普通のファイル**です。
 
-![デモ: ワンコマンドのブートストラップ、生成された .claude/ ツリー、ステージングされた .env をブロックする pre-commit ゲート](docs/assets/demo.gif)
+![デモ: コマンド1つで Claude Code・Codex・Antigravity のガードレールを導入、生成された AGENTS.md・.claude・.codex・.agents ツリー、ステージングされた .env をブロックする実際の git フック](docs/assets/demo.gif)
 
-_30秒デモ: コマンド1つ → 記入済みの `.claude/` → ゲートがシークレットのコミットをブロック。`vhs docs/assets/demo.tape` で再現できます。_
+_30秒デモ: コマンド1つ → `AGENTS.md` と Claude Code・Codex・Antigravity の各層 → 実際の git フックがシークレットのコミットをブロック。`vhs docs/assets/demo.tape` で再現できます。_
 
 ## こんな覚えがあるなら、これです
 
