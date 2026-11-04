@@ -85,9 +85,9 @@ what stops it, so it holds whichever AI tool you use, and it holds when a human 
 <h2>Harness support</h2>
 <table>
   <tr><th>Harness</th><th>Measured</th><th>baseline</th><th>full</th></tr>
-  <tr><td>Claude Code</td><td>2.1.299</td><td>holds</td><td>rules, skills, subagents, hooks</td></tr>
-  <tr><td>Codex</td><td>codex-cli 0.163.0</td><td>holds</td><td>skills, subagents, hooks (no path-scoped rules — stays baseline)</td></tr>
-  <tr><td>Antigravity</td><td>agy 1.4.2</td><td>holds</td><td>full — skills, glob rules, subagents, hooks</td></tr>
+  <tr><td>Claude Code</td><td>2.1.318</td><td>holds</td><td>rules, skills, subagents, hooks</td></tr>
+  <tr><td>Codex</td><td>codex-cli 0.166.0</td><td>holds</td><td>skills, subagents, hooks (no path-scoped rules — stays baseline)</td></tr>
+  <tr><td>Antigravity</td><td>agy 1.5.0</td><td>holds</td><td>baseline — skills, subagents, hooks; glob rules stopped loading on 1.5.0 (#90)</td></tr>
 </table>
 <p><strong>baseline</strong> means the <code>AGENTS.md</code> policy body plus a real
 <code>.git/hooks/pre-commit</code> gate and CI — it holds on every harness, and it holds when a

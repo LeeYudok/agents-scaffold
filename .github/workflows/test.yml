@@ -45,7 +45,7 @@ jobs:
       - name: Check plugin copies against sources
         run: python3 scripts/dev/build-plugins.py --check
       - name: Install Claude Code CLI
-        run: npm install -g @anthropic-ai/claude-code@2.1.310
+        run: npm install -g @anthropic-ai/claude-code@2.1.318
       - name: Validate marketplace and plugins
         run: |
           claude plugin validate .

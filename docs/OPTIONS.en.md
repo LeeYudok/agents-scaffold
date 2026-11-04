@@ -68,7 +68,7 @@ just costs more. None of them fire automatically, even with all three installed;
 
 **Skills have a single source (#61).** Whatever the harness, skills live once in `.agents/skills/`
 (the Codex/agy native path) and Claude Code reads the same files through the symlink
-`.claude/skills -> ../.agents/skills` (measured on claude 2.1.299 — with `.agents/skills` alone and no
+`.claude/skills -> ../.agents/skills` (measured on claude 2.1.318 — with `.agents/skills` alone and no
 link, Claude Code finds no skills). Two copies can no longer drift apart, and adding another harness
 later needs no reinstall.
 
@@ -107,11 +107,11 @@ The selected stack's P0 rules are **inlined into the `AGENTS.md` body**, so they
 
 | Harness | Measured version | baseline | What is / isn't confirmed on the full tier |
 |---|---|---|---|
-| Claude Code | 2.1.299 | holds | `paths:`-scoped loading of `.claude/rules/*.md`, subagents, skills, `settings.json` hooks — all confirmed against the [official docs](https://code.claude.com/docs/en/memory.md) |
-| Codex | codex-cli 0.163.0 | holds | Measured: `AGENTS.md`, inlined stack P0, `.agents/skills`, the `.env` gate, `.codex/agents` subagents (trusted projects only), `.codex/hooks.json` hooks (project and hook-definition trust required), and subdirectory `AGENTS.md` by cwd. No file-path-scoped instructions |
-| Antigravity | agy 1.4.2 | holds | Measured in headless (`-p`) mode: `AGENTS.md`, inlined stack P0, `.agents/skills`, the `.env` gate, `.agents/agents` subagents, `.agents/hooks.json` hooks (run without a trust prompt), and `trigger: glob` scoped rules in `.agents/rules`. Subdirectory `AGENTS.md` loads by cwd only |
+| Claude Code | 2.1.318 | holds | `paths:`-scoped loading of `.claude/rules/*.md`, subagents, skills, `settings.json` hooks — all confirmed against the [official docs](https://code.claude.com/docs/en/memory.md) |
+| Codex | codex-cli 0.166.0 | holds | Measured: `AGENTS.md`, inlined stack P0, `.agents/skills`, the `.env` gate, `.codex/agents` subagents (trusted projects only), `.codex/hooks.json` hooks (project and hook-definition trust required), and subdirectory `AGENTS.md` by cwd. No file-path-scoped instructions |
+| Antigravity | agy 1.5.0 | holds | Measured in headless (`-p`) mode: `AGENTS.md`, inlined stack P0, `.agents/skills`, the `.env` gate, `.agents/agents` subagents, and `.agents/hooks.json` hooks (run without a trust prompt). **`trigger: glob` rules in `.agents/rules` do not load on 1.5.0 even after a matching file is read** (passed through 1.4.2; `always_on` still works, #90). Subdirectory `AGENTS.md` loads by cwd only |
 
-Codex (codex-cli 0.163.0) and agy (1.4.2) auto-load their mode's AGENTS.md and
+Codex (codex-cli 0.166.0) and agy (1.5.0) auto-load their mode's AGENTS.md and
 its inlined stack P0 without any tool call, and discover repository skills under `.agents/skills`
 only — neither discovers `.claude/skills`. agy 1.2.7 headless loaded neither `AGENTS.md` nor
 `GEMINI.md`; that is fixed in 1.2.16. If a model misses a rule, the git hook still blocks a staged
@@ -159,7 +159,8 @@ script, and converts the reply back (measured 2026-10-04):
   remove it from `settings.json` and run `--update`. Update rules match the other adapters.
 
 The scaffold generates subagents (#64) and hooks (#65) for both harnesses and path-scoped rules (#63) for agy, each
-measured end to end. **agy is therefore full** (hooks partial, as for Claude Code). **Codex stays baseline**: it has no
+measured end to end. agy was full through 1.4.2, but **on 1.5.0 glob rules no longer load, so agy is now baseline** (#90) —
+the generator stays as is, and agy returns to full once a fixed release passes the re-measurement. **Codex stays baseline**: it has no
 file-path-scoped instructions, so `.claude/rules` `paths:` rules cannot reach it (subdirectory `AGENTS.md` loads by cwd only). As with Claude Code, hooks are early feedback, not the enforcement line. agy
 runs a repo's `.agents/hooks.json` without a trust prompt, so check that file before running agy in a
 foreign repo (the `security-audit` agent scans it).

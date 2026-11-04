@@ -2,7 +2,8 @@
 """스킬·에이전트 frontmatter 가 엄격한 YAML 로 읽히는지 검사 (#67) — stdlib unittest 전용.
 
 agy 는 frontmatter 를 엄격한 YAML 로 파싱하고, 실패한 파일은 조용히 건너뛴다(1.2.16 실측:
-따옴표 없는 description 안의 ": " 때문에 search-first 가 등록되지 않았다). Claude Code·Codex 는
+따옴표 없는 description 안의 ": " 때문에 search-first 가 등록되지 않았다. 1.3.6 에서 description 콜론은
+고쳐졌지만 1.3.5 이하 사용자와 다른 키·닫히지 않은 `[` 는 여전히 걸린다, #90). Claude Code·Codex 는
 관대해서 증상이 드러나지 않으므로 여기서 막는다. CI 에 PyYAML 이 없을 수 있어 의존성 없이
 "따옴표 없는 평이한 값 안의 ': '·' #'" 를 잡고, PyYAML 이 있으면 safe_load 로도 확인한다.
 

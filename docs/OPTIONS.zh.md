@@ -61,7 +61,7 @@
 | `agy` | Antigravity | 在 `codex` 的共享布局之外，从 `.claude/` 生成 `.agents/rules`（`trigger: glob`，#63）、`.agents/agents`（#64）与 `.agents/hooks.json`（#65） |
 | `all` | 混合团队 | `claude` 的全部内容 + 所有适配器（agy 规则、Codex 与 agy 子代理和钩子）。skills 布局与 harness 无关（#61） |
 
-**skills 只有一个源（#61）。** 无论使用哪个 harness，skills 只存放在 `.agents/skills/`（Codex、agy 的原生路径）一处，Claude Code 通过符号链接 `.claude/skills -> ../.agents/skills` 读取同一份文件（claude 2.1.299 实测 — 只有 `.agents/skills` 而没有链接时，Claude Code 找不到任何 skill）。两份副本不会再分叉，日后加入其他 harness 也无需重新安装。
+**skills 只有一个源（#61）。** 无论使用哪个 harness，skills 只存放在 `.agents/skills/`（Codex、agy 的原生路径）一处，Claude Code 通过符号链接 `.claude/skills -> ../.agents/skills` 读取同一份文件（claude 2.1.318 实测 — 只有 `.agents/skills` 而没有链接时，Claude Code 找不到任何 skill）。两份副本不会再分叉，日后加入其他 harness 也无需重新安装。
 
 - 无法创建符号链接的环境（如 Windows Git Bash 默认设置），或设置了 `AGENTS_SCAFFOLD_NO_SYMLINK=1` 时，`.claude/skills` 为副本。已暂存的副本与源不一致时，pre-commit 门禁会拦截提交（基于索引比较，`__pycache__` 等未跟踪文件不计入）。能否创建链接可能因环境而异（如网络隔离 PC 的策略）— 见 [OFFLINE_INSTALL.en.md](OFFLINE_INSTALL.en.md) 第 6 步。
 - Git for Windows 在 `core.symlinks=false` 下检出时，链接会变成内含路径字符串的普通文件。此时 Claude Code 找不到 skills，门禁会给出警告 — 执行 `git config core.symlinks true` 后重新检出。
@@ -85,11 +85,11 @@ git 钩子**与 harness 无关，始终接入**（#21）。Claude Code 的 `PreT
 
 | Harness | 实测版本 | baseline | full 层已确认 / 未确认的内容 |
 |---|---|---|---|
-| Claude Code | 2.1.299 | 成立 | `.claude/rules/*.md` 的 `paths:` 条件加载、子代理、skills、`settings.json` 钩子 — 均已对照[官方文档](https://code.claude.com/docs/en/memory.md)确认 |
-| Codex | codex-cli 0.163.0 | 成立 | 已实测 `AGENTS.md`、内联技术栈 P0、`.agents/skills`、`.env` 门禁、`.codex/agents` 子代理（仅受信任项目）、`.codex/hooks.json` 钩子（需项目信任与钩子定义信任）以及按 cwd 加载的子目录 `AGENTS.md`。没有按文件路径的条件指令 |
-| Antigravity | agy 1.4.2 | 成立 | 以 headless（`-p`）实测 `AGENTS.md`、内联技术栈 P0、`.agents/skills`、`.env` 门禁、`.agents/agents` 子代理、`.agents/hooks.json` 钩子（无信任确认即执行）以及 `.agents/rules` 中 `trigger: glob` 条件规则。子目录 `AGENTS.md` 仅按 cwd 加载 |
+| Claude Code | 2.1.318 | 成立 | `.claude/rules/*.md` 的 `paths:` 条件加载、子代理、skills、`settings.json` 钩子 — 均已对照[官方文档](https://code.claude.com/docs/en/memory.md)确认 |
+| Codex | codex-cli 0.166.0 | 成立 | 已实测 `AGENTS.md`、内联技术栈 P0、`.agents/skills`、`.env` 门禁、`.codex/agents` 子代理（仅受信任项目）、`.codex/hooks.json` 钩子（需项目信任与钩子定义信任）以及按 cwd 加载的子目录 `AGENTS.md`。没有按文件路径的条件指令 |
+| Antigravity | agy 1.5.0 | 成立 | 以 headless（`-p`）实测 `AGENTS.md`、内联技术栈 P0、`.agents/skills`、`.env` 门禁、`.agents/agents` 子代理与 `.agents/hooks.json` 钩子（无信任确认即执行）。**`.agents/rules` 中的 `trigger: glob` 规则在 1.5.0 上即使读取了匹配文件也不会加载**（1.4.2 及以前为 pass，`always_on` 正常，#90）。子目录 `AGENTS.md` 仅按 cwd 加载 |
 
-Codex（codex-cli 0.163.0）与 agy（1.4.2）会在不调用任何工具的情况下自动加载各自模式产物中的 AGENTS.md 与内联技术栈 P0，并且只发现 `.agents/skills` 下的仓库 skills；两者都不会发现 `.claude/skills`。agy 1.2.7 的 headless 模式既不加载 `AGENTS.md` 也不加载 `GEMINI.md`，该问题已在 1.2.16 中解决。即使模型遗漏规则，git 钩子仍会以 exit 2 拦截已暂存的 `.env`。
+Codex（codex-cli 0.166.0）与 agy（1.5.0）会在不调用任何工具的情况下自动加载各自模式产物中的 AGENTS.md 与内联技术栈 P0，并且只发现 `.agents/skills` 下的仓库 skills；两者都不会发现 `.claude/skills`。agy 1.2.7 的 headless 模式既不加载 `AGENTS.md` 也不加载 `GEMINI.md`，该问题已在 1.2.16 中解决。即使模型遗漏规则，git 钩子仍会以 exit 2 拦截已暂存的 `.env`。
 
 支持状态的单一真实来源是 [`docs/harness-matrix.json`](harness-matrix.json)。本表会与该 manifest 对照，并由 CI 中的 `scripts/dev/check-harness-matrix.py` 检查 — 若某个 `full` 等级超过 90 天未重新实测，或某项判定缺少证据，**构建将失败**。重新实测请运行 `scripts/dev/spike-codex-contract.sh --dynamic` 与 `scripts/dev/spike-agy-contract.sh --dynamic`。
 
@@ -105,7 +105,7 @@ Codex（codex-cli 0.163.0）与 agy（1.4.2）会在不调用任何工具的情�
 - 适配器需要 `python3`（没有时跳过生成）。`.claude/settings.json` 是钩子的源，codex/agy 模式也会保留。
 - Stop 钩子（记忆提醒）在 headless（`-p`、`exec`）下也会多运行一轮。自动化中不需要时，从 `settings.json` 删除后执行 `--update`。更新规则与其他适配器相同。
 
-脚手架为两个 harness 生成子代理（#64）与钩子（#65），为 agy 生成路径条件规则（#63），并分别做了端到端实测。因此 **agy 为 full**（钩子与 Claude Code 相同为 partial）。**Codex 仍为 baseline** —— 它没有按文件路径的条件指令，`.claude/rules` 的 `paths:` 规则无法传达（子目录 `AGENTS.md` 只按 cwd 加载）。与 Claude Code 相同，钩子是早期反馈而非强制线。agy 会在没有信任确认的情况下执行仓库中的 `.agents/hooks.json`，在外部仓库运行 agy 前请先检查该文件（`security-audit` 代理会扫描它）。
+脚手架为两个 harness 生成子代理（#64）与钩子（#65），为 agy 生成路径条件规则（#63），并分别做了端到端实测。agy 在 1.4.2 及以前为 full，但 **1.5.0 上 glob 规则不再加载，因此降为 baseline**（#90）；生成器保持不变，待 agy 修复版通过重新实测后恢复 full。**Codex 仍为 baseline** —— 它没有按文件路径的条件指令，`.claude/rules` 的 `paths:` 规则无法传达（子目录 `AGENTS.md` 只按 cwd 加载）。与 Claude Code 相同，钩子是早期反馈而非强制线。agy 会在没有信任确认的情况下执行仓库中的 `.agents/hooks.json`，在外部仓库运行 agy 前请先检查该文件（`security-audit` 代理会扫描它）。
 
 另有两项 Codex 约束影响设计：
 

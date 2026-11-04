@@ -50,7 +50,7 @@ agents-scaffold/bin/agents-scaffold.sh /path/to/repo --harness all --stack pytho
 |---|---|
 | **プロンプトではなく git で強制** | `.git/hooks/pre-commit` が、ステージングされた `.env`/シークレット、壊れたビルド、型エラー・lint エラーをブロックします。どの AI ツールを使っても、人が手でコミットしても同じように掛かります。 |
 | **ソースは 1 つ、エージェントは 3 つ** | `AGENTS.md` が単一の真実の源(SSOT)で、Claude Code・Codex・Antigravity のすべてがネイティブに読みます。スキルは `.agents/skills/` に一度だけ置き、Codex のサブエージェント(`.codex/agents/*.toml`)と Antigravity のルール・サブエージェント・フックは `.claude/` から生成します。 |
-| **想定ではなく実測** | ハーネスに関する主張はすべて [docs/harness-matrix.json](docs/harness-matrix.json) の実測で裏付けられています — Claude Code と Antigravity は **full** ティア、Codex は **baseline**。実測の有効期限が切れると CI が失敗します。 |
+| **想定ではなく実測** | ハーネスに関する主張はすべて [docs/harness-matrix.json](docs/harness-matrix.json) の実測で裏付けられています — Claude Code は **full** ティア、Codex と Antigravity は **baseline**（agy 1.5.0 で glob ルールが読み込まれなくなった、#90）。実測の有効期限が切れると CI が失敗します。 |
 | **スタックプリセット 13 種** | Next.js、Spring Boot、Java web(JSP)、Bun、Python、Go、Rust、Ruby on Rails、.NET、PHP Laravel、Android、Flutter、ops — それぞれがルールと独自の build/lint/test ゲートを追加します。forge は GitHub か GitLab、出力は韓国語か英語。 |
 | **paths スコープのルール** | ルールはエージェントがマッチするファイルを触っている間だけロードされるため、すべての規約を先頭ロードせずコンテキストがスリムに保たれます。 |
 | **すぐ使えるスキル 24 個** | ワークフロー(review、status、handoff、docs-sync、セキュリティ事前点検 など)に加え、`yd-*` 専門スキル: PostgreSQL、Oracle、SQLite、リレーショナル設計、Go、React、TypeScript、Vite/pnpm ビルド、モバイル画面設計、そして**依存関係の CVE 点検**(オンラインは `pnpm audit`、オフラインは OSV ダンプ)。 |
@@ -115,7 +115,7 @@ codex plugin marketplace add LeeYudok/agents-scaffold && codex plugin add yd-ski
 `yd-skills-personal` にはオプトイン 9 個が入っています。Claude Code ではプラグインのスキルに名前空間が付きます(`yd-skills:yd-pg-expert`)。
 プラグインが運ぶのはスキルだけです — Claude Code のプラグインは rules を、Codex のプラグインはサブエージェントを運べないため、
 プロジェクトのルール・フック・サブエージェントはインストーラーから入れます。各プラグインには Antigravity 用マニフェスト
-(`.antigravity-plugin/plugin.json`)もありますが、agy のドキュメントを基に作成したもので未実測です。オフラインや開発用途では、
+(`.antigravity-plugin/plugin.json`)もありますが、agy のドキュメントを基に作成したもので、agy 1.5.0 の `agy plugin validate` は通過します（インストールは未実測）。オフラインや開発用途では、
 このリポジトリを clone して `scripts/install-skills.sh` を実行します(`~/.claude/skills`・`~/.agents/skills`・
 `~/.gemini/config/skills` にシンボリックリンク。`--personal`・`--copy`・`--project <dir>` に対応)。
 
