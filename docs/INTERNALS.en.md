@@ -43,10 +43,11 @@ The generated `.claude/` tree and the design patterns behind it. Start at the [R
     docs-sync/                doc currency — claim-by-claim verification + parallel-language sync
     handoff/                  session handoff — issue body when a tracker exists, HANDOFF.md otherwise
     yd-*/                     14 general skills — 13 moved from doksam-skills + yd-cve-check (#79) (DB, Go, React, TS, builds, screen design, writing, CVE checks; Korean only)
-  workflows/             (not auto-loaded — invoked explicitly)
+  workflows/             (Claude Code lists them as /<name> commands — they run only when invoked)
     rules-audit.js           stored Workflow example — scan/verify/repair with human merge gate
   scripts/               (not auto-loaded — invoked explicitly)
     knowledge_graph.py       .claude ecosystem graph + --check broken-link gate
+    personal-layer.sh        turns a personal AGENTS.<NAME>.md layer on/off for all three harnesses (#92)
   settings.json               hook wiring + default deny rules
 AGENTS.md                 project brain — rule SSOT (P0/P1/P2 + workflow)
 presets/                  preset fragments (copy-overwrite model, grouped by kind in #81)

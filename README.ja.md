@@ -136,6 +136,7 @@ codex plugin marketplace add LeeYudok/agents-scaffold && codex plugin add yd-ski
 | [docs/INTERNALS.ja.md](docs/INTERNALS.ja.md) | 内部構造 — 生成される全ツリー、リポジトリ構成、主要パターン |
 | [docs/OFFLINE_INSTALL.en.md](docs/OFFLINE_INSTALL.en.md) | 閉域網・Windows インストール — オフラインバンドル、Git Bash、`.cmd` ランチャー、`python3` 設定(英語) |
 | [docs/PRESET_SPEC.md](docs/PRESET_SPEC.md) | スタックプリセットの形式(韓国語) |
+| [AGENTS.LEEYUDOK.md](AGENTS.LEEYUDOK.md) | `AGENTS.md` の上に重ねるメンテナー個人のレイヤー — `AGENTS.<NAME>.md` の作成例、ハーネスごとの利用可否、ツールのバージョン。自分のレイヤーは `.claude/scripts/personal-layer.sh on <NAME>` で有効化(韓国語) |
 | [dotfiles/](dotfiles/README.md) | メンテナーのマシン用シェル環境(zsh、starship、Claude/Codex/agy ステータスライン)。scaffold のインストールとは別物(韓国語) |
 
 ## コントリビュート

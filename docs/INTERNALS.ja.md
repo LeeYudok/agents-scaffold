@@ -43,10 +43,11 @@
     docs-sync/                ドキュメント現行化 — 主張ごとの事実照合 + 多言語ペアの同時更新
     handoff/                  セッション引き継ぎ — トラッカーがあれば Issue 本文、なければ HANDOFF.md
     yd-*/                     汎用スキル 14 個 — doksam-skills から移した 13 個 + yd-cve-check(#79)(DB・Go・React・TS・ビルド・画面設計・ライティング・CVE 点検、韓国語のみ)
-  workflows/             （自動ロードされない — 明示的に呼び出す）
+  workflows/             （Claude Code は /<name> コマンドとして一覧に出す — 実行は明示的な呼び出しのみ）
     rules-audit.js           保存型 Workflow の例 — scan/verify/repair、マージは人間ゲート
   scripts/               （自動ロードされない — 明示的に呼び出す）
     knowledge_graph.py       .claude エコシステムグラフ + --check リンク切れゲート
+    personal-layer.sh        個人の追加指示 AGENTS.<NAME>.md を 3 ハーネスでオン・オフ (#92)
   settings.json               フック配線 + デフォルト deny ルール
 AGENTS.md                 プロジェクトの頭脳 — ルール SSOT(P0/P1/P2 + ワークフロー)
 presets/                  プリセット断片(コピー上書きモデル、#81 で種類別にまとめた)

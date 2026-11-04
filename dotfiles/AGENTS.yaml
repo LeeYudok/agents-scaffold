@@ -128,6 +128,10 @@ nodes:
   type: bash-script
   label: 'bash·zsh 파일별 문법 검사와 Python 컴파일 검사'
   path: scripts/check-syntax.sh
+- id: versions
+  type: bash-script
+  label: '도구 버전·사용 가능 여부 조회(설치 안 함) — --md 출력을 AGENTS.<NAME>.md 작업 환경 표에 붙인다 (#92)'
+  path: scripts/versions.sh
 - id: ci-check
   type: workflow
   label: '원본 저장소 시절 CI 정의(하위 디렉터리라 미실행) — agents-scaffold test.yml 의 dotfiles job 이 대신한다'
@@ -272,6 +276,7 @@ commands:
     windows_paths: scripts/test-windows-paths.sh
   checks:
     agents_yaml: scripts/check-agents-yaml.sh
+    versions: scripts/versions.sh --md
     identifier_scan: scripts/check-identifiers.sh
 
 secret_files: []

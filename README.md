@@ -136,6 +136,7 @@ clone this repo and run `scripts/install-skills.sh` (symlinks into `~/.claude/sk
 | [docs/INTERNALS.en.md](docs/INTERNALS.en.md) | Internals — the full generated tree, repository layout, key patterns |
 | [docs/OFFLINE_INSTALL.en.md](docs/OFFLINE_INSTALL.en.md) | Air-gapped and Windows install — offline bundle, Git Bash, `.cmd` launcher, `python3` setup |
 | [docs/PRESET_SPEC.md](docs/PRESET_SPEC.md) | Stack preset format (Korean) |
+| [AGENTS.LEEYUDOK.md](AGENTS.LEEYUDOK.md) | The maintainer's personal layer on top of `AGENTS.md` — a worked `AGENTS.<NAME>.md` example, per-harness availability, tool versions. Turn your own on with `.claude/scripts/personal-layer.sh on <NAME>` (Korean) |
 | [dotfiles/](dotfiles/README.md) | The maintainer's machine shell setup (zsh, starship, Claude/Codex/agy status lines). Separate from the scaffold install (Korean) |
 
 ## Contributing

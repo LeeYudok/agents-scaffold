@@ -134,6 +134,7 @@ agy 1.5.0 的 `agy plugin validate` 可通过，安装尚未实测。离线或�
 | [docs/INTERNALS.zh.md](docs/INTERNALS.zh.md) | 内部结构 — 生成的完整目录树、仓库布局、关键模式 |
 | [docs/OFFLINE_INSTALL.en.md](docs/OFFLINE_INSTALL.en.md) | 内网与 Windows 安装 — 离线包、Git Bash、`.cmd` 启动器、`python3` 设置（英文） |
 | [docs/PRESET_SPEC.md](docs/PRESET_SPEC.md) | 技术栈预设格式（韩文） |
+| [AGENTS.LEEYUDOK.md](AGENTS.LEEYUDOK.md) | 叠加在 `AGENTS.md` 之上的维护者个人层 —— `AGENTS.<NAME>.md` 编写示例、各 harness 的可用性、工具版本。用 `.claude/scripts/personal-layer.sh on <NAME>` 启用自己的层（韩文） |
 | [dotfiles/](dotfiles/README.md) | 维护者的机器 shell 环境配置（zsh、starship、Claude/Codex/agy 状态栏）。与 scaffold 安装无关（韩文） |
 
 ## 贡献
