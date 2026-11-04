@@ -4,3 +4,5 @@ memory/user_*.md
 memory/observations/
 # python bytecode from scripts/
 scripts/__pycache__/
+# personal-gate 세션 마커·선택값(#94) — 비커밋
+state/

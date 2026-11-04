@@ -15,6 +15,13 @@ Claude Code(v2.1.277+)·Codex·Antigravity(agy) 모두 이 파일을 네이티�
 `AGENTS.<NAME>.md` 에 둔다. `.claude/scripts/personal-layer.sh on <NAME>` 이 그 파일을 Claude Code
 (`CLAUDE.local.md`)·Codex(`AGENTS.override.md`)·agy(`.agents/rules/personal-<name>.md`)에 더하고, 생성물은
 `.git/info/exclude` 로 커밋에서 뺀다. 개인 지침은 이 파일에 **더하기만** 한다 — 충돌하면 이 파일이 이긴다. (#92)
+루트에 `AGENTS.<NAME>.md` 가 있으면 **매 세션 첫 응답에서 사용자가 누구인지 먼저 묻는다**(후보: 그 파일들의
+`<NAME>`, 그리고 "해당 없음"). 답을 받으면 `.claude/scripts/personal-layer.sh use <NAME>`(해당 없음이면 `use none`)을
+단독 명령으로 실행한다. 그 전에는 어떤 개인 지침도 따르지 않는다 — 레이어가 켜져 있어 내용이 컨텍스트에 있어도 같다.
+`.claude/hooks/personal-gate.sh` 훅이 이를 강제한다: 세션 시작·매 프롬프트에 확인 지시를 넣고, 확인 전에는 질문 도구와
+`use` 외 모든 툴을 막고, 확인 뒤에는 그 사람의 개인 파일 본문을 컨텍스트에 싣고 다른 사람의 개인 파일 수정을 막는다
+(Claude Code `settings.json`, Codex `.codex/hooks.json`, agy `.agents/hooks.json`). 훅이 없는 환경에서도 규칙은 같다 —
+첫 응답 전에 루트의 `AGENTS.*.md` 를 반드시 툴로 확인한다(`AGENTS.override.md` 는 Codex 생성물이라 뺀다). (#94)
 
 ## 응답 언어
 

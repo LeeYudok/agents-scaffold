@@ -13,6 +13,10 @@
 - `compact-remind.sh` (SessionStart, matcher `compact`) — 컨텍스트 압축 직후 재진입 사실 정리·메모리 기록을 유도한다.
   stdout 이 모델 컨텍스트에 들어간다. `PreCompact` 는 prompt 타입 훅을 지원하지 않아 예전 PreCompact prompt 훅은
   실행된 적이 없다 (#72).
+- `personal-gate.sh` → `personal-gate.py` (SessionStart·UserPromptSubmit·PreToolUse·PostToolUse) — 루트에 `AGENTS.<NAME>.md` 가
+  있으면 매 세션 사용자 확인을 강제한다. 확인 전에는 질문 도구와 `.claude/scripts/personal-layer.sh use <NAME|none>` 외
+  툴을 막고, 확인 뒤에는 다른 사람의 개인 파일 수정을 막는다. 세션 마커는 `.claude/state/personal-gate/`(비커밋).
+  개인 파일이 없으면 셸에서 바로 통과한다. ews ai-sdlc 의 사번 게이트를 옮겼다 (#94).
 
 ## instinct-lite (세션 관찰 → 습관 추출)
 
@@ -33,5 +37,8 @@ instinct 포맷은 [../memory/README.md](../memory/README.md) 참고.
 - 옮기는 것: `PostToolUse`(Bash·Edit·Write → Codex `Bash`·`apply_patch`, agy `run_command`·`write_to_file` 등), `Stop`.
   Codex 는 `SessionStart`·`UserPromptSubmit` 도 옮긴다.
 - 옮기지 않는 것: `PreToolUse`(커밋 게이트는 `.git/hooks`), prompt 타입 훅, matcher 가 걸린 비-툴 이벤트(`SessionStart` `compact` 등, #72).
+- `personal-gate` 훅은 래퍼를 거치지 않고 하네스 고유 이벤트(Codex `SessionStart`·`UserPromptSubmit`·`PreToolUse`·`PostToolUse`,
+  agy `SessionStart`·`PreInvocation`·`PreToolUse`·`PostToolUse`)로 바로 건다. agy 1.5.0 은 PreToolUse 출력 `{}` 를 거부로 읽어서
+  허용은 `{"decision":"allow"}` 로 낸다 (#94).
 - `python3` 가 필요하다. 프로젝트 경로는 `CLAUDE_PROJECT_DIR` 로 채워 준다.
 - Codex 는 프로젝트 신뢰 + 훅 정의 신뢰(`/hooks`) 뒤에만 실행한다. agy 는 신뢰 확인 없이 실행한다.

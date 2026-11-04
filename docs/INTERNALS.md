@@ -24,6 +24,7 @@
     post-test-notify.sh PostToolUse(Bash, *test*) → 터미널 알림
     stop-memory-remind.sh Stop hook → 세션-once 메모리 리마인드
     compact-remind.sh     SessionStart(compact) hook → 압축 직후 재진입 정리 리마인드
+    personal-gate.sh    SessionStart·Prompt·Pre/PostToolUse → 개인 레이어 사용자 확인 게이트 (#94)
     cc-check.py         PostToolUse(Bash, git commit) → CC > 15 경고
   memory/
     MEMORY.md           auto-memory 인덱스 (SSOT)
