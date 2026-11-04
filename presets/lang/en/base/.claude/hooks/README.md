@@ -13,6 +13,10 @@ Scripts need execute permission (`chmod +x`).
 - `compact-remind.sh` (SessionStart, matcher `compact`) — right after context compaction, prompts a re-entry check and
   memory write. Its stdout goes into the model's context. `PreCompact` does not support prompt-type hooks, so the old
   PreCompact prompt hook never ran (#72).
+- `personal-gate.sh` → `personal-gate.py` (SessionStart, UserPromptSubmit, PreToolUse, PostToolUse) — when the root holds any
+  `AGENTS.<NAME>.md`, forces a who-is-the-user check every session. Until answered it blocks every tool except question tools
+  and `.claude/scripts/personal-layer.sh use <NAME|none>`; afterwards it blocks edits to other people's personal files. Session
+  markers live in `.claude/state/personal-gate/` (not committed). With no personal files it passes in the shell wrapper (#94).
 
 ## instinct-lite (session observation → habit extraction)
 

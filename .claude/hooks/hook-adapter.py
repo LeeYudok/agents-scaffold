@@ -4,8 +4,9 @@
 훅의 원본은 Claude Code 형식(.claude/settings.json 의 hooks + .claude/hooks/*)이다. Codex 와
 agy(Antigravity)는 훅 설정 위치·이벤트·입력 JSON·응답 형식이 달라서, 이 스크립트가 두 가지를 맡는다.
 
-  emit <codex|agy> <settings.json>
+  emit <codex|agy> <settings.json> [--gate-only]
       settings.json 의 훅에서 .codex/hooks.json 또는 .agents/hooks.json 내용을 stdout 으로 낸다.
+      personal-gate 훅(#94)은 하네스 고유 이벤트로 바로 건다. --gate-only 면 게이트만 낸다.
   run <codex|agy> <Event> <claude-matcher> <claude-command>
       하네스가 넘긴 입력을 Claude 형식으로 바꿔 원래 훅 명령을 실행하고, 응답을 하네스 형식으로 돌려준다.
 
@@ -57,6 +58,38 @@ ADAPTER_PATH = {
     "codex": '"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.claude/hooks/hook-adapter.py"',
     "agy": '"$(git rev-parse --show-toplevel 2>/dev/null || echo ..)/.claude/hooks/hook-adapter.py"',
 }
+# 개인 레이어 사용자 확인 게이트(#94)는 차단·주입 형식을 하네스별로 직접 내므로 run 래퍼를 거치지 않고
+# 하네스 고유 이벤트로 바로 건다. settings.json 에 personal-gate 훅이 있을 때만 싣는다.
+GATE = "personal-gate"
+GATE_PATH = {
+    "codex": '"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.claude/hooks/personal-gate.sh"',
+    "agy": '"$(git rev-parse --show-toplevel 2>/dev/null || echo ..)/.claude/hooks/personal-gate.sh"',
+}
+GATE_EVENTS = {
+    "codex": [("SessionStart", "session-start"), ("UserPromptSubmit", "prompt"),
+              ("PreToolUse", "pre-tool"), ("PostToolUse", "post-tool")],
+    "agy": [("SessionStart", "session-start"), ("PreInvocation", "prompt"),
+            ("PreToolUse", "pre-tool"), ("PostToolUse", "post-tool")],
+}
+GATE_TOOL_EVENTS = {"PreToolUse", "PostToolUse"}
+
+
+def has_gate(hooks):
+    return any(GATE in (h.get("command") or "") for groups in hooks.values()
+               for group in groups or [] for h in group.get("hooks") or [])
+
+
+def gate_groups(harness):
+    out = {}
+    for event, name in GATE_EVENTS[harness]:
+        entry = {"type": "command", "command": f"sh {GATE_PATH[harness]} {harness} {name}", "timeout": 10}
+        if event in GATE_TOOL_EVENTS:
+            out[event] = [{"matcher": ".*", "hooks": [entry]}]
+        elif harness == "codex":
+            out[event] = [{"hooks": [entry]}]
+        else:
+            out[event] = [entry]
+    return out
 
 
 def harness_matcher(harness, claude_matcher):
@@ -68,12 +101,12 @@ def harness_matcher(harness, claude_matcher):
     return "|".join(names)
 
 
-def emit(harness, settings_path):
+def emit(harness, settings_path, gate_only=False):
     with open(settings_path, encoding="utf-8") as f:
         hooks = (json.load(f) or {}).get("hooks") or {}
     events = {}
     for event, groups in hooks.items():
-        if event not in SUPPORTED[harness]:
+        if event not in SUPPORTED[harness] or gate_only:
             continue
         for group in groups or []:
             claude_matcher = group.get("matcher", "") or ""
@@ -88,6 +121,8 @@ def emit(harness, settings_path):
                 if hook.get("type") != "command" or not hook.get("command"):
                     continue
                 command = hook["command"]
+                if GATE in command:
+                    continue  # 게이트는 아래에서 하네스 고유 형식으로 건다
                 if "'" in command or "'" in claude_matcher:
                     print(f"hook-adapter: skipped a {event} hook with a single quote: {command}", file=sys.stderr)
                     continue
@@ -108,6 +143,9 @@ def emit(harness, settings_path):
             else:
                 groups.append(entry)  # agy 의 Invocation·Stop 이벤트는 핸들러 배열이다
         out[event] = groups
+    if has_gate(hooks):
+        for event, groups in gate_groups(harness).items():
+            out[event] = groups + out.get(event, [])  # 게이트를 먼저 — 미확인 세션의 다른 훅보다 앞서 막는다
     if harness == "codex":
         doc = {"hooks": out}
     else:
@@ -234,7 +272,7 @@ def run(harness, event, claude_matcher, command):
 
 def main(argv):
     if len(argv) >= 3 and argv[0] == "emit" and argv[1] in SUPPORTED:
-        return emit(argv[1], argv[2])
+        return emit(argv[1], argv[2], gate_only="--gate-only" in argv[3:])
     if len(argv) >= 5 and argv[0] == "run" and argv[1] in SUPPORTED:
         return run(argv[1], argv[2], argv[3], argv[4])
     print(__doc__, file=sys.stderr)

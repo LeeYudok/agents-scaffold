@@ -4,6 +4,8 @@
 #   .claude/scripts/personal-layer.sh on <NAME>      켜기(다시 돌리면 사본을 새로 만든다)
 #   .claude/scripts/personal-layer.sh off            끄기(이 스크립트가 만든 파일만 지운다)
 #   .claude/scripts/personal-layer.sh status         상태와 낡은 사본 여부
+#   .claude/scripts/personal-layer.sh use <NAME|none> 이 세션 사용자 확인(#94) — personal-gate 훅이 이 명령을 기다린다.
+#                                                    NAME 이면 on, none 이면 레이어 파일만 지운다(게이트 훅은 남긴다)
 #
 # AGENTS.md 는 모두가 공유하는 기본 지침이고, AGENTS.<NAME>.md 는 그 위에 얹는 개인 지침이다.
 # 하네스마다 지침 파일을 하나 더 읽게 하는 방법이 달라서 아래 생성물을 만든다.
@@ -17,12 +19,19 @@
 #
 # 실측(2026-11-04, #92): claude 2.1.318·codex-cli 0.166.0(debug prompt-input, 신뢰 무관)·agy 1.5.0
 # 모두 기본 암호어와 개인 암호어를 함께 읽었다.
+#
+# 사용자 확인 게이트(#94): .claude/hooks/personal-gate.sh 가 매 세션 사용자 확인을 강제한다. Claude Code 는
+# .claude/settings.json 훅으로 늘 걸려 있다. Codex·agy 는 .codex/hooks.json·.agents/hooks.json 이 필요해서,
+# 없으면 on/use 가 게이트만 담은 파일을 만들고(exclude 에 넣는다) off 가 지운다. 설치기가 만든 hooks.json 은
+# 이미 게이트를 담고 있으니 건드리지 않는다.
 set -euo pipefail
 
 MARK='<!-- personal-layer.sh 생성물: 직접 고치지 말 것 (#92) -->'
 EXCL_BEGIN='# personal-layer.sh (#92) begin'
 EXCL_END='# personal-layer.sh (#92) end'
 CODEX_BUDGET=32768
+GATE_STATE=".claude/state/personal-gate"
+HOOKS_STATE=".claude/state/personal-layer-hooks"
 
 die() { echo "personal-layer: $*" >&2; exit 1; }
 
@@ -54,9 +63,43 @@ set_exclude() {
   tmp="$(mktemp)"
   awk -v b="$EXCL_BEGIN" -v e="$EXCL_END" '$0==b{skip=1;next} $0==e{skip=0;next} !skip' "$ex" > "$tmp"
   if [ "${1:-}" = add ]; then
-    printf '%s\n/%s\n/%s\n/.agents/rules/personal-*.md\n%s\n' "$EXCL_BEGIN" "$claude_file" "$codex_file" "$EXCL_END" >> "$tmp"
+    {
+      printf '%s\n/%s\n/%s\n/.agents/rules/personal-*.md\n' "$EXCL_BEGIN" "$claude_file" "$codex_file"
+      [ -f "$HOOKS_STATE" ] && sed 's|^|/|' "$HOOKS_STATE"
+      printf '%s\n' "$EXCL_END"
+    } >> "$tmp"
   fi
   cat "$tmp" > "$ex"; rm -f "$tmp"
+}
+
+# Codex·agy 용 게이트 훅 파일이 없으면 게이트만 담아 만든다(#94). 만든 파일은 HOOKS_STATE 에 적는다.
+ensure_gate_hooks() {
+  local h dst
+  grep -qF personal-gate .claude/settings.json 2>/dev/null && [ -f .claude/hooks/hook-adapter.py ] || return 0
+  command -v python3 >/dev/null 2>&1 || { echo "personal-layer: python3 가 없어 Codex·agy 게이트 훅을 만들지 못했다" >&2; return 0; }
+  mkdir -p "$(dirname "$HOOKS_STATE")"; touch "$HOOKS_STATE"
+  for h in codex agy; do
+    case "$h" in codex) dst=".codex/hooks.json" ;; agy) dst=".agents/hooks.json" ;; esac
+    [ -e "$dst" ] && continue
+    mkdir -p "$(dirname "$dst")"
+    if python3 .claude/hooks/hook-adapter.py emit "$h" .claude/settings.json --gate-only > "$dst.tmp"; then
+      mv "$dst.tmp" "$dst"; grep -qxF "$dst" "$HOOKS_STATE" || echo "$dst" >> "$HOOKS_STATE"
+    else
+      rm -f "$dst.tmp"
+    fi
+  done
+}
+
+remove_gate_hooks() {
+  local f
+  [ -f "$HOOKS_STATE" ] || return 0
+  while IFS= read -r f; do
+    [ -n "$f" ] || continue
+    # 커밋된 파일이거나 게이트 생성물이 아니면 건드리지 않는다
+    if [ -f "$f" ] && grep -qF personal-gate "$f" && ! git ls-files --error-unmatch "$f" >/dev/null 2>&1; then rm -f "$f"; fi
+    rmdir "$(dirname "$f")" 2>/dev/null || true
+  done < "$HOOKS_STATE"
+  rm -f "$HOOKS_STATE"
 }
 
 cmd_on() {
@@ -73,6 +116,7 @@ cmd_on() {
   claude_body "$personal" > "$claude_file"
   codex_body "$personal" > "$codex_file"
   mkdir -p .agents/rules; agy_body "$personal" > "$rule"
+  ensure_gate_hooks
   set_exclude add
   bytes="$(wc -c < "$codex_file" | tr -d ' ')"
   echo "personal-layer: $personal 켬 — $claude_file, $codex_file(${bytes} B), $rule"
@@ -81,13 +125,43 @@ cmd_on() {
   fi
 }
 
-cmd_off() {
+remove_layer_files() {
   local f
-  for f in "$claude_file" "$codex_file"; do ours "$f" && rm -f "$f"; done
-  while IFS= read -r f; do [ -n "$f" ] && ours "$f" && rm -f "$f"; done < <(agy_rules)
-  rmdir .agents/rules .agents 2>/dev/null || true
+  for f in "$claude_file" "$codex_file"; do if ours "$f"; then rm -f "$f"; fi; done
+  while IFS= read -r f; do if [ -n "$f" ] && ours "$f"; then rm -f "$f"; fi; done < <(agy_rules)
+  rmdir .agents/rules 2>/dev/null || true
+}
+
+cmd_off() {
+  remove_layer_files
+  remove_gate_hooks
+  rmdir .agents 2>/dev/null || true
+  rm -f "$GATE_STATE/current"
   set_exclude remove
   echo "personal-layer: 꺼짐"
+}
+
+# 이 세션 사용자 확인(#94). personal-gate 훅은 current 값이 요청과 같으면 세션을 연다.
+cmd_use() {
+  local name="${1:-}" upper
+  [[ "$name" =~ ^[A-Za-z0-9_-]+$ ]] || die "use <NAME|none>"
+  mkdir -p "$GATE_STATE"
+  if [ "$(printf '%s' "$name" | tr '[:upper:]' '[:lower:]')" = none ]; then
+    remove_layer_files
+    ensure_gate_hooks
+    set_exclude add
+    echo none > "$GATE_STATE/current"
+    echo "personal-layer: 이 세션 사용자 = 해당 없음 — 개인 지침을 적용하지 않는다"
+    return 0
+  fi
+  upper="$(printf '%s' "$name" | tr '[:lower:]' '[:upper:]')"
+  [ -f "AGENTS.$upper.md" ] || die "AGENTS.$upper.md 이 없다 — 선택지는 루트의 AGENTS.<NAME>.md 이름이다"
+  echo "$upper" > "$GATE_STATE/current"
+  # 레이어 파일을 못 만들어도(사용자 파일과 충돌 등) 사용자 확인은 유효하다 — 경고만 낸다
+  if ! (cmd_on "$upper"); then
+    echo "personal-layer: 경고 — 레이어 파일은 만들지 못했다. 이 세션은 AGENTS.$upper.md 를 직접 읽어 따른다" >&2
+  fi
+  echo "personal-layer: 이 세션 사용자 = $upper"
 }
 
 state() {
@@ -117,5 +191,6 @@ case "${1:-}" in
   on) shift; cmd_on "$@" ;;
   off) cmd_off ;;
   status) cmd_status ;;
-  *) sed -n '2,6p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2 ;;
+  use) shift; cmd_use "$@" ;;
+  *) sed -n '2,8p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2 ;;
 esac

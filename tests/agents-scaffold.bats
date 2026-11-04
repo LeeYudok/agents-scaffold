@@ -1130,13 +1130,19 @@ import json, sys
 t = sys.argv[1]
 codex = json.load(open(t + "/.codex/hooks.json"))["hooks"]
 agy = json.load(open(t + "/.agents/hooks.json"))["agents-scaffold"]
-# PostToolUse·Stop only — the PreToolUse commit gate stays in .git/hooks, prompt hooks have no counterpart
-assert sorted(codex) == ["PostToolUse", "Stop"], sorted(codex)
-assert sorted(agy) == ["PostToolUse", "Stop"], sorted(agy)
+# 어댑터 경유는 PostToolUse·Stop 뿐 — PreToolUse 커밋 게이트는 .git/hooks 가, prompt 훅은 대응물이 없다.
+# 나머지 이벤트는 개인 레이어 사용자 확인 게이트(#94)가 하네스 고유 형식으로 직접 건다.
+assert sorted(codex) == ["PostToolUse", "PreToolUse", "SessionStart", "Stop", "UserPromptSubmit"], sorted(codex)
+assert sorted(agy) == ["PostToolUse", "PreInvocation", "PreToolUse", "SessionStart", "Stop"], sorted(agy)
 assert "apply_patch" in [g["matcher"] for g in codex["PostToolUse"]]
 assert any("write_to_file" in g["matcher"] for g in agy["PostToolUse"])
-cmds = [h["command"] for g in codex["PostToolUse"] for h in g["hooks"]] + [g["command"] for g in agy["Stop"]]
-assert all("hook-adapter.py" in c for c in cmds), cmds
+def commands(groups):
+    return [h["command"] for g in groups for h in (g["hooks"] if "hooks" in g else [g])]
+gate = [c for e in ("PreToolUse", "SessionStart", "UserPromptSubmit") for c in commands(codex[e])] \
+     + [c for e in ("PreToolUse", "SessionStart", "PreInvocation") for c in commands(agy[e])]
+assert gate and all("personal-gate.sh" in c and "hook-adapter.py" not in c for c in gate), gate
+cmds = [c for c in commands(codex["PostToolUse"]) + commands(agy["Stop"]) if "personal-gate.sh" not in c]
+assert cmds and all("hook-adapter.py" in c for c in cmds), cmds
 assert any("stop-memory-remind.sh" in g["command"] for g in agy["Stop"])
 PY
 }
@@ -1712,5 +1718,33 @@ personal_repo() {
   cp "$REPO_ROOT/AGENTS.md" "$d/AGENTS.md"; printf '# mine\n' > "$d/AGENTS.TEST.md"
   cd "$d" && bash "$REPO_ROOT/.claude/scripts/personal-layer.sh" on TEST >/dev/null
   grep -q '매 세션 첫 응답에서 사용자가 누구인지 먼저 묻는다' AGENTS.override.md
+}
+
+@test "personal-layer use records the choice, wires Codex·agy gate hooks, and use none keeps the gate (#94)" {
+  d="$BATS_TEST_TMPDIR/layer-use"; personal_repo "$d"
+  mkdir -p "$d/.claude/hooks"
+  cp "$REPO_ROOT/.claude/settings.json" "$d/.claude/"
+  cp "$REPO_ROOT/.claude/hooks/hook-adapter.py" "$REPO_ROOT/.claude/hooks/personal-gate.sh" "$REPO_ROOT/.claude/hooks/personal-gate.py" "$d/.claude/hooks/"
+  cd "$d"
+  run bash "$REPO_ROOT/.claude/scripts/personal-layer.sh" use test
+  [ "$status" -eq 0 ]
+  [ "$(cat .claude/state/personal-gate/current)" = "TEST" ]
+  grep -q 'personal-gate.sh' .codex/hooks.json && grep -q 'personal-gate.sh' .agents/hooks.json
+  ! grep -q 'hook-adapter.py' .codex/hooks.json   # 게이트만 담은 개인 생성물
+  [ -z "$(git status --porcelain -- .codex .agents CLAUDE.local.md AGENTS.override.md)" ]
+  run bash "$REPO_ROOT/.claude/scripts/personal-layer.sh" use none
+  [ "$status" -eq 0 ]
+  [ "$(cat .claude/state/personal-gate/current)" = "none" ]
+  [ ! -e CLAUDE.local.md ] && [ ! -e AGENTS.override.md ]
+  [ -f .codex/hooks.json ] && [ -f .agents/hooks.json ]   # 게이트는 남는다
+  run bash "$REPO_ROOT/.claude/scripts/personal-layer.sh" off
+  [ ! -e .codex/hooks.json ] && [ ! -e .agents/hooks.json ] && [ ! -e .claude/state/personal-gate/current ]
+}
+
+@test "personal-layer use rejects a name without a personal file (#94)" {
+  d="$BATS_TEST_TMPDIR/layer-use2"; personal_repo "$d"; cd "$d"
+  run bash "$REPO_ROOT/.claude/scripts/personal-layer.sh" use NOBODY
+  [ "$status" -eq 1 ]
+  [ ! -e .claude/state/personal-gate/current ]
 }
 

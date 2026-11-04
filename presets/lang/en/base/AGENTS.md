@@ -16,10 +16,14 @@ do not go in this file — put them in a root `AGENTS.<NAME>.md`. `.claude/scrip
 adds that file to Claude Code (`CLAUDE.local.md`), Codex (`AGENTS.override.md`) and agy
 (`.agents/rules/personal-<name>.md`) and keeps the generated files out of commits via `.git/info/exclude`.
 A personal layer only **adds** to this file — on conflict, this file wins. (#92)
-Before writing the first reply of a session, **always** list the root `AGENTS.*.md` with a tool (e.g. `ls AGENTS.*.md`; skip `AGENTS.override.md`, a Codex artifact) — even when the request looks trivial. If any `AGENTS.<NAME>.md` exists, **the first reply of every session asks who the user is** (options: each file's
-`<NAME>`, plus "none of these"). Follow no personal instructions until answered — even when the layer is on and its text is
-already in context. Once confirmed, follow that file for the rest of the session (if the layer is off, read the file directly
-and suggest `on <NAME>`); for anyone else, ignore personal files. Ask once per session. (#94)
+If the root holds any `AGENTS.<NAME>.md`, **the first reply of every session asks who the user is** (options: each file's
+`<NAME>`, plus "none of these"). Once answered, run `.claude/scripts/personal-layer.sh use <NAME>` (or `use none`) as a
+standalone command. Follow no personal instructions before that — even when the layer is on and its text is already in context.
+The `.claude/hooks/personal-gate.sh` hook enforces this: it injects the question at session start and on every prompt, blocks
+every tool except question tools and `use` until answered, then loads that person's file into context and blocks edits to
+other people's personal files (Claude Code `settings.json`, Codex `.codex/hooks.json`, agy `.agents/hooks.json`). Without the
+hooks the rule still holds — before the first reply, always list the root `AGENTS.*.md` with a tool (skip `AGENTS.override.md`,
+a Codex artifact). (#94)
 
 ## Response language
 

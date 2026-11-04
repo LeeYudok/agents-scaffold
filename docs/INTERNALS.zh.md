@@ -24,6 +24,7 @@
     post-test-notify.sh   PostToolUse(Bash, *test*) → 终端通知
     stop-memory-remind.sh Stop 钩子 → 每会话一次的记忆提醒
     compact-remind.sh     SessionStart(compact) 钩子 → 压缩后立即提醒整理重入信息
+    personal-gate.sh      SessionStart·Prompt·Pre/PostToolUse → 个人层的用户确认门禁 (#94)
     cc-check.py            PostToolUse(Bash, git commit) → CC > 15 时告警
   memory/
     MEMORY.md              auto-memory 索引（SSOT）
