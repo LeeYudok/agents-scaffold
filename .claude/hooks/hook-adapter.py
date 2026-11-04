@@ -13,6 +13,7 @@ agy(Antigravity)는 훅 설정 위치·이벤트·입력 JSON·응답 형식이 
 - Codex 입력은 Claude 와 거의 같다(session_id·cwd·tool_name·tool_input·tool_response). 셸은 tool_name
   "Bash", 파일 편집은 "apply_patch" 이고 tool_input.command 에 패치 텍스트가 온다. Stop 응답
   {"decision":"block","reason":...} 를 Claude 와 같이 받아 한 턴 더 돈다. 훅은 세션 cwd 에서 실행된다.
+  0.166.0 부터 Pre/PostToolUse·PermissionRequest 입력의 cwd 는 세션 cwd 가 아니라 그 명령의 workdir 다(#90).
 - agy 입력은 camelCase 다(conversationId·workspacePaths·toolCall{name,args}). 셸은 run_command
   (args.CommandLine), 파일 편집은 write_to_file·replace_file_content·multi_replace_file_content·sed_file
   (args.TargetFile). PostToolUse 에 명령 출력은 없다. Stop 은 {"decision":"continue","reason":...} 로
@@ -121,17 +122,23 @@ def project_root(harness, payload):
         paths = payload.get("workspacePaths") or []
         if paths:
             return paths[0]
-    elif payload.get("cwd"):
-        cwd = payload["cwd"]
-        try:
-            top = subprocess.run(["git", "-C", cwd, "rev-parse", "--show-toplevel"],
-                                 capture_output=True, text=True, timeout=5)
-            if top.returncode == 0 and top.stdout.strip():
-                return top.stdout.strip()
-        except (OSError, subprocess.SubprocessError):
-            pass
-        return cwd
-    return os.getcwd()
+        return os.getcwd()
+    # Codex 훅 프로세스는 세션 cwd 에서 돈다. 입력의 cwd 는 0.166.0 부터 Pre/PostToolUse·PermissionRequest
+    # 에서 그 명령의 workdir 라 다른 레포일 수 있다 — 세션 cwd 를 먼저 보고 입력 cwd 는 폴백으로만 쓴다(#90).
+    for cwd in (os.getcwd(), payload.get("cwd")):
+        top = git_toplevel(cwd) if cwd else None
+        if top:
+            return top
+    return payload.get("cwd") or os.getcwd()
+
+
+def git_toplevel(cwd):
+    try:
+        top = subprocess.run(["git", "-C", cwd, "rev-parse", "--show-toplevel"],
+                             capture_output=True, text=True, timeout=5)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return top.stdout.strip() if top.returncode == 0 and top.stdout.strip() else None
 
 
 def absolute(path, base):
