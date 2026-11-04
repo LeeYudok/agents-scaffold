@@ -11,6 +11,12 @@ harnesses that expand imports auto-load the index, and the rest read it as a pat
 > If you add a `CLAUDE.md` (or `CLAUDE.local.md`), Claude Code **stops reading this file** (fallback,
 > not merge). If you really need one, make its first line `@AGENTS.md`.
 
+**Personal layer**: instructions that differ per person (communication style, commit rules, machine setup)
+do not go in this file — put them in a root `AGENTS.<NAME>.md`. `.claude/scripts/personal-layer.sh on <NAME>`
+adds that file to Claude Code (`CLAUDE.local.md`), Codex (`AGENTS.override.md`) and agy
+(`.agents/rules/personal-<name>.md`) and keeps the generated files out of commits via `.git/info/exclude`.
+A personal layer only **adds** to this file — on conflict, this file wins. (#92)
+
 ## Response language
 
 - Reply to the user (conversation, reports, questions) **in the language the user writes in**. Keep code, commands, identifiers and verbatim error messages as-is. (#70)

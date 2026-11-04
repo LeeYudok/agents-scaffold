@@ -43,10 +43,11 @@
     docs-sync/          문서 현행화 — 주장별 사실 대조 + 다국어 짝 파일 동시 갱신
     handoff/            세션 핸드오프 — 트래커가 있으면 이슈 본문, 없으면 HANDOFF.md
     yd-*/               범용 스킬 14개 — doksam-skills 에서 옮긴 13개 + yd-cve-check(#79) (DB·Go·React·TS·빌드·화면설계·글쓰기·CVE 점검, 한국어 전용)
-  workflows/            (자동 로드 아님 — 명시 호출로만 실행)
+  workflows/            (Claude Code 는 /<name> 커맨드로 목록에 올린다 — 실행은 명시 호출로만)
     rules-audit.js      저장형 Workflow 예제 — 스캔/검증/수정, 머지는 사람 게이트
   scripts/              (자동 로드 아님 — 명시 호출로만 실행)
     knowledge_graph.py  .claude 생태계 그래프 + --check 깨진 링크 게이트
+    personal-layer.sh   개인 추가 지침 AGENTS.<NAME>.md 를 세 하네스에 켜고 끈다 (#92)
   settings.json         hooks 와이어링 + deny 기본값
 AGENTS.md               프로젝트 브레인 — 규칙 SSOT (P0/P1/P2 + 워크플로)
 presets/                프리셋 조각 (복사 덮어쓰기 방식, #81 에서 종류별로 묶음)

@@ -43,10 +43,11 @@
     docs-sync/                文档现行化 — 逐条主张核对 + 多语言配对文件同步
     handoff/                  会话交接 — 有追踪器时写入 Issue 正文，否则写 HANDOFF.md
     yd-*/                     14 个通用技能 —— 从 doksam-skills 迁入的 13 个 + yd-cve-check（#79）（DB、Go、React、TS、构建、界面设计、写作、CVE 检查；仅韩文）
-  workflows/             （不会自动加载 — 需显式调用）
+  workflows/             （Claude Code 会将其列为 /<name> 命令 —— 仅在显式调用时执行）
     rules-audit.js           存储式 Workflow 示例 —— 扫描/验证/修复，合并由人工把关
   scripts/               （不会自动加载 — 需显式调用）
     knowledge_graph.py       .claude 生态图谱 + --check 断链门禁
+    personal-layer.sh        为三个 harness 开启/关闭个人附加指令 AGENTS.<NAME>.md (#92)
   settings.json               钩子接线 + 默认 deny 规则
 AGENTS.md                 项目大脑 —— 规则 SSOT（P0/P1/P2 + 工作流）
 presets/                  预设片段（复制覆盖模型，#81 起按类型分组）

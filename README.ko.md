@@ -136,6 +136,7 @@ codex plugin marketplace add LeeYudok/agents-scaffold && codex plugin add yd-ski
 | [docs/INTERNALS.md](docs/INTERNALS.md) | 내부 구조 — 생성되는 전체 트리, 레포 구성, 주요 패턴 |
 | [docs/OFFLINE_INSTALL.md](docs/OFFLINE_INSTALL.md) | 폐쇄망·Windows 설치 — 오프라인 번들, Git Bash, `.cmd` 런처, `python3` 설정 |
 | [docs/PRESET_SPEC.md](docs/PRESET_SPEC.md) | 스택 프리셋 규격 |
+| [AGENTS.LEEYUDOK.md](AGENTS.LEEYUDOK.md) | `AGENTS.md` 위에 얹는 메인테이너 개인 레이어 — `AGENTS.<NAME>.md` 작성 예시, 하네스별 사용 가능성, 도구 버전. 자기 레이어는 `.claude/scripts/personal-layer.sh on <NAME>` 으로 켠다 |
 | [dotfiles/](dotfiles/README.md) | 메인테이너의 머신 셸 환경(zsh·starship·Claude/Codex/agy statusline). scaffold 설치와는 별개다 |
 
 ## Contributing

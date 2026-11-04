@@ -186,6 +186,8 @@ EOF
   [ ! -d "$copy/docs/superpowers" ]
   [ ! -e "$copy/dotfiles" ]   # #76: 메인테이너 dotfiles 는 사용자 프로젝트에 남기지 않는다
   [ ! -e "$copy/plugins" ] && [ ! -e "$copy/.claude-plugin" ]   # #82: 스킬 마켓플레이스는 이 레포 것
+  [ ! -e "$copy/AGENTS.LEEYUDOK.md" ]   # #92: 메인테이너 개인 레이어는 사용자 프로젝트에 남기지 않는다
+  [ -x "$copy/.claude/scripts/personal-layer.sh" ]   # #92: 레이어 스크립트는 산출물에 남는다
   # #61: in-place install also moves the template's skills to the .agents/skills source
   [ -L "$copy/.claude/skills" ]
   [ -f "$copy/.agents/skills/review/SKILL.md" ]
@@ -1642,3 +1644,63 @@ PERSONAL_YD="yd-agents-mem yd-claude-auth-sync yd-git-sync yd-git-ship yd-doksam
   [ "$status" -eq 0 ]
   [ ! -e "$BATS_TEST_TMPDIR/.agents/skills/yd-finguard" ]
 }
+
+# --- personal layer AGENTS.<NAME>.md (#92) ---
+
+personal_repo() {
+  local d="$1"
+  mkdir -p "$d" && git -C "$d" init -q
+  printf '# base\n\nBASE-1111\n' > "$d/AGENTS.md"
+  printf '# mine\n\nMINE-2222\n' > "$d/AGENTS.TEST.md"
+}
+
+@test "personal-layer on wires all three harnesses and keeps them out of git (#92)" {
+  d="$BATS_TEST_TMPDIR/layer"; personal_repo "$d"; cd "$d"
+  run bash "$REPO_ROOT/.claude/scripts/personal-layer.sh" on test
+  [ "$status" -eq 0 ]
+  # Claude: AGENTS.md 와 개인 파일을 둘 다 import (CLAUDE.local.md 가 있으면 AGENTS.md 가 빠진다)
+  [ "$(sed -n 1p CLAUDE.local.md)" = "@AGENTS.md" ]
+  [ "$(sed -n 2p CLAUDE.local.md)" = "@AGENTS.TEST.md" ]
+  # Codex: override 사본에 기본·개인 내용이 모두 있다
+  grep -q BASE-1111 AGENTS.override.md && grep -q MINE-2222 AGENTS.override.md
+  # agy: always_on 룰
+  [ "$(sed -n 2p .agents/rules/personal-test.md)" = "trigger: always_on" ]
+  grep -q MINE-2222 .agents/rules/personal-test.md
+  # 생성물은 개인 범위(.git/info/exclude)라 untracked 로도 안 보인다
+  [ -z "$(git status --porcelain -- CLAUDE.local.md AGENTS.override.md .agents)" ]
+  run bash "$REPO_ROOT/.claude/scripts/personal-layer.sh" status
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"AGENTS.TEST.md"* ]]
+}
+
+@test "personal-layer status flags a stale copy and off cleans up only its own files (#92)" {
+  d="$BATS_TEST_TMPDIR/layer2"; personal_repo "$d"; cd "$d"
+  bash "$REPO_ROOT/.claude/scripts/personal-layer.sh" on TEST
+  printf 'BASE-3333\n' >> AGENTS.md
+  run bash "$REPO_ROOT/.claude/scripts/personal-layer.sh" status
+  [ "$status" -eq 3 ]
+  [[ "$output" == *"AGENTS.override.md"* ]]
+  run bash "$REPO_ROOT/.claude/scripts/personal-layer.sh" off
+  [ "$status" -eq 0 ]
+  [ ! -e CLAUDE.local.md ] && [ ! -e AGENTS.override.md ] && [ ! -e .agents ]
+  ! grep -q 'personal-layer' "$(git rev-parse --git-path info/exclude)"
+  [ -f AGENTS.md ] && [ -f AGENTS.TEST.md ]
+}
+
+@test "personal-layer refuses to overwrite a user-owned CLAUDE.local.md (#92)" {
+  d="$BATS_TEST_TMPDIR/layer3"; personal_repo "$d"; cd "$d"
+  printf 'my own notes\n' > CLAUDE.local.md
+  run bash "$REPO_ROOT/.claude/scripts/personal-layer.sh" on TEST
+  [ "$status" -eq 1 ]
+  [ "$(cat CLAUDE.local.md)" = "my own notes" ]
+  [ ! -e AGENTS.override.md ]
+}
+
+@test "personal-layer on fails without the personal file (#92)" {
+  d="$BATS_TEST_TMPDIR/layer4"; personal_repo "$d"; cd "$d"
+  run bash "$REPO_ROOT/.claude/scripts/personal-layer.sh" on NOBODY
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"AGENTS.NOBODY.md"* ]]
+  [ ! -e CLAUDE.local.md ]
+}
+
