@@ -1,0 +1,71 @@
+# agents-scaffold
+
+> Guardrails for AI coding agents — Claude Code, OpenAI Codex CLI and Google Antigravity (agy) — enforced by a real git pre-commit gate instead of prompts. One command installs an AGENTS.md project brain, path-scoped rules, skills, subagents, hooks and a composed pre-commit gate into any repository. Everything it writes is plain files you own: no framework, no runtime, no registry. MIT licensed.
+
+Key facts:
+
+- Enforcement is in git, not in the prompt: `.git/hooks/pre-commit` blocks staged `.env`/secrets, broken builds and type/lint errors, whichever agent (or human) commits.
+- One source, three harnesses: `AGENTS.md` is read natively by Claude Code (v2.1.277+), Codex and Antigravity. Codex subagents/hooks and Antigravity rules/subagents/hooks are generated from `.claude/`.
+- Claims are measured, not assumed: `docs/harness-matrix.json` records live measurements per harness version (Claude Code 2.1.318 full tier; Codex 0.166.0 and agy 1.5.0 baseline tier as of 2026-11-04). CI fails when a full-tier measurement expires.
+- 13 stack presets (Next.js, Spring Boot, Java web/JSP, Bun, Python, Go, Rust, Ruby on Rails, .NET, PHP Laravel, Android, Flutter, ops), each adding rules and its own build/lint/test gate. GitHub or GitLab forge. Korean or English output.
+- Works offline (air-gapped bundle) and on Windows (Git Bash, `.cmd` launcher).
+- Personal instruction layers: keep shared rules in `AGENTS.md` and add per-person `AGENTS.<NAME>.md`; a hook asks "who is the user?" every session before any personal rules apply.
+- Skills also install as Claude Code / Codex plugins, or with `npx skills add LeeYudok/agents-scaffold`.
+
+Install:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/leeyudok/agents-scaffold/main/bin/agents-scaffold.sh | bash -s -- --stack nextjs --yes
+# Codex or Antigravity too: --harness codex | agy | all
+```
+
+## Docs
+
+- [README](https://github.com/LeeYudok/agents-scaffold/blob/main/README.md): overview, quickstart, why it holds up
+- [Options](https://github.com/LeeYudok/agents-scaffold/blob/main/docs/OPTIONS.en.md): every option — stack presets, `--forge`, `--harness`, `--lang`, `--update`, harness support table
+- [Internals](https://github.com/LeeYudok/agents-scaffold/blob/main/docs/INTERNALS.en.md): generated tree, repository layout, key patterns
+- [Offline and Windows install](https://github.com/LeeYudok/agents-scaffold/blob/main/docs/OFFLINE_INSTALL.en.md): air-gapped bundle, Git Bash, `python3` setup
+- [Harness support matrix](https://github.com/LeeYudok/agents-scaffold/blob/main/docs/harness-matrix.json): measured capabilities per harness version
+- [Contributing](https://github.com/LeeYudok/agents-scaffold/blob/main/CONTRIBUTING.md): workflow and how to add a stack preset
+
+## Skills (default set)
+
+Workflow skills ship in English and Korean; `yd-*` specialist skills are written in Korean.
+
+- [review](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/review): code review of the full change set — code-reviewer then security-audit agents
+- [status](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/status): one-shot project status — git, build, tests, issues, branches
+- [search-first](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/search-first): search existing solutions (repo, mirrors, registries, MCP/skills, GitHub) before writing new code
+- [security-precheck](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/security-precheck): self-check before an external security audit, split findings into issues and fix in parallel
+- [docs-sync](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/docs-sync): find and fix docs that drifted from code, config and paths, multilingual pairs together
+- [handoff](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/handoff): end a session and hand it to the next one through a tracker issue (or HANDOFF.md without a forge)
+- [memory-factcheck](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/memory-factcheck): audit agent memory against code, DB, issues and files; correct stale entries
+- [skill-evolve](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/skill-evolve): turn a real agent mistake into a "Learned warnings" rule in the skill that made it
+- [grill-me](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/grill-me): pressure-test an idea or spec with hard questions before implementation
+- [yd-pg-expert](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-pg-expert): PostgreSQL specifics — timestamptz, numeric, query plans, locking ALTERs, CREATE INDEX CONCURRENTLY, VACUUM, shared clusters
+- [yd-oracle-expert](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-oracle-expert): Oracle SQL/PL/SQL and PostgreSQL-to-Oracle porting — empty-string NULL, DATE time, VARCHAR2 bytes, ROWNUM, implicit commits
+- [yd-sqlite-expert](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-sqlite-expert): SQLite files — read-only queries, WAL, locking, migrations, safe dynamic table names
+- [yd-db-expert](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-db-expert): engine-neutral relational design — normalization, keys, NULL semantics, constraints, N+1, cursor paging, transactions
+- [yd-go-expert](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-go-expert): Go 1.22+ — error handling, concurrency, tests, net/http servers, go:embed
+- [yd-react-expert](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-react-expert): React 19 — component design, state, useEffect misuse, re-render performance, accessibility
+- [yd-typescript](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-typescript): TypeScript type boundaries, async state, DOM access, strict settings (Bun included)
+- [yd-frontend-build](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-frontend-build): pnpm workspaces and Vite builds — dependencies, lockfiles, bundle size, air-gapped self-hosting
+- [yd-cve-check](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-cve-check): pnpm dependency CVE/GHSA/malware check and fix with scoped overrides; offline with an OSV dump
+- [yd-mobile-web-planner](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-mobile-web-planner): mobile web/app IA and slide-style storyboards (single HTML) plus Business Rules specs
+- [yd-nextjs-implementer](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-nextjs-implementer): implement those storyboards as a Next.js App Router or Vite + React app with traceability
+- [yd-blueprint](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-blueprint): project blueprint as JSONL data rendered by a Bun + Vite + React viewer
+- [yd-agents-yaml](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-agents-yaml): AGENTS.md + machine-readable AGENTS.yaml + validator for any repository
+- [yd-writer-kr](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-writer-kr): clear, evidence-backed Korean technical writing and editing
+
+## Skills (opt-in personal set, `--with-personal-skills`)
+
+- yd-git-ship, yd-git-sync: agent commits, issues, merge requests and multi-host repo sync on GitLab
+- yd-agents-mem: back up agent memory, global instructions and settings to a git repo
+- yd-claude-auth-sync: copy a refreshed Claude Code login to registered machines without printing tokens
+- yd-finguard: FinGuard CLI source vulnerability scan with a severity gate and bounded fix loop
+- yd-doksam-ui, yd-sdlc-orchestrator, yd-script-editor, yd-session-recording: maintainer-specific UI standard, SDLC orchestration, narration editing and session recording
+
+## Optional
+
+- [Project page](https://leeyudok.github.io/agents-scaffold/)
+- [Plugin marketplace manifest](https://github.com/LeeYudok/agents-scaffold/blob/main/.claude-plugin/marketplace.json)
+- [Maintainer personal layer example](https://github.com/LeeYudok/agents-scaffold/blob/main/AGENTS.LEEYUDOK.md)
