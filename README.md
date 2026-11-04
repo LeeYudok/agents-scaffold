@@ -57,7 +57,7 @@ so your edits are never overwritten. Full options: [docs/OPTIONS.en.md](docs/OPT
 | **Air-gapped and Windows ready** | An offline bundle installs with no network; Windows runs through Git Bash with a `.cmd` launcher ([docs/OFFLINE_INSTALL.en.md](docs/OFFLINE_INSTALL.en.md)). |
 | **Plugin marketplace** | The skills also install globally as a Claude Code / Codex plugin — no clone needed. |
 | **Self-improving** | `skill-evolve` / `agent-evolve` turn real mistakes into "Learned warnings" in the skill or agent that made them. |
-| **Tested** | 89 bats regression tests for the installer, per-skill contract tests, a link checker for the docs, all in CI. |
+| **Tested** | 100 bats regression tests for the installer, per-skill contract tests, a link checker for the docs, all in CI. |
 
 ## What happens the moment it's installed
 
