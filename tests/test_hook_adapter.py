@@ -133,6 +133,32 @@ class Run(unittest.TestCase):
             self.assertEqual(project_dir, root)
             self.assertEqual(os.path.realpath(cwd), os.path.realpath(root))
 
+    def test_codex_project_dir_follows_session_cwd_not_command_workdir(self):
+        # codex 0.166.0: 툴 훅 입력의 cwd 는 명령 workdir(다른 레포일 수 있음), 훅 프로세스 cwd 는 세션 cwd (#90)
+        with tempfile.TemporaryDirectory() as root, tempfile.TemporaryDirectory() as other:
+            for d in (root, other):
+                subprocess.run(["git", "init", "-q", d], check=True)
+            dump = os.path.join(root, "dir.txt")
+            payload = {"session_id": "s1", "cwd": other, "tool_name": "Bash",
+                       "tool_input": {"command": "ls"}, "tool_response": ""}
+            subprocess.run([sys.executable, ADAPTER, "run", "codex", "PostToolUse", "Bash",
+                            f'echo "$CLAUDE_PROJECT_DIR" > "{dump}"'],
+                           input=json.dumps(payload), text=True, check=True, cwd=root)
+            with open(dump) as f:
+                self.assertEqual(os.path.realpath(f.read().strip()), os.path.realpath(root))
+
+    def test_codex_falls_back_to_payload_cwd_outside_a_repo(self):
+        with tempfile.TemporaryDirectory() as root, tempfile.TemporaryDirectory() as outside:
+            subprocess.run(["git", "init", "-q", root], check=True)
+            dump = os.path.join(root, "dir.txt")
+            payload = {"session_id": "s1", "cwd": root, "tool_name": "Bash",
+                       "tool_input": {"command": "ls"}, "tool_response": ""}
+            subprocess.run([sys.executable, ADAPTER, "run", "codex", "PostToolUse", "Bash",
+                            f'echo "$CLAUDE_PROJECT_DIR" > "{dump}"'],
+                           input=json.dumps(payload), text=True, check=True, cwd=outside)
+            with open(dump) as f:
+                self.assertEqual(os.path.realpath(f.read().strip()), os.path.realpath(root))
+
     def test_matcher_filters_on_claude_tool_name(self):
         with tempfile.TemporaryDirectory() as root:
             dump = os.path.join(root, "dump.json")

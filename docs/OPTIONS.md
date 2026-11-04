@@ -64,7 +64,7 @@
 
 **스킬 원본은 한 곳이다 (#61).** 스킬은 하네스와 무관하게 `.agents/skills/`(Codex·agy 네이티브
 경로)에 한 번만 두고, Claude Code 는 `.claude/skills -> ../.agents/skills` 심볼릭 링크로 같은 원본을
-읽는다(claude 2.1.299 실측 — 링크 없이 `.agents/skills` 만 두면 스킬을 찾지 못한다). 사본 두 벌이
+읽는다(claude 2.1.318 실측 — 링크 없이 `.agents/skills` 만 두면 스킬을 찾지 못한다). 사본 두 벌이
 갈라지는 일이 없고, 나중에 다른 하네스를 붙여도 재설치가 필요 없다.
 
 - 링크를 만들 수 없는 환경(Windows Git Bash 기본값 등)이나 `AGENTS_SCAFFOLD_NO_SYMLINK=1` 이면
@@ -104,11 +104,11 @@ Bash 툴로 커밋할 때만 발동하므로 조기 피드백 계층이지 강�
 
 | 하네스 | 실측 버전 | baseline | full 쪽 확인된 것 / 확인 안 된 것 |
 |---|---|---|---|
-| Claude Code | 2.1.299 | 성립 | `.claude/rules/*.md` 의 `paths:` 조건부 로딩, 서브에이전트, skills, `settings.json` 훅 — 전부 [공식 문서](https://code.claude.com/docs/en/memory.md)로 확인 |
-| Codex | codex-cli 0.163.0 | 성립 | `AGENTS.md`·스택 P0 자동 로드, `.agents/skills` 발견, `.env` 게이트, `.codex/agents` 서브에이전트(신뢰 프로젝트만), `.codex/hooks.json` 훅(프로젝트 + 훅 정의 신뢰 필요), cwd 기준 하위 `AGENTS.md` 를 실측. 파일 경로 조건부 지침은 없다 |
-| Antigravity | agy 1.4.2 | 성립 | headless(`-p`)로 `AGENTS.md`·스택 P0 자동 로드, `.agents/skills` 발견, `.env` 게이트, `.agents/agents` 서브에이전트, `.agents/hooks.json` 훅(신뢰 확인 없이 실행), `.agents/rules` 의 `trigger: glob` 조건부 룰을 실측. 하위 `AGENTS.md` 는 cwd 기준으로만 로드 |
+| Claude Code | 2.1.318 | 성립 | `.claude/rules/*.md` 의 `paths:` 조건부 로딩, 서브에이전트, skills, `settings.json` 훅 — 전부 [공식 문서](https://code.claude.com/docs/en/memory.md)로 확인 |
+| Codex | codex-cli 0.166.0 | 성립 | `AGENTS.md`·스택 P0 자동 로드, `.agents/skills` 발견, `.env` 게이트, `.codex/agents` 서브에이전트(신뢰 프로젝트만), `.codex/hooks.json` 훅(프로젝트 + 훅 정의 신뢰 필요), cwd 기준 하위 `AGENTS.md` 를 실측. 파일 경로 조건부 지침은 없다 |
+| Antigravity | agy 1.5.0 | 성립 | headless(`-p`)로 `AGENTS.md`·스택 P0 자동 로드, `.agents/skills` 발견, `.env` 게이트, `.agents/agents` 서브에이전트, `.agents/hooks.json` 훅(신뢰 확인 없이 실행)을 실측. **`.agents/rules` 의 `trigger: glob` 룰은 1.5.0 에서 일치 파일을 읽어도 로드되지 않는다**(1.4.2 까지 pass, `always_on` 은 정상, #90). 하위 `AGENTS.md` 는 cwd 기준으로만 로드 |
 
-Codex(codex-cli 0.163.0)와 agy(1.4.2)는 각 모드 산출물의 AGENTS.md 와 인라인된
+Codex(codex-cli 0.166.0)와 agy(1.5.0)는 각 모드 산출물의 AGENTS.md 와 인라인된
 스택 P0를 툴 호출 없이 자동 로드하고 `.agents/skills`의 저장소 스킬만 발견했다. `.claude/skills`는
 둘 다 발견 경로가 아니다. agy 1.2.7 headless 는 `AGENTS.md`·`GEMINI.md` 를 모두 읽지 못했으나
 1.2.16 에서 해소됐다. 모델이 규칙을 놓쳐도 git hook이 exit 2로 차단한다.
@@ -148,8 +148,9 @@ agy(`--harness agy|all`)용 `.agents/agents/<이름>.md` 로 생성한다. Codex
 - Stop 훅(메모리 리마인드)은 headless(`-p`·`exec`)에서도 한 턴을 더 돌린다. 자동화에서 원치 않으면 `settings.json` 에서
   빼고 `--update` 한다. 갱신 규칙은 다른 어댑터와 같다.
 
-스캐폴드는 서브에이전트(#64)·훅(#65)을 두 하네스에, 경로 조건부 룰(#63)을 agy 에 생성하고 각각 e2e 로 실측했다. 그래서
-**agy 는 full**(훅은 Claude Code 와 같이 partial)이다. **Codex 는 baseline** 이다 — 파일 경로 조건부 지침이 없어서
+스캐폴드는 서브에이전트(#64)·훅(#65)을 두 하네스에, 경로 조건부 룰(#63)을 agy 에 생성하고 각각 e2e 로 실측했다. agy 는
+1.4.2 까지 full 이었으나 **1.5.0 에서 glob 룰이 로드되지 않아 baseline 으로 내렸다**(#90) — 생성기는 그대로 두고, agy 가
+고치면 재실측해 되돌린다. **Codex 는 baseline** 이다 — 파일 경로 조건부 지침이 없어서
 `.claude/rules` 의 `paths:` 룰을 전달할 수단이 없다(하위 `AGENTS.md` 는 cwd 기준으로만 읽힌다). 훅은 Claude Code 와 마찬가지로
 조기 피드백이지 강제선이 아니다. agy 는 레포의 `.agents/hooks.json` 을 신뢰 확인 없이 실행하므로, 외부
 레포에서 agy 를 돌리기 전에 그 파일을 확인한다(`security-audit` 에이전트가 검사한다).

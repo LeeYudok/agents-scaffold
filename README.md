@@ -50,7 +50,7 @@ so your edits are never overwritten. Full options: [docs/OPTIONS.en.md](docs/OPT
 |---|---|
 | **Enforced by git, not by prompts** | `.git/hooks/pre-commit` blocks staged `.env`/secrets, broken builds, type and lint errors. It holds whichever AI tool you use — and when a human commits by hand. |
 | **One source, three agents** | `AGENTS.md` is the single source of truth; Claude Code, Codex and Antigravity all read it natively. Skills live once in `.agents/skills/`; Codex subagents (`.codex/agents/*.toml`), Antigravity rules, subagents and hooks are generated from `.claude/`. |
-| **Measured, not assumed** | Every harness claim is backed by a live measurement in [docs/harness-matrix.json](docs/harness-matrix.json) — Claude Code and Antigravity at the **full** tier, Codex at **baseline**. CI fails when a measurement expires. |
+| **Measured, not assumed** | Every harness claim is backed by a live measurement in [docs/harness-matrix.json](docs/harness-matrix.json) — Claude Code at the **full** tier, Codex and Antigravity at **baseline** (agy 1.5.0 stopped loading glob rules, #90). CI fails when a measurement expires. |
 | **13 stack presets** | Next.js, Spring Boot, Java web (JSP), Bun, Python, Go, Rust, Ruby on Rails, .NET, PHP Laravel, Android, Flutter, ops — each adds rules and its own build/lint/test gate. GitHub or GitLab forge, Korean or English output. |
 | **Path-scoped rules** | A rule loads only while the agent touches matching files, so context stays lean instead of front-loading every convention. |
 | **24 skills out of the box** | Workflow (review, status, handoff, docs-sync, security pre-check, ...) plus `yd-*` expert skills: PostgreSQL, Oracle, SQLite, relational design, Go, React, TypeScript, Vite/pnpm builds, mobile screen design, and **dependency CVE checks** (`pnpm audit` online, OSV dump offline). |
@@ -115,7 +115,7 @@ codex plugin marketplace add LeeYudok/agents-scaffold && codex plugin add yd-ski
 `yd-skills-personal` carries the 9 opt-in ones. In Claude Code, plugin skills are namespaced (`yd-skills:yd-pg-expert`).
 A plugin carries skills only — project rules, hooks and subagents come from the installer, because Claude Code
 plugins cannot ship rules and Codex plugins cannot ship subagents. Each plugin also has an Antigravity manifest
-(`.antigravity-plugin/plugin.json`), written from the agy docs and not yet measured. Offline or for development,
+(`.antigravity-plugin/plugin.json`), written from the agy docs; `agy plugin validate` passes on agy 1.5.0, installation not yet measured. Offline or for development,
 clone this repo and run `scripts/install-skills.sh` (symlinks into `~/.claude/skills`, `~/.agents/skills` and
 `~/.gemini/config/skills`; supports `--personal`, `--copy` and `--project <dir>`).
 

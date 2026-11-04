@@ -5,8 +5,10 @@ One workflow = one `.js` file. Unlike a skill (a procedure the model follows), a
 is plain JavaScript whose control flow (loops, fan-out, gates) runs deterministically while
 subagents do the actual work.
 
-> Requires a harness that provides the Workflow tool. On setups without it these files are
-> inert — they are never auto-loaded, so shipping them costs nothing.
+> Requires a harness that provides the Workflow tool. Claude Code discovers
+> `.claude/workflows/*.js` and lists each one as a `/<name>` command — only the
+> `meta.description` line enters the context (measured on 2.1.318, #90). Harnesses without
+> the Workflow tool (Codex, agy) leave these files inert, so shipping them costs nothing.
 
 ## File shape
 

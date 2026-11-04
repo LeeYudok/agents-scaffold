@@ -50,7 +50,7 @@ agents-scaffold/bin/agents-scaffold.sh /path/to/repo --harness all --stack pytho
 |---|---|
 | **由 git 强制，而非靠提示词** | `.git/hooks/pre-commit` 会拦截暂存的 `.env`/密钥、失败的构建、类型和 lint 错误。无论你用哪个 AI 工具，乃至人手动提交，它都一样生效。 |
 | **一个源头，三个代理** | `AGENTS.md` 是单一事实来源（SSOT），Claude Code、Codex 和 Antigravity 都原生读取它。技能只在 `.agents/skills/` 存放一份；Codex 子代理（`.codex/agents/*.toml`）以及 Antigravity 的规则、子代理和钩子都由 `.claude/` 生成。 |
-| **实测，而非假设** | 每一条关于 harness 的说法都有 [docs/harness-matrix.json](docs/harness-matrix.json) 中的实测记录支撑 — Claude Code 和 Antigravity 达到 **full** 级别，Codex 为 **baseline**。实测记录过期时 CI 会失败。 |
+| **实测，而非假设** | 每一条关于 harness 的说法都有 [docs/harness-matrix.json](docs/harness-matrix.json) 中的实测记录支撑 — Claude Code 达到 **full** 级别，Codex 和 Antigravity 为 **baseline**（agy 1.5.0 不再加载 glob 规则，#90）。实测记录过期时 CI 会失败。 |
 | **13 种技术栈预设** | Next.js、Spring Boot、Java web（JSP）、Bun、Python、Go、Rust、Ruby on Rails、.NET、PHP Laravel、Android、Flutter、ops — 每种都会添加规则和各自的 build/lint/test 门禁。支持 GitHub 或 GitLab forge，输出可选韩文或英文。 |
 | **按路径作用域加载的规则** | 规则只在代理触碰匹配文件时才加载，上下文保持精简，而不是一开始就灌入全部约定。 |
 | **开箱即用的 24 个技能** | 工作流技能（review、status、handoff、docs-sync、安全预检等）加上 `yd-*` 专家技能：PostgreSQL、Oracle、SQLite、关系型设计、Go、React、TypeScript、Vite/pnpm 构建、移动端界面设计，以及**依赖 CVE 检查**（在线用 `pnpm audit`，离线用 OSV 数据转储）。 |
@@ -114,7 +114,7 @@ codex plugin marketplace add LeeYudok/agents-scaffold && codex plugin add yd-ski
 `yd-skills-personal` 包含 9 个可选技能。在 Claude Code 中，插件技能带有命名空间（`yd-skills:yd-pg-expert`）。
 插件只携带技能 — 项目规则、钩子和子代理由安装器提供，因为 Claude Code 插件不能携带 rules，
 Codex 插件不能携带子代理。每个插件还带有 Antigravity 清单（`.antigravity-plugin/plugin.json`），依据 agy 文档编写，
-尚未实测。离线或开发场景下，clone 本仓库并运行 `scripts/install-skills.sh`（在 `~/.claude/skills`、`~/.agents/skills`、
+agy 1.5.0 的 `agy plugin validate` 可通过，安装尚未实测。离线或开发场景下，clone 本仓库并运行 `scripts/install-skills.sh`（在 `~/.claude/skills`、`~/.agents/skills`、
 `~/.gemini/config/skills` 下创建符号链接；支持 `--personal`、`--copy`、`--project <dir>`）。
 
 ## 对比

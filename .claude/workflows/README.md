@@ -4,8 +4,9 @@ Claude Code **Workflow 툴**용 결정적(deterministic) 멀티에이전트 오�
 워크플로 1개 = `.js` 파일 1개. 스킬(모델이 따르는 절차)과 달리 워크플로는 순수 JavaScript
 라서 제어 흐름(루프·fan-out·게이트)이 결정적으로 실행되고, 실제 작업은 서브에이전트가 한다.
 
-> Workflow 툴을 제공하는 harness 가 필요. 없는 환경에서는 이 파일들이 inert —
-> 자동 로드되지 않으므로 동봉 비용이 0이다.
+> Workflow 툴을 제공하는 harness 가 필요. Claude Code 는 `.claude/workflows/*.js` 를 찾아
+> `/<name>` 커맨드로 목록에 올린다 — 컨텍스트에는 `meta.description` 한 줄만 들어간다
+> (2.1.318 실측, #90). Workflow 툴이 없는 하네스(Codex·agy)에서는 inert 라 동봉 비용이 0이다.
 
 ## 파일 형태
 
