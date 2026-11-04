@@ -46,6 +46,7 @@ dotfiles/
 └── scripts/
     ├── check-identifiers.sh       # 공개 전 식별자 검사 — Git 인덱스 대상, 검출 시 파일명만 출력하고 실패
     ├── check-syntax.sh            # bash·zsh 파일별 문법 검사 + Python 컴파일 검사
+    ├── versions.sh                # 도구 버전·사용 가능 여부 표 (--md 는 마크다운, 설치 안 함, #92)
     ├── check-agents-yaml.sh       # AGENTS.yaml 검증 — 구조·따옴표 없는 날짜·그래프·경로 (PyYAML 필요)
     ├── test-install-safety.sh     # 설치·제거 안전성 — 모의 apt/dnf/sudo 로 반복 제거·기록·purge·플러그인 폴백 (임시 HOME)
     ├── test-codex-status-line.sh  # codex/status-line.py 왕복 시험 (임시 HOME)
