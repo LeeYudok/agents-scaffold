@@ -119,6 +119,20 @@ plugins cannot ship rules and Codex plugins cannot ship subagents. Each plugin a
 clone this repo and run `scripts/install-skills.sh` (symlinks into `~/.claude/skills`, `~/.agents/skills` and
 `~/.gemini/config/skills`; supports `--personal`, `--copy` and `--project <dir>`).
 
+**With the `skills` CLI.** [vercel-labs/skills](https://github.com/vercel-labs/skills) finds this repo's skills
+(`.claude/skills/` plus the plugin marketplace) and installs the ones you pick into any agent it supports:
+
+```bash
+npx skills add LeeYudok/agents-scaffold                            # pick from the 21 general skills
+npx skills add LeeYudok/agents-scaffold --skill yd-cve-check -a claude-code
+INSTALL_INTERNAL_SKILLS=1 npx skills add LeeYudok/agents-scaffold  # also the scaffold-only and personal ones
+```
+
+The 21 are the 7 workflow skills that run on their own plus the 14 `yd-*` skills. `review` and `security-precheck`
+need the scaffold's subagents, so they are hidden from the CLI (`metadata.internal`) and come with the installer.
+For Antigravity globals, `skills` 1.7.6 writes to `~/.gemini/antigravity-cli/skills`, while `install-skills.sh` uses
+`~/.gemini/config/skills` ([vercel-labs/skills#1483](https://github.com/vercel-labs/skills/pull/1483) would align them).
+
 ## How it compares
 
 | | A hand-written `CLAUDE.md` | Installable agent frameworks | agents-scaffold |

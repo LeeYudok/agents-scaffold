@@ -119,6 +119,20 @@ codex plugin marketplace add LeeYudok/agents-scaffold && codex plugin add yd-ski
 이 레포를 clone 해 `scripts/install-skills.sh` 를 실행한다(`~/.claude/skills`·`~/.agents/skills`·
 `~/.gemini/config/skills` 에 심링크, `--personal`·`--copy`·`--project <dir>` 지원).
 
+**`skills` CLI 로.** [vercel-labs/skills](https://github.com/vercel-labs/skills) 가 이 레포의 스킬
+(`.claude/skills/` 와 플러그인 마켓플레이스)을 찾아, 고른 것만 지원하는 에이전트에 설치한다.
+
+```bash
+npx skills add LeeYudok/agents-scaffold                            # pick from the 21 general skills
+npx skills add LeeYudok/agents-scaffold --skill yd-cve-check -a claude-code
+INSTALL_INTERNAL_SKILLS=1 npx skills add LeeYudok/agents-scaffold  # also the scaffold-only and personal ones
+```
+
+21개는 단독으로 도는 워크플로 스킬 7개와 `yd-*` 14개다. `review`·`security-precheck` 는 스캐폴드 서브에이전트가 있어야
+돌아서 CLI 에서는 숨기고(`metadata.internal`) 설치 스크립트로만 받는다. Antigravity 전역 설치 경로는 `skills` 1.7.6 이
+`~/.gemini/antigravity-cli/skills`, `install-skills.sh` 가 `~/.gemini/config/skills` 로 서로 다르다
+([vercel-labs/skills#1483](https://github.com/vercel-labs/skills/pull/1483) 이 들어가면 같아진다).
+
 ## 비교
 
 | | 직접 쓴 `CLAUDE.md` | 설치형 에이전트 프레임워크 | agents-scaffold |
