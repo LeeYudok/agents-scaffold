@@ -1,6 +1,8 @@
 ---
 name: yd-git-ship
 description: 'GitLab 레포에 에이전트(Claude Code·Codex·Antigravity)가 작업을 올리는 절차 — 이슈 등록, batch/<agent>-<날짜>-<8자리 hex> 브랜치, "[<model>] <type>: <desc> (#N)" 커밋, Closes MR, merge commit(squash 금지), CI 추적, commit-msg hook 설치. "커밋", "푸시", "MR", "머지", "올려", "이슈 등록", "ship" 등 git/GitLab 에 뭔가 남길 때마다 사용.'
+metadata:
+  internal: true
 ---
 
 # yd-git-ship — 에이전트 작업을 GitLab 에 올리기

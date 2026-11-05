@@ -2,6 +2,8 @@
 name: example-skill
 description: Duplicate this file to create a project skill. Write the trigger condition concretely in the description.
 user-invocable: true
+metadata:
+  internal: true
 ---
 
 <!-- Describe when and what this skill does, as a procedure. Example skeleton: -->

@@ -3,6 +3,8 @@ name: security-precheck
 description: 외부 보안팀 코드 검사 전 자체 사전점검. security-audit 에이전트(+ 설정돼 있으면 SonarQube 보안 핫스팟)를 돌려 P0/P1/P2로 정리하고, 발견사항을 이슈로 쪼개 병렬 서브에이전트로 고친다. "보안 검사", "보안 점검", "코드 감사" 언급 시 사용.
 user-invocable: true
 allowed-tools: Bash, Agent, Read, Edit, Write
+metadata:
+  internal: true
 ---
 
 # 보안 사전점검 (외부 감사 대비)
