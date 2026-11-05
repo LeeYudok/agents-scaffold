@@ -117,6 +117,20 @@ Codex 插件不能携带子代理。每个插件还带有 Antigravity 清单（`
 agy 1.5.0 的 `agy plugin validate` 可通过，安装尚未实测。离线或开发场景下，clone 本仓库并运行 `scripts/install-skills.sh`（在 `~/.claude/skills`、`~/.agents/skills`、
 `~/.gemini/config/skills` 下创建符号链接；支持 `--personal`、`--copy`、`--project <dir>`）。
 
+**使用 `skills` CLI。** [vercel-labs/skills](https://github.com/vercel-labs/skills) 会找到本仓库的技能
+（`.claude/skills/` 以及插件市场），并把你选中的技能安装到它支持的任意代理中：
+
+```bash
+npx skills add LeeYudok/agents-scaffold                            # pick from the 21 general skills
+npx skills add LeeYudok/agents-scaffold --skill yd-cve-check -a claude-code
+INSTALL_INTERNAL_SKILLS=1 npx skills add LeeYudok/agents-scaffold  # also the scaffold-only and personal ones
+```
+
+这 21 个是可独立运行的 7 个工作流技能加上 14 个 `yd-*` 技能。`review` 和 `security-precheck` 需要脚手架的子代理，
+因此在 CLI 中隐藏（`metadata.internal`），只随安装器提供。Antigravity 的全局安装路径不同：`skills` 1.7.6 写入
+`~/.gemini/antigravity-cli/skills`，而 `install-skills.sh` 使用 `~/.gemini/config/skills`
+（[vercel-labs/skills#1483](https://github.com/vercel-labs/skills/pull/1483) 合入后将一致）。
+
 ## 对比
 
 | | 手写的 `CLAUDE.md` | 可安装的代理框架 | agents-scaffold |

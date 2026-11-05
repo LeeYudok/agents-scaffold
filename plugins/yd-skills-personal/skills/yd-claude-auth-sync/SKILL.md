@@ -1,6 +1,8 @@
 ---
 name: yd-claude-auth-sync
 description: 한 PC 에서 claude login 으로 다시 인증한 Claude Code 로그인을, 사용자가 등록해 둔 다른 PC·서버에도 똑같이 맞춘다. 키체인·~/.claude/.credentials.json 의 claudeAiOauth 만 ssh 표준입력으로 넘기고 토큰은 출력하지 않는다. "클로드 인증 서버들에 공유", "claude 로그인 다른 PC 에도 맞춰", "인증값 똑같이" 요청에 쓴다. 저장소 동기화는 yd-git-sync 가 맡는다.
+metadata:
+  internal: true
 ---
 
 # yd-claude-auth-sync

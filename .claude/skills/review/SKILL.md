@@ -2,6 +2,8 @@
 name: review
 description: 코드 변경사항 전체 리뷰. code-reviewer 에이전트 + security-audit 에이전트를 순차 실행하는 래퍼 스킬. PR/MR 생성 전 또는 리뷰 요청 시 사용.
 allowed-tools: Bash, Read, Grep, Glob, Agent
+metadata:
+  internal: true
 ---
 
 # 코드 리뷰 (래퍼)

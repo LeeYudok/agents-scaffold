@@ -2,6 +2,8 @@
 name: example-skill
 description: 이 파일을 복제해 프로젝트 스킬을 만든다. 트리거 조건을 description 에 구체적으로 적을 것.
 user-invocable: true
+metadata:
+  internal: true
 ---
 
 <!-- 이 스킬이 언제·무엇을 하는지 절차로 적는다. 예시 골격: -->

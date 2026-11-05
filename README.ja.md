@@ -119,6 +119,20 @@ codex plugin marketplace add LeeYudok/agents-scaffold && codex plugin add yd-ski
 このリポジトリを clone して `scripts/install-skills.sh` を実行します(`~/.claude/skills`・`~/.agents/skills`・
 `~/.gemini/config/skills` にシンボリックリンク。`--personal`・`--copy`・`--project <dir>` に対応)。
 
+**`skills` CLI で。** [vercel-labs/skills](https://github.com/vercel-labs/skills) はこのリポジトリのスキル
+(`.claude/skills/` とプラグインマーケットプレイス)を見つけ、選んだものを対応するエージェントにインストールします:
+
+```bash
+npx skills add LeeYudok/agents-scaffold                            # pick from the 21 general skills
+npx skills add LeeYudok/agents-scaffold --skill yd-cve-check -a claude-code
+INSTALL_INTERNAL_SKILLS=1 npx skills add LeeYudok/agents-scaffold  # also the scaffold-only and personal ones
+```
+
+21 個は単独で動くワークフロースキル 7 個と `yd-*` 14 個です。`review`・`security-precheck` はスキャフォールドのサブエージェントが
+必要なので CLI では隠し(`metadata.internal`)、インストーラーからだけ入れます。Antigravity のグローバル導入先は、`skills` 1.7.6 が
+`~/.gemini/antigravity-cli/skills`、`install-skills.sh` が `~/.gemini/config/skills` と異なります
+([vercel-labs/skills#1483](https://github.com/vercel-labs/skills/pull/1483) が入れば揃います)。
+
 ## 比較
 
 | | 手書きの `CLAUDE.md` | インストール型エージェントフレームワーク | agents-scaffold |

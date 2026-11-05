@@ -8,14 +8,14 @@
 - [제목](project_xxx.md) — 한 줄 훅
 -->
 
-- [하네스 설정 계약 실측](reference_harness-config-contracts.md) — Claude/Codex/agy 의 설정·디스커버리 경로와 함정(32KiB, trust boundary, PreToolUse 는 강제선 아님, 세 하네스 모두 AGENTS.md 네이티브 로드하나 Claude 는 CLAUDE.md 있으면 무시, 스킬은 Codex·agy=.agents/skills·Claude=.claude/skills, Codex·agy 서브에이전트·훅·경로별 지침 경로와 신뢰 조건, PreCompact 는 prompt 훅 미지원, 2026-11-04 claude 2.1.318·codex 0.166.0·agy 1.5.0 재측정 — agy 1.5.0 glob 룰 회귀로 baseline·Codex 0.166.0 훅 입력 cwd=명령 workdir, 2026-10-24 3사 문서 대조·플러그인 실측(Claude·Codex 공용 .claude-plugin, Codex 는 심링크를 버림, Codex 는 .codex/skills 도 탐색)) + 실측 요령(클라우드 프록시는 레포 설정 쓰기 차단)
+- [하네스 설정 계약 실측](reference_harness-config-contracts.md) — Claude/Codex/agy 의 설정·디스커버리 경로와 함정(32KiB, trust boundary, PreToolUse 는 강제선 아님, 세 하네스 모두 AGENTS.md 네이티브 로드하나 Claude 는 CLAUDE.md 있으면 무시, 스킬은 Codex·agy=.agents/skills·Claude=.claude/skills, Codex·agy 서브에이전트·훅·경로별 지침 경로와 신뢰 조건, PreCompact 는 prompt 훅 미지원, 2026-11-04 claude 2.1.318·codex 0.166.0·agy 1.5.0 재측정 — agy 1.5.0 glob 룰 회귀로 baseline·Codex 0.166.0 훅 입력 cwd=명령 workdir, 2026-10-24 3사 문서 대조·플러그인 실측(Claude·Codex 공용 .claude-plugin, Codex 는 심링크를 버림, Codex 는 .codex/skills 도 탐색)) + skills CLI(`npx skills`) 탐색·`metadata.internal` 숨김 + 실측 요령(클라우드 프록시는 레포 설정 쓰기 차단)
 - [이슈 #20 3자 교차리뷰 결론](project_agents-scaffold-multiagent-review.md) — compile-time emitter 확정, 해시검증 폐기→P0 reachability, 남은 후속 a~c
 - [README 다국어 동시 수정](feedback_readme-multilang-sync.md) — README.md 고치면 en/zh/ja 3종도 같은 커밋에서. 언어 간 일치를 검사하는 자동 게이트가 없다
 - [이슈 클레임·바운티 정책](project_issue-claim-and-bounty-policy.md) — 외부 `/attempt` 코멘트와 유료 작업 제안에 대한 확정 대응
 - [프리셋 게이트 검증법](project_preset-gate-verification.md) — 가짜 툴 바이너리로 exit 분기 실측, bats 엔 툴체인 비의존 케이스만
 - [스킬 스니펫의 조용한 실패](feedback_skill-snippet-silent-failure.md) — `2>/dev/null || true`·`a | tail || b` 가 깨진 플래그·폴백을 숨긴다. 스킬 점검 시 억제 떼고 실행 (#57)
 - [dotfiles 원본은 이 레포](project_dotfiles-ssot.md) — 2026-10-24 부터 `dotfiles/` 가 SSOT, 옛 LeeYudok/dotfiles 는 보관. CI 는 루트 test.yml dotfiles job (#76)
-- [doksam-skills 원본은 이 레포](project_doksam-skills-ssot.md) — 2026-10-24 부터 SSOT. 기본 13(`yd-*`)·옵트인 9(`--with-personal-skills`)·중복 4쌍 병합, 옛 레포·`npx skills add` 경로는 보관 (#78)
+- [doksam-skills 원본은 이 레포](project_doksam-skills-ssot.md) — 2026-10-24 부터 SSOT. 기본 13(`yd-*`)·옵트인 9(`--with-personal-skills`)·중복 4쌍 병합, 옛 레포 경로 대신 `npx skills add LeeYudok/agents-scaffold`·플러그인 (#78 #102)
 - [계약 레벨 품질 수정](feedback_quality-fix-at-contract-level.md) — 산출물 품질 문제는 템플릿 CSS → 검증기 → SKILL.md 순으로 계약에 넣고 콜드 재생성으로 실증
 - [UI 한쪽 색 띠 금지](feedback_ui-no-accent-stripe.md) — 카드 가장자리 accent stripe 는 "AI 냄새". 상태는 테두리 색·배지 글자로
 - [로컬 HTML 렌더 QA](reference_local-html-render-qa.md) — 생성 HTML 은 headless Chrome 스크린샷으로 검수. 검증기 통과 ≠ 렌더 정상
