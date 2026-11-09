@@ -3,6 +3,8 @@ name: security-precheck
 description: Self-run security pre-check ahead of an external security-team code audit. Runs the security-audit agent (plus SonarQube security hotspots when configured), grades findings P0/P1/P2, splits them into issues, and fixes them with parallel subagents. Use on "security check", "security audit prep", "code audit" requests.
 user-invocable: true
 allowed-tools: Bash, Agent, Read, Edit, Write
+metadata:
+  internal: true
 ---
 
 # Security Pre-check (before an external audit)

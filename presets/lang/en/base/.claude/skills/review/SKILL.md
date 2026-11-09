@@ -2,6 +2,8 @@
 name: review
 description: Full review of code changes. A wrapper skill that runs the code-reviewer agent and the security-audit agent in sequence. Use before creating a PR/MR or when a review is requested.
 allowed-tools: Bash, Read, Grep, Glob, Agent
+metadata:
+  internal: true
 ---
 
 # Code Review (wrapper)

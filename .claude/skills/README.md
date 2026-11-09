@@ -67,6 +67,8 @@ doksam-skills 의 `yd-handoff`·`yd-doc-sync`·`yd-memory-factcheck`·`yd-skill-
   중복을 검사한다. 트리거가 겹치면 description 에 경계("X 는 Y 가 맡는다")를 적어 가른다.
 - (agents-scaffold 레포에서) `yd-*` 나 handoff·docs-sync·memory-factcheck·skill-evolve 를 고치면
   `python3 scripts/dev/build-plugins.py` 로 플러그인 사본(`plugins/*/skills/`)을 다시 만들어 같은 커밋에 넣는다(#82, CI 가 드리프트를 막는다).
+- 스캐폴드 에이전트가 있어야 도는 스킬·템플릿·개인 스킬은 frontmatter 에 `metadata:` / `  internal: true` 를 단다.
+  `npx skills add` 목록에서 숨겨진다(#102, `tests/test_skill_visibility.py`).
 
 설치된 프로젝트에서 스킬 원본은 `.agents/skills/`(Codex·agy 네이티브 경로)이고, `.claude/skills` 는
 그 디렉터리를 가리키는 심볼릭 링크다(#61) — 어느 경로로 고쳐도 같은 파일이다. 링크를 만들 수 없는

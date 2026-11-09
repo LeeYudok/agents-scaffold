@@ -70,6 +70,8 @@ Their source is `presets/skills/personal/.claude/skills/` in this repo, and they
 - (In the agents-scaffold repo) after changing a `yd-*` skill or handoff, docs-sync, memory-factcheck or skill-evolve,
   regenerate the plugin copies (`plugins/*/skills/`) with `python3 scripts/dev/build-plugins.py` and commit them together
   (#82; CI blocks drift).
+- Skills that need the scaffold's subagents, templates and personal skills carry `metadata:` / `  internal: true` in their
+  frontmatter, which hides them from `npx skills add` (#102, `tests/test_skill_visibility.py`).
 
 In an installed project the skill source is `.agents/skills/` (the Codex/agy native path) and
 `.claude/skills` is a symlink to it (#61) — editing through either path changes the same file. Where
