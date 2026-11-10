@@ -50,6 +50,7 @@ The generated `.claude/` tree and the design patterns behind it. Start at the [R
     knowledge_graph.py       .claude ecosystem graph + --check broken-link gate
     personal-layer.sh        turns a personal AGENTS.<NAME>.md layer on/off for all three harnesses (#92)
   settings.json               hook wiring + default deny rules
+  .scaffold.json              install choices (forge, stacks, lang, harness, skill sets) — read by --update / --uninstall / --dry-run (#104)
 AGENTS.md                 project brain — rule SSOT (P0/P1/P2 + workflow)
 presets/                  preset fragments (copy-overwrite model, grouped by kind in #81)
   stacks/<stack>/         per-stack fragments (rules + pre-commit.partial.sh + AGENTS.partial.md) — nextjs, bun, ops, ...
@@ -75,4 +76,5 @@ tests/                    bats regression suite for the bootstrap script
 - **Paths-scoped rules**: frontmatter `paths:` auto-loads a rule only while working on matching files.
 - **Multi-agent isolation**: when parallel subagents may touch the same file concurrently, use `isolation: "worktree"`.
 - **Install order**: base copy → forge preset → stack presets → (`--with-personal-skills`) `presets/skills/personal` → `--lang en` overlay → `{{PROJECT_NAME}}` substitution (skips `*/skills/yd-*/*` to keep the planner template's placeholder) → move to `.agents/skills` and link `.claude/skills` → emit Codex/agy agents.
+- **Recorded choices, staged compare**: an install writes its choices to `.claude/.scaffold.json`. `--update`, `--uninstall` and `--dry-run` replay them into a temporary directory and compare the project against that result file by file — presets, the English overlay and `pre-commit.sh` included — instead of comparing against the base alone (#104). Without the file, the choices are inferred from the project.
 - **Skill tests**: each skill carries `tests/test_*.py` and `tests/claims.json`. `scripts/dev/run-skill-tests.sh` runs them per skill; `tests/test_skill_contracts.py` checks the claims format, referenced paths and trigger overlap.

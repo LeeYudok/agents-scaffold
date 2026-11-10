@@ -20,7 +20,7 @@
   <!-- 1. one command -->
   <rect class="box accent" x="20" y="110" width="215" height="96" rx="10"/>
   <text class="h" x="36" y="140">One command</text>
-  <text class="mono" x="36" y="164">claude-scaffold.sh</text>
+  <text class="mono" x="36" y="164">agents-scaffold.sh</text>
   <text class="mono" x="36" y="182">--stack nextjs,go ...</text>
   <text class="cap" x="36" y="199">curl | bash, no framework</text>
 

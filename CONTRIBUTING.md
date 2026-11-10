@@ -30,7 +30,9 @@ the section below and the issues labeled
    The same suite runs in CI on every PR — a green run is required to merge.
 5. **Pull request** against `main` with `Closes #<N>` in the description.
    Merging auto-closes the issue.
-6. **Review.** Changes to `bin/agents-scaffold.sh`, `.claude/hooks/pre-commit.sh`,
+6. **Changelog and version.** A change users can notice gets a line under the unreleased heading of
+   [CHANGELOG.md](CHANGELOG.md). A release bumps `SCAFFOLD_VERSION` in `bin/agents-scaffold.sh` to match the tag.
+7. **Review.** Changes to `bin/agents-scaffold.sh`, `.claude/hooks/pre-commit.sh`,
    or any `pre-commit.partial.sh` get extra scrutiny — these are load-bearing
    for every repo that bootstraps from this template.
 

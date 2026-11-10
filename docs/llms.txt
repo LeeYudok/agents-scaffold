@@ -4,33 +4,43 @@
 
 Key facts:
 
-- Enforcement is in git, not in the prompt: `.git/hooks/pre-commit` blocks staged `.env`/secrets, broken builds and type/lint errors, whichever agent (or human) commits.
-- One source, three harnesses: `AGENTS.md` is read natively by Claude Code (v2.1.277+), Codex and Antigravity. Codex subagents/hooks and Antigravity rules/subagents/hooks are generated from `.claude/`.
-- Claims are measured, not assumed: `docs/harness-matrix.json` records live measurements per harness version (Claude Code 2.1.318 full tier; Codex 0.166.0 and agy 1.5.0 baseline tier as of 2026-11-04). CI fails when a full-tier measurement expires.
-- 13 stack presets (Next.js, Spring Boot, Java web/JSP, Bun, Python, Go, Rust, Ruby on Rails, .NET, PHP Laravel, Android, Flutter, ops), each adding rules and its own build/lint/test gate. GitHub or GitLab forge. Korean or English output.
+- Enforcement is in git, not in the prompt: `.git/hooks/pre-commit` blocks a staged `.env` and runs the selected stack's build, type or lint check, whichever agent (or human) commits. The hook is wired in worktrees, submodules and under `core.hooksPath`. It can be skipped with `git commit --no-verify`, so CI stays the backstop; the scaffold does not install CI.
+- One source, three harnesses: `AGENTS.md` is read natively by Claude Code (v2.1.277+, only when no `CLAUDE.md` exists), Codex and Antigravity. Codex subagents/hooks and Antigravity rules/subagents/hooks are generated from `.claude/`.
+- Claims are measured, not assumed: `docs/harness-matrix.json` records live measurements per harness version (Claude Code 2.1.318 full tier; Codex codex-cli 0.166.0 and Antigravity agy 1.5.0 baseline tier, measured 2026-11-04). CI fails when a full-tier measurement expires.
+- 13 stack presets (Next.js, Spring Boot, Java web/JSP, Bun, Python, Go, Rust, Ruby on Rails, .NET, PHP Laravel, Android, Flutter, ops). Each adds rules, and all but ops add a build/lint/test gate. GitHub or GitLab forge. Korean (default) or English (`--lang en`) output.
+- Skills: an English install ships 10 skills (workflow skills). A Korean install ships 24 skills (the same 10 plus 14 Korean-language `yd-*` expert skills). `--with-yd-skills` / `--no-yd-skills` override the default.
+- Install choices are recorded in `.claude/.scaffold.json`. `--update` replays them and writes `<file>.new` next to any file you changed; `--uninstall` removes only unmodified files; `--dry-run` previews an install, update or uninstall.
+- Re-running the installer saves a changed `AGENTS.md` as `AGENTS.md.bak-<timestamp>` and does not insert a stack gate twice. An unknown `--stack` is an error. A missing target directory is created.
 - Works offline (air-gapped bundle) and on Windows (Git Bash, `.cmd` launcher).
 - Personal instruction layers: keep shared rules in `AGENTS.md` and add per-person `AGENTS.<NAME>.md`; a hook asks "who is the user?" every session before any personal rules apply.
 - Skills also install as Claude Code / Codex plugins, or with `npx skills add LeeYudok/agents-scaffold`.
+- Version: 1.0.0 (`bin/agents-scaffold.sh --version`). No release tag exists yet.
 
 Install:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/leeyudok/agents-scaffold/main/bin/agents-scaffold.sh | bash -s -- --stack nextjs --yes
+curl -fsSL https://raw.githubusercontent.com/leeyudok/agents-scaffold/main/bin/agents-scaffold.sh | bash -s -- --lang en --stack nextjs --yes
 # Codex or Antigravity too: --harness codex | agy | all
+# preview: add --dry-run    list stacks: --list-stacks
+# pin and verify: AGENTS_SCAFFOLD_REF=<tag or branch>  AGENTS_SCAFFOLD_SHA256=<sha256 of that tarball>
 ```
 
 ## Docs
 
-- [README](https://github.com/LeeYudok/agents-scaffold/blob/main/README.md): overview, quickstart, why it holds up
-- [Options](https://github.com/LeeYudok/agents-scaffold/blob/main/docs/OPTIONS.en.md): every option — stack presets, `--forge`, `--harness`, `--lang`, `--update`, harness support table
+- [README](https://github.com/LeeYudok/agents-scaffold/blob/main/README.md): overview, quickstart, after install, why it holds up, comparison
+- [Options](https://github.com/LeeYudok/agents-scaffold/blob/main/docs/OPTIONS.en.md): every option — stack presets, `--forge`, `--harness`, `--lang`, `--update`, `--uninstall`, `--dry-run`, harness support table
+- [Troubleshooting](https://github.com/LeeYudok/agents-scaffold/blob/main/docs/TROUBLESHOOTING.en.md): blocked commits, `CLAUDE.md` hiding `AGENTS.md`, `.new` files, existing hooks and husky, Windows symlinks, uninstall
+- [Skills](https://github.com/LeeYudok/agents-scaffold/blob/main/docs/SKILLS.en.md): skill sets per install, plugin marketplace, `npx skills`, `install-skills.sh`
 - [Internals](https://github.com/LeeYudok/agents-scaffold/blob/main/docs/INTERNALS.en.md): generated tree, repository layout, key patterns
 - [Offline and Windows install](https://github.com/LeeYudok/agents-scaffold/blob/main/docs/OFFLINE_INSTALL.en.md): air-gapped bundle, Git Bash, `python3` setup
 - [Harness support matrix](https://github.com/LeeYudok/agents-scaffold/blob/main/docs/harness-matrix.json): measured capabilities per harness version
+- [Security policy](https://github.com/LeeYudok/agents-scaffold/blob/main/SECURITY.md): reporting, pinned and verified installs
+- [Changelog](https://github.com/LeeYudok/agents-scaffold/blob/main/CHANGELOG.md): changes per version
 - [Contributing](https://github.com/LeeYudok/agents-scaffold/blob/main/CONTRIBUTING.md): workflow and how to add a stack preset
 
-## Skills (default set)
+## Skills (workflow set, English and Korean)
 
-Workflow skills ship in English and Korean; `yd-*` specialist skills are written in Korean.
+Installed by both `--lang en` and `--lang ko`. The tenth skill, `example-skill`, is a template to copy.
 
 - [review](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/review): code review of the full change set — code-reviewer then security-audit agents
 - [status](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/status): one-shot project status — git, build, tests, issues, branches
@@ -41,6 +51,11 @@ Workflow skills ship in English and Korean; `yd-*` specialist skills are written
 - [memory-factcheck](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/memory-factcheck): audit agent memory against code, DB, issues and files; correct stale entries
 - [skill-evolve](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/skill-evolve): turn a real agent mistake into a "Learned warnings" rule in the skill that made it
 - [grill-me](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/grill-me): pressure-test an idea or spec with hard questions before implementation
+
+## Skills (`yd-*` expert set, Korean only)
+
+Installed by `--lang ko` (the default) or with `--with-yd-skills`.
+
 - [yd-pg-expert](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-pg-expert): PostgreSQL specifics — timestamptz, numeric, query plans, locking ALTERs, CREATE INDEX CONCURRENTLY, VACUUM, shared clusters
 - [yd-oracle-expert](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-oracle-expert): Oracle SQL/PL/SQL and PostgreSQL-to-Oracle porting — empty-string NULL, DATE time, VARCHAR2 bytes, ROWNUM, implicit commits
 - [yd-sqlite-expert](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-sqlite-expert): SQLite files — read-only queries, WAL, locking, migrations, safe dynamic table names
