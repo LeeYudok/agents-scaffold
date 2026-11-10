@@ -6,23 +6,23 @@ if [ -f pom.xml ]; then
   if [ -x ./mvnw ]; then javaweb_mvn="./mvnw"; elif command -v mvn >/dev/null 2>&1; then javaweb_mvn="mvn"; fi
   if [ -n "$javaweb_mvn" ]; then
     echo "javaweb: maven compile..." >&2
-    "$javaweb_mvn" -q -DskipTests compile || { echo "차단: maven 컴파일 실패. 커밋 전 수정 필요." >&2; exit 2; }
+    "$javaweb_mvn" -q -DskipTests compile || { echo "Blocked: maven compile failed. Fix it before committing." >&2; exit 2; }
   else
-    echo "pre-commit: maven 미설치 — javaweb 컴파일 게이트 skip" >&2
+    echo "pre-commit: maven not installed — skipping javaweb compile check" >&2
   fi
 elif [ -f build.gradle ] || [ -f build.gradle.kts ]; then
   if [ -x ./gradlew ]; then
     echo "javaweb: gradle compileJava..." >&2
-    ./gradlew -q compileJava || { echo "차단: gradle 컴파일 실패. 커밋 전 수정 필요." >&2; exit 2; }
+    ./gradlew -q compileJava || { echo "Blocked: gradle compile failed. Fix it before committing." >&2; exit 2; }
   else
-    echo "pre-commit: gradlew 없음 — javaweb 컴파일 게이트 skip" >&2
+    echo "pre-commit: no executable ./gradlew — skipping javaweb compile check" >&2
   fi
 elif [ -f build.xml ]; then
   if command -v ant >/dev/null 2>&1; then
     echo "javaweb: ant compile..." >&2
-    ant -q compile || { echo "차단: ant compile 실패. 커밋 전 수정 필요." >&2; exit 2; }
+    ant -q compile || { echo "Blocked: ant compile failed. Fix it before committing." >&2; exit 2; }
   else
-    echo "pre-commit: ant 미설치 — javaweb 컴파일 게이트 skip" >&2
+    echo "pre-commit: ant not installed — skipping javaweb compile check" >&2
   fi
 fi
 
@@ -31,9 +31,9 @@ fi
 # 지시자(<%@)·주석(<%--)은 허용, 스크립틀릿(<%)·표현식(<%=)·선언(<%!)은 차단.
 javaweb_staged_jsp="$(git diff --cached --name-only --diff-filter=ACM -- '*.jsp' 2>/dev/null || true)"
 if [ -n "$javaweb_staged_jsp" ]; then
-  javaweb_new_scriptlets="$(git diff --cached -U0 -- '*.jsp' | grep -E '^\+[^+]' | grep -E '<%([^@-]|$)' | head -5 || true)"
+  javaweb_new_scriptlets="$(git diff --cached -U0 -- '*.jsp' | grep -E '^\+[^+]' | grep -E '<%([^@-]|$)' | sed -n '1,5p' || true)"
   if [ -n "$javaweb_new_scriptlets" ]; then
-    echo "차단: 신규 JSP 스크립틀릿 감지 — EL/JSTL 로 작성할 것 (.claude/rules/javaweb.md P1):" >&2
+    echo "Blocked: new JSP scriptlet added — use EL/JSTL instead (.claude/rules/javaweb.md P1):" >&2
     printf '%s\n' "$javaweb_new_scriptlets" >&2
     exit 2
   fi

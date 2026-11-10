@@ -97,8 +97,27 @@ presets/stacks/<stack>/
 - 하드코딩된 전역 바이너리보다 프로젝트에 이미 설정된 런타임/툴체인
   매니저를 우선한다(예: `presets/stacks/nextjs/.claude/hooks/pre-commit.partial.sh`
   가 하듯 `npx` 로 폴백하기 전에 `bunx` 를 먼저 시도).
-- 실패 출력은 실용적이고 한정된 크기로 유지한다 — 무제한 로그를 그대로
-  덤프하지 말고 긴 컴파일러 출력은 `head -20` 등으로 파이프할 것.
+- 실패 출력은 버리지 않되 한정된 크기로 유지한다 — 무엇이 걸렸는지 보여야
+  고칠 수 있으므로 `>/dev/null` 로 지우지 말고, 긴 출력은 `tail -20` 이나
+  `sed -n '1,20p'` 로 자른다. **`head` 로 자르지 않는다**: `head` 는 먼저
+  끝나므로 앞 명령이 SIGPIPE 로 죽고, `pipefail` 아래에서는 성공한 검사가
+  실패로(또는 `if cmd | head -1 | grep -q` 형태의 가드가 꺼진 것으로)
+  뒤집힌다.
+- 사용자에게 보이는 메시지는 베이스 훅과 같이 **영어**로 쓴다(코드 주석은
+  한국어 유지). 차단은 `Blocked: <무엇이 실패했나>. <고치는 명령>` 형식,
+  건너뜀은 `pre-commit: <툴> not installed — skipping <검사>` 형식이다.
+  `tests/stack-gates.bats` 가 이 규칙과 `exit 2` 전용 여부를 검사한다.
+- 툴이 설치돼 있는지는 실행 **전에** 확인한다(`command -v go` 등). 확인 없이
+  실행하면 `command not found` 가 빌드 실패로 읽혀 커밋이 막힌다.
+- 커밋마다 전체 테스트 스위트를 돌리지 않는다. 더 싼 컴파일 검사가 있으면
+  그것을 기본으로 하고(예: springboot 의 `gradle testClasses`), 테스트 실행은
+  CI 에 맡기거나 환경변수 옵트인으로 둔다(`SPRINGBOOT_GATE_TESTS=1`).
+- 타입체커처럼 설정 없이는 오탐이 많은 도구는 프로젝트가 설정했을 때만
+  게이트로 쓴다(예: python 의 mypy 는 `mypy.ini`·`[tool.mypy]`·`setup.cfg [mypy]`
+  가 있을 때만 실행하고, 실패하면 차단한다).
+- 파셜을 고치거나 추가하면 `tests/stack-gates.bats` 에 "blocks" 와 "no-op"
+  케이스를 함께 넣는다. 가짜 툴 바이너리와 격리된 PATH 로 돌리므로 실제
+  툴체인이 필요 없다.
 - 스택의 설정 파일 존재 여부로 가드한다(예: `if [ -f tsconfig.json ]; then
   ... fi`) — 그래야 스택을 선택했지만 아직 스캐폴딩하지 않은 레포에서
   파셜이 no-op 이 된다.
