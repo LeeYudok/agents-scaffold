@@ -23,14 +23,9 @@ jobs:
       - name: shellcheck (warning)
         run: |
           shellcheck --version
-          git ls-files -z -- '*.sh' ':!dotfiles/**' ':!plugins/**' ':!bin/agents-scaffold.sh' ':!**/pre-commit.partial.sh' \
+          git ls-files -z -- '*.sh' ':!dotfiles/**' ':!plugins/**' ':!**/pre-commit.partial.sh' \
             | xargs -0 shellcheck -S warning
-          shellcheck -S warning -s bash presets/stacks/*/.claude/hooks/pre-commit.partial.sh tests/stack-gates.bats
-
-      # 설치기는 아직 warning 1건(SC2115)이 남아 error 수준으로만 본다. 고치면 위 목록으로 옮긴다.
-      # tests/agents-scaffold.bats 는 SC2314(`! cmd` 가 실패로 이어지지 않음)가 남아 아직 대상이 아니다.
-      - name: shellcheck (error) — installer
-        run: shellcheck -S error bin/agents-scaffold.sh
+          shellcheck -S warning -s bash presets/stacks/*/.claude/hooks/pre-commit.partial.sh tests/*.bats
 
       # F(pyflakes)·E9(문법 오류)만 본다 — 스타일이 아니라 실제 결함을 잡는 규칙이다. 버전은 고정한다.
       - name: ruff

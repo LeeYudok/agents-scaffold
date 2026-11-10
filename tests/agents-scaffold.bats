@@ -83,8 +83,8 @@ setup() {
 
   # 두 partial 모두 exit 2 (차단) 만 쓰고 exit 0 으로 훅을 조기 종료하지 않는지 확인
   # (partial 자체는 exit 0 을 포함하지 않아야 함 — #6 재발 방지)
-  ! grep -q '^exit 0$' "$REPO_ROOT/presets/stacks/bun/.claude/hooks/pre-commit.partial.sh"
-  ! grep -q '^exit 0$' "$REPO_ROOT/presets/stacks/python/.claude/hooks/pre-commit.partial.sh"
+  ! grep -q '^exit 0$' "$REPO_ROOT/presets/stacks/bun/.claude/hooks/pre-commit.partial.sh" || false
+  ! grep -q '^exit 0$' "$REPO_ROOT/presets/stacks/python/.claude/hooks/pre-commit.partial.sh" || false
 }
 
 # --- 4) 마커 없는 커스텀 base -> append fallback ---
@@ -108,7 +108,7 @@ EOF
   hook="$BATS_TEST_TMPDIR/.claude/hooks/pre-commit.sh"
   [ -f "$hook" ]
   # 마커가 여전히 없고, bun 게이트 헤더가 파일에 존재(append 됨)
-  ! grep -qF '# --- STACK CHECKS' "$hook"
+  ! grep -qF '# --- STACK CHECKS' "$hook" || false
   grep -q 'bun (TypeScript) typecheck gate' "$hook"
   # append 이므로 커스텀 원본 내용도 그대로 유지
   grep -q 'custom pre-commit' "$hook"
@@ -121,7 +121,7 @@ EOF
   [ "$status" -eq 0 ]
 
   grep -q 'my-cool-project' "$BATS_TEST_TMPDIR/AGENTS.md"
-  ! grep -q '{{PROJECT_NAME}}' "$BATS_TEST_TMPDIR/AGENTS.md"
+  ! grep -q '{{PROJECT_NAME}}' "$BATS_TEST_TMPDIR/AGENTS.md" || false
 
   # .bak 파일이 하나도 남지 않아야 함
   bak_count="$(find "$BATS_TEST_TMPDIR" -name '*.bak' | wc -l | tr -d ' ')"
@@ -133,9 +133,9 @@ EOF
   [ "$status" -eq 0 ]
 
   grep -qF 'foo&bar/baz\qux' "$BATS_TEST_TMPDIR/AGENTS.md"
-  ! grep -q '{{PROJECT_NAME}}' "$BATS_TEST_TMPDIR/AGENTS.md"
+  ! grep -q '{{PROJECT_NAME}}' "$BATS_TEST_TMPDIR/AGENTS.md" || false
   # '&' 가 매치 원문({{PROJECT_NAME}})으로 재확장되지 않아야 함
-  ! grep -qF 'foo{{PROJECT_NAME}}bar' "$BATS_TEST_TMPDIR/AGENTS.md"
+  ! grep -qF 'foo{{PROJECT_NAME}}bar' "$BATS_TEST_TMPDIR/AGENTS.md" || false
 }
 
 # --- 6) 알 수 없는 스택 ---
@@ -254,7 +254,7 @@ EOF
   [ "$status" -eq 0 ]
 
   [ -f "$target/.claude/rules/common.md" ]
-  ! grep -q "ENGLISH DUMMY COMMON RULES" "$target/.claude/rules/common.md"
+  ! grep -q "ENGLISH DUMMY COMMON RULES" "$target/.claude/rules/common.md" || false
 }
 
 @test "--lang fr is rejected with exit 1" {
@@ -312,11 +312,11 @@ EOF
 
   # en overlay must differ from the Korean base file
   ! diff -q "$REPO_ROOT/.claude/skills/memory-factcheck/SKILL.md" \
-      "$BATS_TEST_TMPDIR/.claude/skills/memory-factcheck/SKILL.md" >/dev/null
+      "$BATS_TEST_TMPDIR/.claude/skills/memory-factcheck/SKILL.md" >/dev/null || false
   ! diff -q "$REPO_ROOT/.claude/workflows/rules-audit.js" \
-      "$BATS_TEST_TMPDIR/.claude/workflows/rules-audit.js" >/dev/null
+      "$BATS_TEST_TMPDIR/.claude/workflows/rules-audit.js" >/dev/null || false
   ! diff -q "$REPO_ROOT/.claude/skills/grill-me/SKILL.md" \
-      "$BATS_TEST_TMPDIR/.claude/skills/grill-me/SKILL.md" >/dev/null
+      "$BATS_TEST_TMPDIR/.claude/skills/grill-me/SKILL.md" >/dev/null || false
   # knowledge_graph.py is a code file — never overlaid (no en counterpart may exist)
   [ ! -f "$REPO_ROOT/presets/lang/en/base/.claude/scripts/knowledge_graph.py" ]
 }
@@ -439,7 +439,7 @@ setup_publish_repo() {
   [ "$status" -eq 0 ]
   # en overlay must differ from the Korean forge preset file
   ! diff -q "$REPO_ROOT/presets/forge/gitlab/.claude/rules/forge.md" \
-      "$BATS_TEST_TMPDIR/.claude/rules/forge.md" >/dev/null
+      "$BATS_TEST_TMPDIR/.claude/rules/forge.md" >/dev/null || false
 }
 
 @test "unknown --forge is rejected with exit 1" {
@@ -467,7 +467,7 @@ setup_publish_repo() {
   # locally-edited file untouched, refreshed copy staged as .new
   grep -q 'local customization' "$BATS_TEST_TMPDIR/.claude/rules/data.md"
   [ -f "$BATS_TEST_TMPDIR/.claude/rules/data.md.new" ]
-  ! grep -q 'local customization' "$BATS_TEST_TMPDIR/.claude/rules/data.md.new"
+  ! grep -q 'local customization' "$BATS_TEST_TMPDIR/.claude/rules/data.md.new" || false
 
   # pre-commit.sh is compared against the same stack selection, so an untouched one is unchanged (#104)
   [ ! -f "$BATS_TEST_TMPDIR/.claude/hooks/pre-commit.sh.new" ]
@@ -544,7 +544,7 @@ setup_publish_repo() {
   run "$SCRIPT" "$BATS_TEST_TMPDIR" --stack javaweb --yes
   [ "$status" -eq 0 ]
   grep -q 'Java + JSP' "$BATS_TEST_TMPDIR/.claude/rules/javaweb.md"
-  ! grep -q '{{JAVA_VERSION}}' "$BATS_TEST_TMPDIR/.claude/rules/javaweb.md"
+  ! grep -q '{{JAVA_VERSION}}' "$BATS_TEST_TMPDIR/.claude/rules/javaweb.md" || false
   grep -q 'javaweb' "$BATS_TEST_TMPDIR/.claude/hooks/pre-commit.sh"
   # 파셜이 마커 뒤, 베이스 exit 0 앞에 삽입됐는지
   marker_line="$(grep -n 'STACK CHECKS' "$BATS_TEST_TMPDIR/.claude/hooks/pre-commit.sh" | head -1 | cut -d: -f1)"
@@ -580,7 +580,7 @@ JSP
   git add src/main/webapp/bad.jsp
   run bash .claude/hooks/pre-commit.sh
   [ "$status" -eq 2 ]
-  [[ "$output" == *"스크립틀릿"* ]]
+  [[ "$output" == *"scriptlet"* ]]
 }
 
 # --- 9) harness (#16) ---
@@ -1237,9 +1237,9 @@ PY
   grep -q '^\*\*springboot\*\*$' "$t/AGENTS.md"
   grep -q 'mypy' "$t/AGENTS.md"
   # 선택하지 않은 스택은 삽입되지 않는다 (context flooding 방지)
-  ! grep -q '^\*\*rust\*\*$' "$t/AGENTS.md"
+  ! grep -q '^\*\*rust\*\*$' "$t/AGENTS.md" || false
   # 참조 위임 문구는 사라졌다
-  ! grep -q '.claude/rules/<stack>.md` 의 `## P0` 섹션 참조' "$t/AGENTS.md"
+  ! grep -q '.claude/rules/<stack>.md` 의 `## P0` 섹션 참조' "$t/AGENTS.md" || false
 }
 
 @test "AGENTS.md owns the single memory-index @import (#54, supersedes #21)" {
@@ -1528,7 +1528,7 @@ PY
   [ -f "$f" ]
   # cmd.exe 는 LF 전용 배치에서 파싱이 어긋날 수 있고, 비ASCII 는 코드페이지에 따라 깨진다
   [ "$(grep -c $'\r$' "$f")" -eq "$(wc -l < "$f")" ]
-  ! LC_ALL=C grep -q $'[\x80-\xff]' "$f"
+  ! LC_ALL=C grep -q $'[\x80-\xff]' "$f" || false
 }
 
 @test "existing crlf or commented hook rule still gets LF override (#58)" {
@@ -1572,7 +1572,7 @@ PY
   [ "$status" -eq 0 ]
   grep -qx '## Response language' "$en/AGENTS.md"
   grep -q 'in the language the user writes in' "$en/AGENTS.md"
-  ! grep -q '항상 한국어' "$en/AGENTS.md"
+  ! grep -q '항상 한국어' "$en/AGENTS.md" || false
 }
 
 @test "compaction reminder is a SessionStart(compact) command hook, gate fails closed (#72)" {
@@ -1623,7 +1623,7 @@ PERSONAL_YD="yd-agents-mem yd-claude-auth-sync yd-git-sync yd-git-ship yd-doksam
   run "$SCRIPT" "$BATS_TEST_TMPDIR" --name demo --yes
   [ "$status" -eq 0 ]
   grep -q '{{PROJECT_NAME}}' "$BATS_TEST_TMPDIR/.agents/skills/yd-mobile-web-planner/SKILL.md"
-  ! grep -rq '{{PROJECT_NAME}}' "$BATS_TEST_TMPDIR/AGENTS.md"
+  ! grep -rq '{{PROJECT_NAME}}' "$BATS_TEST_TMPDIR/AGENTS.md" || false
 }
 
 @test "--with-personal-skills adds the opt-in set; --update refreshes it (#78)" {
@@ -1688,7 +1688,7 @@ personal_repo() {
   run bash "$REPO_ROOT/.claude/scripts/personal-layer.sh" off
   [ "$status" -eq 0 ]
   [ ! -e CLAUDE.local.md ] && [ ! -e AGENTS.override.md ] && [ ! -e .agents ]
-  ! grep -q 'personal-layer' "$(git rev-parse --git-path info/exclude)"
+  ! grep -q 'personal-layer' "$(git rev-parse --git-path info/exclude)" || false
   [ -f AGENTS.md ] && [ -f AGENTS.TEST.md ]
 }
 
@@ -1729,7 +1729,7 @@ personal_repo() {
   [ "$status" -eq 0 ]
   [ "$(cat .claude/state/personal-gate/current)" = "TEST" ]
   grep -q 'personal-gate.sh' .codex/hooks.json && grep -q 'personal-gate.sh' .agents/hooks.json
-  ! grep -q 'hook-adapter.py' .codex/hooks.json   # 게이트만 담은 개인 생성물
+  ! grep -q 'hook-adapter.py' .codex/hooks.json || false   # 게이트만 담은 개인 생성물
   [ -z "$(git status --porcelain -- .codex .agents CLAUDE.local.md AGENTS.override.md)" ]
   run bash "$REPO_ROOT/.claude/scripts/personal-layer.sh" use none
   [ "$status" -eq 0 ]

@@ -1394,8 +1394,8 @@ if [ "$INPLACE" -eq 1 ]; then
   echo "== self-clean: removing bin/ presets/ scripts/ dotfiles/ plugins/ .claude-plugin/ docs/superpowers/ docs/harness-matrix.json AGENTS.LEEYUDOK.md ==" >&2
   # dotfiles/ 는 메인테이너의 머신 셸 환경(#76) — 템플릿을 in-place 로 쓰는 프로젝트에 남기지 않는다
   # plugins/·.claude-plugin/ 은 이 레포의 스킬 마켓플레이스(#82) — 사용자 프로젝트가 마켓플레이스가 되면 안 된다
-  rm -rf "$TARGET/bin" "$TARGET/presets" "$TARGET/scripts" "$TARGET/dotfiles" "$TARGET/docs/superpowers" \
-    "$TARGET/plugins" "$TARGET/.claude-plugin"
+  rm -rf "${TARGET:?}/bin" "${TARGET:?}/presets" "${TARGET:?}/scripts" "${TARGET:?}/dotfiles" "${TARGET:?}/docs/superpowers" \
+    "${TARGET:?}/plugins" "${TARGET:?}/.claude-plugin"
   # scripts/ 와 harness-matrix.json 은 이 저장소의 유지보수 자산이지 사용자 산출물이 아니다 (#37)
   rm -f "$TARGET/docs/harness-matrix.json"
   # AGENTS.LEEYUDOK.md 는 메인테이너 개인 레이어(#92) — 사용자 프로젝트에 남기지 않는다.
