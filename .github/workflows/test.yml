@@ -74,6 +74,10 @@ jobs:
       - name: Check harness support matrix
         run: python3 scripts/dev/check-harness-matrix.py --no-expiry --warn-days 14
 
+      # README 4개 언어·랜딩·llms.txt 의 스택 수·스킬 수·하네스 등급·버전이 실제와 같은지(#107)
+      - name: Check numbers stated in the docs
+        run: python3 scripts/dev/check-doc-numbers.py
+
   # macOS 시스템 bash 3.2 (#107). 설치기와 훅은 3.2 에서 돌아야 한다 — ubuntu 의 bash 5 로는
   # 빈 배열 참조·연관 배열 같은 3.2 비호환이 드러나지 않는다.
   macos:

@@ -7,10 +7,10 @@
 | 预设 | 规则文件 | pre-commit 门禁 |
 |--------|-----------|-----------------|
 | `nextjs` | nextjs.md (paths: app/**, components/**) | `tsc --noEmit` |
-| `springboot` | springboot.md (paths: src/main/java/**) | `./gradlew build` |
+| `springboot` | springboot.md (paths: src/main/java/**) | `gradle testClasses` / `mvn test-compile`（完整测试需 `SPRINGBOOT_GATE_TESTS=1`） |
 | `javaweb` | javaweb.md (paths: src/main/java/**, **/*.jsp) | maven/gradle/ant compile（自动检测） |
 | `bun` | bun.md (paths: **/*.ts) | `bunx tsc --noEmit` |
-| `python` | python.md (paths: **/*.py) | `ruff check` + `mypy` |
+| `python` | python.md (paths: **/*.py) | `ruff check`；项目配置了 `mypy` 时才运行 |
 | `go` | go.md (paths: **/*.go) | `go build ./...` + `vet` + `golangci-lint` |
 | `rust` | rust.md (paths: src/**/*.rs, **/*.rs) | `cargo check` + `clippy` |
 | `android` | android.md (paths: **/*.kt) | `./gradlew ktlintCheck detekt` |
@@ -93,7 +93,7 @@ git 钩子**与 harness 无关，始终接入**（#21）。Claude Code 的 `PreT
 
 Codex（codex-cli 0.166.0）与 agy（1.5.0）会在不调用任何工具的情况下自动加载各自模式产物中的 AGENTS.md 与内联技术栈 P0，并且只发现 `.agents/skills` 下的仓库 skills；两者都不会发现 `.claude/skills`。agy 1.2.7 的 headless 模式既不加载 `AGENTS.md` 也不加载 `GEMINI.md`，该问题已在 1.2.16 中解决。即使模型遗漏规则，git 钩子仍会以 exit 2 拦截已暂存的 `.env`。
 
-支持状态的单一真实来源是 [`docs/harness-matrix.json`](harness-matrix.json)。本表会与该 manifest 对照，并由 CI 中的 `scripts/dev/check-harness-matrix.py` 检查 — 若某个 `full` 等级超过 90 天未重新实测，或某项判定缺少证据，**构建将失败**。重新实测请运行 `scripts/dev/spike-codex-contract.sh --dynamic` 与 `scripts/dev/spike-agy-contract.sh --dynamic`。
+支持状态的单一真实来源是 [`docs/harness-matrix.json`](harness-matrix.json)。本表会与该 manifest 对照，并由 CI 中的 `scripts/dev/check-harness-matrix.py` 检查 — 若某项判定缺少证据或版本不一致，**构建将失败**。若某个 `full` 等级超过 90 天未重新实测，每周运行的 `harness-matrix` 工作流会失败；拉取请求只在到期前 14 天起给出警告。重新实测请运行 `scripts/dev/spike-codex-contract.sh --dynamic` 与 `scripts/dev/spike-agy-contract.sh --dynamic`。
 
 **agy 规则适配器（#63）。** 使用 `--harness agy|all` 时，会把 `.claude/rules/*.md` 生成为 `.agents/rules/*.md`。有 `paths:` 时变为 `trigger: glob` + `globs:`，没有时变为 `trigger: always_on`。模式按 agy 1.2.16 的实测转换：含斜杠的相对模式（`src/**`）改为 `**/src/**`，不含斜杠的模式（`Dockerfile`、`*.py`）按文件名匹配，保持不变。多个模式用逗号连接且不加空格（逗号后的空格会成为下一个模式的一部分，导致无法匹配）。`.claude/rules` 仍是源；`--update` 会重新生成（已有项目用 `--update --harness agy` 首次生成），并删除源已不存在的生成文件。没有生成标记的同名文件（用户自有）不会被改动。
 

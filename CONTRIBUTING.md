@@ -47,7 +47,8 @@ the section below and the issues labeled
 - **English overlay** (`presets/lang/en/`): the English mirror of the Korean
   originals. If you change a Korean rule/agent/skill, mirror the change in
   `presets/lang/en/` in the same PR (and vice versa). Executable scripts are
-  written in English once and shared — do not duplicate them into the overlay.
+  written once and shared — do not duplicate them into the overlay. The exception is a hook whose output is prose
+  for the agent (`compact-remind.sh`, `stop-memory-remind.sh`), which has an English copy in the overlay.
 - **This repo's own memory** (`.claude/memory/*.md` other than `README.md` and `MEMORY.template.md`): maintainer
   notes for this repo. They are never installed (#80). Any other repo-only file you add under `.claude/` must be
   registered in `is_repo_private()` in `bin/agents-scaffold.sh`.

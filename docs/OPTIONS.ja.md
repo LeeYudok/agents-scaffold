@@ -7,10 +7,10 @@
 | プリセット | ルールファイル | pre-commit ゲート |
 |--------|-----------|-----------------|
 | `nextjs` | nextjs.md (paths: app/**, components/**) | `tsc --noEmit` |
-| `springboot` | springboot.md (paths: src/main/java/**) | `./gradlew build` |
+| `springboot` | springboot.md (paths: src/main/java/**) | `gradle testClasses` / `mvn test-compile`(全テストは `SPRINGBOOT_GATE_TESTS=1`) |
 | `javaweb` | javaweb.md (paths: src/main/java/**, **/*.jsp) | maven/gradle/ant compile (自動検出) |
 | `bun` | bun.md (paths: **/*.ts) | `bunx tsc --noEmit` |
-| `python` | python.md (paths: **/*.py) | `ruff check` + `mypy` |
+| `python` | python.md (paths: **/*.py) | `ruff check`、`mypy` はプロジェクトに設定がある場合のみ |
 | `go` | go.md (paths: **/*.go) | `go build ./...` + `vet` + `golangci-lint` |
 | `rust` | rust.md (paths: src/**/*.rs, **/*.rs) | `cargo check` + `clippy` |
 | `android` | android.md (paths: **/*.kt) | `./gradlew ktlintCheck detekt` |
@@ -93,7 +93,7 @@ git フックは**ハーネスに関係なく常に配線されます**（#21）
 
 Codex（codex-cli 0.166.0）と agy（1.5.0）は、各モード成果物の AGENTS.md とインラインのスタック P0 をツール呼び出しなしで自動的に読み込み、`.agents/skills` のリポジトリ skills のみを発見しました。どちらも `.claude/skills` は発見しません。agy 1.2.7 の headless は `AGENTS.md` も `GEMINI.md` も読み込めませんでしたが、1.2.16 で解消されています。モデルがルールを見落としても git フックが staged `.env` を exit 2 でブロックします。
 
-サポート状況の単一の真実の源は [`docs/harness-matrix.json`](harness-matrix.json) です。この表はその manifest と突き合わされ、CI では `scripts/dev/check-harness-matrix.py` が検査します — `full` 等級が 90 日以上再実測されていない、あるいは判定に根拠がない場合、**ビルドは失敗します**。再実測は `scripts/dev/spike-codex-contract.sh --dynamic` と `scripts/dev/spike-agy-contract.sh --dynamic` で行います。
+サポート状況の単一の真実の源は [`docs/harness-matrix.json`](harness-matrix.json) です。この表はその manifest と突き合わされ、CI では `scripts/dev/check-harness-matrix.py` が検査します — 判定に根拠がない、またはバージョンが食い違う場合、**ビルドは失敗します**。`full` 等級が 90 日以上再実測されていない場合は週次の `harness-matrix` ワークフローが失敗し、プルリクエストでは期限の 14 日前から警告だけを出します。再実測は `scripts/dev/spike-codex-contract.sh --dynamic` と `scripts/dev/spike-agy-contract.sh --dynamic` で行います。
 
 **agy ルールアダプタ（#63）。** `--harness agy|all` では `.claude/rules/*.md` を `.agents/rules/*.md` として生成します。`paths:` があれば `trigger: glob` + `globs:`、なければ `trigger: always_on` になります。パターンは agy 1.2.16 の実測どおりに変換します — スラッシュを含む相対パターン（`src/**`）は `**/src/**` に、スラッシュのないパターン（`Dockerfile`・`*.py`）はファイル名に一致するのでそのまま残します。複数のパターンは空白なしのカンマでつなぎます（カンマの後の空白は次のパターンの一部になり、一致しなくなります）。`.claude/rules` が原本で、`--update` 時に再生成し（既存プロジェクトは `--update --harness agy` で初回生成）、原本がなくなった生成物は削除します。生成マークのない同名ファイル（ユーザー所有）には触れません。
 

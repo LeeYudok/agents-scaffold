@@ -7,10 +7,10 @@
 | 프리셋 | 룰 파일 | pre-commit 게이트 |
 |--------|---------|-----------------|
 | `nextjs` | nextjs.md (paths: app/**, components/**) | `tsc --noEmit` |
-| `springboot` | springboot.md (paths: src/main/java/**) | `./gradlew build` |
+| `springboot` | springboot.md (paths: src/main/java/**) | `gradle testClasses` / `mvn test-compile` (전체 테스트는 `SPRINGBOOT_GATE_TESTS=1`) |
 | `javaweb` | javaweb.md (paths: src/main/java/**, **/*.jsp) | maven/gradle/ant 컴파일 (자동 감지) |
 | `bun` | bun.md (paths: **/*.ts) | `bunx tsc --noEmit` |
-| `python` | python.md (paths: **/*.py) | `ruff check` + `mypy` |
+| `python` | python.md (paths: **/*.py) | `ruff check`, `mypy` 는 프로젝트에 설정이 있을 때만 |
 | `go` | go.md (paths: **/*.go) | `go build ./...` + `vet` + `golangci-lint` |
 | `rust` | rust.md (paths: src/**/*.rs, **/*.rs) | `cargo check` + `clippy` |
 | `android` | android.md (paths: **/*.kt) | `./gradlew ktlintCheck detekt` |
@@ -117,8 +117,9 @@ Codex(codex-cli 0.166.0)와 agy(1.5.0)는 각 모드 산출물의 AGENTS.md 와 
 1.2.16 에서 해소됐다. 모델이 규칙을 놓쳐도 git hook이 exit 2로 차단한다.
 
 지원 상태의 단일 진실원천은 [`docs/harness-matrix.json`](harness-matrix.json) 이다. 이 표는
-그 manifest 와 대조되며, `scripts/dev/check-harness-matrix.py` 가 CI 에서 검사한다 — `full` 등급이
-90일 넘게 재측정되지 않았거나 판정에 근거가 없으면 **빌드가 실패한다**. 재측정은
+그 manifest 와 대조되며, `scripts/dev/check-harness-matrix.py` 가 CI 에서 검사한다 — 판정에 근거가 없거나
+버전이 어긋나면 **빌드가 실패한다**. `full` 등급이 90일 넘게 재측정되지 않으면 주간 `harness-matrix` 워크플로가 실패하고,
+PR 에서는 만료 14일 전부터 경고만 낸다. 재측정은
 `scripts/dev/spike-codex-contract.sh --dynamic`·`scripts/dev/spike-agy-contract.sh --dynamic` 으로 수행한다.
 
 **agy 룰 어댑터 (#63).** `--harness agy|all` 이면 `.claude/rules/*.md` 를 `.agents/rules/*.md` 로 생성한다. `paths:` 는

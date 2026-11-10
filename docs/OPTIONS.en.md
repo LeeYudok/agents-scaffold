@@ -7,10 +7,10 @@ Every option of `bin/agents-scaffold.sh`. Start at the [README](../README.md).
 | Preset | Rule file | pre-commit gate |
 |--------|-----------|-----------------|
 | `nextjs` | nextjs.md (paths: app/**, components/**) | `tsc --noEmit` |
-| `springboot` | springboot.md (paths: src/main/java/**) | `./gradlew build` |
+| `springboot` | springboot.md (paths: src/main/java/**) | `gradle testClasses` / `mvn test-compile` (full tests with `SPRINGBOOT_GATE_TESTS=1`) |
 | `javaweb` | javaweb.md (paths: src/main/java/**, **/*.jsp) | maven/gradle/ant compile (auto-detect) |
 | `bun` | bun.md (paths: **/*.ts) | `bunx tsc --noEmit` |
-| `python` | python.md (paths: **/*.py) | `ruff check` + `mypy` |
+| `python` | python.md (paths: **/*.py) | `ruff check`; `mypy` when the project configures it |
 | `go` | go.md (paths: **/*.go) | `go build ./...` + `vet` + `golangci-lint` |
 | `rust` | rust.md (paths: src/**/*.rs, **/*.rs) | `cargo check` + `clippy` |
 | `android` | android.md (paths: **/*.kt) | `./gradlew ktlintCheck detekt` |
@@ -121,8 +121,9 @@ only — neither discovers `.claude/skills`. agy 1.2.7 headless loaded neither `
 `.env` with exit 2.
 
 The single source of truth for support status is [`docs/harness-matrix.json`](harness-matrix.json).
-This table is checked against that manifest by `scripts/dev/check-harness-matrix.py` in CI — if a `full`
-tier has gone 90 days without re-measurement, or a verdict carries no evidence, **the build fails**.
+This table is checked against that manifest by `scripts/dev/check-harness-matrix.py` in CI — a verdict
+without evidence or a version mismatch **fails the build**. A `full` tier that has gone 90 days without
+re-measurement fails the weekly `harness-matrix` workflow; pull requests only warn, from 14 days before expiry.
 Re-measure with `scripts/dev/spike-codex-contract.sh --dynamic` and `scripts/dev/spike-agy-contract.sh --dynamic`.
 
 **agy rules adapter (#63).** With `--harness agy|all`, `.claude/rules/*.md` is generated as `.agents/rules/*.md`.
