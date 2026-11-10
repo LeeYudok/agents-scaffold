@@ -50,6 +50,7 @@
     knowledge_graph.py       .claude エコシステムグラフ + --check リンク切れゲート
     personal-layer.sh        個人の追加指示 AGENTS.<NAME>.md を 3 ハーネスでオン・オフ (#92)
   settings.json               フック配線 + デフォルト deny ルール
+  .scaffold.json              インストール時の選択(forge・スタック・言語・ハーネス・スキルセット)— --update / --uninstall / --dry-run が読む (#104)
 AGENTS.md                 プロジェクトの頭脳 — ルール SSOT(P0/P1/P2 + ワークフロー)
 presets/                  プリセット断片(コピー上書きモデル、#81 で種類別にまとめた)
   stacks/<stack>/         スタック別断片(rules + pre-commit.partial.sh + AGENTS.partial.md)— nextjs・bun・ops など
@@ -75,4 +76,5 @@ tests/                    ブートストラップスクリプト用 bats リグ
 - **paths スコープのルール**: frontmatter の `paths:` により、マッチするファイルの作業中のみルールを自動ロード。
 - **マルチエージェント分離**: 並列サブエージェントが同一ファイルを同時に触る可能性がある場合は `isolation: "worktree"` を使用。
 - **インストール順序**: ベースコピー → forge プリセット → スタックプリセット → (`--with-personal-skills`)`presets/skills/personal` → `--lang en` オーバーレイ → `{{PROJECT_NAME}}` 置換(`*/skills/yd-*/*` は除外 — planner テンプレートのプレースホルダーを保持)→ `.agents/skills` へ移動・`.claude/skills` をリンク → Codex・agy エージェント生成。
+- **選択の記録と再現比較**: インストールは選択を `.claude/.scaffold.json` に書き込みます。`--update`・`--uninstall`・`--dry-run` はその選択で一時ディレクトリに再インストールし、プロジェクトをその結果とファイル単位で比較します。ベースだけでなく、プリセット、英語オーバーレイ、`pre-commit.sh` も対象です(#104)。ファイルがなければ、プロジェクトから選択を推測します。
 - **スキルテスト**: 各スキルに `tests/test_*.py` と `tests/claims.json` を置く。`scripts/dev/run-skill-tests.sh` がスキル別に実行し、`tests/test_skill_contracts.py` が claims 形式・参照パス・トリガー重複を検査する。

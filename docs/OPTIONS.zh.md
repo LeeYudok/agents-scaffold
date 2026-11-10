@@ -20,6 +20,8 @@
 | `php-laravel` | php-laravel.md (paths: app/**/*.php, routes/**/*.php, composer.json) | `composer validate` + `pint --test` + `phpunit` |
 | `ops` | ops.md (paths: Dockerfile, docker-compose*, quadlet/**, ansible/**) | — |
 
+`--list-stacks` 会逐行打印这些名称。不在列表中的名称会报错（exit 1），打印可用的技术栈，并且不安装任何内容 — 以前只是警告。
+
 ## Forge 预设（`--forge`）
 
 注入与你所用 forge 匹配的 issue/PR 工作流。在技术栈预设之前合并。
@@ -77,17 +79,17 @@
 | **baseline** | `AGENTS.md` 正文中的 P0/P1（含所选技术栈的 P0）+ **真正的 `.git/hooks/pre-commit` 门禁** + CI | **全部 harness，与 `--harness` 取值无关。** 无论 harness 读取什么，也无论是否由人在终端直接提交，门禁都会生效 |
 | **full** | baseline + 该 harness 的原生层（子代理、skills、斜杠命令、按路径的条件加载、lifecycle 钩子） | 仅限适配器经过实测验证的 harness |
 
-git 钩子**与 harness 无关，始终接入**（#21）。Claude Code 的 `PreToolUse` 钩子只在该会话通过 Bash 工具提交时触发，因此它属于早期反馈层而非强制线 — 决定性的强制线放在 harness 之外（`.git/hooks` + CI）。已存在的 `.git/hooks/pre-commit` 不会被覆盖，只会给出警告。
+git 钩子**与 harness 无关，始终接入**（#21）。Claude Code 的 `PreToolUse` 钩子只在该会话通过 Bash 工具提交时触发，因此它属于早期反馈层而非强制线 — 决定性的强制线放在 harness 之外（`.git/hooks` + CI）。已存在的 pre-commit 钩子不会被覆盖，只会给出警告，并告诉你需要加进去的那一行。钩子会写到 git 实际执行的位置 — worktree、submodule（`.git` 是文件）以及 `.husky` 这类 `core.hooksPath` 目录都能处理 — 并且 `--update` 会接上缺失的钩子（#106）。见 [TROUBLESHOOTING.en.md](TROUBLESHOOTING.en.md#an-existing-pre-commit-hook-or-husky)（英文）。
 
 所选技术栈的 P0 会**直接插入 `AGENTS.md` 正文**，不依赖 `.claude/rules/` 引用链接，因此在不加载 `.claude/` 的 harness 上同样可达。未选择的技术栈不会被插入（Codex 指令合计默认上限为 32KiB — 以避免 context flooding）。
 
-### 实测验证（2026-10-04）
+### 实测验证（2026-11-04）
 
-| Harness | 实测版本 | baseline | full 层已确认 / 未确认的内容 |
-|---|---|---|---|
-| Claude Code | 2.1.318 | 成立 | `.claude/rules/*.md` 的 `paths:` 条件加载、子代理、skills、`settings.json` 钩子 — 均已对照[官方文档](https://code.claude.com/docs/en/memory.md)确认 |
-| Codex | codex-cli 0.166.0 | 成立 | 已实测 `AGENTS.md`、内联技术栈 P0、`.agents/skills`、`.env` 门禁、`.codex/agents` 子代理（仅受信任项目）、`.codex/hooks.json` 钩子（需项目信任与钩子定义信任）以及按 cwd 加载的子目录 `AGENTS.md`。没有按文件路径的条件指令 |
-| Antigravity | agy 1.5.0 | 成立 | 以 headless（`-p`）实测 `AGENTS.md`、内联技术栈 P0、`.agents/skills`、`.env` 门禁、`.agents/agents` 子代理与 `.agents/hooks.json` 钩子（无信任确认即执行）。**`.agents/rules` 中的 `trigger: glob` 规则在 1.5.0 上即使读取了匹配文件也不会加载**（1.4.2 及以前为 pass，`always_on` 正常，#90）。子目录 `AGENTS.md` 仅按 cwd 加载 |
+| Harness | 实测版本 | 级别 | baseline | full 层已确认 / 未确认的内容 |
+|---|---|---|---|---|
+| Claude Code | 2.1.318 | **full** | 成立 | `.claude/rules/*.md` 的 `paths:` 条件加载、子代理、skills、`settings.json` 钩子 — 均已对照[官方文档](https://code.claude.com/docs/en/memory.md)确认 |
+| Codex | codex-cli 0.166.0 | **baseline** | 成立 | 已实测 `AGENTS.md`、内联技术栈 P0、`.agents/skills`、`.env` 门禁、`.codex/agents` 子代理（仅受信任项目）、`.codex/hooks.json` 钩子（需项目信任与钩子定义信任）以及按 cwd 加载的子目录 `AGENTS.md`。没有按文件路径的条件指令 |
+| Antigravity | agy 1.5.0 | **baseline** | 成立 | 以 headless（`-p`）实测 `AGENTS.md`、内联技术栈 P0、`.agents/skills`、`.env` 门禁、`.agents/agents` 子代理与 `.agents/hooks.json` 钩子（无信任确认即执行）。**`.agents/rules` 中的 `trigger: glob` 规则在 1.5.0 上即使读取了匹配文件也不会加载**（1.4.2 及以前为 pass，`always_on` 正常，#90）。子目录 `AGENTS.md` 仅按 cwd 加载 |
 
 Codex（codex-cli 0.166.0）与 agy（1.5.0）会在不调用任何工具的情况下自动加载各自模式产物中的 AGENTS.md 与内联技术栈 P0，并且只发现 `.agents/skills` 下的仓库 skills；两者都不会发现 `.claude/skills`。agy 1.2.7 的 headless 模式既不加载 `AGENTS.md` 也不加载 `GEMINI.md`，该问题已在 1.2.16 中解决。即使模型遗漏规则，git 钩子仍会以 exit 2 拦截已暂存的 `.env`。
 
@@ -112,24 +114,40 @@ Codex（codex-cli 0.166.0）与 agy（1.5.0）会在不调用任何工具的情�
 - **指令合计默认上限 32KiB**（`project_doc_max_bytes`），因此只把所选技术栈的 P0 内联进 `AGENTS.md`（`--stack javaweb` 实测 6,869 B — 占上限的 21%）。
 - **`.codex/` 层仅在项目受信任时加载。** 生成文件并不等于生效，因此决定性的强制线放在 `.git/hooks` + CI。
 
-## 技能包（`--with-personal-skills`）
+## 技能包（`--with-yd-skills`、`--no-yd-skills`、`--with-personal-skills`）
 
-默认安装包含 24 个通用技能：原有的 10 个（`review`、`status`、`handoff`、`docs-sync` 等），以及从
-[LeeYudok/doksam-skills](https://github.com/LeeYudok/doksam-skills) 迁入的 13 个 `yd-*` 技能（DB、Go、React、
-TypeScript、构建、界面设计、韩文写作等），以及依赖 CVE 检查 `yd-cve-check`（#79）。这些 `yd-*` 技能附带的 12 个代理（`.claude/agents/yd-*.md`）也一并安装（#78）。
+| 安装方式 | 技能 | 子代理 |
+|---|---|---|
+| `--lang ko`（默认） | 24 — 10 个工作流技能 + 14 个 `yd-*` | 19 — 7 + 12 个 `yd-*` |
+| `--lang en` | 10 — 工作流技能 | 7 |
+| 加上 `--with-personal-skills` | +9 | +4 |
 
-`--with-personal-skills` 会在技术栈预设之后合并可选包 `presets/skills/personal/`——9 个技能
-（`yd-agents-mem`、`yd-claude-auth-sync`、`yd-git-sync`、`yd-git-ship`、`yd-doksam-ui`、`yd-finguard`、
-`yd-sdlc-orchestrator`、`yd-script-editor`、`yd-session-recording`）和 4 个代理。它们以特定的 GitLab、主机、
-ui.doksam.com 和 FinGuard 为前提，不适用于其他环境。
+10 个工作流技能是 `review`、`status`、`search-first`、`security-precheck`、`docs-sync`、`handoff`、
+`memory-factcheck`、`skill-evolve`、`grill-me` 以及模板 `example-skill`。14 个 `yd-*` 技能包括从
+[LeeYudok/doksam-skills](https://github.com/LeeYudok/doksam-skills) 迁入的 13 个（DB、Go、React、TypeScript、构建、
+界面设计、韩文写作等）和依赖 CVE 检查 `yd-cve-check`（#79）；它们附带的 12 个代理（`.claude/agents/yd-*.md`）
+也一并安装（#78）。
+
+| 选项 | 效果 |
+|---|---|
+| `--with-yd-skills` | 安装 14 个 `yd-*` 技能及其代理。`--lang ko` 的默认行为 |
+| `--no-yd-skills` | 不安装。`--lang en` 的默认行为，因为 `yd-*` 技能是用韩文写的，没有英文覆盖层（#105） |
+| `--with-personal-skills` | 在技术栈预设之后再合并可选包 `presets/skills/personal/` |
+
+可选包含 9 个技能（`yd-agents-mem`、`yd-claude-auth-sync`、`yd-git-sync`、`yd-git-ship`、`yd-doksam-ui`、
+`yd-finguard`、`yd-sdlc-orchestrator`、`yd-script-editor`、`yd-session-recording`）和 4 个代理。它们以特定的
+GitLab、主机、ui.doksam.com 和 FinGuard 为前提，不适用于其他环境。
 
 ```bash
+agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --lang en --stack go --with-yd-skills
 agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --stack go --with-personal-skills
 ```
 
-- `yd-*` 技能仅提供韩文版——没有 `--lang en` 覆盖层。
-- 预设通常不在 `--update` 范围内，此包是例外。传入 `--with-personal-skills`，或目标中已有其中任一技能时，
-  `--update` 也会刷新此包（沿用 `.new` 规则）。对默认安装执行 `--update` 不会新增此包。
+- 选择会记录在 `.claude/.scaffold.json`（`yd_skills`、`personal_skills`）中，`--update` 会保持同样的技能包。
+  对于没有该文件的安装，目标中存在 `yd-db-expert` 时视为已安装 `yd-*` 包，存在可选包中任一技能时视为已安装可选包。
+- 对默认安装执行 `--update` 不会新增可选包。`--update --with-yd-skills` 会给已有安装补上 `yd-*` 包；
+  `--update --no-yd-skills` 只修改记录，已安装的技能不会被删除。
+- 脱离脚手架单独安装技能（插件、`npx skills`、`install-skills.sh`）：见 [SKILLS.en.md](SKILLS.en.md)（英文）。
 
 ## 语言（`--lang`）
 
@@ -144,10 +162,13 @@ agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --stack go --with-perso
 agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --lang en --forge github --stack bun
 ```
 
+`--lang en` 还会略去仅有韩文版的 `yd-*` 技能，除非传入 `--with-yd-skills`
+（见[技能包](#技能包--with-yd-skills--no-yd-skills--with-personal-skills)）。
+
 `.claude/hooks/pre-commit.sh` 永远不会被 `--lang` 覆盖（它是技术栈片段
-拼接进去的文件——消息只有单一语言，代码不受语言影响）。`--update`
-只刷新韩语基础文件；若需要重新应用英文覆盖层，请在其后再带
-`--lang en` 运行一次。
+拼接进去的文件——两种语言共用一份，代码不受语言影响）。语言会记录在
+`.claude/.scaffold.json` 中，`--update` 会与该语言的安装结果比较 —
+英文安装不会再被建议换成韩文文件。
 
 ## Usage 1 — 脚本
 
@@ -157,21 +178,78 @@ git clone https://github.com/leeyudok/agents-scaffold.git
 agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --forge github --stack nextjs,bun --name my-app
 ```
 
-省略 `--forge`/`--stack`/`--name` 即进入交互模式——脚本会依次询问
-（forge 默认为 github）。
+省略 `--forge`/`--stack`/`--lang` 即进入交互模式——脚本会依次询问
+（forge 默认为 github，语言默认为 ko）。目标目录不存在时会自动创建。
+
+安装结束时会打印摘要（版本，规则文件、技能和子代理的数量，以及门禁）和后续步骤：填写 `AGENTS.md`
+中的空白章节，确认门禁会拦截暂存的 `.env`，然后提交结果。
 
 ### 选项
 
 | 选项 | 说明 |
 |---|---|
-| `<target-dir>` | 目标目录。默认 `.` |
+| `<target-dir>` | 目标目录。默认 `.`。不存在时会创建（`--update`、`--uninstall`、`--dry-run` 除外） |
 | `--forge <forge>` | `github`（默认）或 `gitlab` |
 | `--lang <lang>` | `ko`（默认）或 `en` |
-| `--stack <list>` | 逗号分隔的技术栈预设列表。省略时进入交互式提问 |
+| `--stack <list>` | 逗号分隔的技术栈预设列表。省略时进入交互式提问。未知名称会报错 |
 | `--name <name>` | `{{PROJECT_NAME}}` 的替换值。默认 = 目标目录名 |
-| `--with-personal-skills` | 额外安装绑定维护者环境的 9 个 `yd-*` 技能和 4 个代理（见下文） |
+| `--harness <harness>` | `claude`（默认）、`codex`、`agy` 或 `all` — 见 [Harness](#harness--harness) |
+| `--with-yd-skills` / `--no-yd-skills` | 安装或略去 14 个韩文 `yd-*` 技能。默认：`ko` 安装包含，`en` 安装不包含 |
+| `--with-personal-skills` | 额外安装绑定维护者环境的 9 个 `yd-*` 技能和 4 个代理 |
 | `--yes` | 跳过交互式提问（非交互模式） |
-| `--update` | 刷新已引导项目的基础文件（见下文） |
+| `--dry-run` | 不做任何改动。打印安装、`--update` 或 `--uninstall` 将要做的事（见下文） |
+| `--update` | 刷新已引导的项目（见下文） |
+| `--uninstall` | 删除脚手架安装且你未改动的文件（见下文） |
+| `--list-stacks` | 逐行打印可用的技术栈预设 |
+| `--version` | 打印脚手架版本（`agents-scaffold 1.0.0`） |
+| `-h`、`--help` | 打印用法 |
+
+需要值的选项缺少值时，会以 `Error: --stack needs a value` 终止；未知选项会以 `Unknown option` 终止。
+
+### 安装选择的记录 — `.claude/.scaffold.json`
+
+每次安装和 `--update` 都会把所用的选择写入 `.claude/.scaffold.json`（#104）：
+
+```json
+{
+  "scaffold_version": "1.0.0",
+  "name": "my-app",
+  "forge": "github",
+  "stacks": "nextjs,bun",
+  "lang": "en",
+  "harness": "claude",
+  "yd_skills": "0",
+  "personal_skills": "0"
+}
+```
+
+`--update`、`--uninstall` 和 `--dry-run` 读取它，以便原样重建当初安装的内容。请把它和 `.claude/` 的其他文件一起提交。
+文件缺失时（1.0.0 之前的安装），会从项目中推断这些选择（forge 看 `rules/forge.md`，技术栈看 `rules/<stack>.md`，
+语言看 `AGENTS.md` 的标题，harness 看现有目录），输出的第一行会显示 `(inferred)` 而不是 `(recorded)`，
+并在 `--update` 结束时写入该文件。命令行上的选项优先于记录的值。
+
+### 预览 — `--dry-run`
+
+```bash
+agents-scaffold/bin/agents-scaffold.sh /path/to/repo --lang en --stack python --dry-run
+agents-scaffold/bin/agents-scaffold.sh --update /path/to/repo --dry-run
+agents-scaffold/bin/agents-scaffold.sh --uninstall /path/to/repo --dry-run
+```
+
+目标中不会有任何改动。安装预览会打印将新增多少文件、多少文件已经相同，以及哪些已有文件内容不同。
+`--update --dry-run` 列出将新增或以 `.new` 形式放置的文件，`--uninstall --dry-run` 列出将删除和保留的文件。
+目标目录必须已经存在。
+
+### 在已有项目上再次安装
+
+普通安装可以安全地重复运行（#104）：
+
+- 已存在的基础文件保持不变。来自 forge 预设、技术栈预设或英文覆盖层的文件会重新写入。
+- `AGENTS.md` 会重新生成。如果你的文件与生成结果不同，会先保存为 `AGENTS.md.bak-<timestamp>` —
+  需要的内容请从中合并回来。
+- 已经在 `pre-commit.sh` 里的技术栈门禁不会被再次插入。
+
+如果只想刷新而不重新生成 `AGENTS.md`，请使用 `--update`。
 
 ### 远程一键安装（无需 clone）
 
@@ -182,25 +260,63 @@ curl -fsSL https://raw.githubusercontent.com/leeyudok/agents-scaffold/main/bin/a
 当脚本检测到自己并非从本地检出运行时（例如管道执行），会将
 `AGENTS_SCAFFOLD_REPO` 的 tarball（默认：
 `github.com/leeyudok/agents-scaffold`，可通过环境变量覆盖）下载到临时目录，
-并将其作为模板来源。用 `AGENTS_SCAFFOLD_REF` 固定分支/标签
-（默认 `main`）。
+并将其作为模板来源。
 
-### 更新基础文件 — `--update`
+| 变量 | 含义 |
+|---|---|
+| `AGENTS_SCAFFOLD_REPO` | 下载 tarball 的仓库 URL。默认为官方 GitHub 仓库 |
+| `AGENTS_SCAFFOLD_REF` | 要下载的分支或标签。默认 `main`。标签自 1.0.0 起可用（#106） |
+| `AGENTS_SCAFFOLD_SHA256` | 可选。下载的 tarball 应有的 SHA-256；不一致时中止安装 |
+| `AGENTS_SCAFFOLD_NO_SYMLINK` | 设为 `1` 时，`.claude/skills` 为副本而非符号链接 |
 
-将最新的基础文件（`.claude/`、`AGENTS.md`）应用到已完成引导的项目。
-旧版本生成的 `.gemini/settings.json` 不会被改动（保留也无害）。
-仅当 `.agents/skills` 不存在或内容相同时，才会把真实目录 `.claude/skills` 移入源 `.agents/skills` 并改为链接（#61）。两者都存在且内容不同时不做迁移，并提示手动合并。迁移后，基础 skills 会在 `.agents/skills` 一侧更新。
+固定版本并校验的写法如下（这是发布标签出现之后的用法 — 目前尚未发布任何标签；
+见 [SECURITY.md](../SECURITY.md#installing-safely)）：
+
+```bash
+export AGENTS_SCAFFOLD_REF=v1.0.0
+export AGENTS_SCAFFOLD_SHA256=<sha256 of that ref's source tarball>
+curl -fsSL https://raw.githubusercontent.com/leeyudok/agents-scaffold/v1.0.0/bin/agents-scaffold.sh | bash -s -- --lang en --yes
+```
+
+### 更新 — `--update`
+
+刷新已完成引导的项目。`--update` 读取记录的选择，在临时目录里构建出按这些选择今天会安装的结果，
+再逐个文件与项目比较（#104）。由于比较对象是完整结果而不只是基础文件，forge 与技术栈预设、英文覆盖层
+以及 `.claude/hooks/pre-commit.sh` 也都在比较范围内。
 
 ```bash
 agents-scaffold/bin/agents-scaffold.sh --update /path/to/existing-repo
+agents-scaffold/bin/agents-scaffold.sh --update /path/to/existing-repo --dry-run
 ```
 
-- `.claude/hooks/pre-commit.sh` 始终被跳过——技术栈片段已被拼接
-  进去，需要手动合并。
-- 其他基础文件内容相同时跳过；有差异时保留现有文件，新版本写为
-  `<file>.new`（占位符替换同样作用于 `.new` 文件）。
-- 结束时打印新增 / 待更新 / 跳过 / 未变更文件的汇总——用 `diff`
-  查看 `.new` 文件后手动应用。
+| 项目中的文件 | `--update` 的处理 |
+|---|---|
+| 与新版本相同 | 跳过 |
+| 不存在 | 新增 |
+| 有差异 | 保持原样；新版本写为 `<file>.new` |
+| `.claude/memory/MEMORY.md` | 归你所有 — 仅在缺失时新增，从不生成 `.new` |
+| 生成的适配器（`.codex/`、`.agents/rules`、`.agents/agents`、`.agents/hooks.json`） | 由项目的 `.claude/` 重新生成 |
+
+- 结束时打印新增 / 待更新（`.new`）/ 未变更文件的汇总。请用 `diff` 查看每个 `.new` 后手动应用 —
+  见 [TROUBLESHOOTING.en.md](TROUBLESHOOTING.en.md#new-files-after---update)（英文）。
+- `AGENTS.md` 与其他文件一样参与比较，所以在你填写内容之后，每次更新都会写出 `AGENTS.md.new`。
+- 缺失的 git pre-commit 钩子会被接上，记录的选择也会重新写入。
+- 命令行上的选项优先于记录：`--update --harness all` 会给已有项目补上 Codex 和 agy 适配器，
+  `--update --stack nextjs,go` 会与另一组技术栈比较。
+- 旧版本生成的 `.gemini/settings.json` 不会被改动（保留也无害）。
+- 仅当 `.agents/skills` 不存在或内容相同时，才会把真实目录 `.claude/skills` 移入源 `.agents/skills` 并改为链接（#61）。
+  两者都存在且内容不同时不做迁移，并提示手动合并。迁移后，基础 skills 会在 `.agents/skills` 一侧更新。
+
+### 卸载 — `--uninstall`
+
+```bash
+agents-scaffold/bin/agents-scaffold.sh --uninstall /path/to/repo --dry-run
+agents-scaffold/bin/agents-scaffold.sh --uninstall /path/to/repo --yes
+```
+
+按记录的选择重建当初安装的内容，并删除与之仍然相同的文件（#106）。你改过的文件会保留并列出。
+`.claude/memory/` 以及脚手架没有创建的任何东西都不会被删除。git pre-commit 钩子只有在它是脚手架自己写的
+单行钩子时才会被删除。不带 `--yes` 时会请求确认；没有可供询问的终端时拒绝执行。
 
 ## Usage 2 — GitLab 模板
 

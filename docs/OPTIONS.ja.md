@@ -20,6 +20,8 @@
 | `php-laravel` | php-laravel.md (paths: app/**/*.php, routes/**/*.php, composer.json) | `composer validate` + `pint --test` + `phpunit` |
 | `ops` | ops.md (paths: Dockerfile, docker-compose*, quadlet/**, ansible/**) | — |
 
+`--list-stacks` はこれらの名前を 1 行に 1 つずつ表示します。一覧にない名前はエラー(exit 1)になり、利用できるスタックを表示して、何もインストールしません。以前は警告だけでした。
+
 ## Forge プリセット (`--forge`)
 
 利用する forge のイシュー/PR ワークフローを注入します。スタックプリセットより先にマージされます。
@@ -77,17 +79,17 @@
 | **baseline** | `AGENTS.md` 本文の P0/P1（選択したスタックの P0 を含む）+ **実際の `.git/hooks/pre-commit` ゲート** + CI | **`--harness` の値に関係なく全ハーネス。** ハーネスが何を読むかによらず、人が端末から直接コミットしても同じように掛かります |
 | **full** | baseline + そのハーネスのネイティブ層（サブエージェント・skills・スラッシュコマンド・パススコープのルール読み込み・lifecycle フック） | アダプタが実測検証されたハーネスのみ |
 
-git フックは**ハーネスに関係なく常に配線されます**（#21）。Claude Code の `PreToolUse` フックはそのセッションが Bash ツールでコミットしたときにのみ発火するため、早期フィードバック層であって強制線ではありません — 決定的な強制線はハーネスの外（`.git/hooks` + CI）に置きます。既存の `.git/hooks/pre-commit` は上書きせず、警告のみ出します。
+git フックは**ハーネスに関係なく常に配線されます**（#21）。Claude Code の `PreToolUse` フックはそのセッションが Bash ツールでコミットしたときにのみ発火するため、早期フィードバック層であって強制線ではありません — 決定的な強制線はハーネスの外（`.git/hooks` + CI）に置きます。既存の pre-commit フックは上書きせず、そこに追加する 1 行を警告で示します。フックは git が実際に実行する場所に書き込みます。worktree、submodule（`.git` がファイル）、`.husky` のような `core.hooksPath` ディレクトリにも対応し、`--update` は欠けているフックを配線します（#106）。[TROUBLESHOOTING.en.md](TROUBLESHOOTING.en.md#an-existing-pre-commit-hook-or-husky)（英語）を参照。
 
 選択したスタックの P0 は **`AGENTS.md` 本文に直接挿入**されます。`.claude/rules/` の参照リンクに依存しないため、`.claude/` を読み込まないハーネスでも到達可能です。選択していないスタックは挿入されません（Codex の指示合計はデフォルト 32KiB 上限 — context flooding を防ぐため）。
 
-### 実測検証（2026-10-04）
+### 実測検証（2026-11-04）
 
-| ハーネス | 実測バージョン | baseline | full 層で確認できたこと / できていないこと |
-|---|---|---|---|
-| Claude Code | 2.1.318 | 成立 | `.claude/rules/*.md` の `paths:` 条件付きロード、サブエージェント、skills、`settings.json` フック — いずれも[公式ドキュメント](https://code.claude.com/docs/en/memory.md)で確認 |
-| Codex | codex-cli 0.166.0 | 成立 | `AGENTS.md`、インラインのスタック P0、`.agents/skills`、`.env` ゲート、`.codex/agents` サブエージェント（信頼済みプロジェクトのみ）、`.codex/hooks.json` フック（プロジェクトとフック定義の信頼が必要）、cwd 基準のサブディレクトリ `AGENTS.md` を実測。ファイルパス条件付きの指示はない |
-| Antigravity | agy 1.5.0 | 成立 | headless（`-p`）で `AGENTS.md`、インラインのスタック P0、`.agents/skills`、`.env` ゲート、`.agents/agents` サブエージェント、`.agents/hooks.json` フック（信頼確認なしで実行）を実測。**`.agents/rules` の `trigger: glob` ルールは 1.5.0 では一致するファイルを読んでも読み込まれない**（1.4.2 までは pass、`always_on` は正常、#90）。サブディレクトリの `AGENTS.md` は cwd 基準でのみ読み込まれる |
+| ハーネス | 実測バージョン | ティア | baseline | full 層で確認できたこと / できていないこと |
+|---|---|---|---|---|
+| Claude Code | 2.1.318 | **full** | 成立 | `.claude/rules/*.md` の `paths:` 条件付きロード、サブエージェント、skills、`settings.json` フック — いずれも[公式ドキュメント](https://code.claude.com/docs/en/memory.md)で確認 |
+| Codex | codex-cli 0.166.0 | **baseline** | 成立 | `AGENTS.md`、インラインのスタック P0、`.agents/skills`、`.env` ゲート、`.codex/agents` サブエージェント（信頼済みプロジェクトのみ）、`.codex/hooks.json` フック（プロジェクトとフック定義の信頼が必要）、cwd 基準のサブディレクトリ `AGENTS.md` を実測。ファイルパス条件付きの指示はない |
+| Antigravity | agy 1.5.0 | **baseline** | 成立 | headless（`-p`）で `AGENTS.md`、インラインのスタック P0、`.agents/skills`、`.env` ゲート、`.agents/agents` サブエージェント、`.agents/hooks.json` フック（信頼確認なしで実行）を実測。**`.agents/rules` の `trigger: glob` ルールは 1.5.0 では一致するファイルを読んでも読み込まれない**（1.4.2 までは pass、`always_on` は正常、#90）。サブディレクトリの `AGENTS.md` は cwd 基準でのみ読み込まれる |
 
 Codex（codex-cli 0.166.0）と agy（1.5.0）は、各モード成果物の AGENTS.md とインラインのスタック P0 をツール呼び出しなしで自動的に読み込み、`.agents/skills` のリポジトリ skills のみを発見しました。どちらも `.claude/skills` は発見しません。agy 1.2.7 の headless は `AGENTS.md` も `GEMINI.md` も読み込めませんでしたが、1.2.16 で解消されています。モデルがルールを見落としても git フックが staged `.env` を exit 2 でブロックします。
 
@@ -112,26 +114,43 @@ Codex 側の制約がもう 2 点、設計に効いてきます。
 - **指示の合計はデフォルト 32KiB 上限**（`project_doc_max_bytes`）。そのため選択したスタックの P0 のみを `AGENTS.md` にインライン化します（`--stack javaweb` で実測 6,869 B — 上限の 21%）。
 - **`.codex/` レイヤは信頼済みプロジェクトでのみロードされます。** ファイルを生成しても有効化は保証されません。だからこそ決定的な強制線は `.git/hooks` + CI に置きます。
 
-## スキルバンドル (`--with-personal-skills`)
+## スキルバンドル (`--with-yd-skills`, `--no-yd-skills`, `--with-personal-skills`)
 
-デフォルトのインストールには汎用スキル 24 個が入る — 既存の 10 個(`review`・`status`・`handoff`・`docs-sync` など)と、
-[LeeYudok/doksam-skills](https://github.com/LeeYudok/doksam-skills) から移した `yd-*` 13 個(DB・Go・React・
-TypeScript・ビルド・画面設計・韓国語ライティングなど)、依存関係の CVE 点検 `yd-cve-check`(#79)。これらの `yd-*` スキルに付属するエージェント 12 個
-(`.claude/agents/yd-*.md`)も一緒にインストールされる(#78)。
+| インストール | スキル | サブエージェント |
+|---|---|---|
+| `--lang ko`(デフォルト) | 24 — ワークフロー 10 + `yd-*` 14 | 19 — 7 + `yd-*` 12 |
+| `--lang en` | 10 — ワークフロースキル | 7 |
+| `--with-personal-skills` を追加 | +9 | +4 |
 
-`--with-personal-skills` を付けると、メンテナー環境に結びついたオプトインバンドル `presets/skills/personal/` を
-スタックプリセットの後にマージする — スキル 9 個(`yd-agents-mem`・`yd-claude-auth-sync`・`yd-git-sync`・
-`yd-git-ship`・`yd-doksam-ui`・`yd-finguard`・`yd-sdlc-orchestrator`・`yd-script-editor`・`yd-session-recording`)と
-エージェント 4 個。特定の GitLab・ホスト・ui.doksam.com・FinGuard を前提とするため、他の環境では使わない。
+ワークフロースキル 10 個は `review`・`status`・`search-first`・`security-precheck`・`docs-sync`・`handoff`・
+`memory-factcheck`・`skill-evolve`・`grill-me` と、テンプレートの `example-skill` です。`yd-*` 14 個は
+[LeeYudok/doksam-skills](https://github.com/LeeYudok/doksam-skills) から移した 13 個(DB・Go・React・TypeScript・ビルド・
+画面設計・韓国語ライティングなど)と、依存関係の CVE 点検 `yd-cve-check`(#79)です。付属するエージェント 12 個
+(`.claude/agents/yd-*.md`)も一緒にインストールされます(#78)。
+
+| オプション | 効果 |
+|---|---|
+| `--with-yd-skills` | `yd-*` 14 個とそのエージェントをインストールする。`--lang ko` のデフォルト |
+| `--no-yd-skills` | 入れない。`--lang en` のデフォルト。`yd-*` スキルは韓国語で書かれており、英語オーバーレイがないため(#105) |
+| `--with-personal-skills` | オプトインバンドル `presets/skills/personal/` もスタックプリセットの後にマージする |
+
+オプトインバンドルはスキル 9 個(`yd-agents-mem`・`yd-claude-auth-sync`・`yd-git-sync`・`yd-git-ship`・`yd-doksam-ui`・
+`yd-finguard`・`yd-sdlc-orchestrator`・`yd-script-editor`・`yd-session-recording`)とエージェント 4 個です。
+特定の GitLab・ホスト・ui.doksam.com・FinGuard を前提とするため、他の環境向けではありません。
 
 ```bash
+agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --lang en --stack go --with-yd-skills
 agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --stack go --with-personal-skills
 ```
 
-- `yd-*` スキルは韓国語のみ — `--lang en` オーバーレイはない。
-- プリセットは本来 `--update` の対象外だが、このバンドルは例外。`--with-personal-skills` を付けるか、対象に
-  そのスキルが 1 つでもあれば `--update` がバンドルも更新する(既存の `.new` ルールのまま)。デフォルトの
-  インストールを `--update` してもバンドルは追加されない。
+- 選択は `.claude/.scaffold.json`(`yd_skills`、`personal_skills`)に記録され、`--update` は同じセットを維持します。
+  このファイルがないインストールでは、`yd-db-expert` があれば `yd-*` セットを、オプトインのスキルが 1 つでもあれば
+  オプトインバンドルをインストール済みとみなします。
+- デフォルトのインストールを `--update` してもオプトインバンドルは追加されません。`--update --with-yd-skills` は
+  既存のインストールに `yd-*` セットを追加します。`--update --no-yd-skills` は記録を変えるだけで、
+  インストール済みのスキルは削除しません。
+- スキャフォールドなしでスキルだけを入れる方法(プラグイン、`npx skills`、`install-skills.sh`)は
+  [SKILLS.en.md](SKILLS.en.md)(英語)にあります。
 
 ## 言語 (`--lang`)
 
@@ -146,10 +165,14 @@ forge プリセット、スタックプリセットの後に適用されるた�
 agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --lang en --forge github --stack bun
 ```
 
+`--lang en` では、韓国語のみの `yd-*` スキルも入りません。入れるには `--with-yd-skills` を付けます
+([スキルバンドル](#スキルバンドル---with-yd-skills---no-yd-skills---with-personal-skills)を参照)。
+
 `.claude/hooks/pre-commit.sh` は `--lang` によるオーバーレイの対象外です
-(スタックパーシャルが挿入されるファイルであり、メッセージは単一言語、コードは
-言語の影響を受けません)。`--update` は韓国語のベースのみを更新します。英語
-オーバーレイを再適用したい場合は、その上で `--lang en` を付けて再実行してください。
+(スタックパーシャルが挿入されるファイルであり、両言語で 1 つを共有します。コードは
+言語の影響を受けません)。言語は `.claude/.scaffold.json` に記録され、`--update` は
+その言語でインストールした結果と比較します。英語インストールに韓国語のファイルが
+提案されることはなくなりました。
 
 ## Usage 1 — script
 
@@ -159,21 +182,80 @@ git clone https://github.com/leeyudok/agents-scaffold.git
 agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --forge github --stack nextjs,bun --name my-app
 ```
 
-`--forge`/`--stack`/`--name` を省略すると対話モードで実行され、スクリプトが
-プロンプトを表示します(forge のデフォルトは github)。
+`--forge`/`--stack`/`--lang` を省略すると対話モードで実行され、スクリプトが
+プロンプトを表示します(forge のデフォルトは github、言語のデフォルトは ko)。存在しない対象ディレクトリは作成されます。
+
+インストールの最後にサマリー(バージョン、ルールファイル・スキル・サブエージェントの数、ゲート)と次の手順が表示されます。
+`AGENTS.md` の空のセクションを埋め、ゲートがステージされた `.env` を止めることを確認し、結果をコミットする、という手順です。
 
 ### オプション
 
 | オプション | 説明 |
 |---|---|
-| `<target-dir>` | 対象ディレクトリ。デフォルト `.` |
+| `<target-dir>` | 対象ディレクトリ。デフォルト `.`。存在しなければ作成する(`--update`・`--uninstall`・`--dry-run` では作成しない) |
 | `--forge <forge>` | `github`(デフォルト)または `gitlab` |
 | `--lang <lang>` | `ko`(デフォルト)または `en` |
-| `--stack <list>` | カンマ区切りのスタックプリセット。省略時は対話的にプロンプト |
+| `--stack <list>` | カンマ区切りのスタックプリセット。省略時は対話的にプロンプト。未知の名前はエラー |
 | `--name <name>` | `{{PROJECT_NAME}}` の置換値。デフォルトは対象ディレクトリ名 |
-| `--with-personal-skills` | メンテナー環境専用の `yd-*` スキル 9 個とエージェント 4 個もインストール(後述) |
+| `--harness <harness>` | `claude`(デフォルト)、`codex`、`agy`、`all` — [ハーネス](#ハーネス---harness)を参照 |
+| `--with-yd-skills` / `--no-yd-skills` | 韓国語の `yd-*` スキル 14 個を入れる/入れない。デフォルトは `ko` で入れ、`en` で入れない |
+| `--with-personal-skills` | メンテナー環境専用の `yd-*` スキル 9 個とエージェント 4 個もインストール |
 | `--yes` | 対話プロンプトをスキップ(非対話モード) |
-| `--update` | ブートストラップ済みプロジェクトのベースファイルを更新(後述) |
+| `--dry-run` | 何も変更しない。インストール、`--update`、`--uninstall` が行う内容を表示する(後述) |
+| `--update` | ブートストラップ済みプロジェクトを更新(後述) |
+| `--uninstall` | スキャフォールドがインストールし、あなたが変更していないファイルを削除(後述) |
+| `--list-stacks` | 利用できるスタックプリセットを 1 行に 1 つずつ表示 |
+| `--version` | スキャフォールドのバージョンを表示(`agents-scaffold 1.0.0`) |
+| `-h`、`--help` | 使い方を表示 |
+
+値が必要なオプションに値がないと `Error: --stack needs a value` で、未知のオプションは `Unknown option` で止まります。
+
+### 選択の記録 — `.claude/.scaffold.json`
+
+インストールと `--update` は、使った選択を `.claude/.scaffold.json` に書き込みます(#104)。
+
+```json
+{
+  "scaffold_version": "1.0.0",
+  "name": "my-app",
+  "forge": "github",
+  "stacks": "nextjs,bun",
+  "lang": "en",
+  "harness": "claude",
+  "yd_skills": "0",
+  "personal_skills": "0"
+}
+```
+
+`--update`・`--uninstall`・`--dry-run` はこれを読み、インストールした内容をそのまま再構築します。`.claude/` の他の
+ファイルと一緒にコミットしてください。ファイルがない場合(1.0.0 より前のインストール)は、プロジェクトから選択を推測します
+(forge は `rules/forge.md`、スタックは `rules/<stack>.md`、言語は `AGENTS.md` の見出し、ハーネスは存在するディレクトリから)。
+このとき最初の出力行は `(recorded)` ではなく `(inferred)` になり、`--update` の最後にファイルが書き込まれます。
+コマンドラインのオプションは記録より優先されます。
+
+### プレビュー — `--dry-run`
+
+```bash
+agents-scaffold/bin/agents-scaffold.sh /path/to/repo --lang en --stack python --dry-run
+agents-scaffold/bin/agents-scaffold.sh --update /path/to/repo --dry-run
+agents-scaffold/bin/agents-scaffold.sh --uninstall /path/to/repo --dry-run
+```
+
+対象は一切変更されません。インストールのプレビューは、追加されるファイル数、すでに同一のファイル数、内容が異なる
+既存ファイルを表示します。`--update --dry-run` は追加されるファイルと `.new` として置かれるファイルを、
+`--uninstall --dry-run` は削除されるファイルと残るファイルを一覧します。対象ディレクトリは存在している必要があります。
+
+### 既存プロジェクトへの再インストール
+
+通常のインストールは繰り返し実行しても安全です(#104)。
+
+- すでにあるベースファイルはそのまま残ります。forge プリセット、スタックプリセット、英語オーバーレイ由来のファイルは
+  書き直されます。
+- `AGENTS.md` は再生成されます。あなたのファイルが生成結果と異なる場合は、先に `AGENTS.md.bak-<timestamp>` として
+  保存されます。必要な内容はそこから戻してください。
+- すでに `pre-commit.sh` に入っているスタックゲートが二重に挿入されることはありません。
+
+`AGENTS.md` を再生成せずに更新だけしたい場合は `--update` を使います。
 
 ### リモートワンコマンドインストール(クローン不要)
 
@@ -184,25 +266,65 @@ curl -fsSL https://raw.githubusercontent.com/leeyudok/agents-scaffold/main/bin/a
 スクリプトはローカルチェックアウトから実行されていないこと(パイプ実行など)を検知すると、
 `AGENTS_SCAFFOLD_REPO` の tarball(デフォルト: `github.com/leeyudok/agents-scaffold`、
 環境変数で上書き可)を一時ディレクトリにダウンロードし、テンプレートソースとして
-使用します。ブランチ/タグの固定は `AGENTS_SCAFFOLD_REF`(デフォルト `main`)で行います。
+使用します。
 
-### ベースの更新 — `--update`
+| 変数 | 意味 |
+|---|---|
+| `AGENTS_SCAFFOLD_REPO` | tarball をダウンロードするリポジトリ URL。デフォルトは公式の GitHub リポジトリ |
+| `AGENTS_SCAFFOLD_REF` | ダウンロードするブランチまたはタグ。デフォルト `main`。タグは 1.0.0 から使える(#106) |
+| `AGENTS_SCAFFOLD_SHA256` | 任意。ダウンロードした tarball の期待 SHA-256。一致しなければインストールを中止する |
+| `AGENTS_SCAFFOLD_NO_SYMLINK` | `1` で `.claude/skills` をシンボリックリンクではなくコピーにする |
 
-ブートストラップ済みプロジェクトに最新のベースファイル(`.claude/`、`AGENTS.md`)を適用します。
-以前のバージョンが生成した `.gemini/settings.json` には触れません(残っていても無害)。
-実ディレクトリの `.claude/skills` は、`.agents/skills` が存在しないか内容が同じ場合にのみ原本 `.agents/skills` へ移してリンクにします(#61)。両方が存在し内容が異なる場合は移動せず、手動マージを案内します。移行後はベースの skills も `.agents/skills` 側で更新されます。
+リリースを固定して検証するには次の形式を使います(リリースタグができた後の書き方で、タグはまだ公開されていません。
+[SECURITY.md](../SECURITY.md#installing-safely) を参照)。
+
+```bash
+export AGENTS_SCAFFOLD_REF=v1.0.0
+export AGENTS_SCAFFOLD_SHA256=<sha256 of that ref's source tarball>
+curl -fsSL https://raw.githubusercontent.com/leeyudok/agents-scaffold/v1.0.0/bin/agents-scaffold.sh | bash -s -- --lang en --yes
+```
+
+### 更新 — `--update`
+
+ブートストラップ済みプロジェクトを更新します。`--update` は記録された選択を読み、その選択で今インストールした場合の結果を
+一時ディレクトリに作り、プロジェクトとファイル単位で比較します(#104)。ベースだけでなく結果全体と比較するため、
+forge・スタックプリセット、英語オーバーレイ、`.claude/hooks/pre-commit.sh` も比較対象です。
 
 ```bash
 agents-scaffold/bin/agents-scaffold.sh --update /path/to/existing-repo
+agents-scaffold/bin/agents-scaffold.sh --update /path/to/existing-repo --dry-run
 ```
 
-- `.claude/hooks/pre-commit.sh` は常にスキップされます — スタックパーシャルが
-  挿入済みのため、手動マージが必要です。
-- その他のベースファイルは、内容が同一ならスキップされます。差分がある場合は
-  既存ファイルを保持し、新バージョンを `<file>.new` として書き出します
-  (プレースホルダー置換は `.new` ファイルにも適用されます)。
-- 最後に追加 / 更新保留 / スキップ / 変更なしのファイルのサマリーが出力されます —
-  `.new` ファイルを `diff` で確認し、手動で適用してください。
+| プロジェクト内のファイル | `--update` の動作 |
+|---|---|
+| 新バージョンと同一 | スキップ |
+| 存在しない | 追加 |
+| 異なる | そのまま残し、新バージョンを `<file>.new` として書き出す |
+| `.claude/memory/MEMORY.md` | あなたのファイル。ない場合だけ追加し、`.new` は作らない |
+| 生成アダプター(`.codex/`、`.agents/rules`、`.agents/agents`、`.agents/hooks.json`) | プロジェクトの `.claude/` から再生成 |
+
+- 最後に追加 / 更新保留(`.new`)/ 変更なしのサマリーが出力されます。`.new` は `diff` で確認し、手動で適用してください
+  ([TROUBLESHOOTING.en.md](TROUBLESHOOTING.en.md#new-files-after---update)、英語)。
+- `AGENTS.md` も他のファイルと同じく比較されるので、内容を埋めた後は更新のたびに `AGENTS.md.new` が書き出されます。
+- 欠けている git pre-commit フックを配線し、記録された選択を書き戻します。
+- コマンドラインのオプションは記録より優先されます。`--update --harness all` は既存プロジェクトに Codex と agy の
+  アダプターを追加し、`--update --stack nextjs,go` は別のスタック構成と比較します。
+- 以前のバージョンが生成した `.gemini/settings.json` には触れません(残っていても無害)。
+- 実ディレクトリの `.claude/skills` は、`.agents/skills` が存在しないか内容が同じ場合にのみ原本 `.agents/skills` へ移して
+  リンクにします(#61)。両方が存在し内容が異なる場合は移動せず、手動マージを案内します。移行後はベースの skills も
+  `.agents/skills` 側で更新されます。
+
+### 削除 — `--uninstall`
+
+```bash
+agents-scaffold/bin/agents-scaffold.sh --uninstall /path/to/repo --dry-run
+agents-scaffold/bin/agents-scaffold.sh --uninstall /path/to/repo --yes
+```
+
+記録された選択でインストールした内容を再構築し、それとまだ同一のファイルだけを削除します(#106)。変更したファイルは
+残して一覧表示します。`.claude/memory/` と、スキャフォールドが作っていないものは削除しません。git pre-commit フックは、
+スキャフォールド自身が書いた 1 行のフックである場合にだけ削除します。`--yes` がなければ確認を求め、確認できる端末が
+ない場合は実行しません。
 
 ## Usage 2 — GitLab テンプレート
 
