@@ -33,7 +33,7 @@ install_stack() {
   local target="$BATS_TEST_TMPDIR/proj"
   mkdir -p "$target"
   "$SCRIPT" "$target" --stack "$1" --yes >/dev/null
-  cd "$target"
+  cd "$target" || return 1
   git init -q -b main
   git config user.name t
   git config user.email t@e.c
@@ -55,6 +55,16 @@ fake() { fake_at "$FAKE/$1" "$1"; }
 # 격리된 PATH 로 훅을 실행한다.
 run_hook() {
   run env PATH="$FAKE:$SAFE" FAKE_LOG="$FAKE_LOG" "$@" bash .claude/hooks/pre-commit.sh
+}
+
+# refute_logged <ERE> — 가짜 툴이 그렇게 호출되지 않았어야 한다.
+# bats 에서 `! cmd` 는 마지막 줄이 아니면 테스트를 실패시키지 않는다(SC2314) — 그래서 함수로 둔다.
+refute_logged() {
+  if grep -qE -- "$1" "$FAKE_LOG"; then
+    echo "unexpected call matching '$1':"
+    cat "$FAKE_LOG"
+    return 1
+  fi
 }
 
 stage() {
@@ -227,7 +237,7 @@ SH
   run_hook
   [ "$status" -eq 0 ]
   grep -q '^bunx .*tsc --noEmit' "$FAKE_LOG"
-  ! grep -q '^npx' "$FAKE_LOG"
+  refute_logged '^npx'
 }
 
 @test "nextjs gate is a no-op without tsconfig.json" {
@@ -291,7 +301,7 @@ SH
   [ "$status" -eq 0 ]
   grep -q '^dotnet build' "$FAKE_LOG"
   # 테스트 프로젝트가 없으면 dotnet test 를 돌리지 않는다
-  ! grep -q '^dotnet test' "$FAKE_LOG"
+  refute_logged '^dotnet test'
 }
 
 @test "dotnet gate is a no-op without a project file" {
@@ -350,7 +360,7 @@ SH
   [ "$status" -eq 0 ]
   grep -q '^flutter analyze' "$FAKE_LOG"
   # test/ 디렉터리가 없으면 flutter test 를 돌리지 않는다
-  ! grep -q '^flutter test' "$FAKE_LOG"
+  refute_logged '^flutter test'
 }
 
 @test "flutter gate is a no-op without pubspec.yaml" {
@@ -584,7 +594,7 @@ SH
   run_hook
   [ "$status" -eq 0 ]
   grep -q '^ruff check' "$FAKE_LOG"
-  ! grep -q '^uv' "$FAKE_LOG"
+  refute_logged '^uv'
 }
 
 @test "python gate blocks through uv run ruff in a uv project, falls back to ruff when uv cannot resolve it" {
@@ -612,7 +622,7 @@ SH
   run_hook
   [ "$status" -eq 0 ]
   grep -q '^ruff check' "$FAKE_LOG"
-  ! grep -q '^uv run ruff check' "$FAKE_LOG"
+  refute_logged '^uv run ruff check'
 }
 
 @test "python gate blocks on mypy errors when mypy is configured" {
@@ -641,7 +651,7 @@ SH
   stage src/pkg/mod.py setup.cfg
   run_hook
   [ "$status" -eq 0 ]
-  ! grep -q '^mypy' "$FAKE_LOG"
+  refute_logged '^mypy'
 
   printf '[mypy]\nstrict = True\n' > setup.cfg
   run_hook

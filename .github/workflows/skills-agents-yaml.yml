@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       # ubuntu 24.04 시스템 python 은 PEP 668 로 pip 설치를 막는다
       - uses: actions/setup-python@v5
         with:
