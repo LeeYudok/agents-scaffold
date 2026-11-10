@@ -7,7 +7,6 @@
 import importlib.util
 import re
 import subprocess
-from pathlib import Path
 
 TARGET_RE = re.compile(r'목표\s*길이\s*[:：]\s*(\d+(?:\.\d+)?)\s*초')
 ROW_RE = re.compile(r'^\| \d+ \|')

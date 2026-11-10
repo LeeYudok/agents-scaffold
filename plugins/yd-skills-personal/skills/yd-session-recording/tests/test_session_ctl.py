@@ -7,7 +7,6 @@ import contextlib
 import importlib.util
 import io
 import os
-import re
 import signal
 import subprocess
 import sys
