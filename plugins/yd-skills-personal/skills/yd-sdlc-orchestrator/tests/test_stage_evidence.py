@@ -1,7 +1,6 @@
 """check_stage_evidence.py 가 SKILL.md 의 게이트 단언을 판정하는지 본다 (stdlib only, 이슈 #201)."""
 
 import contextlib
-import copy
 import importlib.util
 import io
 import json

@@ -50,7 +50,7 @@ class TestCalcCc(unittest.TestCase):
         self.assertIn(f"CC~{cc.THRESHOLD + 1}", w[0])
 
     def test_branches_inside_strings_are_not_counted(self):
-        lines = [f'    s = "if while for && || case"' for _ in range(30)]
+        lines = ['    s = "if while for && || case"' for _ in range(30)]
         src = "def quiet():\n" + "\n".join(lines) + "\n    return s\n"
         self.assertEqual(self.check_source(src), [])
 

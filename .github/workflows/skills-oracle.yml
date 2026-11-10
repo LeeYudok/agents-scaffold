@@ -23,14 +23,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Start throwaway Oracle Free
         run: |
           docker run -d --name ydora-verify -e ORACLE_PASSWORD=verify \
             gvenzl/oracle-free:23-slim-faststart
       - name: Wait for DATABASE IS READY TO USE!
         run: |
-          for i in $(seq 1 120); do
+          for _ in $(seq 1 120); do
             if docker logs ydora-verify 2>&1 | grep -q 'DATABASE IS READY TO USE!'; then
               exit 0
             fi

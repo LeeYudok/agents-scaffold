@@ -5,7 +5,7 @@ if [ -f tsconfig.json ]; then
   if bunx --no-install tsc --version >/dev/null 2>&1; then
     errors="$(bunx --no-install tsc --noEmit -p tsconfig.json 2>&1 | grep -E 'error TS' || true)"
     if [ -n "$errors" ]; then
-      echo "차단: TypeScript 에러. 커밋 전 수정 필요:" >&2
+      echo "Blocked: TypeScript errors. Fix them before committing:" >&2
       printf '%s\n' "$errors" >&2
       exit 2
     fi

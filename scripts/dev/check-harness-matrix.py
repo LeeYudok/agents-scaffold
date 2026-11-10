@@ -10,9 +10,16 @@ CI 게이트다. 문서를 자동으로 고치지 않는다 — 어긋나면 실
               (full 인데 fail/unverified 가 있으면 안 된다)
   4. 문서 대조 — README 가 주장하는 CLI 버전이 manifest 와 일치하는가
 
-사용:  python3 scripts/dev/check-harness-matrix.py [--today YYYY-MM-DD]
+사용:  python3 scripts/dev/check-harness-matrix.py [--today YYYY-MM-DD] [--no-expiry] [--warn-days N]
+
+  --no-expiry    만료(2)를 실패가 아니라 경고로 내린다. PR 검사용 — 날짜가 지났다는 이유로
+                 무관한 PR 이 막히지 않게 한다. 만료 실패는 주간 워크플로(harness-matrix.yml)가 낸다.
+  --warn-days N  tier=full 의 만료까지 N일 이하로 남으면 경고한다(실패 아님).
+
+경고는 GitHub Actions 에서 `::warning::` 주석으로, 그 밖에서는 stderr 의 `WARN:` 줄로 나온다.
 """
 import json
+import os
 import pathlib
 import re
 import sys
@@ -31,13 +38,26 @@ def fail(msgs):
     return 1
 
 
+def warn(msgs):
+    for m in msgs:
+        if os.environ.get("GITHUB_ACTIONS") == "true":
+            print(f"::warning title=harness-matrix::{m}")
+        else:
+            print(f"WARN: {m}", file=sys.stderr)
+
+
 def main(argv):
     today = date.today()
     if "--today" in argv:
         today = datetime.strptime(argv[argv.index("--today") + 1], "%Y-%m-%d").date()
+    no_expiry = "--no-expiry" in argv
+    warn_days = None
+    if "--warn-days" in argv:
+        warn_days = int(argv[argv.index("--warn-days") + 1])
 
     data = json.loads(MANIFEST.read_text(encoding="utf-8"))
     errors = []
+    warnings = []
     max_age = data["policy"]["full_max_age_days"]
     known_caps = set(data["capabilities"])
 
@@ -71,9 +91,14 @@ def main(argv):
 
         if h.get("tier") == "full":
             if age > max_age:
-                errors.append(
+                (warnings if no_expiry else errors).append(
                     f"{hid}: tier=full 인데 마지막 실측이 {age}일 전이다 "
                     f"(한도 {max_age}일). 재측정하고 last_measured 를 갱신하거나 tier 를 강등할 것"
+                )
+            elif warn_days is not None and max_age - age <= warn_days:
+                warnings.append(
+                    f"{hid}: tier=full 실측이 {max_age - age}일 뒤 만료된다 "
+                    f"(마지막 실측 {h['last_measured']}, 한도 {max_age}일). 만료 전에 재측정할 것"
                 )
             bad = [n for n, c in caps.items()
                    if c.get("verdict") in {"fail", "unverified", "inconclusive"}]
@@ -93,9 +118,11 @@ def main(argv):
                 f"— 문서가 낡았거나 manifest 가 낡았다"
             )
 
+    warn(warnings)
     if errors:
         return fail(errors)
-    print(f"OK: {len(data['harnesses'])} harnesses, 기준일 {today}")
+    print(f"OK: {len(data['harnesses'])} harnesses, 기준일 {today}"
+          + (f", 경고 {len(warnings)}건" if warnings else ""))
     return 0
 
 

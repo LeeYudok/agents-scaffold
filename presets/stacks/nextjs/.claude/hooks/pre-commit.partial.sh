@@ -5,9 +5,12 @@ if [ -f tsconfig.json ]; then
   if $npx_cmd tsc --version >/dev/null 2>&1; then
     errors="$($npx_cmd tsc --noEmit -p tsconfig.json 2>&1 | grep -E 'error TS' || true)"
     if [ -n "$errors" ]; then
-      echo "차단: TypeScript 에러. 커밋 전 수정 필요:" >&2
-      printf '%s\n' "$errors" | head -20 >&2
+      echo "Blocked: TypeScript errors. Fix them before committing:" >&2
+      # head 가 아니라 sed 로 자른다 — head 는 먼저 끝나 printf 가 SIGPIPE 로 죽을 수 있다(pipefail).
+      printf '%s\n' "$errors" | sed -n '1,20p' >&2
       exit 2
     fi
+  else
+    echo "pre-commit: tsc unavailable — skipping typecheck" >&2
   fi
 fi

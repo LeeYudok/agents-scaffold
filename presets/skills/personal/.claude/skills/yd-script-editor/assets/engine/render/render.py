@@ -734,7 +734,6 @@ def intro_ad_frame(row, t, total, steps, beats):
         a = rv.smooth(min(1.0, (t - t0) / 0.35, max(0.0, (t1 + 0.25 - t) / 0.25)))
         sc = 1.06 - 0.06 * rv.smooth(min(1.0, (t - t0) / 0.6))   # 살짝 다가오며 자리 잡는다
         f = font(round(size * sc), True)
-        w_ = d.textlength(text, font=f)
         col = tuple(round(c * a) for c in color)
         d.text((W / 2, H / 2 - 30 + 18 * (1 - a)), text, font=f, fill=col, anchor='mm')
     end = beats[-1][1] + 0.25 if beats else 0.3

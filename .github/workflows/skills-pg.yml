@@ -38,7 +38,7 @@ jobs:
       PGPASSWORD: verify
       YD_PG_PSQL: psql -X -h localhost -U postgres -d postgres
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Show client and server versions
         run: |
           psql --version

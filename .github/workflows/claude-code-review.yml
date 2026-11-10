@@ -12,6 +12,7 @@ jobs:
     # 같은 레포 PR + API 키 시크릿이 설정된 경우에만 — 포크 PR 과 시크릿 미설정 레포에서 실패 방지
     if: github.event.pull_request.head.repo.full_name == github.repository && vars.CLAUDE_REVIEW_ENABLED == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: read
       pull-requests: write
@@ -23,7 +24,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: anthropics/claude-code-action@v1
+      - uses: anthropics/claude-code-action@4fa93a88de49bbef68b10eb15aabedf28ca0e1ed # v1.0.271
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           prompt: |

@@ -1,0 +1,28 @@
+# 지원 매트릭스 만료 검사 (#37, #107).
+# tier=full 하네스의 실측(last_measured)이 policy.full_max_age_days 를 넘기면 실패한다.
+# PR 검사(test.yml)는 만료를 경고로만 내린다 — 날짜가 지났다는 이유로 무관한 PR 이 막히면 안 되기 때문이다.
+# 대신 이 워크플로가 주 1회 돌아 만료를 빨간 실행으로 드러낸다. 실패하면 재측정해
+# docs/harness-matrix.json 의 last_measured 를 갱신하거나 tier 를 강등하는 PR 을 올린다.
+# CI 가 문서를 자동으로 고치지 않는다.
+name: harness-matrix
+
+on:
+  schedule:
+    # 매주 월요일 00:17 UTC (09:17 KST). 정각은 Actions 큐가 밀려 피한다.
+    - cron: "17 0 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  expiry:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      # 만료 14일 전부터는 경고 주석을 남긴다(실패 아님). 만료되면 exit 1.
+      - name: Check harness support matrix (with expiry)
+        run: python3 scripts/dev/check-harness-matrix.py --warn-days 14
