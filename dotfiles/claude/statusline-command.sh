@@ -2,7 +2,7 @@
 # Claude Code statusLine script
 # Reads JSON on stdin, prints a two-line status.
 #
-#   1행: 경로 │ git 브랜치 │ 모델 · 추론 강도 · thinking · fast │ 컨텍스트 막대 · 사용률 (입력/창) · 출력 토큰
+#   1행: git 브랜치 │ 경로 │ 모델 · 추론 강도 · thinking · fast │ 컨텍스트 막대 · 사용률 (입력/창) · 출력 토큰 │ 호스트
 #   2행: 세션 비용 │ 소요 시간(전체·API) │ 변경 라인 │ 캐시 적중률 │ 5h·7d 한도(리셋 시각) │ 출력 스타일 │ 버전
 #
 # 렌더 빈도가 높으므로 jq 는 한 번만 호출해 US(0x1f) 로 이어 붙인 모든 필드를 한 줄로 받는다.
@@ -88,6 +88,12 @@ dir_name=$(basename "$cwd" 2>/dev/null)
 [ -z "$dir_name" ] && dir_name="?"
 path_part="${FG_PATH}${BOLD}${dir_name}${RESET}"
 
+# --- 시스템명(호스트) : 1행 맨 뒤 ---
+# macOS 는 ComputerName, 그 외(리눅스 서버 등)는 짧은 hostname
+host_name=$(scutil --get ComputerName 2>/dev/null || hostname -s 2>/dev/null)
+host_part=""
+[ -n "$host_name" ] && host_part="${SEP}${FG_MUTE}${host_name}${RESET}"
+
 # --- git branch ---
 git_part=""
 if [ -n "$cwd" ] && git -C "$cwd" --no-optional-locks rev-parse --is-inside-work-tree >/dev/null 2>&1; then
@@ -97,9 +103,9 @@ if [ -n "$cwd" ] && git -C "$cwd" --no-optional-locks rev-parse --is-inside-work
   fi
   if [ -n "$branch" ]; then
     if [ -n "$(git -C "$cwd" --no-optional-locks status --porcelain 2>/dev/null)" ]; then
-      git_part="${SEP}${FG_GIT_DIRTY}git: ${branch} *${RESET}"
+      git_part="${FG_GIT_DIRTY}\xe2\x8e\x87 ${branch} \xe2\x97\x8f${RESET}"
     else
-      git_part="${SEP}${FG_GIT_CLEAN}git: ${branch}${RESET}"
+      git_part="${FG_GIT_CLEAN}\xe2\x8e\x87 ${branch}${RESET}"
     fi
   fi
 fi
@@ -108,8 +114,9 @@ fi
 model_part=""
 if [ -n "$model" ]; then
   flags=""
+  [ "$effort" = "medium" ] && effort="med"                       # 추론 강도는 짧게
   [ -n "$effort" ] && flags="${flags} ${effort}"
-  [ -n "$thinking" ] && flags="${flags} think"
+  [ -n "$thinking" ] && flags="${flags} \xe2\x9c\xa6"          # ✦ = thinking
   [ -n "$fast_mode" ] && flags="${flags} fast"
   model_part="${SEP}${FG_MODEL}${model}${RESET}"
   [ -n "$flags" ] && model_part="${model_part}${FG_MUTE}${flags}${RESET}"
@@ -172,19 +179,31 @@ if [ -n "$cache_hit" ]; then
 fi
 
 # --- claude.ai rate limits (+ 리셋 시각) ---
+# 사용률은 컨텍스트와 같은 색 기준(60% 주의·80% 위험), 리셋은 "(⟲)HH:MM" 으로 표기.
+# 7d 리셋은 날짜가 없으면 의미가 없어 M/D 를 붙인다.
+pct_color() {
+  local n; n=$(int "$1")
+  if   [ "$n" -ge 80 ]; then printf '%s' "$FG_CRIT"
+  elif [ "$n" -ge 60 ]; then printf '%s' "$FG_WARN"
+  else printf '%s' "$FG_OK"; fi
+}
+mdhm() {                                                          # epoch → M/D HH:MM
+  [ -n "$1" ] || return
+  date -r "$1" '+%-m/%-d %H:%M' 2>/dev/null || date -d "@$1" '+%-m/%-d %H:%M' 2>/dev/null
+}
 rate_part=""
 if [ -n "$five" ] || [ -n "$week" ]; then
   rl=""
   if [ -n "$five" ]; then
-    rl="5h $(int "$five")%"
-    r=$(hhmm "$five_reset"); [ -n "$r" ] && rl="${rl}~${r}"
+    rl="${FG_MUTE}5h ${RESET}$(pct_color "$five")$(int "$five")%${RESET}"
+    r=$(hhmm "$five_reset"); [ -n "$r" ] && rl="${rl}${FG_MUTE} (\xe2\x9f\xb2)${r}${RESET}"
   fi
   if [ -n "$week" ]; then
-    w="7d $(int "$week")%"
-    r=$(hhmm "$week_reset"); [ -n "$r" ] && w="${w}~${r}"
-    [ -n "$rl" ] && rl="${rl}  ${w}" || rl="$w"
+    w="${FG_MUTE}7d ${RESET}$(pct_color "$week")$(int "$week")%${RESET}"
+    r=$(mdhm "$week_reset"); [ -n "$r" ] && w="${w}${FG_MUTE} (\xe2\x9f\xb2)${r}${RESET}"
+    [ -n "$rl" ] && rl="${rl}${SEP}${w}" || rl="$w"
   fi
-  rate_part="${FG_MUTE}${rl}${RESET}"
+  rate_part="$rl"
 fi
 
 # --- 출력 스타일 + 버전 ---
@@ -200,6 +219,9 @@ for seg in "$cost_part" "$diff_part" "$cache_part" "$rate_part" "$style_part" "$
   [ -n "$line2" ] && line2="${line2}${SEP}${seg}" || line2="$seg"
 done
 
-printf "%b%b%b%b\n" "$path_part" "$git_part" "$model_part" "$ctx_part"
+# 브랜치가 맨 앞, 깃 저장소 밖이면 nogit
+[ -z "$git_part" ] && git_part="${FG_MUTE}nogit${RESET}"
+git_part="${git_part}${SEP}"
+printf "%b%b%b%b%b\n" "$git_part" "$path_part" "$model_part" "$ctx_part" "$host_part"
 [ -n "$line2" ] && printf "%b\n" "$line2"
 exit 0
