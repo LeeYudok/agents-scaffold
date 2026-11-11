@@ -11,8 +11,13 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      # apt 대신 npm 의 bats-core 공식 배포를 버전 고정으로 받는다 — 러너 apt 미러 DNS 장애에 job 이 떨어지지 않게 (#111).
+      # 전역 설치(-g)는 man 페이지 경로(/usr/local/share/man) 쓰기 권한이 없어 EACCES 로 실패하므로 임시 prefix 에 둔다.
       - name: Install bats-core
-        run: sudo apt-get update -y && sudo apt-get install -y bats
+        run: |
+          npm install --no-save --no-audit --no-fund --prefix "$RUNNER_TEMP/bats" bats@1.13.0
+          echo "$RUNNER_TEMP/bats/node_modules/.bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/bats/node_modules/.bin/bats" --version
 
       - name: Run python unit tests
         run: python3 -m unittest discover -s tests -p 'test_*.py' -v
@@ -64,16 +69,29 @@ jobs:
           persist-credentials: false
       - name: 식별자 검사
         run: scripts/check-identifiers.sh
+      # python3·jq 는 러너에 이미 있다. zsh 는 apt 대신 러너에 깔린 Homebrew 로 받는다 — bottle 이 ghcr.io 에 있어
+      # apt 미러(azure.archive·archive.ubuntu.com) DNS 장애와 무관하다 (#111)
       - name: 문법 검사 도구 설치
-        run: sudo apt-get update -qq && sudo apt-get install -y zsh python3
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: '1'
+          HOMEBREW_NO_INSTALL_CLEANUP: '1'
+          HOMEBREW_NO_ENV_HINTS: '1'
+        run: |
+          command -v python3 jq
+          if ! command -v zsh >/dev/null; then
+            brew=/home/linuxbrew/.linuxbrew/bin/brew
+            "$brew" install zsh
+            mkdir -p "$RUNNER_TEMP/bin"
+            ln -sf "$("$brew" --prefix)/bin/zsh" "$RUNNER_TEMP/bin/zsh"
+            echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+          fi
+          "$(command -v zsh || echo "$RUNNER_TEMP/bin/zsh")" --version
       - name: 파일별 문법 검사
         run: scripts/check-syntax.sh
       # dotfiles 원본이 이 레포로 옮겨와(#76) 이 job 이 유일한 게이트다 — 밀폐형 시험(임시 HOME·모의 패키지 관리자)도 돌린다.
       # test-windows-paths.sh 는 실제 apt·curl 설치를 해서 제외한다(네트워크·sudo 의존).
-      - name: 시험 도구 설치
-        run: sudo apt-get install -y jq
       - name: 밀폐형 시험
         run: |
-          for t in test-agy-statusline test-codex-cost-hook test-codex-status-line test-install-safety test-windows-git; do
+          for t in test-agy-statusline test-codex-cost-hook test-codex-status-line test-install-safety test-windows-git test-yolo-wrapper; do
             echo "== $t"; bash "scripts/$t.sh"
           done

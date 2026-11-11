@@ -46,5 +46,28 @@ alias gd='git diff'
 # Windows 탐색기로 현재 디렉터리 열기
 alias open='explorer.exe'
 
+# ── AI CLI --yolo ────────────────────────────────────────
+# `claude --yolo`, `agy --yolo` → `--dangerously-skip-permissions` (#109). `--` 뒤 인자는 바꾸지 않는다.
+# macOS·Linux 는 install.sh 가 PATH 래퍼(yolo/wrapper.sh)를 깔지만, Git Bash 는 Windows 실행 파일(.exe·.cmd) 탐색이 달라 함수로 둔다.
+# export -f 로 이 셸에서 띄우는 bash 스크립트·bash -c 에도 넘긴다. 명령이 PATH 에 있을 때만 정의한다.
+_yolo_exec() {
+  local cmd=$1 a passthru=0
+  local -a args=()
+  shift
+  for a in "$@"; do
+    if [ "$passthru" = 0 ]; then
+      case $a in
+        --) passthru=1 ;;
+        --yolo) a=--dangerously-skip-permissions ;;
+      esac
+    fi
+    args+=("$a")
+  done
+  command "$cmd" "${args[@]}"
+}
+export -f _yolo_exec
+if command -v claude >/dev/null 2>&1; then claude() { _yolo_exec claude "$@"; }; export -f claude; fi
+if command -v agy >/dev/null 2>&1; then agy() { _yolo_exec agy "$@"; }; export -f agy; fi
+
 # ── 머신별 ───────────────────────────────────────────────
 if [ -f "$HOME/.bashrc.local" ]; then . "$HOME/.bashrc.local"; fi

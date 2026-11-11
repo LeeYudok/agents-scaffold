@@ -45,6 +45,8 @@
 | `windows/uninstall-git.ps1` | — | `install-git.ps1` 의 역연산. `-Purge`(설치 기록이 있는 Git 까지), `-KeepBackup` |
 | `windows/*.cmd` | — | cmd 에서 같은 이름의 `.ps1` 을 `-ExecutionPolicy Bypass` 로 실행하는 래퍼 |
 | `scripts/test-windows-git.sh` | — | `windows/`·`gitbash/` 정적 시험. 인코딩(BOM·ASCII)·줄바꿈·bash 문법·pwsh 구문 분석(있을 때) |
+| `yolo/wrapper.sh` | `~/.local/share/dotfiles/bin/claude`·`agy` (PATH 에 있는 명령만) | `--yolo` → `--dangerously-skip-permissions` 로 바꿔 실제 CLI 를 `exec`. 파일 이름이 대상 명령이다. PATH 에서 자기 디렉터리 뒤의 실제 파일을 찾고 같은 내용의 사본·cmux shim 은 건너뛴다. 두 zshrc 가 디렉터리를 PATH 맨 앞에 둔다. 스크립트 앞부분에 대상 명령 이름을 소문자로 적지 않는다(cmux 가 재진입 shim 으로 분류) |
+| `scripts/test-yolo-wrapper.sh` | — | 가짜 CLI·가짜 cmux shim 으로 치환·인자 보존·비대화형 셸·루프 없음·실제 파일 없음(127), `gitbash/bashrc` 함수의 `export -f` |
 | `.gitattributes` | — | 기본 LF, `.ps1`/`.cmd` 는 CRLF 그대로(`-text`) |
 | `scripts/test-install-safety.sh` | — | 임시 HOME·모의 apt/dnf/sudo로 반복 제거, 미설치 파일 보존, Claude 사전 검사, 패키지별 기록·purge, sudo 불가·패키지 실패 시 플러그인 tarball 폴백 검증 |
 | `scripts/test-codex-status-line.sh` | — | `status-line.py` 의 임시 `HOME` 왕복 시험. `status_line` 순서까지 검증 |
@@ -132,6 +134,9 @@ scripts/test-agy-statusline.sh
 
 # 폐쇄망 Windows 스크립트 — 인코딩·줄바꿈·bash 문법, pwsh 가 PATH 에 있으면 .ps1 구문 분석까지. 실제 설치는 Windows 에서만 확인할 수 있다
 scripts/test-windows-git.sh
+
+# yolo 래퍼 — 가짜 CLI·가짜 cmux shim 으로 치환·인자 보존·비대화형 셸·루프 없음·실제 파일 없음(127), Git Bash 함수
+scripts/test-yolo-wrapper.sh
 
 # Windows 경로 — Git Bash 거부는 어느 OS 에서나, WSL 흉내 왕복은 Linux 에서만 돈다 (macOS 에서는 컨테이너로)
 scripts/test-windows-paths.sh

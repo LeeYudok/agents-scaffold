@@ -39,7 +39,7 @@ nodes:
 # 진입점
 - id: install
   type: bash-script
-  label: '부트스트랩. 0 의존성 검사 → 1 패키지 → 2 starship.toml·eza theme.yml → 2.5 Nerd Fonts → 3 zshrc → 4 Claude statusline → 5 Codex → 6 Antigravity → 7 chsh 안내'
+  label: '부트스트랩. 0 의존성 검사 → 1 패키지 → 2 starship.toml·eza theme.yml → 2.5 Nerd Fonts → 3 zshrc → 3.5 yolo 래퍼 → 4 Claude statusline → 5 Codex → 6 Antigravity → 7 chsh 안내'
   path: install.sh
 - id: uninstall
   type: bash-script
@@ -81,6 +81,11 @@ nodes:
   type: template
   label: '~/.zshrc.local 템플릿. 배치하지 않는다. placeholder 만'
   path: zsh/zshrc.local.example
+- id: yolo-wrapper
+  type: sh-script
+  label: 'claude·agy 를 대신 실행하며 --yolo 를 --dangerously-skip-permissions 로 치환. PATH 에서 자기 디렉터리 뒤의 실제 파일을 찾고 cmux shim 은 건너뛴다'
+  path: yolo/wrapper.sh
+  deploy_to: '~/.local/share/dotfiles/bin/{claude,agy}'
 - id: claude-statusline
   type: bash-script
   label: 'Claude Code statusLine JSON(stdin) → 두 줄 출력'
@@ -158,6 +163,10 @@ nodes:
   type: test
   label: 'windows/·gitbash/ 정적 시험. 인코딩·줄바꿈·bash 문법·pwsh 구문 분석(있을 때)'
   path: scripts/test-windows-git.sh
+- id: test-yolo-wrapper
+  type: test
+  label: 'yolo 래퍼 치환·인자 보존·비대화형 셸·가짜 cmux shim 앞뒤 루프 없음·실제 파일 없음(127), Git Bash 함수'
+  path: scripts/test-yolo-wrapper.sh
 - id: test-windows-paths
   type: test
   label: 'Git Bash 거부(어느 OS 나)와 WSL 폰트 건너뛰기(Linux 에서만)'
@@ -222,6 +231,7 @@ edges:
 - {from: install, to: eza-theme, rel: deploys}
 - {from: install, to: zshrc-macos, rel: deploys, env: [HOME]}
 - {from: install, to: zshrc-linux, rel: deploys, env: [HOME]}
+- {from: install, to: yolo-wrapper, rel: deploys, env: [HOME, PATH]}
 - {from: install, to: claude-statusline, rel: deploys}
 - {from: install, to: codex-cost-hook, rel: deploys}
 - {from: install, to: agy-statusline, rel: deploys}
@@ -259,6 +269,8 @@ edges:
 - {from: test-windows-git, to: install-git, rel: tests}
 - {from: test-windows-git, to: gitbash-bashrc, rel: tests}
 - {from: test-windows-paths, to: install, rel: tests}
+- {from: test-yolo-wrapper, to: yolo-wrapper, rel: tests}
+- {from: test-yolo-wrapper, to: gitbash-bashrc, rel: tests}
 
 commands:
   syntax:
@@ -274,6 +286,7 @@ commands:
     agy_statusline: scripts/test-agy-statusline.sh
     windows_git: scripts/test-windows-git.sh
     windows_paths: scripts/test-windows-paths.sh
+    yolo_wrapper: scripts/test-yolo-wrapper.sh
   checks:
     agents_yaml: scripts/check-agents-yaml.sh
     versions: scripts/versions.sh --md

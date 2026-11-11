@@ -49,6 +49,10 @@ restore_file "$HOME/.config/starship.toml" starship.toml
 restore_file "$HOME/.config/eza/theme.yml" eza-theme.yml
 rmdir "$HOME/.config/eza" 2>/dev/null || true   # 비어 있을 때만 제거
 restore_file "$HOME/.zshrc" zshrc
+for name in claude agy; do
+  restore_file "$HOME/.local/share/dotfiles/bin/$name" "yolo-$name"
+done
+rmdir "$HOME/.local/share/dotfiles/bin" "$HOME/.local/share/dotfiles" 2>/dev/null || true   # 비어 있을 때만 제거
 [ -f "$HOME/.zshrc.local" ] && info "$HOME/.zshrc.local 은 사용자 파일 — 유지 (install.sh 가 만든 것이 아님)"
 restore_file "$HOME/.claude/statusline-command.sh" statusline-command.sh
 # ~/.claude/CLAUDE.md 는 사용자 파일 — 건드리지 않는다 (구버전 install.sh 가 배치했더라도 그대로 둔다)

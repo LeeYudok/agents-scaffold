@@ -48,6 +48,11 @@ export PYENV_ROOT="$HOME/.pyenv"
 [[ -d $PYENV_ROOT/bin ]] && path=("$PYENV_ROOT/bin" $path)
 command -v pyenv >/dev/null && eval "$(pyenv init -)"
 
+# dotfiles yolo 래퍼(`claude --yolo`, `agy --yolo` → `--dangerously-skip-permissions`, install.sh 3.5 단계, #109).
+# 같은 이름의 실제 실행 파일보다 앞서야 하므로 PATH 설정의 맨 마지막에 맨 앞으로 넣는다. 자식 프로세스가 PATH 를 물려받아
+# 비대화형 셸·bash·스크립트에서도 동작한다.
+[[ -d $HOME/.local/share/dotfiles/bin ]] && path=("$HOME/.local/share/dotfiles/bin" $path)
+
 # ── 히스토리 / 셸 옵션 ─────────────────────────────────────
 HISTFILE=~/.zsh_history
 HISTSIZE=100000
@@ -109,18 +114,6 @@ else
   alias la="ls -laG"
 fi
 command -v bat >/dev/null && alias cat="bat --paging=never"
-# AI CLI: `claude --yolo`, `agy --yolo` → `--dangerously-skip-permissions`
-_yolo_exec() {
-  local cmd=$1 a
-  local -a args
-  shift
-  for a in "$@"; do
-    [[ "$a" == --yolo ]] && args+=(--dangerously-skip-permissions) || args+=("$a")
-  done
-  command "$cmd" "${args[@]}"
-}
-command -v claude >/dev/null && function claude { _yolo_exec claude "$@"; }
-command -v agy >/dev/null && function agy { _yolo_exec agy "$@"; }
 
 # ── 시크릿 (mode 600, 버전관리 제외) ────────────────────────
 # API 키 등 토큰은 전부 이 파일에. zshrc 에는 값을 절대 직접 쓰지 않는다
