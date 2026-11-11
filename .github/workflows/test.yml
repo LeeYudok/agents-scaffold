@@ -74,6 +74,6 @@ jobs:
         run: sudo apt-get install -y jq
       - name: 밀폐형 시험
         run: |
-          for t in test-agy-statusline test-codex-cost-hook test-codex-status-line test-install-safety test-windows-git; do
+          for t in test-agy-statusline test-codex-cost-hook test-codex-status-line test-install-safety test-windows-git test-yolo-wrapper; do
             echo "== $t"; bash "scripts/$t.sh"
           done
