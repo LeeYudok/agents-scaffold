@@ -277,21 +277,21 @@ starship 1.26 기준. `[palettes.catppuccin_mocha]` 로 색을 이름으로 참�
 
 | 줄 | 내용 |
 |---|---|
-| 1행 | 경로 · git 브랜치/dirty · 모델명(추론 강도 · thinking · fast) · 컨텍스트 사용률 바와 입력/창 크기 · 출력 토큰 |
-| 2행 | 세션 비용 · 소요 시간(전체·API) · 변경 라인 수 · 프롬프트 캐시 적중률 · 5시간/주간 사용 한도와 리셋 시각 · 출력 스타일 · CLI 버전 |
+| 1행 | git 브랜치/dirty(`⎇ main ●`, 저장소 밖이면 `nogit`) · 경로 · 모델명(추론 강도(`medium` 은 `med`) · thinking `✦` · fast) · 컨텍스트 사용률 바와 입력/창 크기 · 출력 토큰 · 호스트 이름(macOS 는 ComputerName, 그 외 `hostname -s`) |
+| 2행 | 세션 비용 · 소요 시간(전체·API) · 변경 라인 수 · 프롬프트 캐시 적중률 · 5시간/주간 사용 한도와 리셋 시각(`(⟲)HH:MM`, 주간은 `M/D HH:MM`) · 출력 스타일 · CLI 버전 |
 
 ```
-dotfiles │ git: main │ Opus 5 (1M context) medium think │ █░░░░░░░░░ 10% (98k/1000k) ↑3
-$1.51 5m(api 1m) │ cache 95% │ 5h 16%~12:00  7d 48%~05:00 │ Proactive │ v2.1.278
+⎇ main │ dotfiles │ Opus 5.5 (1M context) med ✦ │ █░░░░░░░░░ 10% (98k/1000k) ↑3k │ macbook
+$1.51 5m(api 1m) │ cache 95% │ 5h 16% (⟲)12:00 │ 7d 64% (⟲)11/14 05:00 │ Proactive │ v2.1.322
 ```
 
-렌더 빈도가 높으므로 `jq` 는 한 번만 호출해 모든 필드를 US(0x1f) 구분자로 받는다(탭은 IFS 공백류라 빈 필드가 합쳐져 값이 밀린다). payload 에 없는 필드는 그 구간을 통째로 생략하므로, 해당 키를 주지 않는 CLI 버전에서도 나머지는 그대로 나온다. 컨텍스트는 60%/80% 에서 색이 바뀌고 `exceeds_200k_tokens` 가 참이면 경고색과 `>200k` 표시가 붙는다.
+렌더 빈도가 높으므로 `jq` 는 한 번만 호출해 모든 필드를 US(0x1f) 구분자로 받는다(탭은 IFS 공백류라 빈 필드가 합쳐져 값이 밀린다). payload 에 없는 필드는 그 구간을 통째로 생략하므로, 해당 키를 주지 않는 CLI 버전에서도 나머지는 그대로 나온다. 컨텍스트와 5시간·주간 사용 한도는 60%/80% 에서 색이 바뀌고, `exceeds_200k_tokens` 가 참이면 경고색과 `>200k` 표시가 붙는다.
 
 `install.sh` 는 스크립트를 배치하고 `~/.claude/settings.json` 의 `statusLine` 키 하나만 merge 한다. `settings.json` 전체와 `~/.claude/CLAUDE.md` 같은 개인 지침은 이 저장소가 관리하지 않는다.
 
 ## Antigravity CLI statusline
 
-Antigravity CLI(`agy`)는 Claude Code 와 같은 방식이다 — 에이전트 상태가 바뀔 때마다 `settings.json` 의 `statusLine.command` 를 실행해 상태 JSON 을 stdin 으로 넘기고, stdout 을 프롬프트 아래에 그린다. `agy/statusline-command.sh` 는 Claude statusline 과 같은 모양·색으로 **두 줄**을 출력한다. 런타임에 `jq` 가 필요하다.
+Antigravity CLI(`agy`)는 Claude Code 와 같은 방식이다 — 에이전트 상태가 바뀔 때마다 `settings.json` 의 `statusLine.command` 를 실행해 상태 JSON 을 stdin 으로 넘기고, stdout 을 프롬프트 아래에 그린다. `agy/statusline-command.sh` 는 Claude statusline 과 같은 색으로 **두 줄**을 출력한다. 1행 구간 순서(경로가 맨 앞)와 호스트 표시는 Claude statusline 과 다르다. 런타임에 `jq` 가 필요하다.
 
 | 줄 | 내용 |
 |---|---|
