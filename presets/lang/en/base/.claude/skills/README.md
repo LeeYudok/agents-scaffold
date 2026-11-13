@@ -53,10 +53,10 @@ The `yd-*` skills are **Korean only**, so an English install (`--lang en`) leave
 doksam-skills' `yd-handoff`, `yd-doc-sync`, `yd-memory-factcheck` and `yd-skill-evolve` were merged into
 `handoff`, `docs-sync`, `memory-factcheck` and `skill-evolve`, which do the same jobs.
 
-**Opt-in (9)** — these assume the maintainer's environment (a specific GitLab, hosts, ui.doksam.com, FinGuard).
+**Opt-in (10)** — these assume the maintainer's environment (a specific GitLab, hosts, ui.doksam.com, FinGuard).
 Their source is `presets/skills/personal/.claude/skills/` in this repo, and they are installed only with
 `--with-personal-skills`: `yd-sdlc-orchestrator`, `yd-finguard`, `yd-doksam-ui`, `yd-script-editor` (with agents),
-`yd-agents-mem`, `yd-git-ship`, `yd-git-sync`, `yd-claude-auth-sync`, `yd-session-recording`.
+`yd-agents-mem`, `yd-git-ship`, `yd-git-sync`, `yd-claude-auth-sync`, `yd-session-recording`, `yd-naver-blog`.
 
 ## Authoring rules
 

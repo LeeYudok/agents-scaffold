@@ -52,10 +52,10 @@ superpowers `brainstorming`·Ouroboros 와 작업마다 택일하며, 비교는 
 doksam-skills 의 `yd-handoff`·`yd-doc-sync`·`yd-memory-factcheck`·`yd-skill-evolve` 는 같은 역할의
 `handoff`·`docs-sync`·`memory-factcheck`·`skill-evolve` 에 합쳤다.
 
-**옵트인 9개** — 메인테이너 환경(특정 GitLab·호스트·ui.doksam.com·FinGuard)을 전제한다. 원본은 이 레포의
+**옵트인 10개** — 메인테이너 환경(특정 GitLab·호스트·ui.doksam.com·FinGuard)을 전제한다. 원본은 이 레포의
 `presets/skills/personal/.claude/skills/` 이고, 설치할 때 `--with-personal-skills` 를 줘야 들어간다.
 `yd-sdlc-orchestrator`·`yd-finguard`·`yd-doksam-ui`·`yd-script-editor`(에이전트 동봉), `yd-agents-mem`·
-`yd-git-ship`·`yd-git-sync`·`yd-claude-auth-sync`·`yd-session-recording`.
+`yd-git-ship`·`yd-git-sync`·`yd-claude-auth-sync`·`yd-session-recording`·`yd-naver-blog`.
 
 ## 작성 규약
 

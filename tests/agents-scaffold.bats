@@ -1744,7 +1744,7 @@ PY
 # --- doksam-skills 편입 (#78) ---
 
 DEFAULT_YD="yd-agents-yaml yd-blueprint yd-db-expert yd-pg-expert yd-oracle-expert yd-sqlite-expert yd-go-expert yd-react-expert yd-typescript yd-frontend-build yd-mobile-web-planner yd-nextjs-implementer yd-writer-kr"
-PERSONAL_YD="yd-agents-mem yd-claude-auth-sync yd-git-sync yd-git-ship yd-doksam-ui yd-finguard yd-sdlc-orchestrator yd-script-editor yd-session-recording"
+PERSONAL_YD="yd-agents-mem yd-claude-auth-sync yd-git-sync yd-git-ship yd-doksam-ui yd-finguard yd-sdlc-orchestrator yd-script-editor yd-session-recording yd-naver-blog"
 
 @test "default install ships general yd-* skills and agents, not personal ones (#78)" {
   run "$SCRIPT" "$BATS_TEST_TMPDIR" --yes
