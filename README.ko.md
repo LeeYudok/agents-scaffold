@@ -57,7 +57,7 @@ agents-scaffold/bin/agents-scaffold.sh /path/to/repo --harness all --stack pytho
 | **폐쇄망·Windows 지원** | 오프라인 번들은 네트워크 없이 설치된다. Windows 는 Git Bash 와 `.cmd` 런처로 돌아간다([docs/OFFLINE_INSTALL.md](docs/OFFLINE_INSTALL.md)). |
 | **플러그인 마켓플레이스** | 스킬은 Claude Code / Codex 플러그인으로도 전역 설치된다 — clone 이 필요 없다. |
 | **자기개선** | `skill-evolve` / `agent-evolve` 가 실제 실수를, 그 실수를 낸 스킬·에이전트의 "Learned warnings" 로 바꾼다. |
-| **테스트됨** | 설치 스크립트 bats 회귀 테스트 100개, 스킬별 계약 테스트, 문서 링크 체커가 모두 CI 에서 돈다. |
+| **테스트됨** | 설치 스크립트 bats 회귀 테스트 110개, 스킬별 계약 테스트, 문서 링크 체커가 모두 CI 에서 돈다. (2026-11-13) |
 
 ## 설치 직후 이런 일이 벌어진다
 

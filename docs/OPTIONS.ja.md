@@ -129,9 +129,8 @@ agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --stack go --with-perso
 ```
 
 - `yd-*` スキルは韓国語のみ — `--lang en` オーバーレイはない。
-- プリセットは本来 `--update` の対象外だが、このバンドルは例外。`--with-personal-skills` を付けるか、対象に
-  そのスキルが 1 つでもあれば `--update` がバンドルも更新する(既存の `.new` ルールのまま)。デフォルトの
-  インストールを `--update` してもバンドルは追加されない。
+- `--update` はインストール時に選択したプリセットも更新する。`--with-personal-skills` を付けるか、対象に
+  個人スキルがあれば個人バンドルも更新する。通常のインストールに個人バンドルは追加しない。
 
 ## 言語 (`--lang`)
 
@@ -148,8 +147,8 @@ agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --lang en --forge githu
 
 `.claude/hooks/pre-commit.sh` は `--lang` によるオーバーレイの対象外です
 (スタックパーシャルが挿入されるファイルであり、メッセージは単一言語、コードは
-言語の影響を受けません)。`--update` は韓国語のベースのみを更新します。英語
-オーバーレイを再適用したい場合は、その上で `--lang en` を付けて再実行してください。
+言語の影響を受けません)。`--update` は保存された言語を使います。変更する場合は
+`--update --lang en` または `--update --lang ko` を指定し、`.new` ファイルをマージしてください。
 
 ## Usage 1 — script
 
@@ -196,13 +195,17 @@ curl -fsSL https://raw.githubusercontent.com/leeyudok/agents-scaffold/main/bin/a
 agents-scaffold/bin/agents-scaffold.sh --update /path/to/existing-repo
 ```
 
-- `.claude/hooks/pre-commit.sh` は常にスキップされます — スタックパーシャルが
-  挿入済みのため、手動マージが必要です。
-- その他のベースファイルは、内容が同一ならスキップされます。差分がある場合は
+- インストール時の forge・スタック・言語・harness・プロジェクト名・個人スキルの選択を `.claude/.scaffold.json` に保存します。
+  読み書きには `python3` が必要です。ない場合もインストールは警告して続行します。
+- 記録のない既存環境では指示・ルール・アダプターから選択を推定します。表示を確認し、必要ならオプションで上書きしてください。
+- 同じ選択で最新のファイルを合成します。`pre-commit.sh` も選択したスタックの検査を含めて比較します。
+- 内容が同一ならスキップされます。差分がある場合は
   既存ファイルを保持し、新バージョンを `<file>.new` として書き出します
   (プレースホルダー置換は `.new` ファイルにも適用されます)。
 - 最後に追加 / 更新保留 / スキップ / 変更なしのファイルのサマリーが出力されます —
   `.new` ファイルを `diff` で確認し、手動で適用してください。
+- 再インストールで `AGENTS.md` が変わる場合、元の内容を `AGENTS.md.bak-<日時>-<固有値>` に保存してパスを表示します。
+  バックアップから独自の指示を復元してください。既存のスタック検査は重複挿入しません。
 
 ## Usage 2 — GitLab テンプレート
 

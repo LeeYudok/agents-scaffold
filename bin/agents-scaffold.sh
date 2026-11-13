@@ -39,10 +39,9 @@ Usage:
                  all = claude layers + every adapter.
                  Every harness gets the pre-commit gate as a real .git/hooks/pre-commit.
   --yes          Skip interactive prompts (non-interactive mode).
-  --update       Refresh the base .claude/·AGENTS.md etc. of an already-bootstrapped project.
-                 .claude/hooks/pre-commit.sh has stack partials inserted, so it is skipped
-                 (manual merge required). Out of scope: --lang — --update only touches the
-                 Korean base regardless of the project's language overlay.
+  --update       Refresh an installed project using its saved forge, stacks, language and
+                 harness (.claude/.scaffold.json). Older installs are inferred from their files.
+                 Changed files, including the composed pre-commit gate, are offered as .new.
                  Other base files are skipped if identical to the target, otherwise the
                  existing file is preserved and the new version is saved as <file>.new.
                  A summary of added/updated/skipped files is printed at the end.
@@ -78,15 +77,16 @@ ASSUME_YES=0
 UPDATE=0
 HARNESS="claude"
 WITH_PERSONAL=0
+FORGE_SET=0 STACKS_SET=0 LANG_SET=0 HARNESS_SET=0 NAME_SET=0
 PERSONAL_PRESET="presets/skills/personal"   # #78: 옵트인 yd-* 스킬·에이전트 묶음
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    --stack) STACKS="$2"; shift 2 ;;
-    --forge) FORGE="$2"; shift 2 ;;
-    --lang)  LANG_OPT="$2"; shift 2 ;;
-    --name)  NAME="$2";  shift 2 ;;
-    --harness) HARNESS="$2"; shift 2 ;;
+    --stack) STACKS="$2"; STACKS_SET=1; shift 2 ;;
+    --forge) FORGE="$2"; FORGE_SET=1; shift 2 ;;
+    --lang)  LANG_OPT="$2"; LANG_SET=1; shift 2 ;;
+    --name)  NAME="$2"; NAME_SET=1; shift 2 ;;
+    --harness) HARNESS="$2"; HARNESS_SET=1; shift 2 ;;
     --yes)   ASSUME_YES=1; shift ;;
     --update) UPDATE=1; shift ;;
     --with-personal-skills) WITH_PERSONAL=1; shift ;;
@@ -107,7 +107,9 @@ esac
 # --- 이슈 #10: SRC 결정. 로컬 clone 이면 BASH_SOURCE 기준, curl 파이프 등으로
 #     로컬 템플릿이 없으면 tarball 을 받아 임시 디렉터리를 SRC 로 쓴다.
 REMOTE_TMPDIR=""
+UPDATE_TMPDIR=""
 cleanup_remote_tmpdir() {
+  if [ -n "$UPDATE_TMPDIR" ]; then rm -rf "$UPDATE_TMPDIR"; fi
   # EXIT trap 의 마지막 명령 상태가 스크립트 exit code 를 오염시키지 않도록 if 문 사용
   # ([ -n ] && ... 형태면 로컬 설치(빈 REMOTE_TMPDIR)에서 항상 exit 1 이 됨)
   if [ -n "$REMOTE_TMPDIR" ]; then
@@ -651,19 +653,129 @@ emit_hooks() {
   fi
 }
 
+# #104: 설치 선택은 데이터로만 읽는다. JSON 내용을 셸 명령으로 실행하지 않는다.
+load_install_choices() {
+  local state="$TARGET/.claude/.scaffold.json" values saved_forge saved_stacks saved_lang saved_harness saved_name saved_personal
+  if [ -f "$state" ]; then
+    if ! command -v python3 >/dev/null 2>&1; then
+      echo "Error: python3 is required to read $state." >&2
+      return 1
+    fi
+    values="$(mktemp)"
+    if ! python3 - "$state" > "$values" <<'PY'
+import json
+import re
+import sys
+try:
+    with open(sys.argv[1], encoding="utf-8") as source:
+        state = json.load(source)
+    assert state["schema_version"] == 1, "unsupported schema_version"
+    assert state["forge"] in ("github", "gitlab"), "invalid forge"
+    assert state["lang"] in ("ko", "en"), "invalid lang"
+    assert state["harness"] in ("claude", "codex", "agy", "all"), "invalid harness"
+    assert isinstance(state["stacks"], list), "stacks must be a list"
+    assert all(isinstance(s, str) and re.fullmatch(r"[A-Za-z0-9_-]+", s) for s in state["stacks"]), "invalid stack"
+    assert isinstance(state["name"], str) and "\0" not in state["name"], "invalid name"
+    assert isinstance(state["with_personal_skills"], bool), "invalid personal-skills choice"
+    fields = [state["forge"], ",".join(state["stacks"]), state["lang"], state["harness"], state["name"], str(int(state["with_personal_skills"]))]
+except (OSError, ValueError, KeyError, TypeError, AssertionError) as error:
+    sys.exit(f"Invalid scaffold state: {error}")
+sys.stdout.buffer.write("\0".join(fields).encode("utf-8") + b"\0")
+PY
+    then
+      rm -f "$values"
+      return 1
+    fi
+    { IFS= read -r -d '' saved_forge; IFS= read -r -d '' saved_stacks; IFS= read -r -d '' saved_lang
+      IFS= read -r -d '' saved_harness; IFS= read -r -d '' saved_name; IFS= read -r -d '' saved_personal; } < "$values"
+    rm -f "$values"
+  else
+    saved_forge=github saved_stacks="" saved_lang=ko saved_harness=claude saved_name="$NAME" saved_personal=0
+    grep -q 'forge-gitlab\|glab issue' "$TARGET/.claude/rules/forge.md" 2>/dev/null && saved_forge=gitlab
+    if grep -q '^## Response language' "$TARGET/AGENTS.md" 2>/dev/null \
+      || grep -q '^# Common rules' "$TARGET/.claude/rules/common.md" 2>/dev/null; then saved_lang=en; fi
+    local d stack
+    # P0 는 마지막 선택부터 삽입된다. 역순으로 읽어 스택 합성 순서까지 복구한다.
+    while IFS= read -r stack; do
+      [ -d "$SRC/presets/stacks/$stack" ] || continue
+      saved_stacks="${saved_stacks:+$saved_stacks,}$stack"
+    done < <(awk '/^\*\*[A-Za-z0-9_-]+\*\*$/ { names[++n]=substr($0,3,length($0)-4) } END { for (i=n;i>0;i--) print names[i] }' "$TARGET/AGENTS.md" 2>/dev/null)
+    for d in "$SRC"/presets/stacks/*/; do
+      stack="$(basename "$d")"
+      case ",$saved_stacks," in *",$stack,"*) continue ;; esac
+      if [ -f "$TARGET/.claude/rules/$stack.md" ]; then saved_stacks="${saved_stacks:+$saved_stacks,}$stack"; fi
+    done
+    [ ! -d "$TARGET/.codex/agents" ] && [ ! -f "$TARGET/.codex/hooks.json" ] || saved_harness=codex
+    if [ -d "$TARGET/.agents/agents" ] || [ -f "$TARGET/.agents/hooks.json" ]; then
+      if [ "$saved_harness" = codex ] || [ -d "$TARGET/.claude/commands" ]; then saved_harness=all; else saved_harness=agy; fi
+    elif [ "$saved_harness" = codex ] && [ -d "$TARGET/.claude/commands" ]; then saved_harness=all; fi
+    local header
+    header="$(sed -n 's/^# AGENTS.md — //p' "$TARGET/AGENTS.md" 2>/dev/null | head -n1)"
+    [ -z "$header" ] || saved_name="$header"
+    echo "No scaffold state found; inferring forge=$saved_forge stacks=[$saved_stacks] lang=$saved_lang harness=$saved_harness. Override with explicit options if needed." >&2
+  fi
+  [ "$FORGE_SET" -eq 1 ] || FORGE="$saved_forge"
+  [ "$STACKS_SET" -eq 1 ] || STACKS="$saved_stacks"
+  [ "$LANG_SET" -eq 1 ] || LANG_OPT="$saved_lang"
+  [ "$HARNESS_SET" -eq 1 ] || HARNESS="$saved_harness"
+  [ "$NAME_SET" -eq 1 ] || { NAME="$saved_name"; NAME_SED="$(sed_escape_replacement "$NAME")"; }
+  [ "$WITH_PERSONAL" -eq 1 ] || WITH_PERSONAL="$saved_personal"
+  # 이전 버전에서 개인 스킬을 수동 설치했어도 계속 갱신한다.
+  local d
+  for d in "$SRC/$PERSONAL_PRESET/.claude/skills/"*/; do
+    d="$(basename "$d")"
+    if [ -e "$TARGET/.agents/skills/$d" ] || [ -e "$TARGET/.claude/skills/$d" ]; then WITH_PERSONAL=1; break; fi
+  done
+}
+
+save_install_choices() {
+  if ! command -v python3 >/dev/null 2>&1; then
+    echo "Warning: python3 not found; installation choices were not saved. Updates will infer them." >&2
+    return 0
+  fi
+  python3 - "$TARGET/.claude/.scaffold.json" "$FORGE" "$STACKS" "$LANG_OPT" "$HARNESS" "$NAME" "$WITH_PERSONAL" <<'PY'
+import json
+import os
+import sys
+import tempfile
+from pathlib import Path
+path, forge, stacks, lang, harness, name, personal = sys.argv[1:]
+state = dict(schema_version=1, forge=forge, stacks=list(dict.fromkeys(s.strip() for s in stacks.split(",") if s.strip())),
+             lang=lang, harness=harness, name=name, with_personal_skills=personal == "1")
+target = Path(path)
+target.parent.mkdir(parents=True, exist_ok=True)
+fd, temporary = tempfile.mkstemp(dir=target.parent)
+try:
+    with os.fdopen(fd, "w", encoding="utf-8") as output:
+        json.dump(state, output, ensure_ascii=False, indent=2)
+        output.write("\n")
+    os.replace(temporary, target)
+finally:
+    if os.path.exists(temporary):
+        os.unlink(temporary)
+PY
+}
+
 # --- 이슈 #13: --update 모드. 이미 부트스트랩된 프로젝트의 베이스 파일을 최신화한다.
 run_update() {
   echo "== agents-scaffold --update: target=$TARGET name=$NAME ==" >&2
-  echo "note: --lang is out of scope for --update; only the Korean base is refreshed" >&2
-
-  local hook_rel=".claude/hooks/pre-commit.sh"
+  load_install_choices
+  # 설치 경로 자체를 재사용해 forge·stack·lang 합성 규칙이 업데이트와 갈라지지 않게 한다 (#104).
+  UPDATE_TMPDIR="$(mktemp -d)"
+  local expected="$UPDATE_TMPDIR/expected"
+  mkdir -p "$expected"
+  local render_args=("$expected" --yes --forge "$FORGE" --stack "$STACKS" --lang "$LANG_OPT" --harness "$HARNESS" --name "$NAME")
+  [ "$WITH_PERSONAL" -eq 0 ] || render_args+=(--with-personal-skills)
+  if ! AGENTS_SCAFFOLD_NO_SYMLINK=1 bash "$SRC/bin/agents-scaffold.sh" "${render_args[@]}" > "$UPDATE_TMPDIR/render.log" 2>&1; then
+    cat "$UPDATE_TMPDIR/render.log" >&2
+    return 1
+  fi
   local added=() updated=() skipped=() unchanged=()
-
-  # git 소스면 tracked 만 대상(#39) — find 는 untracked 로컬 산출물(observations 등)까지
-  # Added 로 실어 나른다. tarball 폴백은 아카이브가 이미 tracked 만 담으므로 find 유지.
   local base_files=() f
-  while IFS= read -r -d '' f; do base_files+=("$SRC/$f"); done < <(list_base_payload)
-  base_files+=("$SRC/AGENTS.md")
+  while IFS= read -r -d '' f; do base_files+=("$f"); done < <(
+    find "$expected/.claude" -type f ! -name .scaffold.json -print0
+  )
+  base_files+=("$expected/AGENTS.md")
 
   # #80: 예전 설치가 실수로 배포한 이 레포 메모리 — 지금 원본과 바이트가 같은 것만 보고한다(자동 삭제 안 함)
   local leaked=()
@@ -671,25 +783,6 @@ run_update() {
     is_repo_private "$f" || continue
     if [ -f "$TARGET/$f" ] && cmp -s "$SRC/$f" "$TARGET/$f"; then leaked+=("$f"); fi
   done < <(list_claude_files)
-
-  # #78: 옵트인 yd-* 스킬 — --with-personal-skills 이거나 타겟에 그 스킬이 하나라도 있으면 함께 갱신한다.
-  #      (presets 는 원래 --update 대상이 아니다. 옵트인 묶음만 예외로 둔다.)
-  local pdir="$SRC/$PERSONAL_PRESET" want_personal="$WITH_PERSONAL" d
-  if [ "$want_personal" -eq 0 ] && [ -d "$pdir/.claude/skills" ]; then
-    for d in "$pdir"/.claude/skills/*/; do
-      d="$(basename "$d")"
-      if [ -e "$TARGET/.agents/skills/$d" ] || [ -e "$TARGET/.claude/skills/$d" ]; then want_personal=1; break; fi
-    done
-  fi
-  if [ "$want_personal" -eq 1 ] && [ -d "$pdir/.claude" ]; then
-    if git -C "$SRC" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-      while IFS= read -r -d '' f; do base_files+=("$SRC/$f"); done \
-        < <(git -C "$SRC" ls-files -z -- "$PERSONAL_PRESET/.claude")
-    else
-      while IFS= read -r f; do base_files+=("$f"); done \
-        < <(find "$pdir/.claude" -type f ! -path '*/__pycache__/*' ! -name '*.pyc')
-    fi
-  fi
 
   # #61: 스킬 원본은 .agents/skills. 이전이 끝났으면 베이스 스킬도 원본 쪽으로 갱신한다.
   #   단독 문장으로 호출한다 — `&&` 문맥이면 함수 안 set -e 가 꺼진다.
@@ -699,8 +792,7 @@ run_update() {
   local f rel tgt
   for f in "${base_files[@]:-}"; do
     [ -n "$f" ] || continue
-    rel="${f#"$SRC"/}"
-    rel="${rel#"$PERSONAL_PRESET"/}"   # #78: 옵트인 묶음은 타겟의 .claude/ 아래로 간다
+    rel="${f#"$expected"/}"
     rel="$(payload_target_rel "$rel")"
     # #80: 메모리 인덱스는 사용자 소유 — 없을 때만 템플릿을 넣고, 있으면 .new 도 만들지 않는다
     if [ "$rel" = ".claude/memory/MEMORY.md" ] && [ -f "$TARGET/$rel" ]; then
@@ -713,35 +805,21 @@ run_update() {
     fi
     tgt="$TARGET/$rel"
 
-    if [ "$rel" = "$hook_rel" ]; then
-      if [ -f "$tgt" ]; then
-        skipped+=("$rel (stack partial inserted file — manual merge required, skipped)")
-      fi
-      continue
-    fi
-
     if [ ! -f "$tgt" ]; then
       mkdir -p "$(dirname "$tgt")"
       cp "$f" "$tgt"
-      substitute_placeholders "$tgt"
       added+=("$rel")
       continue
     fi
 
-    # 치환 "적용 후" 사본과 비교(#39) — 원본과 비교하면 {{PROJECT_NAME}} 든
-    # 파일이 no-op 업데이트에도 전부 "변경됨"으로 잡혀 .new 를 쏟아낸다.
-    subbed="$(mktemp)"
-    cp "$f" "$subbed"
-    # 임시 경로엔 */skills/yd-*/ 가 없어 제외 규칙이 안 걸린다 — 원래 경로로 판정(#78)
-    case "$rel" in */skills/yd-*/*) ;; *) substitute_placeholders "$subbed" ;; esac
-    if diff -q "$subbed" "$tgt" >/dev/null 2>&1; then
-      rm -f "$subbed"
+    # expected 는 설치 경로에서 이미 치환한 산출물이다. 두 번 치환하면 이름 속 토큰도 변한다.
+    if cmp -s "$f" "$tgt"; then
       unchanged+=("$rel")
       continue
     fi
 
     mkdir -p "$(dirname "$tgt")"
-    mv "$subbed" "$tgt.new"
+    cp "$f" "$tgt.new"
     updated+=("$rel")
   done
 
@@ -782,6 +860,7 @@ run_update() {
 
   chmod +x "$TARGET/.claude/hooks/"*.sh 2>/dev/null || true
   ensure_hook_eol_attributes
+  save_install_choices
 
   echo "== --update summary ==" >&2
   echo "Added: ${#added[@]}" >&2
@@ -807,6 +886,11 @@ run_update() {
 if [ "$UPDATE" -eq 1 ]; then
   run_update
   exit 0
+fi
+
+# 재설치에도 생략한 옵션은 기존 선택을 유지한다. 명시한 옵션만 바꾼다 (#104).
+if [ -f "$TARGET/.claude/.scaffold.json" ]; then
+  load_install_choices
 fi
 
 # forge 미지정 + 대화형이면 묻는다 (기본 github)
@@ -856,6 +940,13 @@ if is_ssot_link && [ ! -e "$TARGET/.claude/skills" ]; then
   mkdir -p "$TARGET/.agents/skills"
 fi
 
+# #104: AGENTS.md 를 바꾸기 전에 원문을 보관한다. 같은 산출물이면 마지막에 백업을 없앤다.
+AGENTS_BACKUP=""
+if [ -f "$TARGET/AGENTS.md" ]; then
+  AGENTS_BACKUP="$(mktemp "$TARGET/AGENTS.md.bak-$(date +%Y%m%d%H%M%S)-XXXXXX")"
+  cp -p "$TARGET/AGENTS.md" "$AGENTS_BACKUP"
+fi
+
 # 1) 베이스 복사 (in-place 면 이미 있으므로 스킵)
 # git 소스면 tracked 파일만 복사(#39) — cp -R 은 untracked 로컬 산출물
 # (memory/observations 세션로그, __pycache__, 에이전트 메모리)까지 실어 나른다.
@@ -899,19 +990,29 @@ merge_preset() {
       # (끝에 append 하면 base 의 `exit 0` 뒤로 떨어져 죽은 코드가 됨)
       local hook="$TARGET/.claude/hooks/pre-commit.sh"
       local marker='# --- STACK CHECKS'
+      local stack_name="${pdir##*/}" partial_header begin end
+      partial_header="$(head -n1 "$f")"
+      begin="# agents-scaffold: stack $stack_name begin"
+      end="# agents-scaffold: stack $stack_name end"
+      # 구버전의 표시 없는 파셜도 헤더로 감지한다. 사용자 수정은 그대로 두고 재삽입만 막는다.
+      if grep -qxF "$begin" "$hook" || { [ -n "$partial_header" ] && grep -qxF "$partial_header" "$hook"; }; then
+        continue
+      fi
       if grep -qF "$marker" "$hook"; then
         local tmp
         tmp="$(mktemp)"
-        awk -v partial="$f" '
+        awk -v partial="$f" -v begin="$begin" -v end="$end" '
           { print }
           /# --- STACK CHECKS/ && !ins {
+            print begin
             while ((getline line < partial) > 0) print line
+            print end
             close(partial); ins = 1
           }
         ' "$hook" > "$tmp" && mv "$tmp" "$hook"
       else
         # 마커가 없으면(커스텀 base) 안전하게 끝에 붙인다.
-        cat "$f" >> "$hook"
+        { printf '\n%s\n' "$begin"; cat "$f"; printf '\n%s\n' "$end"; } >> "$hook"
       fi
     else
       # #61: 재설치로 .claude/skills 가 이미 링크면 그 너머는 Codex·agy 와 공유하는 원본이다 —
@@ -1097,4 +1198,12 @@ if [ "$INPLACE" -eq 1 ]; then
   rm -f "$TARGET/AGENTS.LEEYUDOK.md"
 fi
 
+save_install_choices
+if [ -n "$AGENTS_BACKUP" ]; then
+  if cmp -s "$AGENTS_BACKUP" "$TARGET/AGENTS.md"; then
+    rm -f "$AGENTS_BACKUP"
+  else
+    echo "Previous AGENTS.md saved to $AGENTS_BACKUP — review and restore your custom instructions." >&2
+  fi
+fi
 echo "== Done. Fill in AGENTS.md and .claude/ for your project. ==" >&2

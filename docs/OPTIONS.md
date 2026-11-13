@@ -178,9 +178,8 @@ agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --stack go --with-perso
 ```
 
 - `yd-*` 스킬은 한국어 전용이다 — `--lang en` 오버레이가 없다.
-- presets 는 원래 `--update` 대상이 아니지만, 이 묶음은 예외다. `--update` 에 `--with-personal-skills` 를
-  주거나 타겟에 그 스킬이 하나라도 있으면 묶음의 파일도 갱신한다(기존 `.new` 규칙 그대로). 기본 설치를
-  `--update` 해도 묶음이 새로 들어가지는 않는다.
+- `--update` 는 설치 선택에 포함된 프리셋도 갱신한다. `--with-personal-skills` 를 주거나
+  타겟에 개인 스킬이 하나라도 있으면 개인 묶음도 갱신한다. 기본 설치에는 개인 묶음을 추가하지 않는다.
 
 ## 언어 (`--lang`)
 
@@ -195,8 +194,8 @@ agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --lang en --forge githu
 ```
 
 `.claude/hooks/pre-commit.sh` 는 `--lang` 오버레이 대상이 아니다(스택 파셜이 삽입되는
-파일이라 언어 단일본 — 코드 동작에는 영향 없음). `--update` 는 한국어 베이스만
-갱신하므로, 영어 오버레이가 필요하면 `--lang en` 으로 다시 실행한다.
+파일이라 메시지는 한국어 단일본이다). `--update` 는 저장된 언어로 기대 산출물을 만든다.
+언어를 바꾸려면 `--update --lang en` 또는 `--update --lang ko` 를 지정하고 `.new` 파일을 병합한다.
 
 ## 사용법 1 — 스크립트
 
@@ -243,11 +242,16 @@ curl -fsSL https://raw.githubusercontent.com/leeyudok/agents-scaffold/main/bin/a
 agents-scaffold/bin/agents-scaffold.sh --update /path/to/existing-repo
 ```
 
-- `.claude/hooks/pre-commit.sh` 는 스택 파셜이 삽입돼 있어 항상 건너뛴다(수동 병합 필요).
-- 그 외 베이스 파일은 대상과 diff 없으면 스킵, 다르면 기존 파일은 그대로 두고 새 버전을
+- 설치 시 forge·스택·언어·하네스·프로젝트 이름·개인 스킬 선택을 `.claude/.scaffold.json` 에 기록한다.
+  기록을 읽고 쓰려면 `python3` 가 필요하다. 없으면 설치는 계속하고 경고한다.
+- 기록이 없는 기존 설치는 지침·룰·어댑터에서 선택을 추론한다. 출력된 선택을 확인하고 필요하면 옵션으로 지정한다.
+- 같은 선택으로 최신 산출물을 합성해 비교한다. `pre-commit.sh` 도 선택한 스택 검사를 포함해 비교한다.
+- 파일이 같으면 건너뛴다. 다르면 기존 파일을 보존하고 새 버전을
   `<file>.new` 로 저장한다. `{{PLACEHOLDER}}` 치환은 `.new` 파일에도 적용된다.
 - 실행 끝에 추가/갱신 대기/건너뜀/변경없음 목록을 요약 출력 — `.new` 파일은 `diff` 로 확인 후
   수동 반영.
+- 재설치로 `AGENTS.md` 가 달라지면 기존 내용을 `AGENTS.md.bak-<시각>-<고유값>` 에 보관하고 경로를 알린다.
+  백업에서 프로젝트 지침을 복원한다. 기존 스택 검사는 중복 삽입하지 않는다.
 
 ## 사용법 2 — GitLab 템플릿
 

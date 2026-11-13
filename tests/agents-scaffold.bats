@@ -23,6 +23,148 @@ setup() {
   SCRIPT="$REPO_ROOT/bin/agents-scaffold.sh"
 }
 
+# #104: 실제 설치 산출물과 실패하는 도구를 사용한다. 네트워크·개발 도구 설치는 필요 없다.
+@test "reinstall backs up custom AGENTS verbatim and does not duplicate stack gates (#104)" {
+  run bash "$SCRIPT" "$BATS_TEST_TMPDIR" --stack python,bun --lang en --yes
+  [ "$status" -eq 0 ]
+  printf '\nCustom project instructions\n' >> "$BATS_TEST_TMPDIR/AGENTS.md"
+  cp "$BATS_TEST_TMPDIR/AGENTS.md" "$BATS_TEST_TMPDIR/original-agents"
+  cp "$BATS_TEST_TMPDIR/.claude/hooks/pre-commit.sh" "$BATS_TEST_TMPDIR/original-hook"
+  run bash "$SCRIPT" "$BATS_TEST_TMPDIR" --yes
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Previous AGENTS.md saved"* ]]
+  backup="$(find "$BATS_TEST_TMPDIR" -name 'AGENTS.md.bak-*' -type f)"
+  [ -n "$backup" ]
+  cmp "$backup" "$BATS_TEST_TMPDIR/original-agents"
+  cmp "$BATS_TEST_TMPDIR/.claude/hooks/pre-commit.sh" "$BATS_TEST_TMPDIR/original-hook"
+  [ "$(grep -c '^# agents-scaffold: stack python begin$' "$BATS_TEST_TMPDIR/original-hook")" -eq 1 ]
+}
+
+@test "unchanged reinstall leaves no AGENTS backup and recognizes legacy unmarked stack gates (#104)" {
+  run bash "$SCRIPT" "$BATS_TEST_TMPDIR" --stack bun --yes
+  [ "$status" -eq 0 ]
+  hook="$BATS_TEST_TMPDIR/.claude/hooks/pre-commit.sh"
+  sed '/^# agents-scaffold: stack /d' "$hook" > "$hook.legacy"
+  mv "$hook.legacy" "$hook"
+  cp "$hook" "$BATS_TEST_TMPDIR/original-hook"
+  run bash "$SCRIPT" "$BATS_TEST_TMPDIR" --stack bun --yes
+  [ "$status" -eq 0 ]
+  cmp "$hook" "$BATS_TEST_TMPDIR/original-hook"
+  [ -z "$(find "$BATS_TEST_TMPDIR" -name 'AGENTS.md.bak-*')" ]
+}
+
+@test "update retains saved forge stacks language harness and project name without new-file noise (#104)" {
+  run bash "$SCRIPT" "$BATS_TEST_TMPDIR" --forge gitlab --stack python,ops --lang en --harness codex --name 'saved name' --yes
+  [ "$status" -eq 0 ]
+  [ -f "$BATS_TEST_TMPDIR/.claude/.scaffold.json" ]
+  cp "$BATS_TEST_TMPDIR/AGENTS.md" "$BATS_TEST_TMPDIR/original-agents"
+  cp "$BATS_TEST_TMPDIR/.claude/hooks/pre-commit.sh" "$BATS_TEST_TMPDIR/original-hook"
+  run bash "$SCRIPT" "$BATS_TEST_TMPDIR" --update --yes
+  [ "$status" -eq 0 ]
+  [ -z "$(find "$BATS_TEST_TMPDIR" -name '*.new')" ]
+  cmp "$BATS_TEST_TMPDIR/AGENTS.md" "$BATS_TEST_TMPDIR/original-agents"
+  cmp "$BATS_TEST_TMPDIR/.claude/hooks/pre-commit.sh" "$BATS_TEST_TMPDIR/original-hook"
+  [ ! -d "$BATS_TEST_TMPDIR/.claude/commands" ]
+  python3 - "$BATS_TEST_TMPDIR/.claude/.scaffold.json" <<'PY'
+import json, sys
+with open(sys.argv[1]) as source:
+    state = json.load(source)
+assert state == dict(schema_version=1, forge='gitlab', stacks=['python', 'ops'], lang='en', harness='codex', name='saved name', with_personal_skills=False)
+PY
+}
+
+@test "legacy update infers English GitLab multi-stack and all harness choices (#104)" {
+  run bash "$SCRIPT" "$BATS_TEST_TMPDIR" --forge gitlab --stack python,go --lang en --harness all --name legacy --yes
+  [ "$status" -eq 0 ]
+  rm "$BATS_TEST_TMPDIR/.claude/.scaffold.json"
+  run bash "$SCRIPT" "$BATS_TEST_TMPDIR" --update --yes
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"inferring forge=gitlab"*"lang=en harness=all"* ]]
+  [ -z "$(find "$BATS_TEST_TMPDIR" -name '*.new')" ]
+  [ -f "$BATS_TEST_TMPDIR/.claude/.scaffold.json" ]
+}
+
+@test "update recreates missing selected rules and gate and offers explicit language changes (#104)" {
+  run bash "$SCRIPT" "$BATS_TEST_TMPDIR" --forge gitlab --stack python --lang en --yes
+  [ "$status" -eq 0 ]
+  rm "$BATS_TEST_TMPDIR/.claude/rules/python.md" "$BATS_TEST_TMPDIR/.claude/hooks/pre-commit.sh"
+  run bash "$SCRIPT" "$BATS_TEST_TMPDIR" --update --yes
+  [ "$status" -eq 0 ]
+  cmp "$BATS_TEST_TMPDIR/.claude/rules/python.md" "$REPO_ROOT/presets/lang/en/stacks/python/.claude/rules/python.md"
+  grep -q 'Python lint + typecheck gate' "$BATS_TEST_TMPDIR/.claude/hooks/pre-commit.sh"
+  run bash "$SCRIPT" "$BATS_TEST_TMPDIR" --update --lang ko --yes
+  [ "$status" -eq 0 ]
+  [ -f "$BATS_TEST_TMPDIR/AGENTS.md.new" ]
+  grep -q '^## 응답 언어' "$BATS_TEST_TMPDIR/AGENTS.md.new"
+  grep -q '^## Response language' "$BATS_TEST_TMPDIR/AGENTS.md"
+}
+
+@test "invalid saved choices abort update without touching project files (#104)" {
+  run bash "$SCRIPT" "$BATS_TEST_TMPDIR" --yes
+  [ "$status" -eq 0 ]
+  cp "$BATS_TEST_TMPDIR/AGENTS.md" "$BATS_TEST_TMPDIR/original-agents"
+  printf '{broken json' > "$BATS_TEST_TMPDIR/.claude/.scaffold.json"
+  run bash "$SCRIPT" "$BATS_TEST_TMPDIR" --update --yes
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"Invalid scaffold state"* ]]
+  cmp "$BATS_TEST_TMPDIR/AGENTS.md" "$BATS_TEST_TMPDIR/original-agents"
+  [ -z "$(find "$BATS_TEST_TMPDIR" -name '*.new')" ]
+}
+
+python_gate_fixture() {
+  mkdir -p "$BATS_TEST_TMPDIR/tools" "$BATS_TEST_TMPDIR/src"
+  touch "$BATS_TEST_TMPDIR/src/main.py"
+  printf '#!/usr/bin/env bash\nset -euo pipefail\n' > "$BATS_TEST_TMPDIR/gate.sh"
+  cat "$REPO_ROOT/presets/stacks/python/.claude/hooks/pre-commit.partial.sh" >> "$BATS_TEST_TMPDIR/gate.sh"
+  printf '#!/usr/bin/env bash\necho uv-must-not-run; exit 9\n' > "$BATS_TEST_TMPDIR/tools/uv"
+  printf '#!/usr/bin/env bash\nexit 0\n' > "$BATS_TEST_TMPDIR/tools/ruff"
+  printf '#!/usr/bin/env bash\necho "mypy: incompatible assignment"; exit 1\n' > "$BATS_TEST_TMPDIR/tools/mypy"
+  chmod +x "$BATS_TEST_TMPDIR/tools/"*
+}
+
+@test "Python gate blocks mypy errors and preserves diagnostics even when uv is installed (#104)" {
+  python_gate_fixture
+  run bash -c 'cd "$1" && PATH="$1/tools:$PATH" bash gate.sh' _ "$BATS_TEST_TMPDIR"
+  [ "$status" -eq 2 ]
+  [[ "$output" == *"mypy: incompatible assignment"* ]]
+  [[ "$output" != *"uv-must-not-run"* ]]
+}
+
+@test "Python gate shows ruff errors and prefers installed project tools (#104)" {
+  python_gate_fixture
+  mkdir -p "$BATS_TEST_TMPDIR/.venv/bin"
+  printf '#!/usr/bin/env bash\necho "ruff: F821 undefined name"; exit 1\n' > "$BATS_TEST_TMPDIR/.venv/bin/ruff"
+  chmod +x "$BATS_TEST_TMPDIR/.venv/bin/ruff"
+  run bash -c 'cd "$1" && PATH="$1/tools:$PATH" bash gate.sh' _ "$BATS_TEST_TMPDIR"
+  [ "$status" -eq 2 ]
+  [[ "$output" == *"ruff: F821 undefined name"* ]]
+  [[ "$output" != *"mypy: incompatible assignment"* ]]
+}
+
+@test "Python gate checks root files and passes when both tools succeed (#104)" {
+  python_gate_fixture
+  mv "$BATS_TEST_TMPDIR/src/main.py" "$BATS_TEST_TMPDIR/main.py"
+  printf '#!/usr/bin/env bash\necho mypy-ran; exit 0\n' > "$BATS_TEST_TMPDIR/tools/mypy"
+  run bash -c 'cd "$1" && PATH="$1/tools:$PATH" bash gate.sh' _ "$BATS_TEST_TMPDIR"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"mypy-ran"* ]]
+}
+
+@test "Android gate ignores generated Kotlin in build directories but checks source (#104)" {
+  mkdir -p "$BATS_TEST_TMPDIR/app/build/generated"
+  touch "$BATS_TEST_TMPDIR/app/build/generated/Generated.kt"
+  printf '#!/usr/bin/env bash\necho gradle-ran; exit 1\n' > "$BATS_TEST_TMPDIR/gradlew"
+  chmod +x "$BATS_TEST_TMPDIR/gradlew"
+  run bash -c 'cd "$1" && source "$2"' _ "$BATS_TEST_TMPDIR" "$REPO_ROOT/presets/stacks/android/.claude/hooks/pre-commit.partial.sh"
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"gradle-ran"* ]]
+  mkdir -p "$BATS_TEST_TMPDIR/app/src"
+  touch "$BATS_TEST_TMPDIR/app/src/Main.kt"
+  run bash -c 'cd "$1" && source "$2"' _ "$BATS_TEST_TMPDIR" "$REPO_ROOT/presets/stacks/android/.claude/hooks/pre-commit.partial.sh"
+  [ "$status" -eq 2 ]
+  [[ "$output" == *"gradle-ran"* ]]
+}
+
 # --- 1) 베이스 복사 ---
 
 # 테스트 이름은 ASCII 로 유지한다 — bats-core 가 비-ASCII(한글) 테스트명에서
@@ -54,9 +196,9 @@ setup() {
 
   marker_line="$(grep -n '# --- STACK CHECKS' "$hook" | head -1 | cut -d: -f1)"
   [ -n "$marker_line" ]
-  next_line="$((marker_line + 1))"
+  next_line="$((marker_line + 2))"
   next_content="$(sed -n "${next_line}p" "$hook")"
-  # bun partial 의 첫 줄(주석 헤더)이 마커 바로 다음 줄이어야 함
+  # 스택 시작 표시 다음 줄에 bun partial 의 헤더가 있어야 함 (#104)
   first_partial_line="$(head -1 "$REPO_ROOT/presets/stacks/bun/.claude/hooks/pre-commit.partial.sh")"
   [ "$next_content" = "$first_partial_line" ]
 }
@@ -449,13 +591,14 @@ setup_publish_repo() {
 
 # --- 15) --update mode (#33, mechanics from issue #13) ---
 
-@test "--update re-adds deleted base file, stages .new for local edits, skips pre-commit.sh" {
+@test "--update re-adds deleted files and offers changed files including the gate as .new (#104)" {
   run "$SCRIPT" "$BATS_TEST_TMPDIR" --yes
   [ "$status" -eq 0 ]
 
   # simulate drift: base file deleted + base file locally edited
   rm "$BATS_TEST_TMPDIR/.claude/rules/security.md"
   echo "local customization" >> "$BATS_TEST_TMPDIR/.claude/rules/data.md"
+  echo "# custom gate" >> "$BATS_TEST_TMPDIR/.claude/hooks/pre-commit.sh"
 
   run "$SCRIPT" "$BATS_TEST_TMPDIR" --update --yes
   [ "$status" -eq 0 ]
@@ -469,9 +612,10 @@ setup_publish_repo() {
   [ -f "$BATS_TEST_TMPDIR/.claude/rules/data.md.new" ]
   ! grep -q 'local customization' "$BATS_TEST_TMPDIR/.claude/rules/data.md.new"
 
-  # pre-commit.sh is never overwritten (stack partials may be spliced in)
-  [[ "$output" == *"pre-commit.sh"*"skipped"* ]]
-  [ ! -f "$BATS_TEST_TMPDIR/.claude/hooks/pre-commit.sh.new" ]
+  # 현재 훅은 보존하고 합성한 최신 훅만 .new 로 제안한다.
+  grep -q 'custom gate' "$BATS_TEST_TMPDIR/.claude/hooks/pre-commit.sh"
+  [ -f "$BATS_TEST_TMPDIR/.claude/hooks/pre-commit.sh.new" ]
+  ! grep -q 'custom gate' "$BATS_TEST_TMPDIR/.claude/hooks/pre-commit.sh.new"
 }
 
 @test "--update leaves placeholder-free identical files unchanged (no .new spam)" {
@@ -480,10 +624,10 @@ setup_publish_repo() {
   run "$SCRIPT" "$BATS_TEST_TMPDIR" --update --yes
   [ "$status" -eq 0 ]
   # no-op 업데이트는 .new 를 만들지 않아야 한다 — 플레이스홀더 든 파일 포함(#39).
-  # 예외: forge 프리셋이 덮어쓴 commands/ 2개는 base 와 다른 게 정상(--update 는 forge 미인지).
+  # forge 프리셋도 같은 설치 선택으로 합성하므로 .new 예외가 없다 (#104).
   [ ! -f "$BATS_TEST_TMPDIR/.claude/rules/security.md.new" ]
   [ ! -f "$BATS_TEST_TMPDIR/AGENTS.md.new" ]
-  stray="$(find "$BATS_TEST_TMPDIR" -name '*.new' ! -path '*/.claude/commands/*' | wc -l | tr -d ' ')"
+  stray="$(find "$BATS_TEST_TMPDIR" -name '*.new' | wc -l | tr -d ' ')"
   [ "$stray" -eq 0 ]
 }
 
