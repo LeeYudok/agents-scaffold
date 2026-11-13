@@ -64,6 +64,19 @@ async (page) => {
 
 넣은 뒤 반환값을 원고와 문단 단위로 대조한다. 한 문단이라도 다르면 저장하지 않는다.
 
+붙여넣기로 바뀌는 요소(2026-11-13 실측):
+
+| HTML | 에디터 컴포넌트 |
+|---|---|
+| `<h2>` | 소제목 |
+| `<ul><li>` | 글머리 기호 목록 |
+| `<blockquote><p>` | 인용구(`.se-component.se-quotation`). 출처 칸은 비어 있다 |
+| `<p><br></p>` | 빈 줄 |
+
+- 인용구 출처는 붙여넣은 뒤 `.se-quotation .se-text-paragraph` 마지막 칸을 눌러 입력한다. 본문 안에 "— 이름" 으로 적지 않는다.
+- 여러 줄로 감긴 문단에서 `End` 는 화면상 줄 끝으로만 간다. 문단 끝을 지우려고 `Backspace` 를 반복하면 중간 글자가 지워진다. 문단을 고칠 때는 세 번 클릭(`click({ clickCount: 3 })`)으로 문단을 고른 뒤 다시 입력한다.
+- 에디터는 자체 스크롤 영역이다. `window.scrollTo` 는 듣지 않으니 `page.mouse.wheel` 로 움직인다.
+
 ## 3. 임시저장
 
 - 저장 버튼은 `#mainFrame` 안의 `button[class*="save_btn"]`, 임시저장 개수는 `button[class*="save_count_btn"]` 다.
@@ -159,7 +172,8 @@ for (const t of tags) { await page.keyboard.type(t, { delay: 10 }); await page.k
 - 태그는 입력하고 `Enter` 를 누르면 생기며 최대 30개다.
 
 **검수**
-- 오른쪽 아래 "?" 위의 기기 아이콘을 누를 때마다 PC → Mobile → Tablet 미리보기로 바뀐다. 발행 전에 모바일 화면을 스크린샷으로 확인한다.
+- 오른쪽 아래 "?" 위의 기기 아이콘(`button.__mode-button`, 클래스 끝이 `-device-desktop`·`-device-mobile` 등)을 누를 때마다 PC → Mobile → Tablet 미리보기로 바뀐다. 발행 전에 모바일 화면을 스크린샷으로 확인한다.
+- 수정 화면(`PostUpdateForm`)에는 임시저장 버튼이 없다. 고친 내용은 "발행"을 눌러야 남는다. 사용자 확인 전에는 화면을 닫지 말고 그대로 둔다.
 - 임시저장 목록에서 글을 고르면 그 글을 불러온다. 목록에는 "삭제"·"전체삭제" 가 있다. 사용자 지시 없이 누르지 않는다.
 
 ## 증시 글을 쓸 때의 데이터 출처
