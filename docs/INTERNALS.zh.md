@@ -57,7 +57,7 @@ presets/                  预设片段（复制覆盖模型，#81 起按类型�
   forge/github/           GitHub forge —— gh、PR、`Closes #N` 自动关闭
   forge/gitlab/           GitLab forge —— glab、MR、`Closes #N` 自动关闭（合并后需确认）
   lang/en/                英文覆盖层（base/、forge/<forge>/、stacks/<stack>/）—— 见下文 `--lang`
-  skills/personal/        可选包：9 个 yd-* 技能 + 4 个 agent，仅在 `--with-personal-skills` 时合并（#78）
+  skills/personal/        可选包：10 个 yd-* 技能 + 4 个 agent，仅在 `--with-personal-skills` 时合并（#78）
 bin/                      agents-scaffold.sh 引导脚本
 plugins/                  技能插件 yd-skills、yd-skills-personal（#82）—— skills/ 是由源头生成的副本（build-plugins.py）
 .claude-plugin/           marketplace.json —— Claude Code 与 Codex 共用的插件市场（#82）

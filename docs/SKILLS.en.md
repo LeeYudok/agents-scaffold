@@ -23,7 +23,7 @@ English overlay, which is why `--lang en` leaves them out.
 |---|---|
 | `--with-yd-skills` | Add the 14 `yd-*` skills (and their agents) to an English install |
 | `--no-yd-skills` | Leave them out of a Korean install |
-| `--with-personal-skills` | Also install the 9 opt-in skills. They assume a specific GitLab, hosts, ui.doksam.com and FinGuard, so they are not meant for other environments |
+| `--with-personal-skills` | Also install the 10 opt-in skills. They assume a specific GitLab, hosts, ui.doksam.com and FinGuard, so they are not meant for other environments |
 
 The choice is recorded in `.claude/.scaffold.json`, so `--update` keeps the same sets. The per-skill table and the
 authoring rules are in [.claude/skills/README.md](../.claude/skills/README.md) (Korean).
@@ -42,7 +42,7 @@ codex plugin marketplace add LeeYudok/agents-scaffold && codex plugin add yd-ski
 ```
 
 - `yd-skills` carries the 14 `yd-*` skills plus `handoff`, `docs-sync`, `memory-factcheck` and `skill-evolve`.
-  `yd-skills-personal` carries the 9 opt-in ones. Both are Korean.
+  `yd-skills-personal` carries the 10 opt-in ones. Both are Korean.
 - In Claude Code, plugin skills are namespaced (`yd-skills:yd-pg-expert`).
 - A plugin carries skills only. Project rules, hooks and subagents come from the installer, because Claude Code
   plugins cannot ship rules and Codex plugins cannot ship subagents.

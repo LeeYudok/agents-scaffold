@@ -57,7 +57,7 @@ presets/                  プリセット断片(コピー上書きモデル、#8
   forge/github/           GitHub forge — gh、PR、`Closes #N` 自動クローズ
   forge/gitlab/           GitLab forge — glab、MR、`Closes #N` 自動クローズ(マージ後に確認)
   lang/en/                英語オーバーレイ(base/・forge/<forge>/・stacks/<stack>/)— 後述の `--lang` を参照
-  skills/personal/        オプトインバンドル: yd-* スキル 9 個 + エージェント 4 個、`--with-personal-skills` 時のみマージ(#78)
+  skills/personal/        オプトインバンドル: yd-* スキル 10 個 + エージェント 4 個、`--with-personal-skills` 時のみマージ(#78)
 bin/                      agents-scaffold.sh ブートストラップスクリプト
 plugins/                  スキルプラグイン yd-skills・yd-skills-personal(#82)— skills/ は原本から生成したコピー(build-plugins.py)
 .claude-plugin/           marketplace.json — Claude Code・Codex 共通のマーケットプレイス(#82)

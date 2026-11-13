@@ -120,7 +120,7 @@ Codex（codex-cli 0.166.0）与 agy（1.5.0）会在不调用任何工具的情�
 |---|---|---|
 | `--lang ko`（默认） | 24 — 10 个工作流技能 + 14 个 `yd-*` | 19 — 7 + 12 个 `yd-*` |
 | `--lang en` | 10 — 工作流技能 | 7 |
-| 加上 `--with-personal-skills` | +9 | +4 |
+| 加上 `--with-personal-skills` | +10 | +4 |
 
 10 个工作流技能是 `review`、`status`、`search-first`、`security-precheck`、`docs-sync`、`handoff`、
 `memory-factcheck`、`skill-evolve`、`grill-me` 以及模板 `example-skill`。14 个 `yd-*` 技能包括从
@@ -134,8 +134,8 @@ Codex（codex-cli 0.166.0）与 agy（1.5.0）会在不调用任何工具的情�
 | `--no-yd-skills` | 不安装。`--lang en` 的默认行为，因为 `yd-*` 技能是用韩文写的，没有英文覆盖层（#105） |
 | `--with-personal-skills` | 在技术栈预设之后再合并可选包 `presets/skills/personal/` |
 
-可选包含 9 个技能（`yd-agents-mem`、`yd-claude-auth-sync`、`yd-git-sync`、`yd-git-ship`、`yd-doksam-ui`、
-`yd-finguard`、`yd-sdlc-orchestrator`、`yd-script-editor`、`yd-session-recording`）和 4 个代理。它们以特定的
+可选包含 10 个技能（`yd-agents-mem`、`yd-claude-auth-sync`、`yd-git-sync`、`yd-git-ship`、`yd-doksam-ui`、
+`yd-finguard`、`yd-sdlc-orchestrator`、`yd-script-editor`、`yd-session-recording`、`yd-naver-blog`）和 4 个代理。它们以特定的
 GitLab、主机、ui.doksam.com 和 FinGuard 为前提，不适用于其他环境。
 
 ```bash
@@ -195,7 +195,7 @@ agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --forge github --stack 
 | `--name <name>` | `{{PROJECT_NAME}}` 的替换值。默认 = 目标目录名 |
 | `--harness <harness>` | `claude`（默认）、`codex`、`agy` 或 `all` — 见 [Harness](#harness--harness) |
 | `--with-yd-skills` / `--no-yd-skills` | 安装或略去 14 个韩文 `yd-*` 技能。默认：`ko` 安装包含，`en` 安装不包含 |
-| `--with-personal-skills` | 额外安装绑定维护者环境的 9 个 `yd-*` 技能和 4 个代理 |
+| `--with-personal-skills` | 额外安装绑定维护者环境的 10 个 `yd-*` 技能和 4 个代理 |
 | `--yes` | 跳过交互式提问（非交互模式） |
 | `--dry-run` | 不做任何改动。打印安装、`--update` 或 `--uninstall` 将要做的事（见下文） |
 | `--update` | 刷新已引导的项目（见下文） |

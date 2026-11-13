@@ -183,7 +183,7 @@ Two further Codex constraints shape the design:
 |---|---|---|
 | `--lang ko` (default) | 24 — 10 workflow skills + 14 `yd-*` | 19 — 7 + 12 `yd-*` |
 | `--lang en` | 10 — the workflow skills | 7 |
-| with `--with-personal-skills` | +9 | +4 |
+| with `--with-personal-skills` | +10 | +4 |
 
 The 10 workflow skills are `review`, `status`, `search-first`, `security-precheck`, `docs-sync`, `handoff`,
 `memory-factcheck`, `skill-evolve`, `grill-me` and the `example-skill` template. The 14 `yd-*` skills are the 13 moved
@@ -197,8 +197,8 @@ screen design, Korean writing, ...) plus `yd-cve-check` for dependency CVE check
 | `--no-yd-skills` | Leave them out. The default for `--lang en`, because the `yd-*` skills are written in Korean and have no English overlay (#105) |
 | `--with-personal-skills` | Also merge the opt-in bundle `presets/skills/personal/` after the stack presets |
 
-The opt-in bundle is 9 skills (`yd-agents-mem`, `yd-claude-auth-sync`, `yd-git-sync`, `yd-git-ship`, `yd-doksam-ui`,
-`yd-finguard`, `yd-sdlc-orchestrator`, `yd-script-editor`, `yd-session-recording`) and 4 agents. They assume a
+The opt-in bundle is 10 skills (`yd-agents-mem`, `yd-claude-auth-sync`, `yd-git-sync`, `yd-git-ship`, `yd-doksam-ui`,
+`yd-finguard`, `yd-sdlc-orchestrator`, `yd-script-editor`, `yd-session-recording`, `yd-naver-blog`) and 4 agents. They assume a
 specific GitLab, hosts, ui.doksam.com and FinGuard, so they are not meant for other environments.
 
 ```bash
@@ -262,7 +262,7 @@ and commit the result.
 | `--name <name>` | `{{PROJECT_NAME}}` substitution value. Default = target directory name |
 | `--harness <harness>` | `claude` (default), `codex`, `agy` or `all` — see [Harness](#harness---harness) |
 | `--with-yd-skills` / `--no-yd-skills` | Install or leave out the 14 Korean `yd-*` skills. Default: in for `ko`, out for `en` |
-| `--with-personal-skills` | Also install the 9 `yd-*` skills and 4 agents tied to the maintainer's environment |
+| `--with-personal-skills` | Also install the 10 `yd-*` skills and 4 agents tied to the maintainer's environment |
 | `--yes` | Skip interactive prompts (non-interactive mode) |
 | `--dry-run` | Change nothing. Print what an install, `--update` or `--uninstall` would do (see below) |
 | `--update` | Refresh an already-bootstrapped project (see below) |

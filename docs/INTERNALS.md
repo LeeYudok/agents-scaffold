@@ -57,7 +57,7 @@ presets/                프리셋 조각 (복사 덮어쓰기 방식, #81 에서
   forge/github/         GitHub forge — gh, PR, `Closes #N` 자동 클로즈
   forge/gitlab/         GitLab forge — glab, MR, `Closes #N` 자동 클로즈(머지 후 확인)
   lang/en/              영어 오버레이 (base/·forge/<forge>/·stacks/<stack>/) — 아래 `--lang` 참조
-  skills/personal/      옵트인 yd-* 스킬 9개·에이전트 4개 — `--with-personal-skills` 때만 머지 (#78)
+  skills/personal/      옵트인 yd-* 스킬 10개·에이전트 4개 — `--with-personal-skills` 때만 머지 (#78)
 bin/                    agents-scaffold.sh 부트스트랩 스크립트
 plugins/                스킬 플러그인 yd-skills·yd-skills-personal (#82) — skills/ 는 원본에서 생성한 사본(build-plugins.py)
 .claude-plugin/         marketplace.json — Claude Code·Codex 공용 마켓플레이스 (#82)

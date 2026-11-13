@@ -57,7 +57,7 @@ presets/                  preset fragments (copy-overwrite model, grouped by kin
   forge/github/           GitHub forge — gh, PRs, `Closes #N` auto-close
   forge/gitlab/           GitLab forge — glab, MRs, `Closes #N` auto-close (verify after merge)
   lang/en/                English overlay (base/, forge/<forge>/, stacks/<stack>/) — see `--lang` below
-  skills/personal/        opt-in bundle: 9 yd-* skills + 4 agents, merged only with `--with-personal-skills` (#78)
+  skills/personal/        opt-in bundle: 10 yd-* skills + 4 agents, merged only with `--with-personal-skills` (#78)
 bin/                      agents-scaffold.sh bootstrap script
 plugins/                  skill plugins yd-skills and yd-skills-personal (#82) — skills/ is a copy generated from the source (build-plugins.py)
 .claude-plugin/           marketplace.json — one marketplace for Claude Code and Codex (#82)

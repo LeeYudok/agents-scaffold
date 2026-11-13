@@ -172,7 +172,7 @@ Codex 쪽 추가 제약 두 가지도 설계에 영향을 준다.
 |---|---|---|
 | `--lang ko` (기본) | 24 — 워크플로 10 + `yd-*` 14 | 19 — 7 + `yd-*` 12 |
 | `--lang en` | 10 — 워크플로 스킬 | 7 |
-| `--with-personal-skills` 추가 | +9 | +4 |
+| `--with-personal-skills` 추가 | +10 | +4 |
 
 워크플로 스킬 10개는 `review`·`status`·`search-first`·`security-precheck`·`docs-sync`·`handoff`·
 `memory-factcheck`·`skill-evolve`·`grill-me` 와 템플릿 `example-skill` 이다. `yd-*` 14개는
@@ -186,8 +186,8 @@ Codex 쪽 추가 제약 두 가지도 설계에 영향을 준다.
 | `--no-yd-skills` | 뺀다. `--lang en` 의 기본값이다. `yd-*` 스킬은 한국어로 쓰여 있고 영어 오버레이가 없다(#105) |
 | `--with-personal-skills` | 옵트인 묶음 `presets/skills/personal/` 도 스택 프리셋 다음에 머지한다 |
 
-옵트인 묶음은 스킬 9개(`yd-agents-mem`·`yd-claude-auth-sync`·`yd-git-sync`·`yd-git-ship`·`yd-doksam-ui`·
-`yd-finguard`·`yd-sdlc-orchestrator`·`yd-script-editor`·`yd-session-recording`)와 에이전트 4개다.
+옵트인 묶음은 스킬 10개(`yd-agents-mem`·`yd-claude-auth-sync`·`yd-git-sync`·`yd-git-ship`·`yd-doksam-ui`·
+`yd-finguard`·`yd-sdlc-orchestrator`·`yd-script-editor`·`yd-session-recording`·`yd-naver-blog`)와 에이전트 4개다.
 특정 GitLab·호스트·ui.doksam.com·FinGuard 를 전제하므로 다른 환경에서는 쓰지 않는다.
 
 ```bash
@@ -247,7 +247,7 @@ agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --forge github --stack 
 | `--name <name>` | `{{PROJECT_NAME}}` 치환값. 기본 = 대상 디렉터리명 |
 | `--harness <harness>` | `claude`(기본)·`codex`·`agy`·`all` — [하네스](#하네스---harness) 참조 |
 | `--with-yd-skills` / `--no-yd-skills` | 한국어 `yd-*` 스킬 14개를 넣거나 뺀다. 기본값은 `ko` 설치에 포함, `en` 설치에 제외 |
-| `--with-personal-skills` | 메인테이너 환경 전용 `yd-*` 스킬 9개·에이전트 4개도 설치 |
+| `--with-personal-skills` | 메인테이너 환경 전용 `yd-*` 스킬 10개·에이전트 4개도 설치 |
 | `--yes` | 대화형 프롬프트 생략(비대화 모드) |
 | `--dry-run` | 아무것도 바꾸지 않는다. 설치·`--update`·`--uninstall` 이 할 일을 출력한다 (아래 참조) |
 | `--update` | 이미 부트스트랩된 프로젝트를 최신화 (아래 참조) |
