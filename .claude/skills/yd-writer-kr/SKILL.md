@@ -137,7 +137,7 @@ Closes #N
 
 ## 검사 도구
 
-### 검사기 — Rust `scripts/check-writing`
+### 검사기 — Go `scripts/check-writing`
 
 ```bash
 bash <스킬경로>/scripts/check-writing 글.md          # 문어체 산출물
@@ -148,28 +148,27 @@ cat 글.md | bash <스킬경로>/scripts/check-writing -  # 표준 입력
 - 오류: 금지 표현, 문어체의 ~함·~됨·~있음 종결, ISO 8601 시각, 이모지. 하나라도 있으면 exit 1 이다.
 - 경고: 60자를 넘는 문장. 의미를 자르면서까지 맞추지 않는다. `--strict` 면 오류로 센다.
 - 코드 블록·인라인 코드·표·인용·URL 은 보지 않는다. 한 줄만 면제하려면 `writer:allow` 를 적는다.
-- Rust 엔진이 `references/banned-expressions.md` 의 `검사` 열을 실행할 때마다 읽는다. 목록을 늘릴 때는 그 표만 고친다.
+- Go 엔진이 `references/banned-expressions.md` 의 `검사` 열을 실행할 때마다 읽는다. 목록을 늘릴 때는 그 표만 고친다.
 - 검사기는 근거 유무와 독자에게 필요한 내용인지는 판단하지 못한다. 그건 점검표로 본다.
 
-첫 실행에는 Rust 1.95 이상의 `cargo`가 필요하다. `Cargo.lock`으로 의존성을 고정해 빌드한다.
+첫 실행에는 Go 1.22 이상이 필요하다. 표준 라이브러리만 쓰므로 빌드에 네트워크가 필요 없다.
+빌드는 2026-11-13 맥(Apple Silicon)에서 빈 Go 캐시 기준 약 2초 걸렸다.
 빌드 결과는 사용자 캐시에 보관한다. 소스가 바뀌면 다시 빌드한다.
-기본 캐시 경로는 `${XDG_CACHE_HOME:-$HOME/.cache}/yd-writer-kr/`이다.
+기본 캐시 경로는 `${XDG_CACHE_HOME:-$HOME/.cache}/yd-writer-kr/go/`이다.
 
-- 이미 빌드한 바이너리는 `CHECK_WRITING_BIN=/경로/check-writing`으로 지정한다. 이 경우 Rust와 Python 없이 실행한다.
+- 이미 빌드한 바이너리는 `CHECK_WRITING_BIN=/경로/check-writing`으로 지정한다. 이 경우 Go와 Python 없이 실행한다.
 - `--json`은 파일별 검사 결과와 오류·경고 개수를 JSON으로 출력한다.
 - 종료 코드는 0(오류 없음), 1(글 검사 위반), 2(실행 불가)다. `--strict`는 경고도 위반으로 센다.
-- 기존 `python3 scripts/check_writing.py` 명령과 Upstage 호출부는 호환 계층에서 Rust 엔진을 부른다.
+- 기존 `python3 scripts/check_writing.py` 명령과 Upstage 호출부는 호환 계층에서 Go 엔진을 부른다.
 
-폐쇄망에서는 연결된 환경에서 같은 소스의 의존성을 준비한다. Cargo 캐시와 소스를 함께 반입하거나
-같은 운영체제·CPU용 바이너리를 반입해 `CHECK_WRITING_BIN`으로 지정한다.
+폐쇄망에서도 Go 툴체인만 있으면 빌드된다. 툴체인이 없으면 같은 운영체제·CPU용 바이너리를 반입해
+`CHECK_WRITING_BIN`으로 지정한다. 다른 플랫폼용 바이너리는 연결된 환경에서 교차 빌드한다.
 
 ```bash
-cargo fetch --locked --manifest-path <스킬경로>/rust/Cargo.toml
-CARGO_NET_OFFLINE=true bash <스킬경로>/scripts/check-writing 글.md
+cd <스킬경로>/go && GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -o <반입경로>/check-writing .
 ```
 
-Rust 변경은 `cargo test --locked`, `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`로 검증한다.
-명령에 `--manifest-path <스킬경로>/rust/Cargo.toml`을 함께 지정한다.
+Go 변경은 `<스킬경로>/go` 에서 `gofmt -l .`(출력 없음), `go vet ./...`, `go test ./...` 로 검증한다.
 
 ### Upstage 1차 교정 — `scripts/upstage_proofread.py`
 
