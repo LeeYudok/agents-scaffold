@@ -128,8 +128,8 @@ agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --stack go --with-perso
 ```
 
 - `yd-*` 技能仅提供韩文版——没有 `--lang en` 覆盖层。
-- 预设通常不在 `--update` 范围内，此包是例外。传入 `--with-personal-skills`，或目标中已有其中任一技能时，
-  `--update` 也会刷新此包（沿用 `.new` 规则）。对默认安装执行 `--update` 不会新增此包。
+- `--update` 会刷新安装时选择的预设。传入 `--with-personal-skills`，或目标中已有个人技能时，也会刷新个人包。
+  默认安装不会自动新增个人包。
 
 ## 语言（`--lang`）
 
@@ -146,8 +146,7 @@ agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --lang en --forge githu
 
 `.claude/hooks/pre-commit.sh` 永远不会被 `--lang` 覆盖（它是技术栈片段
 拼接进去的文件——消息只有单一语言，代码不受语言影响）。`--update`
-只刷新韩语基础文件；若需要重新应用英文覆盖层，请在其后再带
-`--lang en` 运行一次。
+会使用保存的语言。要更改语言，请指定 `--update --lang en` 或 `--update --lang ko`，再合并 `.new` 文件。
 
 ## Usage 1 — 脚本
 
@@ -195,12 +194,16 @@ curl -fsSL https://raw.githubusercontent.com/leeyudok/agents-scaffold/main/bin/a
 agents-scaffold/bin/agents-scaffold.sh --update /path/to/existing-repo
 ```
 
-- `.claude/hooks/pre-commit.sh` 始终被跳过——技术栈片段已被拼接
-  进去，需要手动合并。
-- 其他基础文件内容相同时跳过；有差异时保留现有文件，新版本写为
+- 安装时将 forge、技术栈、语言、harness、项目名称和个人技能选择记录到 `.claude/.scaffold.json`。
+  读写此记录需要 `python3`；没有时安装会继续并发出警告。
+- 没有记录的旧安装会从指令、规则和适配器中推断选择。请检查输出，必要时用选项覆盖。
+- 更新会按这些选择合成最新文件，包括 `pre-commit.sh` 中的技术栈检查。
+- 文件内容相同时跳过；有差异时保留现有文件，新版本写为
   `<file>.new`（占位符替换同样作用于 `.new` 文件）。
 - 结束时打印新增 / 待更新 / 跳过 / 未变更文件的汇总——用 `diff`
   查看 `.new` 文件后手动应用。
+- 重新安装若改变 `AGENTS.md`，原内容会保存到 `AGENTS.md.bak-<时间>-<唯一值>` 并显示路径。
+  请从备份恢复自定义指令。已有技术栈检查不会重复插入。
 
 ## Usage 2 — GitLab 模板
 

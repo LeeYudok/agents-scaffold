@@ -190,9 +190,8 @@ agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --stack go --with-perso
 ```
 
 - `yd-*` skills are Korean only — there is no `--lang en` overlay for them.
-- Presets are normally outside `--update`; this bundle is the exception. With `--with-personal-skills`, or when
-  the target already has any of its skills, `--update` refreshes the bundle too (same `.new` rule). Running
-  `--update` on a default install does not add the bundle.
+- `--update` refreshes presets selected at installation. With `--with-personal-skills`, or when the target
+  already has a personal skill, it refreshes the personal bundle too. Default installs do not gain the bundle.
 
 ## Language (`--lang`)
 
@@ -209,8 +208,8 @@ agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --lang en --forge githu
 
 `.claude/hooks/pre-commit.sh` is never overlaid by `--lang` (it's the file
 stack partials get spliced into — single-language messages, code unaffected
-by language). `--update` only refreshes the Korean base; re-run with
-`--lang en` on top if you need the English overlay reapplied.
+by language). `--update` uses the saved language. To change it, pass `--update --lang en` or
+`--update --lang ko`, then merge the proposed `.new` files.
 
 ## Usage 1 — script
 
@@ -260,13 +259,18 @@ merge is suggested. Once migrated, base skills are refreshed on the `.agents/ski
 agents-scaffold/bin/agents-scaffold.sh --update /path/to/existing-repo
 ```
 
-- `.claude/hooks/pre-commit.sh` is always skipped — stack partials were spliced
-  into it, so it needs manual merging.
-- Other base files are skipped when identical; when they differ, the existing
+- Installation saves forge, stacks, language, harness, project name and personal-skill choices in `.claude/.scaffold.json`.
+  Reading and writing this record requires `python3`. Without it, installation continues with a warning.
+- For older installs without a record, choices are inferred from instructions, rules and adapters.
+  Check the reported choices and override them with explicit options if needed.
+- Updates compose fresh output using those choices, including the selected stack gates in `pre-commit.sh`.
+- Identical files are skipped; when they differ, the existing
   file is preserved and the new version is written as `<file>.new`
   (placeholder substitution applies to `.new` files too).
 - A summary of added / pending-update / skipped / unchanged files is printed at
   the end — review `.new` files with `diff` and apply manually.
+- If reinstalling changes `AGENTS.md`, its original bytes are saved as `AGENTS.md.bak-<timestamp>-<unique>`.
+  The installer reports the backup path; restore your custom instructions from it. Existing stack gates are not inserted twice.
 
 ## Usage 2 — GitLab template
 

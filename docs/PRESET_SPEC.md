@@ -55,8 +55,9 @@ presets/stacks/<stack>/
 
 `bin/agents-scaffold.sh` 는 선택된 각 스택의 파셜을 대상의
 `.claude/hooks/pre-commit.sh` 안 `# --- STACK CHECKS` 마커 줄 바로 뒤에,
-`--stack` 에 전달된 순서대로 삽입한다. 여러 파셜은 하나의 파일 안에 이어
-붙어서, 베이스 스크립트의 끝부분 `echo "pre-commit 통과"; exit 0` 이전까지
+스택별 시작/끝 표시로 감싸 삽입한다. 매번 마커 바로 뒤에 넣으므로 실행 순서는
+`--stack` 선택의 역순이다. 재설치 시 같은 스택 검사는 다시 넣지 않는다(#104).
+여러 파셜은 하나의 파일 안에 이어 붙어서, 베이스 스크립트의 끝부분 `echo "pre-commit 통과"; exit 0` 이전까지
 전부 같은 `bash -euo pipefail` 프로세스에서 실행된다.
 
 ### 파셜이 `exit 0` 을 호출하면 안 되는 이유

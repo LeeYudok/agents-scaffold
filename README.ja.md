@@ -57,7 +57,7 @@ agents-scaffold/bin/agents-scaffold.sh /path/to/repo --harness all --stack pytho
 | **閉域網と Windows に対応** | オフラインバンドルはネットワークなしでインストールでき、Windows は Git Bash と `.cmd` ランチャーで動きます([docs/OFFLINE_INSTALL.en.md](docs/OFFLINE_INSTALL.en.md))。 |
 | **プラグインマーケットプレイス** | スキルは Claude Code / Codex のプラグインとしてグローバルにもインストールできます — クローン不要。 |
 | **自己改善** | `skill-evolve` / `agent-evolve` が実際のミスを、それを起こしたスキルやエージェントの「Learned warnings」に変えます。 |
-| **テスト済み** | インストーラーの bats リグレッションテスト 100 個、スキルごとの契約テスト、ドキュメントのリンクチェッカー。すべて CI で実行。 |
+| **テスト済み** | インストーラーの bats リグレッションテスト 110 個、スキルごとの契約テスト、ドキュメントのリンクチェッカー。すべて CI で実行。 (2026-11-13) |
 
 ## インストール直後に起きること
 

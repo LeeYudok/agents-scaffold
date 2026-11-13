@@ -57,7 +57,7 @@ agents-scaffold/bin/agents-scaffold.sh /path/to/repo --harness all --stack pytho
 | **支持内网与 Windows** | 离线包无需网络即可安装；Windows 通过 Git Bash 和 `.cmd` 启动器运行（[docs/OFFLINE_INSTALL.en.md](docs/OFFLINE_INSTALL.en.md)）。 |
 | **插件市场** | 这些技能也可以作为 Claude Code / Codex 插件全局安装 — 无需 clone。 |
 | **自我改进** | `skill-evolve` / `agent-evolve` 会把真实错误提炼成 "Learned warnings"，写回犯错的那个技能或代理。 |
-| **经过测试** | 安装器有 100 个 bats 回归测试，每个技能有契约测试，文档有链接检查器，全部在 CI 中运行。 |
+| **经过测试** | 安装器有 110 个 bats 回归测试，每个技能有契约测试，文档有链接检查器，全部在 CI 中运行。 (2026-11-13) |
 
 ## 装好之后会发生什么
 

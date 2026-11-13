@@ -1,5 +1,6 @@
 # --- Android Kotlin lint + typecheck gate ---
-if [ -x ./gradlew ] && (find . -name "*.kt" | head -1 | grep -q kt 2>/dev/null); then
+kotlin_file="$(find . \( -type d \( -name .git -o -name .gradle -o -name build -o -name node_modules \) -prune \) -o -type f -name '*.kt' -print -quit)"
+if [ -x ./gradlew ] && [ -n "$kotlin_file" ]; then
   echo "ktlintCheck + detekt..." >&2
   if ! ./gradlew ktlintCheck -q 2>&1; then
     echo "차단: ktlint 실패. './gradlew ktlintFormat' 실행 후 재커밋." >&2
