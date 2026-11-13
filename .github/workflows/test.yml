@@ -19,6 +19,19 @@ jobs:
           echo "$RUNNER_TEMP/bats/node_modules/.bin" >> "$GITHUB_PATH"
           "$RUNNER_TEMP/bats/node_modules/.bin/bats" --version
 
+      # writer 검사기는 Rust 엔진을 사용한다 (#115). Python 호환 테스트도 같은 실행 파일을 쓴다.
+      - name: Build and check Rust writing checker
+        env:
+          CARGO_TARGET_DIR: ${{ runner.temp }}/writer-rust
+        run: |
+          rustup toolchain install 1.95.0 --profile minimal --component rustfmt --component clippy
+          manifest=.claude/skills/yd-writer-kr/rust/Cargo.toml
+          cargo +1.95.0 fmt --manifest-path "$manifest" --check
+          cargo +1.95.0 clippy --locked --manifest-path "$manifest" --all-targets -- -D warnings
+          cargo +1.95.0 test --locked --manifest-path "$manifest"
+          cargo +1.95.0 build --release --locked --manifest-path "$manifest"
+          echo "CHECK_WRITING_BIN=$CARGO_TARGET_DIR/release/check-writing" >> "$GITHUB_ENV"
+
       - name: Run python unit tests
         run: python3 -m unittest discover -s tests -p 'test_*.py' -v
 

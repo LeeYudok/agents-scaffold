@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# Rust 빌드는 사용자 캐시에 둔다. 스킬 배포본·플러그인 사본에 target/ 을 섞지 않는다 (#115).
+set -euo pipefail
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+if [ -n "${CHECK_WRITING_BIN:-}" ]; then
+  if [ ! -x "$CHECK_WRITING_BIN" ]; then
+    echo 'check-writing: CHECK_WRITING_BIN 이 실행 가능한 파일이 아니다' >&2
+    exit 2
+  fi
+  exec "$CHECK_WRITING_BIN" --rules "$root/references/banned-expressions.md" "$@"
+fi
+if command -v sha256sum >/dev/null 2>&1; then
+  digest() { sha256sum; }
+elif command -v shasum >/dev/null 2>&1; then
+  digest() { shasum -a 256; }
+else
+  echo 'check-writing: sha256sum 또는 shasum 이 필요하다' >&2
+  exit 2
+fi
+fingerprint="$(
+  for source in "$root/rust/Cargo.toml" "$root/rust/Cargo.lock" "$root/rust/src/"*.rs; do
+    printf '%s\0' "${source##*/}"
+    cat "$source"
+    printf '\0'
+  done | digest | cut -d ' ' -f1
+)"
+cache="${XDG_CACHE_HOME:-${HOME:?}/.cache}/yd-writer-kr/$(uname -s)-$(uname -m)/$fingerprint"
+binary="$cache/release/check-writing"
+[ "$(uname -s | cut -c1-5)" != MINGW ] || binary="$binary.exe"
+if [ ! -x "$binary" ]; then
+  if ! command -v cargo >/dev/null 2>&1; then
+    echo 'check-writing: Rust 빌드에는 cargo 가 필요하다. 설치된 바이너리는 CHECK_WRITING_BIN 으로 지정한다' >&2
+    exit 2
+  fi
+  if ! cargo build --quiet --release --locked --manifest-path "$root/rust/Cargo.toml" --target-dir "$cache"; then
+    echo 'check-writing: Rust 빌드 실패. 의존성을 준비하거나 CHECK_WRITING_BIN 을 지정한다' >&2
+    exit 2
+  fi
+fi
+exec "$binary" --rules "$root/references/banned-expressions.md" "$@"
