@@ -36,7 +36,9 @@ the section below and the issues labeled
    The same suite runs in CI on every PR — a green run is required to merge.
 5. **Pull request** against `main` with `Closes #<N>` in the description.
    Merging auto-closes the issue.
-6. **Review.** Changes to `bin/agents-scaffold.sh`, `.claude/hooks/pre-commit.sh`,
+6. **Changelog and version.** A change users can notice gets a line under the unreleased heading of
+   [CHANGELOG.md](CHANGELOG.md). A release bumps `SCAFFOLD_VERSION` in `bin/agents-scaffold.sh` to match the tag.
+7. **Review.** Changes to `bin/agents-scaffold.sh`, `.claude/hooks/pre-commit.sh`,
    or any `pre-commit.partial.sh` get extra scrutiny — these are load-bearing
    for every repo that bootstraps from this template.
 
@@ -51,7 +53,8 @@ the section below and the issues labeled
 - **English overlay** (`presets/lang/en/`): the English mirror of the Korean
   originals. If you change a Korean rule/agent/skill, mirror the change in
   `presets/lang/en/` in the same PR (and vice versa). Executable scripts are
-  written in English once and shared — do not duplicate them into the overlay.
+  written once and shared — do not duplicate them into the overlay. The exception is a hook whose output is prose
+  for the agent (`compact-remind.sh`, `stop-memory-remind.sh`), which has an English copy in the overlay.
 - **This repo's own memory** (`.claude/memory/*.md` other than `README.md` and `MEMORY.template.md`): maintainer
   notes for this repo. They are never installed (#80). Any other repo-only file you add under `.claude/` must be
   registered in `is_repo_private()` in `bin/agents-scaffold.sh`.

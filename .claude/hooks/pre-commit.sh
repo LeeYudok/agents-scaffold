@@ -59,5 +59,5 @@ fi
 
 # --- STACK CHECKS (presets append here) ---
 
-echo "pre-commit 통과"
+echo "pre-commit: passed"
 exit 0

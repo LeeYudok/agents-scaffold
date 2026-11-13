@@ -5,22 +5,61 @@ on:
     branches: ["main", "develop"]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
-  bats:
+  # 정적 검사 (#107). 여기서 걸리는 것은 실행 전에 잡히는 종류다 — 쓰지 않는 import, 셸 인용 실수, 워크플로 문법.
+  lint:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
-      # apt 대신 npm 의 bats-core 공식 배포를 버전 고정으로 받는다 — 러너 apt 미러 DNS 장애에 job 이 떨어지지 않게 (#111).
-      # 전역 설치(-g)는 man 페이지 경로(/usr/local/share/man) 쓰기 권한이 없어 EACCES 로 실패하므로 임시 prefix 에 둔다.
-      - name: Install bats-core
+      # dotfiles/ 는 자체 문법 검사(dotfiles job)가 있고 plugins/ 는 생성물이라 뺀다.
+      # 스택 파셜과 bats 는 shebang 이 없어 -s bash 로 따로 본다.
+      - name: shellcheck (warning)
+        run: |
+          shellcheck --version
+          git ls-files -z -- '*.sh' ':!dotfiles/**' ':!plugins/**' ':!**/pre-commit.partial.sh' \
+            | xargs -0 shellcheck -S warning
+          shellcheck -S warning -s bash presets/stacks/*/.claude/hooks/pre-commit.partial.sh tests/*.bats
+          shellcheck -S warning .claude/skills/yd-writer-kr/scripts/check-writing
+
+      # F(pyflakes)·E9(문법 오류)만 본다 — 스타일이 아니라 실제 결함을 잡는 규칙이다. 버전은 고정한다.
+      - name: ruff
+        run: |
+          pipx install ruff==0.16.9
+          ruff check --select F,E9 .
+
+      - name: actionlint
+        run: |
+          go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
+          "$(go env GOPATH)/bin/actionlint" -color
+
+  bats:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Install bats-core and GNU parallel
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: '1'
+          HOMEBREW_NO_INSTALL_CLEANUP: '1'
+          HOMEBREW_NO_ENV_HINTS: '1'
         run: |
           npm install --no-save --no-audit --no-fund --prefix "$RUNNER_TEMP/bats" bats@1.13.0
           echo "$RUNNER_TEMP/bats/node_modules/.bin" >> "$GITHUB_PATH"
-          "$RUNNER_TEMP/bats/node_modules/.bin/bats" --version
+          if ! command -v parallel >/dev/null; then
+            /home/linuxbrew/.linuxbrew/bin/brew install parallel
+            echo /home/linuxbrew/.linuxbrew/bin >> "$GITHUB_PATH"
+          fi
 
-      # writer 검사기는 Go 표준 라이브러리만 쓴다 (#117, Rust 판 #115 대체). Python 호환 테스트도 같은 실행 파일을 쓴다.
-      # go.mod 의 최소 버전(1.22)으로 돌려 하위 호환을 확인한다.
       - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
@@ -48,19 +87,84 @@ jobs:
       - name: Run install-skills.sh tests
         run: bash tests/test_install_skills.sh
 
-      - name: Run agents-scaffold.sh bats tests
-        run: bats tests/agents-scaffold.bats
+      - name: Run install smoke test
+        run: bash tests/smoke-install.sh
 
-      # 지원 매트릭스 게이트 (#37) — tier=full 인데 실측이 만료됐거나, 판정에 근거가
-      # 없거나, manifest 와 문서의 CLI 버전이 어긋나면 실패한다. 문서를 자동 수정하지
-      # 않는다 — 강등은 사람이 PR 로 반영한다.
+      # 테스트마다 격리된 BATS_TEST_TMPDIR 을 쓰므로 파일·테스트 단위로 병렬 실행한다 (#107).
+      - name: Run bats tests
+        run: bats --jobs "$(nproc)" tests/*.bats
+
+      # 지원 매트릭스 게이트 (#37) — 판정에 근거가 없거나, manifest 와 문서의 CLI 버전이 어긋나면
+      # 실패한다. 만료(tier=full 실측이 한도를 넘김)는 여기서 경고만 한다 — 날짜가 지났다는 이유로
+      # 무관한 PR 이 막히지 않게 하고, 만료 실패는 주간 harness-matrix.yml 이 낸다 (#107).
       - name: Check harness support matrix
-        run: python3 scripts/dev/check-harness-matrix.py
+        run: python3 scripts/dev/check-harness-matrix.py --no-expiry --warn-days 14
+
+      # README 4개 언어·랜딩·llms.txt 의 스택 수·스킬 수·하네스 등급·버전이 실제와 같은지(#107)
+      - name: Check numbers stated in the docs
+        run: python3 scripts/dev/check-doc-numbers.py
+
+  # macOS 시스템 bash 3.2 (#107). 설치기와 훅은 3.2 에서 돌아야 한다 — ubuntu 의 bash 5 로는
+  # 빈 배열 참조·연관 배열 같은 3.2 비호환이 드러나지 않는다.
+  macos:
+    runs-on: macos-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      # `#!/usr/bin/env bash` 가 Homebrew bash 5 가 아니라 /bin/bash 3.2 를 잡도록 PATH 맨 앞에 둔다.
+      - name: Put system bash 3.2 first on PATH
+        run: |
+          mkdir -p "$RUNNER_TEMP/sysbash"
+          ln -s /bin/bash "$RUNNER_TEMP/sysbash/bash"
+          echo "$RUNNER_TEMP/sysbash" >> "$GITHUB_PATH"
+
+      - name: Verify bash is 3.2
+        run: |
+          bash --version | head -1
+          bash -c '[ "${BASH_VERSINFO[0]}" -eq 3 ]'
+
+      - name: Install smoke test
+        run: bash tests/smoke-install.sh
+
+      - name: Install bats-core
+        run: brew install bats-core
+
+      # 스택 게이트는 가짜 툴과 격리된 PATH 로 돌아 툴체인이 필요 없다 — 파셜의 3.2 호환을 여기서 본다.
+      - name: Stack gate tests
+        run: bats tests/stack-gates.bats
+
+  # Windows Git Bash (#107). 심링크를 만들 수 없는 환경이라 사본 레이아웃(AGENTS_SCAFFOLD_NO_SYMLINK=1)으로 깔고,
+  # 실제 git commit 이 훅을 타는지 본다. bats 는 깔지 않는다.
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+    env:
+      AGENTS_SCAFFOLD_NO_SYMLINK: "1"
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Show environment
+        run: |
+          bash --version | head -1
+          git --version
+          uname -s
+
+      - name: Install smoke test (install + git commit gate)
+        run: bash tests/smoke-install.sh
 
   # 스킬 플러그인 마켓플레이스(#82) — 사본 드리프트는 unittest(test_build_plugins)가, 매니페스트 형식은 Claude Code 검증기가 본다.
   # 검증기는 인증 없이 로컬에서 돈다. 버전은 고정한다(검증 규칙이 바뀌면 PR 로 올린다).
   plugins:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v6
         with:
@@ -78,6 +182,7 @@ jobs:
   # 하위 디렉터리의 .github/workflows 는 GitHub 가 실행하지 않으므로 여기서 돌린다.
   dotfiles:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: dotfiles

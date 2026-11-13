@@ -4,123 +4,586 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>agents-scaffold — guardrails for Claude Code, Codex and Antigravity, enforced by a git pre-commit gate</title>
-<meta name="description" content="Guardrails for AI coding agents. One command installs AGENTS.md, path-scoped rules, skills, subagents, hooks and a real git pre-commit gate for Claude Code, Codex and Antigravity. 12 stack presets, 24 skills, offline and Windows install, plugin marketplace. Plain files, no runtime.">
+<meta name="description" content="Guardrails for AI coding agents. One command installs AGENTS.md, path-scoped rules, skills, subagents, hooks and a real git pre-commit gate for Claude Code, Codex and Antigravity. 13 stack presets, offline and Windows install, dry-run, update and uninstall. Plain files, no runtime.">
 <link rel="canonical" href="https://leeyudok.github.io/agents-scaffold/">
 <meta property="og:type" content="website">
+<meta property="og:site_name" content="agents-scaffold">
 <meta property="og:title" content="agents-scaffold — guardrails for Claude Code, Codex and Antigravity, enforced by a git pre-commit gate">
 <meta property="og:description" content="AI coding agents break your rules. This blocks the commit instead of asking nicely.">
 <meta property="og:url" content="https://leeyudok.github.io/agents-scaffold/">
 <meta property="og:image" content="https://leeyudok.github.io/agents-scaffold/assets/social-preview.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta property="og:image:alt" content="agents-scaffold: AI coding agents break your rules. This blocks the commit instead of asking nicely.">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0d1117" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
 <link rel="alternate" type="text/plain" title="llms.txt" href="llms.txt">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230d1117'/%3E%3Cpath d='M16 5.5l8.5 2.6v7.3c0 5-3.4 9-8.5 11.1-5.1-2.1-8.5-6.1-8.5-11.1V8.1z' fill='none' stroke='%23f0883e' stroke-width='2.2' stroke-linejoin='round'/%3E%3Cpath d='M12 15.8l3 3 5.2-6' fill='none' stroke='%23f0883e' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <style>
   :root {
-    --bg:#ffffff; --fg:#1f2328; --muted:#59636e; --line:#d1d9e0;
-    --accent:#bc4c00; --code-bg:#f6f8fa; --term-bg:#0d1117; --term-fg:#e6edf3;
-    --green:#1a7f37; --red:#cf222e;
+    --bg: #ffffff; --surface: #f6f8fa; --raised: #ffffff;
+    --fg: #1f2328; --muted: #59636e; --line: #d1d9e0;
+    --accent: #bc4c00; --accent-soft: #fff1e5; --on-accent: #ffffff;
+    --ok: #1a7f37; --warn: #7d4e00; --stop: #cf222e;
+    --term-bg: #0d1117; --term-fg: #e6edf3; --term-line: #30363d;
+    --term-in: #7ee787; --term-out: #ff7b72; --term-dim: #9198a1;
+    --glow: rgba(240, 136, 62, .13);
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
   }
   @media (prefers-color-scheme: dark) {
-    :root { --bg:#0d1117; --fg:#e6edf3; --muted:#9198a1; --line:#3d444d;
-            --accent:#f0883e; --code-bg:#161b22; --term-bg:#010409; --term-fg:#e6edf3;
-            --green:#7ee787; --red:#ff7b72; }
+    :root {
+      --bg: #0d1117; --surface: #151b23; --raised: #1c232c;
+      --fg: #e6edf3; --muted: #9198a1; --line: #3d444d;
+      --accent: #f0883e; --accent-soft: #2b1d10; --on-accent: #0d1117;
+      --ok: #3fb950; --warn: #d29922; --stop: #ff7b72;
+      --term-bg: #010409; --term-line: #3d444d;
+      --glow: rgba(240, 136, 62, .10);
+    }
   }
-  * { box-sizing:border-box }
-  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; }
-  .wrap { max-width:820px; margin:0 auto; padding:0 20px 96px }
-  header { border-top:6px solid var(--accent); padding:56px 0 8px }
-  h1 { font-size:2rem; margin:0 0 4px; letter-spacing:-.02em }
-  .lede { font-size:1.5rem; font-weight:700; line-height:1.35; margin:28px 0 8px }
-  .lede em { color:var(--accent); font-style:normal }
-  p.sub { color:var(--muted); font-size:1.05rem; margin:0 0 28px }
-  pre { background:var(--code-bg); border:1px solid var(--line); border-radius:8px; padding:14px 16px; overflow-x:auto; font-size:.9rem }
-  .term { background:var(--term-bg); color:var(--term-fg); border-color:#30363d }
-  .term .in { color:var(--green) } .term .out { color:var(--red) }
-  code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace }
-  h2 { font-size:1.25rem; margin:44px 0 12px; padding-bottom:6px; border-bottom:1px solid var(--line) }
-  ul { padding-left:20px } li { margin:8px 0 }
-  table { border-collapse:collapse; width:100%; font-size:.95rem; display:block; overflow-x:auto }
-  th,td { border:1px solid var(--line); padding:8px 12px; text-align:left }
-  th { background:var(--code-bg) }
-  a { color:var(--accent) }
-  .cta { display:inline-block; margin:8px 12px 0 0; padding:10px 18px; border:1px solid var(--line); border-radius:8px; text-decoration:none; font-weight:600 }
-  footer { margin-top:56px; padding-top:20px; border-top:1px solid var(--line); color:var(--muted); font-size:.9rem }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.6 var(--sans); overflow-wrap: break-word; }
+  img, svg { max-width: 100%; height: auto; }
+  a { color: var(--accent); text-underline-offset: 3px; }
+  a:hover { text-decoration-thickness: 2px; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  code, pre, kbd { font-family: var(--mono); }
+  code { font-size: .9em; }
+  p code, li code, td code, th code, figcaption code { background: var(--surface); border: 1px solid var(--line); border-radius: 5px; padding: .08em .35em; white-space: nowrap; }
+  h1, h2, h3 { line-height: 1.2; letter-spacing: -.015em; margin: 0; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
+  .skip { position: absolute; left: 12px; top: -60px; background: var(--fg); color: var(--bg); padding: 10px 14px; border-radius: 8px; z-index: 10; font-weight: 600; }
+  .skip:focus { top: 12px; }
+
+  /* header */
+  .top { border-bottom: 1px solid var(--line); }
+  .top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 60px; }
+  .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--fg); text-decoration: none; font-weight: 700; font-size: 1.05rem; letter-spacing: -.01em; }
+  .brand svg { width: 26px; height: 26px; flex: none; color: var(--accent); }
+  .top nav { display: flex; align-items: center; gap: 4px; }
+  .top nav a { color: var(--muted); text-decoration: none; padding: 8px 10px; border-radius: 6px; font-size: .93rem; }
+  .top nav a:hover { color: var(--fg); background: var(--surface); }
+  .top nav a.gh { color: var(--fg); border: 1px solid var(--line); margin-left: 6px; font-weight: 600; }
+  @media (max-width: 760px) { .top nav a:not(.gh) { display: none; } }
+
+  /* hero */
+  .hero { background: radial-gradient(900px 420px at 85% -10%, var(--glow), transparent 70%); border-bottom: 1px solid var(--line); }
+  .hero .wrap { display: grid; gap: 36px; padding-top: 52px; padding-bottom: 56px; }
+  .hero .wrap > * { min-width: 0; }
+  @media (min-width: 960px) { .hero .wrap { grid-template-columns: minmax(0, 1.08fr) minmax(0, .92fr); align-items: center; gap: 48px; padding-top: 76px; padding-bottom: 80px; } }
+  .eyebrow { font-family: var(--mono); font-size: .8rem; color: var(--muted); letter-spacing: .02em; margin: 0 0 16px; }
+  h1 { font-size: clamp(2.05rem, 6.4vw, 3.35rem); font-weight: 800; letter-spacing: -.03em; }
+  h1 .hot { color: var(--accent); display: block; }
+  .lede { font-size: 1.12rem; color: var(--muted); margin: 20px 0 26px; max-width: 34em; }
+  .lede strong { color: var(--fg); font-weight: 600; }
+  .cmd { display: flex; align-items: stretch; background: var(--term-bg); border: 1px solid var(--term-line); border-radius: 10px; overflow: hidden; }
+  .cmd pre { margin: 0; padding: 14px 16px; overflow-x: auto; color: var(--term-fg); font-size: .84rem; line-height: 1.55; flex: 1 1 auto; min-width: 0; white-space: pre; }
+  .cmd pre .p { color: var(--term-dim); user-select: none; }
+  .copy { flex: none; border: 0; border-left: 1px solid var(--term-line); background: transparent; color: var(--term-fg); font: 600 .82rem var(--sans); padding: 0 16px; cursor: pointer; min-width: 74px; }
+  .copy:hover { background: rgba(255, 255, 255, .08); }
+  .copy:focus-visible { outline-offset: -3px; }
+  .hero .cmd pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .cmd-note { font-size: .86rem; color: var(--muted); margin: 10px 0 0; }
+  .cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 46px; padding: 0 20px; border-radius: 10px; font-weight: 700; text-decoration: none; border: 1.5px solid transparent; }
+  .btn.primary { background: var(--accent); color: var(--on-accent); }
+  .btn.primary:hover { filter: brightness(1.08); }
+  .btn.ghost { color: var(--fg); border-color: var(--line); background: transparent; font-weight: 600; }
+  .btn.ghost:hover { border-color: var(--fg); }
+  .term { background: var(--term-bg); color: var(--term-fg); border: 1px solid var(--term-line); border-radius: 12px; overflow: hidden; box-shadow: 0 18px 44px -24px rgba(1, 4, 9, .55); }
+  .term .bar { display: flex; align-items: center; gap: 6px; padding: 10px 14px; border-bottom: 1px solid var(--term-line); color: var(--term-dim); font: .76rem var(--mono); }
+  .term .bar i { width: 10px; height: 10px; border-radius: 50%; background: var(--term-line); }
+  .term .bar span { margin-left: 8px; }
+  .term pre { margin: 0; padding: 16px; overflow-x: auto; font-size: .82rem; line-height: 1.7; white-space: pre; }
+  .term .in { color: var(--term-in); } .term .out { color: var(--term-out); font-weight: 600; } .term .dim { color: var(--term-dim); }
+  .hero figcaption { font-size: .86rem; color: var(--muted); margin-top: 12px; }
+  figure { margin: 0; }
+
+  /* facts strip */
+  .facts { border-bottom: 1px solid var(--line); background: var(--surface); }
+  .facts ul { list-style: none; margin: 0; padding: 18px 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 20px; }
+  @media (min-width: 760px) { .facts ul { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  .facts b { display: block; font-size: 1.5rem; letter-spacing: -.02em; line-height: 1.2; }
+  .facts span { color: var(--muted); font-size: .9rem; }
+
+  /* sections */
+  section { padding: 64px 0; scroll-margin-top: 12px; }
+  section + section { border-top: 1px solid var(--line); }
+  .kicker { font: 600 .78rem var(--mono); color: var(--accent); letter-spacing: .04em; text-transform: uppercase; margin: 0 0 10px; }
+  h2 { font-size: clamp(1.55rem, 4vw, 2.1rem); font-weight: 800; letter-spacing: -.025em; }
+  .sec-lede { color: var(--muted); font-size: 1.05rem; max-width: 46em; margin: 14px 0 32px; }
+  .frame { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--term-bg); }
+  .frame img { display: block; width: 100%; }
+  #demo figure { max-width: 960px; }
+  .cap { color: var(--muted); font-size: .9rem; margin-top: 12px; }
+
+  .cards { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 680px) { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (min-width: 1000px) { .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  .card { border: 1px solid var(--line); border-radius: 14px; padding: 22px; background: var(--raised); min-width: 0; }
+  .card .tag { display: inline-block; font: 600 .76rem var(--mono); color: var(--accent); background: var(--accent-soft); border-radius: 6px; padding: 3px 8px; margin-bottom: 14px; }
+  .card h3 { font-size: 1.08rem; margin-bottom: 8px; }
+  .card p { margin: 0; color: var(--muted); font-size: .96rem; }
+
+  .split { display: grid; gap: 28px; align-items: start; }
+  .split > * { min-width: 0; }
+  @media (min-width: 960px) { .split { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; } }
+  .tree { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin: 0; overflow-x: auto; font-size: .82rem; line-height: 1.75; white-space: pre; }
+  .tree .c { color: var(--muted); }
+  .overview { border: 1px solid var(--line); border-radius: 12px; background: var(--raised); padding: 10px; }
+  .overview img { display: block; width: 100%; }
+
+  /* responsive tables */
+  .rt { width: 100%; border-collapse: collapse; font-size: .95rem; }
+  .rt th, .rt td { text-align: left; vertical-align: top; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+  .rt thead th { font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; background: var(--surface); border-top: 1px solid var(--line); }
+  .rt thead th:first-child { border-left: 1px solid var(--line); border-top-left-radius: 10px; }
+  .rt thead th:last-child { border-right: 1px solid var(--line); border-top-right-radius: 10px; }
+  .rt tbody th { font-weight: 700; white-space: nowrap; }
+  .rt .ver { display: block; font: .8rem var(--mono); color: var(--muted); font-weight: 400; margin-top: 2px; }
+  .rt .us { background: var(--accent-soft); }
+  .badge { display: inline-block; font: 700 .78rem var(--mono); padding: 3px 10px; border-radius: 999px; border: 1.5px solid currentColor; white-space: nowrap; }
+  .badge.full { color: var(--ok); }
+  .badge.baseline { color: var(--warn); }
+  @media (max-width: 820px) {
+    .rt thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+    .rt, .rt tbody, .rt tr, .rt th, .rt td { display: block; }
+    .rt tr { border: 1px solid var(--line); border-radius: 12px; padding: 6px 16px; margin-bottom: 12px; background: var(--raised); }
+    .rt th, .rt td { padding: 10px 0; border-bottom: 1px solid var(--line); }
+    .rt tr > :last-child { border-bottom: 0; }
+    .rt tbody th { white-space: normal; font-size: 1.02rem; }
+    .rt td::before { content: attr(data-label); display: block; font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; margin-bottom: 3px; }
+    .rt .us { background: transparent; }
+    .rt td.us::before { color: var(--accent); }
+  }
+  .note { color: var(--muted); font-size: .93rem; margin-top: 18px; max-width: 52em; }
+
+  .stacks { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  @media (min-width: 680px) { .stacks { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (min-width: 1000px) { .stacks { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  .stacks li { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: var(--raised); min-width: 0; }
+  .stacks b { display: block; font: 700 .93rem var(--mono); }
+  .stacks span { display: block; color: var(--muted); font-size: .82rem; margin-top: 3px; }
+
+  .steps { list-style: none; counter-reset: s; margin: 0; padding: 0; display: grid; gap: 14px; }
+  @media (min-width: 900px) { .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .steps > li { counter-increment: s; border: 1px solid var(--line); border-radius: 14px; padding: 20px; background: var(--raised); min-width: 0; }
+  .steps h3 { font-size: 1.04rem; display: flex; align-items: baseline; gap: 10px; }
+  .steps h3::before { content: counter(s); flex: none; font: 700 .82rem var(--mono); color: var(--accent); border: 1.5px solid var(--accent); border-radius: 999px; width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; transform: translateY(-1px); }
+  .steps p { color: var(--muted); font-size: .95rem; margin: 10px 0 12px; }
+  .steps .cmd pre { font-size: .8rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+  .docs { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 680px) { .docs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (min-width: 1000px) { .docs { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  .doc { border: 1px solid var(--line); border-radius: 12px; padding: 18px; background: var(--raised); min-width: 0; }
+  .doc h3 { font-size: 1rem; margin-bottom: 4px; }
+  .doc p { margin: 0 0 10px; color: var(--muted); font-size: .9rem; }
+  .langs { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .92rem; }
+
+  footer { border-top: 1px solid var(--line); padding: 28px 0 44px; color: var(--muted); font-size: .9rem; }
+  footer .wrap { display: flex; flex-wrap: wrap; gap: 8px 20px; justify-content: space-between; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 </style>
 </head>
 <body>
-<div class="wrap">
-<header>
-  <h1>agents-scaffold</h1>
-  <p class="sub">Guardrails for Claude Code, Codex and Antigravity — MIT</p>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#main" aria-label="agents-scaffold, top of page">
+      <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M16 4.5l9.5 2.9v8c0 5.5-3.8 9.9-9.5 12.2-5.7-2.3-9.5-6.7-9.5-12.2v-8z"/><path d="M11.5 15.8l3.3 3.3 5.7-6.6"/></svg>
+      agents-scaffold
+    </a>
+    <nav aria-label="Sections">
+      <a href="#why">Why</a>
+      <a href="#harnesses">Harnesses</a>
+      <a href="#stacks">Stacks</a>
+      <a href="#after-install">After install</a>
+      <a href="#compare">Compare</a>
+      <a href="#docs">Docs</a>
+      <a class="gh" href="https://github.com/LeeYudok/agents-scaffold">GitHub</a>
+    </nav>
+  </div>
 </header>
 
-<p class="lede"><em>AI coding agents break your rules.</em><br>This blocks the commit instead of asking nicely.</p>
-<p class="sub">One command installs an <code>AGENTS.md</code> project brain, path-scoped rules, skills, subagents,
-hooks and a composed pre-commit gate into your repo — for Claude Code, Codex and Antigravity at once.
-No framework, no runtime, no registry — plain files you own outright.</p>
+<main id="main">
 
-<a class="cta" href="https://github.com/LeeYudok/agents-scaffold">View on GitHub</a>
-<a class="cta" href="https://github.com/LeeYudok/agents-scaffold#quickstart">Quickstart</a>
+<div class="hero">
+  <div class="wrap">
+    <div>
+      <p class="eyebrow">Guardrails for Claude Code · Codex · Antigravity</p>
+      <h1><span class="hot">AI coding agents break your rules.</span> This blocks the commit.</h1>
+      <p class="lede">One command installs an <strong>AGENTS.md</strong> project brain, path-scoped rules, skills, subagents, hooks and a <strong>real git pre-commit gate</strong> into your repo. No framework, no runtime, no registry — plain files you own.</p>
+      <div class="cmd">
+        <pre id="install-cmd" tabindex="0" aria-label="Install command"><span class="p">$ </span>curl -fsSL https://raw.githubusercontent.com/leeyudok/agents-scaffold/main/bin/agents-scaffold.sh | bash -s -- --lang en --stack nextjs --yes</pre>
+        <button class="copy" type="button" data-copy="curl -fsSL https://raw.githubusercontent.com/leeyudok/agents-scaffold/main/bin/agents-scaffold.sh | bash -s -- --lang en --stack nextjs --yes">Copy</button>
+      </div>
+      <p class="cmd-note">Run it in your repository. Add <code>--dry-run</code> to see what it would write first, or <a href="https://github.com/LeeYudok/agents-scaffold/blob/main/SECURITY.md#installing-safely">pin and verify the download</a>.</p>
+      <div class="cta">
+        <a class="btn primary" href="https://github.com/LeeYudok/agents-scaffold#quickstart">Get started</a>
+        <a class="btn ghost" href="#demo">Watch the 30-second demo</a>
+      </div>
+    </div>
+    <figure>
+      <div class="term" role="img" aria-label="Terminal: after installing, a commit that stages a .env file is rejected with the message: Blocked: a .env-type file is staged. Commit is not allowed.">
+        <div class="bar" aria-hidden="true"><i></i><i></i><i></i><span>payments — git</span></div>
+<pre aria-hidden="true"><span class="in">$ echo 'DB_PASSWORD=hunter2' &gt; .env</span>
+<span class="in">$ git add -f .env app.py</span>
+<span class="in">$ git commit -m "feat: add config"</span>
+<span class="out">Blocked: a .env-type file is staged.
+Commit is not allowed.</span>
+<span class="dim">$ echo $?</span>
+<span class="dim">1</span></pre>
+      </div>
+      <figcaption>The actual output of the installed gate. It runs from <code>.git/hooks/pre-commit</code>, so it holds for any agent — and for a person at the terminal.</figcaption>
+    </figure>
+  </div>
+</div>
 
-<h2>You want this if</h2>
-<ul>
-  <li>You re-explain the same rules every session — what you told the agent yesterday is gone today.</li>
-  <li>An agent staged your <code>.env</code>, or produced a commit with type errors still in it.</li>
-  <li>Every teammate has a different <code>CLAUDE.md</code>, so results depend on whose session it was.</li>
-  <li>Your team mixes Claude Code, Codex and Antigravity, and you want one set of rules for all of them.</li>
-  <li>You work on an air-gapped network or Windows, and most agent setups assume neither.</li>
-</ul>
-<p>Rules that live only in a document get ignored eventually. This scaffold turns them into a gate
-that blocks the commit, and plants it in the repo.</p>
+<div class="facts">
+  <div class="wrap">
+    <ul>
+      <li><b>3 agents</b><span>read one <code>AGENTS.md</code> natively</span></li>
+      <li><b>13 stack presets</b><span>12 with a build, type or lint gate</span></li>
+      <li><b>169 tests</b><span>bats regression suite for the installer</span></li>
+      <li><b>0 runtimes</b><span>MIT-licensed plain files in your repo</span></li>
+    </ul>
+  </div>
+</div>
 
-<h2>Install</h2>
-<pre><code>curl -fsSL https://raw.githubusercontent.com/leeyudok/agents-scaffold/main/bin/agents-scaffold.sh \
-  | bash -s -- --stack nextjs --yes</code></pre>
+<section id="demo">
+  <div class="wrap">
+    <p class="kicker">Demo</p>
+    <h2>One command, then the gate does the arguing</h2>
+    <p class="sec-lede">A rule that lives only in a prompt gets ignored eventually. The scaffold turns the rule into a gate that stops the commit, and plants it in the repository.</p>
+    <figure>
+      <div class="frame">
+        <img src="assets/demo.gif" width="960" height="620" loading="lazy" alt="Terminal recording: one command installs guardrails for Claude Code, Codex and Antigravity; the generated AGENTS.md, .claude, .codex and .agents tree is listed; then the real git hook blocks a commit that stages a .env file.">
+      </div>
+      <figcaption class="cap">30 seconds: install → the generated tree → a secret commit is blocked. Recorded with <code>vhs docs/assets/demo.tape</code>.</figcaption>
+    </figure>
+  </div>
+</section>
 
-<h2>What happens the moment it's installed</h2>
-<pre class="term"><code><span class="in">$ echo 'DB_PASSWORD=hunter2' &gt; .env
-$ git add -f .env app.py &amp;&amp; git commit -m "feat: add config"</span>
-<span class="out">Blocked: a .env-type file is staged. Commit is not allowed.</span></code></pre>
-<p>This is not the same as writing “don't commit secrets” in a doc. <code>.git/hooks/pre-commit</code> is
-what stops it, so it holds whichever AI tool you use, and it holds when a human commits by hand.</p>
+<section id="why">
+  <div class="wrap">
+    <p class="kicker">Why it holds up</p>
+    <h2>Enforcement lives outside the agent</h2>
+    <p class="sec-lede">Prompts are requests. These are the parts that do not depend on a model choosing to comply.</p>
+    <div class="cards">
+      <div class="card">
+        <span class="tag">.git/hooks/pre-commit</span>
+        <h3>Enforced by git, not by prompts</h3>
+        <p>The gate blocks a staged <code>.env</code> and runs the selected stack's build, type or lint check. It is wired in worktrees, submodules and under <code>core.hooksPath</code>.</p>
+      </div>
+      <div class="card">
+        <span class="tag">AGENTS.md</span>
+        <h3>One source, three agents</h3>
+        <p>Claude Code, Codex and Antigravity read the same <code>AGENTS.md</code>. Skills live once in <code>.agents/skills</code>; Codex and Antigravity adapters are generated from <code>.claude/</code>.</p>
+      </div>
+      <div class="card">
+        <span class="tag">harness-matrix.json</span>
+        <h3>Measured, not assumed</h3>
+        <p>Each harness claim is a recorded measurement against a named CLI version. A weekly CI job fails when a full-tier measurement is older than 90 days.</p>
+      </div>
+      <div class="card">
+        <span class="tag">paths:</span>
+        <h3>Rules load when they apply</h3>
+        <p>A path-scoped rule is loaded only while the agent touches matching files, so context is not spent on conventions for code it is not editing.</p>
+      </div>
+      <div class="card">
+        <span class="tag">--dry-run · --update · --uninstall</span>
+        <h3>Reversible by design</h3>
+        <p>Preview before writing. Updating never overwrites a file you changed — the new version lands beside it as <code>.new</code>. Uninstall removes only untouched files.</p>
+      </div>
+      <div class="card">
+        <span class="tag">offline bundle · Git Bash</span>
+        <h3>Air-gapped and Windows ready</h3>
+        <p>An offline bundle installs with no network. Windows runs through Git Bash with a <code>.cmd</code> launcher, and falls back to a checked copy where symlinks are unavailable.</p>
+      </div>
+    </div>
+  </div>
+</section>
 
-<h2>Harness support</h2>
-<table>
-  <tr><th>Harness</th><th>Measured</th><th>baseline</th><th>full</th></tr>
-  <tr><td>Claude Code</td><td>2.1.318</td><td>holds</td><td>rules, skills, subagents, hooks</td></tr>
-  <tr><td>Codex</td><td>codex-cli 0.166.0</td><td>holds</td><td>skills, subagents, hooks (no path-scoped rules — stays baseline)</td></tr>
-  <tr><td>Antigravity</td><td>agy 1.5.0</td><td>holds</td><td>baseline — skills, subagents, hooks; glob rules stopped loading on 1.5.0 (#90)</td></tr>
-</table>
-<p><strong>baseline</strong> means the <code>AGENTS.md</code> policy body plus a real
-<code>.git/hooks/pre-commit</code> gate and CI — it holds on every harness, and it holds when a
-human commits from the terminal. <strong>full</strong> adds that harness's native layers. Support
-status is tracked in a machine-readable
-<a href="https://github.com/LeeYudok/agents-scaffold/blob/main/docs/harness-matrix.json">manifest</a>
-that CI fails when a claim goes 90 days without re-measurement.</p>
+<section id="what">
+  <div class="wrap">
+    <p class="kicker">What lands in your repo</p>
+    <h2>Files you can read, edit and delete</h2>
+    <p class="sec-lede">Nothing is hidden in a package. This is an English install with one stack; a Korean install adds 14 Korean-language <code>yd-*</code> expert skills.</p>
+    <div class="split">
+      <div class="overview">
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="assets/overview-dark.svg">
+          <img src="assets/overview-light.svg" width="880" height="330" loading="lazy" alt="Diagram: one command produces a .claude directory you own — agents, skills, commands, rules, hooks, memory and AGENTS.md — and enforced gates that block a staged .env, a broken build and failing lint.">
+        </picture>
+      </div>
+<pre class="tree" tabindex="0" aria-label="Installed file tree">AGENTS.md              <span class="c"># rules: P0 / P1 / P2</span>
+.claude/
+  rules/               <span class="c"># 5 files + 1 per stack</span>
+  agents/              <span class="c"># 7 subagents</span>
+  commands/            <span class="c"># /fix-issue, /sdlc-cycle</span>
+  hooks/pre-commit.sh  <span class="c"># the gate</span>
+  memory/              <span class="c"># project memory</span>
+  settings.json        <span class="c"># deny / ask rules, hooks</span>
+  .scaffold.json       <span class="c"># your install choices</span>
+  skills -&gt; ../.agents/skills
+.agents/skills/        <span class="c"># 10 skills</span>
+.git/hooks/pre-commit  <span class="c"># runs the gate</span></pre>
+    </div>
+  </div>
+</section>
 
-<h2>What's in the box</h2>
-<ul>
-  <li><strong>Tiered rules</strong> — P0 (stop work), P1 (blocks the PR), P2 (review note), wired into hooks rather than prose.</li>
-  <li><strong>Path-scoped rules</strong> — a rule loads only when the agent touches a matching file, so context stays cheap.</li>
-  <li><strong>12 stack presets</strong> — Next.js, Spring Boot, Java Web, Bun, Python, Go, Rust, Ruby on Rails, .NET, Android, Flutter, Ops — composed into one pre-commit gate. GitHub or GitLab, Korean or English.</li>
-  <li><strong>24 skills and subagents</strong> — code review, security audit, DB migration safety, SDLC role split, PostgreSQL/Oracle/SQLite, Go, React, TypeScript, dependency CVE checks, self-improving skill/agent definitions.</li>
-  <li><strong>Air-gapped and Windows</strong> — an offline bundle installs with no network; Windows runs through Git Bash.</li>
-  <li><strong>Plugin marketplace</strong> — <code>claude plugin marketplace add LeeYudok/agents-scaffold</code> (Codex reads the same marketplace).</li>
-  <li><strong>Project memory</strong> — learnings accumulate under <code>.claude/memory/</code> and load next session.</li>
-</ul>
+<section id="harnesses">
+  <div class="wrap">
+    <p class="kicker">Harness support</p>
+    <h2>Two tiers, stated plainly</h2>
+    <p class="sec-lede"><strong>baseline</strong> is what holds everywhere: the <code>AGENTS.md</code> policy body, including the selected stack's P0 rules, and the git gate. <strong>full</strong> adds the harness's own layers with every capability measured as passing or partial. Measured 2026-11-04.</p>
+    <table class="rt" id="harness-table">
+      <thead>
+        <tr><th scope="col">Harness</th><th scope="col">Tier</th><th scope="col">Measured as working</th><th scope="col">Limits</th></tr>
+      </thead>
+      <tbody>
+        <tr data-harness="claude" data-tier="full" data-version="2.1.318">
+          <th scope="row">Claude Code <span class="ver">2.1.318</span></th>
+          <td data-label="Tier"><span class="badge full">full</span></td>
+          <td data-label="Measured as working"><code>AGENTS.md</code>, path-scoped rules, skills, subagents, the git gate</td>
+          <td data-label="Limits">Its own hooks fire only when the session commits through its Bash tool — early feedback, not the enforcement line</td>
+        </tr>
+        <tr data-harness="codex" data-tier="baseline" data-version="codex-cli 0.166.0">
+          <th scope="row">Codex <span class="ver">codex-cli 0.166.0</span></th>
+          <td data-label="Tier"><span class="badge baseline">baseline</span></td>
+          <td data-label="Measured as working"><code>AGENTS.md</code> with inlined stack P0, skills, generated subagents and hooks, the git gate</td>
+          <td data-label="Limits">No file-path-scoped instructions. <code>.codex/</code> loads only for a trusted project</td>
+        </tr>
+        <tr data-harness="agy" data-tier="baseline" data-version="agy 1.5.0">
+          <th scope="row">Antigravity <span class="ver">agy 1.5.0</span></th>
+          <td data-label="Tier"><span class="badge baseline">baseline</span></td>
+          <td data-label="Measured as working"><code>AGENTS.md</code> with inlined stack P0, skills, generated subagents and hooks, the git gate</td>
+          <td data-label="Limits">Glob-triggered rules stopped loading on 1.5.0. Hooks run without a trust prompt — read <code>.agents/hooks.json</code> in a repo you did not write</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="note">The source of truth is <a href="https://github.com/LeeYudok/agents-scaffold/blob/main/docs/harness-matrix.json">docs/harness-matrix.json</a>, with the evidence for every verdict. This table is checked against it.</p>
+  </div>
+</section>
 
-<h2>Docs</h2>
-<ul>
-  <li><a href="https://github.com/LeeYudok/agents-scaffold#readme">README</a> —
-      <a href="https://github.com/LeeYudok/agents-scaffold/blob/main/README.ko.md">한국어</a> ·
-      <a href="https://github.com/LeeYudok/agents-scaffold/blob/main/README.zh.md">简体中文</a> ·
-      <a href="https://github.com/LeeYudok/agents-scaffold/blob/main/README.ja.md">日本語</a></li>
-  <li><a href="https://github.com/LeeYudok/agents-scaffold/blob/main/docs/OPTIONS.en.md">All options</a> — stack presets, <code>--forge</code>, <code>--harness</code>, <code>--lang</code></li>
-  <li><a href="https://github.com/LeeYudok/agents-scaffold/blob/main/docs/INTERNALS.en.md">Internals</a> — the generated tree and design patterns</li>
-</ul>
+<section id="stacks">
+  <div class="wrap">
+    <p class="kicker">Stack presets</p>
+    <h2>13 stack presets, composed into one gate</h2>
+    <p class="sec-lede">Pick any combination with <code>--stack nextjs,python</code>. Each preset adds a rule file scoped to its paths and, where a tool can check it, a step in the pre-commit gate. <code>--list-stacks</code> prints the names; a misspelt one is an error, not a silent skip.</p>
+    <ul class="stacks" id="stack-list">
+      <li><b>nextjs</b><span>tsc --noEmit</span></li>
+      <li><b>bun</b><span>bunx tsc --noEmit</span></li>
+      <li><b>python</b><span>ruff check, mypy</span></li>
+      <li><b>go</b><span>go build, vet, golangci-lint</span></li>
+      <li><b>rust</b><span>cargo check, clippy</span></li>
+      <li><b>springboot</b><span>gradlew build</span></li>
+      <li><b>javaweb</b><span>maven / gradle / ant compile</span></li>
+      <li><b>dotnet</b><span>dotnet build, format, test</span></li>
+      <li><b>ruby-rails</b><span>rubocop, rspec</span></li>
+      <li><b>php-laravel</b><span>composer validate, pint, phpunit</span></li>
+      <li><b>android</b><span>ktlintCheck, detekt</span></li>
+      <li><b>flutter</b><span>dart format, analyze, test</span></li>
+      <li><b>ops</b><span>rules only, no gate step</span></li>
+    </ul>
+    <p class="note">GitHub or GitLab workflow with <code>--forge</code>. Rules and messages in English (<code>--lang en</code>) or Korean (the default).</p>
+  </div>
+</section>
+
+<section id="after-install">
+  <div class="wrap">
+    <p class="kicker">After install</p>
+    <h2>Four steps, and the installer prints them too</h2>
+    <p class="sec-lede">Paths assume the clone from the quickstart, in <code>agents-scaffold/</code>.</p>
+    <ol class="steps">
+      <li>
+        <h3>Fill in AGENTS.md</h3>
+        <p>Three sections are left empty for you: Project overview, Stack, Commands. Everything else is ready.</p>
+      </li>
+      <li>
+        <h3>Prove the gate works</h3>
+        <p>This commit must fail with <code>Blocked</code>. Then unstage the file.</p>
+        <div class="cmd"><pre tabindex="0">echo X=1 &gt; .env &amp;&amp; git add -f .env &amp;&amp; git commit -m test
+git rm --cached -q .env &amp;&amp; rm .env</pre></div>
+      </li>
+      <li>
+        <h3>Commit what was installed</h3>
+        <p>The hook itself lives in <code>.git/</code>, so each clone wires it once — <code>--update</code> does that.</p>
+        <div class="cmd"><pre tabindex="0">git add AGENTS.md .claude .agents .gitattributes
+git commit -m "chore: add agents-scaffold"</pre></div>
+      </li>
+      <li>
+        <h3>Update or remove, later</h3>
+        <p>Your choices are recorded in <code>.claude/.scaffold.json</code> and replayed. <code>--dry-run</code> previews either.</p>
+        <div class="cmd"><pre tabindex="0">agents-scaffold/bin/agents-scaffold.sh --update .
+agents-scaffold/bin/agents-scaffold.sh --uninstall . --dry-run</pre></div>
+      </li>
+    </ol>
+    <p class="note">Stuck? The <a href="https://github.com/LeeYudok/agents-scaffold/blob/main/docs/TROUBLESHOOTING.en.md">troubleshooting guide</a> covers a blocked commit, an ignored <code>AGENTS.md</code>, <code>.new</code> files, husky and Windows symlinks.</p>
+  </div>
+</section>
+
+<section id="compare">
+  <div class="wrap">
+    <p class="kicker">How it compares</p>
+    <h2>Categories, not products</h2>
+    <p class="sec-lede">Check any specific tool against the rows. For a small repo with one agent, a hand-written file is the right answer.</p>
+    <table class="rt">
+      <thead>
+        <tr><th scope="col"><span class="sr">Question</span></th><th scope="col">Hand-written CLAUDE.md / AGENTS.md</th><th scope="col">Rule packs and frameworks inside one vendor's runtime</th><th scope="col">agents-scaffold</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">Where a rule is enforced</th>
+          <td data-label="Hand-written file">In the prompt. The model can ignore it</td>
+          <td data-label="Inside one vendor's runtime">Inside that agent's session. A commit made outside it is not checked</td>
+          <td class="us" data-label="agents-scaffold">In <code>.git/hooks/pre-commit</code>, outside any agent. It also runs when a person commits</td>
+        </tr>
+        <tr>
+          <th scope="row">Can it be bypassed</th>
+          <td data-label="Hand-written file">Nothing to bypass</td>
+          <td data-label="Inside one vendor's runtime">Work outside that runtime</td>
+          <td class="us" data-label="agents-scaffold">Yes — <code>git commit --no-verify</code>. Keep CI as the backstop; the scaffold does not install CI</td>
+        </tr>
+        <tr>
+          <th scope="row">Several agents, one repo</th>
+          <td data-label="Hand-written file">One file per tool, kept in step by hand</td>
+          <td data-label="Inside one vendor's runtime">Typically one vendor</td>
+          <td class="us" data-label="agents-scaffold">One <code>AGENTS.md</code> for three; Codex and Antigravity at the baseline tier</td>
+        </tr>
+        <tr>
+          <th scope="row">What you keep upgrading</th>
+          <td data-label="Hand-written file">Nothing</td>
+          <td data-label="Inside one vendor's runtime">A plugin, package or CLI</td>
+          <td class="us" data-label="agents-scaffold">Nothing running — but roughly 60 to 190 files committed to your repo</td>
+        </tr>
+        <tr>
+          <th scope="row">Getting new versions</th>
+          <td data-label="Hand-written file">You edit the file</td>
+          <td data-label="Inside one vendor's runtime">The vendor's update channel</td>
+          <td class="us" data-label="agents-scaffold"><code>--update</code>; changed files are kept and the new one is written as <code>.new</code> to merge</td>
+        </tr>
+        <tr>
+          <th scope="row">Offline install</th>
+          <td data-label="Hand-written file">It is just a file</td>
+          <td data-label="Inside one vendor's runtime">Depends on reaching a registry or marketplace</td>
+          <td class="us" data-label="agents-scaffold">An offline bundle</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="docs">
+  <div class="wrap">
+    <p class="kicker">Docs</p>
+    <h2>Read it in your language</h2>
+    <p class="sec-lede">The README and the reference docs are maintained in four languages. The installed rules come in English or Korean.</p>
+    <div class="docs">
+      <div class="doc">
+        <h3>README</h3>
+        <p>Overview, quickstart, after install.</p>
+        <div class="langs">
+          <a href="https://github.com/LeeYudok/agents-scaffold#readme" lang="en" hreflang="en">English</a>
+          <a href="https://github.com/LeeYudok/agents-scaffold/blob/main/README.ko.md" lang="ko" hreflang="ko">한국어</a>
+          <a href="https://github.com/LeeYudok/agents-scaffold/blob/main/README.zh.md" lang="zh-Hans" hreflang="zh-Hans">简体中文</a>
+          <a href="https://github.com/LeeYudok/agents-scaffold/blob/main/README.ja.md" lang="ja" hreflang="ja">日本語</a>
+        </div>
+      </div>
+      <div class="doc">
+        <h3>All options</h3>
+        <p>Stacks, forge, harness, language, update, uninstall.</p>
+        <div class="langs">
+          <a href="https://github.com/LeeYudok/agents-scaffold/blob/main/docs/OPTIONS.en.md" lang="en" hreflang="en">English</a>
+          <a href="https://github.com/LeeYudok/agents-scaffold/blob/main/docs/OPTIONS.md" lang="ko" hreflang="ko">한국어</a>
+          <a href="https://github.com/LeeYudok/agents-scaffold/blob/main/docs/OPTIONS.zh.md" lang="zh-Hans" hreflang="zh-Hans">简体中文</a>
+          <a href="https://github.com/LeeYudok/agents-scaffold/blob/main/docs/OPTIONS.ja.md" lang="ja" hreflang="ja">日本語</a>
+        </div>
+      </div>
+      <div class="doc">
+        <h3>Internals</h3>
+        <p>The generated tree and the design patterns.</p>
+        <div class="langs">
+          <a href="https://github.com/LeeYudok/agents-scaffold/blob/main/docs/INTERNALS.en.md" lang="en" hreflang="en">English</a>
+          <a href="https://github.com/LeeYudok/agents-scaffold/blob/main/docs/INTERNALS.md" lang="ko" hreflang="ko">한국어</a>
+          <a href="https://github.com/LeeYudok/agents-scaffold/blob/main/docs/INTERNALS.zh.md" lang="zh-Hans" hreflang="zh-Hans">简体中文</a>
+          <a href="https://github.com/LeeYudok/agents-scaffold/blob/main/docs/INTERNALS.ja.md" lang="ja" hreflang="ja">日本語</a>
+        </div>
+      </div>
+      <div class="doc">
+        <h3>Troubleshooting</h3>
+        <p>Blocked commits, ignored rules, hooks, Windows.</p>
+        <div class="langs">
+          <a href="https://github.com/LeeYudok/agents-scaffold/blob/main/docs/TROUBLESHOOTING.en.md" lang="en" hreflang="en">English</a>
+          <a href="https://github.com/LeeYudok/agents-scaffold/blob/main/docs/TROUBLESHOOTING.md" lang="ko" hreflang="ko">한국어</a>
+        </div>
+      </div>
+      <div class="doc">
+        <h3>Skills</h3>
+        <p>Skill sets, the plugin marketplace, <code>npx skills</code>.</p>
+        <div class="langs">
+          <a href="https://github.com/LeeYudok/agents-scaffold/blob/main/docs/SKILLS.en.md" lang="en" hreflang="en">English</a>
+          <a href="https://github.com/LeeYudok/agents-scaffold/blob/main/docs/SKILLS.md" lang="ko" hreflang="ko">한국어</a>
+        </div>
+      </div>
+      <div class="doc">
+        <h3>Offline and Windows</h3>
+        <p>Air-gapped bundle, Git Bash, <code>python3</code>.</p>
+        <div class="langs">
+          <a href="https://github.com/LeeYudok/agents-scaffold/blob/main/docs/OFFLINE_INSTALL.en.md" lang="en" hreflang="en">English</a>
+          <a href="https://github.com/LeeYudok/agents-scaffold/blob/main/docs/OFFLINE_INSTALL.md" lang="ko" hreflang="ko">한국어</a>
+        </div>
+      </div>
+    </div>
+    <p class="note">Also: <a href="https://github.com/LeeYudok/agents-scaffold/blob/main/SECURITY.md">security policy</a>, <a href="https://github.com/LeeYudok/agents-scaffold/blob/main/CHANGELOG.md">changelog</a>, <a href="https://github.com/LeeYudok/agents-scaffold/blob/main/CONTRIBUTING.md">contributing</a>, and <a href="llms.txt">llms.txt</a> for language models. Version 1.0.0 is in preparation; no release has been tagged yet.</p>
+  </div>
+</section>
+
+</main>
 
 <footer>
-  MIT licensed · <a href="https://github.com/LeeYudok/agents-scaffold">github.com/LeeYudok/agents-scaffold</a>
+  <div class="wrap">
+    <span>MIT licensed · <a href="https://github.com/LeeYudok/agents-scaffold">github.com/LeeYudok/agents-scaffold</a></span>
+    <span>Plain files. No telemetry, no runtime.</span>
+  </div>
 </footer>
-</div>
+
+<span class="sr" role="status" aria-live="polite" id="copy-status"></span>
+<script>
+(function () {
+  var status = document.getElementById('copy-status');
+  function done(btn, ok) {
+    var label = btn.textContent;
+    btn.textContent = ok ? 'Copied' : 'Select + copy';
+    if (status) { status.textContent = ok ? 'Command copied to clipboard' : 'Copy failed. Select the command and copy it.'; }
+    setTimeout(function () { btn.textContent = label; if (status) { status.textContent = ''; } }, 1800);
+  }
+  function fallback(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    document.body.removeChild(ta);
+    return ok;
+  }
+  document.querySelectorAll('[data-copy]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var text = btn.getAttribute('data-copy');
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () { done(btn, true); }, function () { done(btn, fallback(text)); });
+      } else {
+        done(btn, fallback(text));
+      }
+    });
+  });
+})();
+</script>
 </body>
 </html>

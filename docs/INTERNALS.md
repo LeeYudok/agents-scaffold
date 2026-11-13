@@ -50,6 +50,7 @@
     knowledge_graph.py  .claude 생태계 그래프 + --check 깨진 링크 게이트
     personal-layer.sh   개인 추가 지침 AGENTS.<NAME>.md 를 세 하네스에 켜고 끈다 (#92)
   settings.json         hooks 와이어링 + deny 기본값
+  .scaffold.json        설치 선택 기록(forge·스택·언어·하네스·스킬 묶음) — --update / --uninstall / --dry-run 이 읽는다 (#104)
 AGENTS.md               프로젝트 브레인 — 규칙 SSOT (P0/P1/P2 + 워크플로)
 presets/                프리셋 조각 (복사 덮어쓰기 방식, #81 에서 종류별로 묶음)
   stacks/<stack>/       스택별 조각 (rules + pre-commit.partial.sh + AGENTS.partial.md) — nextjs·bun·ops 등
@@ -74,4 +75,5 @@ scripts/                사용자용 — install-skills.sh(스킬 전역 설치)
 - **paths 스코프 룰**: frontmatter `paths:` 로 해당 파일 작업 시에만 자동 로드.
 - **멀티에이전트 격리**: 병렬 서브에이전트 파일 동시수정 → `isolation: "worktree"`.
 - **설치 순서**: 베이스 복사 → forge 프리셋 → 스택 프리셋 → (`--with-personal-skills`) `presets/skills/personal` → `--lang en` 오버레이 → `{{PROJECT_NAME}}` 치환(`*/skills/yd-*/*` 는 제외 — planner 템플릿 자리표시자 보존) → `.agents/skills` 로 이동·`.claude/skills` 링크 → Codex·agy 에이전트 생성.
+- **선택 기록과 재현 비교**: 설치는 선택을 `.claude/.scaffold.json` 에 쓴다. `--update`·`--uninstall`·`--dry-run` 은 그 선택으로 임시 디렉터리에 다시 설치하고, 프로젝트를 그 결과와 파일 단위로 비교한다. 베이스만이 아니라 프리셋·영어 오버레이·`pre-commit.sh` 까지 비교한다(#104). 파일이 없으면 프로젝트에서 선택을 추론한다.
 - **스킬 테스트**: 스킬마다 `tests/test_*.py` 와 `tests/claims.json` 을 둔다. `scripts/dev/run-skill-tests.sh` 가 스킬별로 돌리고, `tests/test_skill_contracts.py` 가 claims 형식·참조 경로·트리거 중복을 검사한다.

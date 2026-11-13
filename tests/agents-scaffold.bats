@@ -69,7 +69,7 @@ setup() {
 import json, sys
 with open(sys.argv[1]) as source:
     state = json.load(source)
-assert state == dict(schema_version=1, forge='gitlab', stacks=['python', 'ops'], lang='en', harness='codex', name='saved name', with_personal_skills=False)
+assert (state['forge'], state['stacks'], state['lang'], state['harness'], state['name'], state['personal_skills']) == ('gitlab', 'python,ops', 'en', 'codex', 'saved name', '0')
 PY
 }
 
@@ -113,7 +113,7 @@ PY
 
 python_gate_fixture() {
   mkdir -p "$BATS_TEST_TMPDIR/tools" "$BATS_TEST_TMPDIR/src"
-  touch "$BATS_TEST_TMPDIR/src/main.py"
+  touch "$BATS_TEST_TMPDIR/src/main.py" "$BATS_TEST_TMPDIR/mypy.ini"
   printf '#!/usr/bin/env bash\nset -euo pipefail\n' > "$BATS_TEST_TMPDIR/gate.sh"
   cat "$REPO_ROOT/presets/stacks/python/.claude/hooks/pre-commit.partial.sh" >> "$BATS_TEST_TMPDIR/gate.sh"
   printf '#!/usr/bin/env bash\necho uv-must-not-run; exit 9\n' > "$BATS_TEST_TMPDIR/tools/uv"
@@ -198,7 +198,7 @@ python_gate_fixture() {
   [ -n "$marker_line" ]
   next_line="$((marker_line + 2))"
   next_content="$(sed -n "${next_line}p" "$hook")"
-  # 스택 시작 표시 다음 줄에 bun partial 의 헤더가 있어야 함 (#104)
+  # bun partial 의 첫 줄(주석 헤더)이 마커 바로 다음 줄이어야 함
   first_partial_line="$(head -1 "$REPO_ROOT/presets/stacks/bun/.claude/hooks/pre-commit.partial.sh")"
   [ "$next_content" = "$first_partial_line" ]
 }
@@ -225,8 +225,8 @@ python_gate_fixture() {
 
   # 두 partial 모두 exit 2 (차단) 만 쓰고 exit 0 으로 훅을 조기 종료하지 않는지 확인
   # (partial 자체는 exit 0 을 포함하지 않아야 함 — #6 재발 방지)
-  ! grep -q '^exit 0$' "$REPO_ROOT/presets/stacks/bun/.claude/hooks/pre-commit.partial.sh"
-  ! grep -q '^exit 0$' "$REPO_ROOT/presets/stacks/python/.claude/hooks/pre-commit.partial.sh"
+  ! grep -q '^exit 0$' "$REPO_ROOT/presets/stacks/bun/.claude/hooks/pre-commit.partial.sh" || false
+  ! grep -q '^exit 0$' "$REPO_ROOT/presets/stacks/python/.claude/hooks/pre-commit.partial.sh" || false
 }
 
 # --- 4) 마커 없는 커스텀 base -> append fallback ---
@@ -250,7 +250,7 @@ EOF
   hook="$BATS_TEST_TMPDIR/.claude/hooks/pre-commit.sh"
   [ -f "$hook" ]
   # 마커가 여전히 없고, bun 게이트 헤더가 파일에 존재(append 됨)
-  ! grep -qF '# --- STACK CHECKS' "$hook"
+  ! grep -qF '# --- STACK CHECKS' "$hook" || false
   grep -q 'bun (TypeScript) typecheck gate' "$hook"
   # append 이므로 커스텀 원본 내용도 그대로 유지
   grep -q 'custom pre-commit' "$hook"
@@ -263,7 +263,7 @@ EOF
   [ "$status" -eq 0 ]
 
   grep -q 'my-cool-project' "$BATS_TEST_TMPDIR/AGENTS.md"
-  ! grep -q '{{PROJECT_NAME}}' "$BATS_TEST_TMPDIR/AGENTS.md"
+  ! grep -q '{{PROJECT_NAME}}' "$BATS_TEST_TMPDIR/AGENTS.md" || false
 
   # .bak 파일이 하나도 남지 않아야 함
   bak_count="$(find "$BATS_TEST_TMPDIR" -name '*.bak' | wc -l | tr -d ' ')"
@@ -275,21 +275,21 @@ EOF
   [ "$status" -eq 0 ]
 
   grep -qF 'foo&bar/baz\qux' "$BATS_TEST_TMPDIR/AGENTS.md"
-  ! grep -q '{{PROJECT_NAME}}' "$BATS_TEST_TMPDIR/AGENTS.md"
+  ! grep -q '{{PROJECT_NAME}}' "$BATS_TEST_TMPDIR/AGENTS.md" || false
   # '&' 가 매치 원문({{PROJECT_NAME}})으로 재확장되지 않아야 함
-  ! grep -qF 'foo{{PROJECT_NAME}}bar' "$BATS_TEST_TMPDIR/AGENTS.md"
+  ! grep -qF 'foo{{PROJECT_NAME}}bar' "$BATS_TEST_TMPDIR/AGENTS.md" || false
 }
 
 # --- 6) 알 수 없는 스택 ---
 
-@test "unknown stack prints warning and continues (no abort)" {
+@test "unknown stack is an error that lists the available stacks and installs nothing (#106)" {
   run "$SCRIPT" "$BATS_TEST_TMPDIR" --stack totally-unknown-stack --yes
-  [ "$status" -eq 0 ]
-  [[ "$output" == *"Warning"* ]]
-  [[ "$output" == *"totally-unknown-stack"* ]]
-  # 베이스는 정상적으로 완료됨
-  [ -d "$BATS_TEST_TMPDIR/.claude" ]
-  [ -f "$BATS_TEST_TMPDIR/AGENTS.md" ]
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"unknown stack 'totally-unknown-stack'"* ]]
+  [[ "$output" == *"Available:"*"nextjs"* ]]
+  # 오타가 "설치 성공"으로 끝나면 게이트 없이 쓰게 된다 — 아무것도 깔지 않는다
+  [ ! -e "$BATS_TEST_TMPDIR/.claude" ]
+  [ ! -e "$BATS_TEST_TMPDIR/AGENTS.md" ]
 }
 
 # --- 7) --yes 비대화 모드 ---
@@ -396,7 +396,7 @@ EOF
   [ "$status" -eq 0 ]
 
   [ -f "$target/.claude/rules/common.md" ]
-  ! grep -q "ENGLISH DUMMY COMMON RULES" "$target/.claude/rules/common.md"
+  ! grep -q "ENGLISH DUMMY COMMON RULES" "$target/.claude/rules/common.md" || false
 }
 
 @test "--lang fr is rejected with exit 1" {
@@ -454,11 +454,11 @@ EOF
 
   # en overlay must differ from the Korean base file
   ! diff -q "$REPO_ROOT/.claude/skills/memory-factcheck/SKILL.md" \
-      "$BATS_TEST_TMPDIR/.claude/skills/memory-factcheck/SKILL.md" >/dev/null
+      "$BATS_TEST_TMPDIR/.claude/skills/memory-factcheck/SKILL.md" >/dev/null || false
   ! diff -q "$REPO_ROOT/.claude/workflows/rules-audit.js" \
-      "$BATS_TEST_TMPDIR/.claude/workflows/rules-audit.js" >/dev/null
+      "$BATS_TEST_TMPDIR/.claude/workflows/rules-audit.js" >/dev/null || false
   ! diff -q "$REPO_ROOT/.claude/skills/grill-me/SKILL.md" \
-      "$BATS_TEST_TMPDIR/.claude/skills/grill-me/SKILL.md" >/dev/null
+      "$BATS_TEST_TMPDIR/.claude/skills/grill-me/SKILL.md" >/dev/null || false
   # knowledge_graph.py is a code file — never overlaid (no en counterpart may exist)
   [ ! -f "$REPO_ROOT/presets/lang/en/base/.claude/scripts/knowledge_graph.py" ]
 }
@@ -581,7 +581,7 @@ setup_publish_repo() {
   [ "$status" -eq 0 ]
   # en overlay must differ from the Korean forge preset file
   ! diff -q "$REPO_ROOT/presets/forge/gitlab/.claude/rules/forge.md" \
-      "$BATS_TEST_TMPDIR/.claude/rules/forge.md" >/dev/null
+      "$BATS_TEST_TMPDIR/.claude/rules/forge.md" >/dev/null || false
 }
 
 @test "unknown --forge is rejected with exit 1" {
@@ -591,14 +591,13 @@ setup_publish_repo() {
 
 # --- 15) --update mode (#33, mechanics from issue #13) ---
 
-@test "--update re-adds deleted files and offers changed files including the gate as .new (#104)" {
+@test "--update re-adds deleted base file, stages .new for local edits, leaves an unchanged pre-commit.sh" {
   run "$SCRIPT" "$BATS_TEST_TMPDIR" --yes
   [ "$status" -eq 0 ]
 
   # simulate drift: base file deleted + base file locally edited
   rm "$BATS_TEST_TMPDIR/.claude/rules/security.md"
   echo "local customization" >> "$BATS_TEST_TMPDIR/.claude/rules/data.md"
-  echo "# custom gate" >> "$BATS_TEST_TMPDIR/.claude/hooks/pre-commit.sh"
 
   run "$SCRIPT" "$BATS_TEST_TMPDIR" --update --yes
   [ "$status" -eq 0 ]
@@ -610,12 +609,10 @@ setup_publish_repo() {
   # locally-edited file untouched, refreshed copy staged as .new
   grep -q 'local customization' "$BATS_TEST_TMPDIR/.claude/rules/data.md"
   [ -f "$BATS_TEST_TMPDIR/.claude/rules/data.md.new" ]
-  ! grep -q 'local customization' "$BATS_TEST_TMPDIR/.claude/rules/data.md.new"
+  ! grep -q 'local customization' "$BATS_TEST_TMPDIR/.claude/rules/data.md.new" || false
 
-  # 현재 훅은 보존하고 합성한 최신 훅만 .new 로 제안한다.
-  grep -q 'custom gate' "$BATS_TEST_TMPDIR/.claude/hooks/pre-commit.sh"
-  [ -f "$BATS_TEST_TMPDIR/.claude/hooks/pre-commit.sh.new" ]
-  ! grep -q 'custom gate' "$BATS_TEST_TMPDIR/.claude/hooks/pre-commit.sh.new"
+  # pre-commit.sh is compared against the same stack selection, so an untouched one is unchanged (#104)
+  [ ! -f "$BATS_TEST_TMPDIR/.claude/hooks/pre-commit.sh.new" ]
 }
 
 @test "--update leaves placeholder-free identical files unchanged (no .new spam)" {
@@ -624,7 +621,7 @@ setup_publish_repo() {
   run "$SCRIPT" "$BATS_TEST_TMPDIR" --update --yes
   [ "$status" -eq 0 ]
   # no-op 업데이트는 .new 를 만들지 않아야 한다 — 플레이스홀더 든 파일 포함(#39).
-  # forge 프리셋도 같은 설치 선택으로 합성하므로 .new 예외가 없다 (#104).
+  # #104: 설치 때의 선택을 재현해 비교하므로 forge 프리셋이 바꾼 commands/ 도 예외가 아니다.
   [ ! -f "$BATS_TEST_TMPDIR/.claude/rules/security.md.new" ]
   [ ! -f "$BATS_TEST_TMPDIR/AGENTS.md.new" ]
   stray="$(find "$BATS_TEST_TMPDIR" -name '*.new' | wc -l | tr -d ' ')"
@@ -689,7 +686,7 @@ setup_publish_repo() {
   run "$SCRIPT" "$BATS_TEST_TMPDIR" --stack javaweb --yes
   [ "$status" -eq 0 ]
   grep -q 'Java + JSP' "$BATS_TEST_TMPDIR/.claude/rules/javaweb.md"
-  ! grep -q '{{JAVA_VERSION}}' "$BATS_TEST_TMPDIR/.claude/rules/javaweb.md"
+  ! grep -q '{{JAVA_VERSION}}' "$BATS_TEST_TMPDIR/.claude/rules/javaweb.md" || false
   grep -q 'javaweb' "$BATS_TEST_TMPDIR/.claude/hooks/pre-commit.sh"
   # 파셜이 마커 뒤, 베이스 exit 0 앞에 삽입됐는지
   marker_line="$(grep -n 'STACK CHECKS' "$BATS_TEST_TMPDIR/.claude/hooks/pre-commit.sh" | head -1 | cut -d: -f1)"
@@ -725,7 +722,7 @@ JSP
   git add src/main/webapp/bad.jsp
   run bash .claude/hooks/pre-commit.sh
   [ "$status" -eq 2 ]
-  [[ "$output" == *"스크립틀릿"* ]]
+  [[ "$output" == *"scriptlet"* ]]
 }
 
 # --- 9) harness (#16) ---
@@ -1382,9 +1379,9 @@ PY
   grep -q '^\*\*springboot\*\*$' "$t/AGENTS.md"
   grep -q 'mypy' "$t/AGENTS.md"
   # 선택하지 않은 스택은 삽입되지 않는다 (context flooding 방지)
-  ! grep -q '^\*\*rust\*\*$' "$t/AGENTS.md"
+  ! grep -q '^\*\*rust\*\*$' "$t/AGENTS.md" || false
   # 참조 위임 문구는 사라졌다
-  ! grep -q '.claude/rules/<stack>.md` 의 `## P0` 섹션 참조' "$t/AGENTS.md"
+  ! grep -q '.claude/rules/<stack>.md` 의 `## P0` 섹션 참조' "$t/AGENTS.md" || false
 }
 
 @test "AGENTS.md owns the single memory-index @import (#54, supersedes #21)" {
@@ -1673,7 +1670,7 @@ PY
   [ -f "$f" ]
   # cmd.exe 는 LF 전용 배치에서 파싱이 어긋날 수 있고, 비ASCII 는 코드페이지에 따라 깨진다
   [ "$(grep -c $'\r$' "$f")" -eq "$(wc -l < "$f")" ]
-  ! LC_ALL=C grep -q $'[\x80-\xff]' "$f"
+  ! LC_ALL=C grep -q $'[\x80-\xff]' "$f" || false
 }
 
 @test "existing crlf or commented hook rule still gets LF override (#58)" {
@@ -1717,7 +1714,7 @@ PY
   [ "$status" -eq 0 ]
   grep -qx '## Response language' "$en/AGENTS.md"
   grep -q 'in the language the user writes in' "$en/AGENTS.md"
-  ! grep -q '항상 한국어' "$en/AGENTS.md"
+  ! grep -q '항상 한국어' "$en/AGENTS.md" || false
 }
 
 @test "compaction reminder is a SessionStart(compact) command hook, gate fails closed (#72)" {
@@ -1768,7 +1765,7 @@ PERSONAL_YD="yd-agents-mem yd-claude-auth-sync yd-git-sync yd-git-ship yd-doksam
   run "$SCRIPT" "$BATS_TEST_TMPDIR" --name demo --yes
   [ "$status" -eq 0 ]
   grep -q '{{PROJECT_NAME}}' "$BATS_TEST_TMPDIR/.agents/skills/yd-mobile-web-planner/SKILL.md"
-  ! grep -rq '{{PROJECT_NAME}}' "$BATS_TEST_TMPDIR/AGENTS.md"
+  ! grep -rq '{{PROJECT_NAME}}' "$BATS_TEST_TMPDIR/AGENTS.md" || false
 }
 
 @test "--with-personal-skills adds the opt-in set; --update refreshes it (#78)" {
@@ -1833,7 +1830,7 @@ personal_repo() {
   run bash "$REPO_ROOT/.claude/scripts/personal-layer.sh" off
   [ "$status" -eq 0 ]
   [ ! -e CLAUDE.local.md ] && [ ! -e AGENTS.override.md ] && [ ! -e .agents ]
-  ! grep -q 'personal-layer' "$(git rev-parse --git-path info/exclude)"
+  ! grep -q 'personal-layer' "$(git rev-parse --git-path info/exclude)" || false
   [ -f AGENTS.md ] && [ -f AGENTS.TEST.md ]
 }
 
@@ -1874,7 +1871,7 @@ personal_repo() {
   [ "$status" -eq 0 ]
   [ "$(cat .claude/state/personal-gate/current)" = "TEST" ]
   grep -q 'personal-gate.sh' .codex/hooks.json && grep -q 'personal-gate.sh' .agents/hooks.json
-  ! grep -q 'hook-adapter.py' .codex/hooks.json   # 게이트만 담은 개인 생성물
+  ! grep -q 'hook-adapter.py' .codex/hooks.json || false   # 게이트만 담은 개인 생성물
   [ -z "$(git status --porcelain -- .codex .agents CLAUDE.local.md AGENTS.override.md)" ]
   run bash "$REPO_ROOT/.claude/scripts/personal-layer.sh" use none
   [ "$status" -eq 0 ]
@@ -1892,3 +1889,205 @@ personal_repo() {
   [ ! -e .claude/state/personal-gate/current ]
 }
 
+# --- #104: 재설치 안전·설치 선택 기록 ---
+
+@test "re-install backs up a changed AGENTS.md and does not splice the stack gate twice (#104)" {
+  t="$BATS_TEST_TMPDIR/re"
+  mkdir -p "$t"
+  run "$SCRIPT" "$t" --stack nextjs --yes
+  [ "$status" -eq 0 ]
+  hook_len="$(wc -l < "$t/.claude/hooks/pre-commit.sh")"
+  echo "MY NOTES" >> "$t/AGENTS.md"
+  run "$SCRIPT" "$t" --stack nextjs --yes
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"AGENTS.md.bak-"* ]]
+  grep -q "MY NOTES" "$t"/AGENTS.md.bak-*
+  [ "$(wc -l < "$t/.claude/hooks/pre-commit.sh")" -eq "$hook_len" ]
+  first="$(grep -m1 . "$REPO_ROOT/presets/stacks/nextjs/.claude/hooks/pre-commit.partial.sh")"
+  [ "$(grep -cxF "$first" "$t/.claude/hooks/pre-commit.sh")" -eq 1 ]
+  # an untouched AGENTS.md needs no backup
+  rm "$t"/AGENTS.md.bak-*
+  run "$SCRIPT" "$t" --stack nextjs --yes
+  [ -z "$(find "$t" -maxdepth 1 -name 'AGENTS.md.bak-*')" ]
+}
+
+@test "--update replays the recorded forge, stacks and language: no .new on a fresh install (#104)" {
+  t="$BATS_TEST_TMPDIR/replay"
+  mkdir -p "$t"
+  run "$SCRIPT" "$t" --forge gitlab --stack go,python --lang en --name replay-app --yes
+  [ "$status" -eq 0 ]
+  grep -q '"forge": "gitlab"' "$t/.claude/.scaffold.json"
+  grep -q '"stacks": "go,python"' "$t/.claude/.scaffold.json"
+  grep -q '"lang": "en"' "$t/.claude/.scaffold.json"
+  run "$SCRIPT" "$t" --update
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"(recorded)"* ]]
+  [[ "$output" == *"Added: 0"* ]]
+  [ "$(find "$t" -name '*.new' | wc -l | tr -d ' ')" -eq 0 ]
+  # the English overlay is what gets compared: a local edit yields an English .new
+  echo "local" >> "$t/.claude/rules/common.md"
+  run "$SCRIPT" "$t" --update
+  [ -f "$t/.claude/rules/common.md.new" ]
+  grep -q "Priority tiers" "$t/.claude/rules/common.md.new"
+  # a stack gate edit is staged too, instead of pre-commit.sh being skipped wholesale
+  echo "# mine" >> "$t/.claude/hooks/pre-commit.sh"
+  run "$SCRIPT" "$t" --update
+  [ -f "$t/.claude/hooks/pre-commit.sh.new" ]
+}
+
+@test "--update infers the choices of an install that predates .scaffold.json (#104)" {
+  t="$BATS_TEST_TMPDIR/legacy"
+  mkdir -p "$t"
+  run "$SCRIPT" "$t" --forge gitlab --stack rust --yes
+  [ "$status" -eq 0 ]
+  rm "$t/.claude/.scaffold.json"
+  run "$SCRIPT" "$t" --update
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"forge=gitlab stacks=[rust] lang=ko"*"(inferred)"* ]]
+  [ "$(find "$t" -name '*.new' | wc -l | tr -d ' ')" -eq 0 ]
+  grep -q '"stacks": "rust"' "$t/.claude/.scaffold.json"
+}
+
+# --- #105: 영어 설치 ---
+
+@test "--lang en leaves the Korean-only yd-* skills out unless --with-yd-skills (#105)" {
+  t="$BATS_TEST_TMPDIR/en"
+  mkdir -p "$t"
+  run "$SCRIPT" "$t" --lang en --harness all --yes
+  [ "$status" -eq 0 ]
+  [ -z "$(find "$t/.agents/skills" -maxdepth 1 -name 'yd-*')" ]
+  [ -z "$(find "$t/.claude/agents" "$t/.codex/agents" "$t/.agents/agents" -name 'yd-*')" ]
+  [ -f "$t/.agents/skills/review/SKILL.md" ]
+  [[ "$output" == *"Next steps:"* ]]
+  run "$SCRIPT" "$t" --update
+  [[ "$output" == *"Added: 0"* ]]
+  t2="$BATS_TEST_TMPDIR/en-yd"
+  mkdir -p "$t2"
+  run "$SCRIPT" "$t2" --lang en --with-yd-skills --yes
+  [ -f "$t2/.agents/skills/yd-pg-expert/SKILL.md" ]
+  # Korean installs keep them by default
+  t3="$BATS_TEST_TMPDIR/ko-noyd"
+  mkdir -p "$t3"
+  run "$SCRIPT" "$t3" --no-yd-skills --yes
+  [ -z "$(find "$t3/.agents/skills" -maxdepth 1 -name 'yd-*')" ]
+}
+
+# --- #106: CLI 기본기 ---
+
+@test "--version, --list-stacks and a missing option value (#106)" {
+  run "$SCRIPT" --version
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ ^agents-scaffold\ [0-9]+\.[0-9]+\.[0-9]+$ ]]
+  run "$SCRIPT" --list-stacks
+  [ "$status" -eq 0 ]
+  [ "$(printf '%s\n' "$output" | wc -l | tr -d ' ')" -eq "$(find "$REPO_ROOT/presets/stacks" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')" ]
+  run "$SCRIPT" "$BATS_TEST_TMPDIR" --stack
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"--stack needs a value"* ]]
+  [[ "$output" != *"unbound variable"* ]]
+}
+
+@test "--dry-run changes nothing; a missing target directory is created by a real install (#106)" {
+  t="$BATS_TEST_TMPDIR/dry"
+  mkdir -p "$t"
+  run "$SCRIPT" "$t" --stack go --dry-run --yes
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Would add:"* ]]
+  [ -z "$(ls -A "$t")" ]
+  run "$SCRIPT" "$BATS_TEST_TMPDIR/not/yet/there" --yes
+  [ "$status" -eq 0 ]
+  [ -f "$BATS_TEST_TMPDIR/not/yet/there/AGENTS.md" ]
+  run "$SCRIPT" "$BATS_TEST_TMPDIR/not/yet/there" --update --dry-run
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"nothing was changed"* ]]
+}
+
+@test "--uninstall removes untouched scaffold files, keeps edited ones and memory (#106)" {
+  t="$BATS_TEST_TMPDIR/un"
+  mkdir -p "$t"
+  git -C "$t" init -q
+  run "$SCRIPT" "$t" --stack go --harness all --yes
+  [ "$status" -eq 0 ]
+  [ -x "$t/.git/hooks/pre-commit" ]
+  echo "mine" >> "$t/.claude/rules/common.md"
+  echo "- [x](project_x.md)" >> "$t/.claude/memory/MEMORY.md"
+  echo "keep" > "$t/.claude/rules/my-own.md"
+  # needs confirmation without --yes
+  run "$SCRIPT" "$t" --uninstall </dev/null
+  [ "$status" -eq 1 ]
+  [ -f "$t/.claude/settings.json" ]
+  run "$SCRIPT" "$t" --uninstall --yes
+  [ "$status" -eq 0 ]
+  [ ! -e "$t/.claude/settings.json" ]
+  [ ! -e "$t/.agents/skills" ]
+  [ ! -e "$t/.claude/skills" ] && [ ! -L "$t/.claude/skills" ]
+  [ ! -e "$t/.git/hooks/pre-commit" ]
+  [ ! -e "$t/.claude/.scaffold.json" ]
+  grep -q "mine" "$t/.claude/rules/common.md"
+  [ -f "$t/.claude/rules/my-own.md" ]
+  grep -q "project_x" "$t/.claude/memory/MEMORY.md"
+  [[ "$output" == *"= .claude/rules/common.md"* ]]
+}
+
+@test "the git hook is wired in a worktree and respects core.hooksPath; --update wires a missing one (#106)" {
+  main="$BATS_TEST_TMPDIR/wt-main"
+  mkdir -p "$main"
+  git -C "$main" init -q
+  git -C "$main" -c user.name=t -c user.email=t@example.com commit -q --allow-empty -m init
+  git -C "$main" worktree add -q "$BATS_TEST_TMPDIR/wt" -b feature
+  run "$SCRIPT" "$BATS_TEST_TMPDIR/wt" --yes
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"git pre-commit hook wired"* ]]
+  hooks="$(git -C "$BATS_TEST_TMPDIR/wt" rev-parse --git-path hooks)"
+  [ -x "$hooks/pre-commit" ]
+
+  hp="$BATS_TEST_TMPDIR/hp"
+  mkdir -p "$hp/.myhooks"
+  git -C "$hp" init -q
+  git -C "$hp" config core.hooksPath .myhooks
+  run "$SCRIPT" "$hp" --yes
+  [ -x "$hp/.myhooks/pre-commit" ]
+  [ ! -e "$hp/.git/hooks/pre-commit" ]
+
+  late="$BATS_TEST_TMPDIR/late"
+  mkdir -p "$late"
+  run "$SCRIPT" "$late" --yes
+  git -C "$late" init -q
+  run "$SCRIPT" "$late" --update
+  [ -x "$late/.git/hooks/pre-commit" ]
+}
+
+@test "update migrates the original schema-1 choices without changing project files (#104, #106)" {
+  run bash "$SCRIPT" "$BATS_TEST_TMPDIR" --forge gitlab --stack python --lang en --harness all --with-yd-skills --name legacy-schema --yes
+  [ "$status" -eq 0 ]
+  python3 - "$BATS_TEST_TMPDIR/.claude/.scaffold.json" <<'PY_STATE'
+import json,sys
+from pathlib import Path
+state=dict(schema_version=1,forge='gitlab',stacks=['python'],lang='en',harness='all',name='legacy-schema',with_personal_skills=False)
+Path(sys.argv[1]).write_text(json.dumps(state,ensure_ascii=False))
+PY_STATE
+  run bash "$SCRIPT" "$BATS_TEST_TMPDIR" --update --yes
+  [ "$status" -eq 0 ]
+  [ -z "$(find "$BATS_TEST_TMPDIR" -name '*.new')" ]
+  grep -q '"scaffold_version"' "$BATS_TEST_TMPDIR/.claude/.scaffold.json"
+}
+
+@test "force update preserves original bytes in backups and dry-run changes nothing (#106)" {
+  run bash "$SCRIPT" "$BATS_TEST_TMPDIR" --yes
+  [ "$status" -eq 0 ]
+  printf '\ncustom project rule\n' >> "$BATS_TEST_TMPDIR/.claude/rules/data.md"
+  cp "$BATS_TEST_TMPDIR/.claude/rules/data.md" "$BATS_TEST_TMPDIR/original-data"
+  run bash "$SCRIPT" "$BATS_TEST_TMPDIR" --update --force --dry-run --yes
+  [ "$status" -eq 0 ]
+  cmp "$BATS_TEST_TMPDIR/.claude/rules/data.md" "$BATS_TEST_TMPDIR/original-data"
+  [ -z "$(find "$BATS_TEST_TMPDIR" -name '*.bak-*')" ]
+  run bash "$SCRIPT" "$BATS_TEST_TMPDIR" --update --force --yes
+  [ "$status" -eq 0 ]
+  backup="$(find "$BATS_TEST_TMPDIR/.claude/rules" -name 'data.md.bak-*')"
+  [ -n "$backup" ]
+  cmp "$backup" "$BATS_TEST_TMPDIR/original-data"
+  ! grep -q 'custom project rule' "$BATS_TEST_TMPDIR/.claude/rules/data.md" || false
+  [ ! -e "$BATS_TEST_TMPDIR/.claude/rules/data.md.new" ]
+  run bash "$SCRIPT" "$BATS_TEST_TMPDIR" --force --yes
+  [ "$status" -eq 1 ]
+}

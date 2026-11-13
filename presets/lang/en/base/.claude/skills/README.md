@@ -28,27 +28,27 @@ New skills should use the `{{PROJECT_NAME}}-sk-*` prefix.
 ## `yd-*` skills (#78)
 
 Moved over from [LeeYudok/doksam-skills](https://github.com/LeeYudok/doksam-skills); this repo is now their source.
-The `yd-*` skills are **Korean only** (no `--lang en` overlay), and installation does not substitute
-`{{PROJECT_NAME}}` inside them. Skills marked ○ also have a named agent in `agents/yd-<name>.md`.
+The `yd-*` skills are **Korean only**, so an English install (`--lang en`) leaves them out unless you pass
+`--with-yd-skills` (#105). Installation does not substitute `{{PROJECT_NAME}}` inside them. Skills marked ○ also have a named agent in `agents/yd-<name>.md`.
 
-**Installed by default (14)**
+**Installed with `--lang ko`, or with `--with-yd-skills` (14)**
 
 | Skill | Agent | Use when |
 |---|---|---|
-| [yd-mobile-web-planner](yd-mobile-web-planner/SKILL.md) | ○ | Producing IA, a screen-design deck (HTML slides) and Business Rules for a mobile web/app |
-| [yd-nextjs-implementer](yd-nextjs-implementer/SKILL.md) | ○ | Turning the screen design into Next.js or Vite + React code |
-| [yd-blueprint](yd-blueprint/SKILL.md) | ○ | Recording structure, implementation status and remaining work as JSONL and rendering a blueprint view |
-| [yd-frontend-build](yd-frontend-build/SKILL.md) | ○ | pnpm/Vite builds, dependencies, bundle size, offline self-hosting |
-| [yd-typescript](yd-typescript/SKILL.md) | — | Reviewing type boundaries, async UI and DOM access |
-| [yd-react-expert](yd-react-expert/SKILL.md) | ○ | React 19 components, state, effects, accessibility, render performance |
-| [yd-go-expert](yd-go-expert/SKILL.md) | ○ | Writing or reviewing Go 1.22+ (errors, concurrency, `net/http`, `go:embed`) |
-| [yd-db-expert](yd-db-expert/SKILL.md) | ○ | Engine-neutral relational design (normalization, keys, constraints, indexes, transactions, migrations) |
-| [yd-pg-expert](yd-pg-expert/SKILL.md) | ○ | PostgreSQL-specific behavior (locking ALTERs, `CONCURRENTLY`, VACUUM, plans) |
-| [yd-oracle-expert](yd-oracle-expert/SKILL.md) | ○ | Oracle-specific issues (empty string NULL, DATE time part, VARCHAR2 bytes, ROWNUM) |
-| [yd-sqlite-expert](yd-sqlite-expert/SKILL.md) | ○ | SQLite-specific issues (read-only queries, WAL, locking, dynamic table names) |
-| [yd-agents-yaml](yd-agents-yaml/SKILL.md) | — | Setting up or updating `AGENTS.md` + `AGENTS.yaml` + validator |
-| [yd-writer-kr](yd-writer-kr/SKILL.md) | ○ | Writing, editing or summarizing Korean issues, PRs, docs and announcements |
-| [yd-cve-check](yd-cve-check/SKILL.md) | ○ | Checking and fixing pnpm dependencies against known CVE/GHSA/malicious-package data (online `pnpm audit`, offline OSV dump, #79) |
+| `yd-mobile-web-planner` | ○ | Producing IA, a screen-design deck (HTML slides) and Business Rules for a mobile web/app |
+| `yd-nextjs-implementer` | ○ | Turning the screen design into Next.js or Vite + React code |
+| `yd-blueprint` | ○ | Recording structure, implementation status and remaining work as JSONL and rendering a blueprint view |
+| `yd-frontend-build` | ○ | pnpm/Vite builds, dependencies, bundle size, offline self-hosting |
+| `yd-typescript` | — | Reviewing type boundaries, async UI and DOM access |
+| `yd-react-expert` | ○ | React 19 components, state, effects, accessibility, render performance |
+| `yd-go-expert` | ○ | Writing or reviewing Go 1.22+ (errors, concurrency, `net/http`, `go:embed`) |
+| `yd-db-expert` | ○ | Engine-neutral relational design (normalization, keys, constraints, indexes, transactions, migrations) |
+| `yd-pg-expert` | ○ | PostgreSQL-specific behavior (locking ALTERs, `CONCURRENTLY`, VACUUM, plans) |
+| `yd-oracle-expert` | ○ | Oracle-specific issues (empty string NULL, DATE time part, VARCHAR2 bytes, ROWNUM) |
+| `yd-sqlite-expert` | ○ | SQLite-specific issues (read-only queries, WAL, locking, dynamic table names) |
+| `yd-agents-yaml` | — | Setting up or updating `AGENTS.md` + `AGENTS.yaml` + validator |
+| `yd-writer-kr` | ○ | Writing or editing Korean issues, PRs, docs and announcements |
+| `yd-cve-check` | ○ | Checking and fixing pnpm dependencies against known CVE/GHSA/malicious-package data (online `pnpm audit`, offline OSV dump, #79) |
 
 doksam-skills' `yd-handoff`, `yd-doc-sync`, `yd-memory-factcheck` and `yd-skill-evolve` were merged into
 `handoff`, `docs-sync`, `memory-factcheck` and `skill-evolve`, which do the same jobs.

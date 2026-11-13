@@ -7,10 +7,10 @@
 | 프리셋 | 룰 파일 | pre-commit 게이트 |
 |--------|---------|-----------------|
 | `nextjs` | nextjs.md (paths: app/**, components/**) | `tsc --noEmit` |
-| `springboot` | springboot.md (paths: src/main/java/**) | `./gradlew build` |
+| `springboot` | springboot.md (paths: src/main/java/**) | `gradle testClasses` / `mvn test-compile` (전체 테스트는 `SPRINGBOOT_GATE_TESTS=1`) |
 | `javaweb` | javaweb.md (paths: src/main/java/**, **/*.jsp) | maven/gradle/ant 컴파일 (자동 감지) |
 | `bun` | bun.md (paths: **/*.ts) | `bunx tsc --noEmit` |
-| `python` | python.md (paths: **/*.py) | `ruff check` + `mypy` |
+| `python` | python.md (paths: **/*.py) | `ruff check`, `mypy` 는 프로젝트에 설정이 있을 때만 |
 | `go` | go.md (paths: **/*.go) | `go build ./...` + `vet` + `golangci-lint` |
 | `rust` | rust.md (paths: src/**/*.rs, **/*.rs) | `cargo check` + `clippy` |
 | `android` | android.md (paths: **/*.kt) | `./gradlew ktlintCheck detekt` |
@@ -19,6 +19,9 @@
 | `dotnet` | dotnet.md (paths: **/*.cs, **/*.csproj, appsettings*.json) | `dotnet build` + `format --verify-no-changes` + `test` |
 | `php-laravel` | php-laravel.md (paths: app/**/*.php, routes/**/*.php, composer.json) | `composer validate` + `pint --test` + `phpunit` |
 | `ops` | ops.md (paths: Dockerfile, docker-compose*, quadlet/**, ansible/**) | — |
+
+`--list-stacks` 가 이 이름들을 한 줄에 하나씩 찍는다. 목록에 없는 이름은 오류다(exit 1). 쓸 수 있는 스택을 보여주고
+아무것도 설치하지 않는다. 예전에는 경고만 했다.
 
 ## Forge 프리셋 (`--forge`)
 
@@ -94,19 +97,19 @@
 
 git hook 은 **하네스와 무관하게 항상 배선된다**(#21). Claude Code 의 `PreToolUse` 훅은 그 세션이
 Bash 툴로 커밋할 때만 발동하므로 조기 피드백 계층이지 강제선이 아니다 — 결정적 강제선은
-하네스 밖(`.git/hooks` + CI)에 둔다. 기존 `.git/hooks/pre-commit` 이 있으면 덮어쓰지 않고 경고만 낸다.
+하네스 밖(`.git/hooks` + CI)에 둔다. 기존 pre-commit 훅이 있으면 덮어쓰지 않고, 그 훅에 넣을 한 줄을 경고로 알려준다. 훅은 git 이 실제로 실행하는 위치에 쓴다. worktree, submodule(`.git` 이 파일), `.husky` 같은 `core.hooksPath` 디렉터리를 처리하고, `--update` 는 없는 훅을 연결한다(#106). [TROUBLESHOOTING.md](TROUBLESHOOTING.md#기존-pre-commit-훅이나-husky-가-있다) 참조.
 
 선택한 스택의 P0 는 `AGENTS.md` **본문에 직접 삽입**된다 — `.claude/rules/` 참조 링크에 의존하지
 않으므로 `.claude/` 를 로드하지 않는 하네스에서도 도달 가능하다. 선택하지 않은 스택은 삽입되지
 않는다(Codex instruction 합산 기본 한도 32KiB — context flooding 방지).
 
-### 실측 검증 (2026-10-04)
+### 실측 검증 (2026-11-04)
 
-| 하네스 | 실측 버전 | baseline | full 쪽 확인된 것 / 확인 안 된 것 |
-|---|---|---|---|
-| Claude Code | 2.1.318 | 성립 | `.claude/rules/*.md` 의 `paths:` 조건부 로딩, 서브에이전트, skills, `settings.json` 훅 — 전부 [공식 문서](https://code.claude.com/docs/en/memory.md)로 확인 |
-| Codex | codex-cli 0.166.0 | 성립 | `AGENTS.md`·스택 P0 자동 로드, `.agents/skills` 발견, `.env` 게이트, `.codex/agents` 서브에이전트(신뢰 프로젝트만), `.codex/hooks.json` 훅(프로젝트 + 훅 정의 신뢰 필요), cwd 기준 하위 `AGENTS.md` 를 실측. 파일 경로 조건부 지침은 없다 |
-| Antigravity | agy 1.5.0 | 성립 | headless(`-p`)로 `AGENTS.md`·스택 P0 자동 로드, `.agents/skills` 발견, `.env` 게이트, `.agents/agents` 서브에이전트, `.agents/hooks.json` 훅(신뢰 확인 없이 실행)을 실측. **`.agents/rules` 의 `trigger: glob` 룰은 1.5.0 에서 일치 파일을 읽어도 로드되지 않는다**(1.4.2 까지 pass, `always_on` 은 정상, #90). 하위 `AGENTS.md` 는 cwd 기준으로만 로드 |
+| 하네스 | 실측 버전 | 등급 | baseline | full 쪽 확인된 것 / 확인 안 된 것 |
+|---|---|---|---|---|
+| Claude Code | 2.1.318 | **full** | 성립 | `.claude/rules/*.md` 의 `paths:` 조건부 로딩, 서브에이전트, skills, `settings.json` 훅 — 전부 [공식 문서](https://code.claude.com/docs/en/memory.md)로 확인 |
+| Codex | codex-cli 0.166.0 | **baseline** | 성립 | `AGENTS.md`·스택 P0 자동 로드, `.agents/skills` 발견, `.env` 게이트, `.codex/agents` 서브에이전트(신뢰 프로젝트만), `.codex/hooks.json` 훅(프로젝트 + 훅 정의 신뢰 필요), cwd 기준 하위 `AGENTS.md` 를 실측. 파일 경로 조건부 지침은 없다 |
+| Antigravity | agy 1.5.0 | **baseline** | 성립 | headless(`-p`)로 `AGENTS.md`·스택 P0 자동 로드, `.agents/skills` 발견, `.env` 게이트, `.agents/agents` 서브에이전트, `.agents/hooks.json` 훅(신뢰 확인 없이 실행)을 실측. **`.agents/rules` 의 `trigger: glob` 룰은 1.5.0 에서 일치 파일을 읽어도 로드되지 않는다**(1.4.2 까지 pass, `always_on` 은 정상, #90). 하위 `AGENTS.md` 는 cwd 기준으로만 로드 |
 
 Codex(codex-cli 0.166.0)와 agy(1.5.0)는 각 모드 산출물의 AGENTS.md 와 인라인된
 스택 P0를 툴 호출 없이 자동 로드하고 `.agents/skills`의 저장소 스킬만 발견했다. `.claude/skills`는
@@ -114,8 +117,9 @@ Codex(codex-cli 0.166.0)와 agy(1.5.0)는 각 모드 산출물의 AGENTS.md 와 
 1.2.16 에서 해소됐다. 모델이 규칙을 놓쳐도 git hook이 exit 2로 차단한다.
 
 지원 상태의 단일 진실원천은 [`docs/harness-matrix.json`](harness-matrix.json) 이다. 이 표는
-그 manifest 와 대조되며, `scripts/dev/check-harness-matrix.py` 가 CI 에서 검사한다 — `full` 등급이
-90일 넘게 재측정되지 않았거나 판정에 근거가 없으면 **빌드가 실패한다**. 재측정은
+그 manifest 와 대조되며, `scripts/dev/check-harness-matrix.py` 가 CI 에서 검사한다 — 판정에 근거가 없거나
+버전이 어긋나면 **빌드가 실패한다**. `full` 등급이 90일 넘게 재측정되지 않으면 주간 `harness-matrix` 워크플로가 실패하고,
+PR 에서는 만료 14일 전부터 경고만 낸다. 재측정은
 `scripts/dev/spike-codex-contract.sh --dynamic`·`scripts/dev/spike-agy-contract.sh --dynamic` 으로 수행한다.
 
 **agy 룰 어댑터 (#63).** `--harness agy|all` 이면 `.claude/rules/*.md` 를 `.agents/rules/*.md` 로 생성한다. `paths:` 는
@@ -162,24 +166,41 @@ Codex 쪽 추가 제약 두 가지도 설계에 영향을 준다.
 - **`.codex/` 레이어는 프로젝트를 신뢰한 경우에만 로드된다.** 파일을 생성했다고 활성화가
   보장되지 않는다. 그래서 결정적 강제선을 `.git/hooks` + CI 에 둔다.
 
-## 스킬 묶음 (`--with-personal-skills`)
+## 스킬 묶음 (`--with-yd-skills`, `--no-yd-skills`, `--with-personal-skills`)
 
-기본 설치에는 범용 스킬 24개가 들어간다 — 기존 10개(`review`·`status`·`handoff`·`docs-sync` 등)와
-[LeeYudok/doksam-skills](https://github.com/LeeYudok/doksam-skills) 에서 옮겨 온 `yd-*` 13개(DB·Go·React·
-TypeScript·빌드·화면설계·글쓰기 등), 의존성 CVE 점검 `yd-cve-check`(#79)다. `yd-*` 스킬에 딸린 에이전트 12개(`.claude/agents/yd-*.md`)도 함께 깔린다(#78).
+| 설치 | 스킬 | 서브에이전트 |
+|---|---|---|
+| `--lang ko` (기본) | 24 — 워크플로 10 + `yd-*` 14 | 19 — 7 + `yd-*` 12 |
+| `--lang en` | 10 — 워크플로 스킬 | 7 |
+| `--with-personal-skills` 추가 | +9 | +4 |
 
-`--with-personal-skills` 를 주면 메인테이너 환경에 묶인 옵트인 묶음 `presets/skills/personal/` 을 스택 프리셋
-다음에 머지한다 — 스킬 9개(`yd-agents-mem`·`yd-claude-auth-sync`·`yd-git-sync`·`yd-git-ship`·`yd-doksam-ui`·
-`yd-finguard`·`yd-sdlc-orchestrator`·`yd-script-editor`·`yd-session-recording`)와 에이전트 4개.
+워크플로 스킬 10개는 `review`·`status`·`search-first`·`security-precheck`·`docs-sync`·`handoff`·
+`memory-factcheck`·`skill-evolve`·`grill-me` 와 템플릿 `example-skill` 이다. `yd-*` 14개는
+[LeeYudok/doksam-skills](https://github.com/LeeYudok/doksam-skills) 에서 옮겨 온 13개(DB·Go·React·TypeScript·빌드·
+화면설계·글쓰기 등)와 의존성 CVE 점검 `yd-cve-check`(#79)다. 딸린 에이전트 12개(`.claude/agents/yd-*.md`)도 함께
+들어간다(#78).
+
+| 옵션 | 효과 |
+|---|---|
+| `--with-yd-skills` | `yd-*` 14개와 그 에이전트를 설치한다. `--lang ko` 의 기본값 |
+| `--no-yd-skills` | 뺀다. `--lang en` 의 기본값이다. `yd-*` 스킬은 한국어로 쓰여 있고 영어 오버레이가 없다(#105) |
+| `--with-personal-skills` | 옵트인 묶음 `presets/skills/personal/` 도 스택 프리셋 다음에 머지한다 |
+
+옵트인 묶음은 스킬 9개(`yd-agents-mem`·`yd-claude-auth-sync`·`yd-git-sync`·`yd-git-ship`·`yd-doksam-ui`·
+`yd-finguard`·`yd-sdlc-orchestrator`·`yd-script-editor`·`yd-session-recording`)와 에이전트 4개다.
 특정 GitLab·호스트·ui.doksam.com·FinGuard 를 전제하므로 다른 환경에서는 쓰지 않는다.
 
 ```bash
+agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --lang en --stack go --with-yd-skills
 agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --stack go --with-personal-skills
 ```
 
-- `yd-*` 스킬은 한국어 전용이다 — `--lang en` 오버레이가 없다.
-- `--update` 는 설치 선택에 포함된 프리셋도 갱신한다. `--with-personal-skills` 를 주거나
-  타겟에 개인 스킬이 하나라도 있으면 개인 묶음도 갱신한다. 기본 설치에는 개인 묶음을 추가하지 않는다.
+- 선택은 `.claude/.scaffold.json`(`yd_skills`, `personal_skills`)에 기록되고 `--update` 는 같은 묶음을 유지한다.
+  이 파일이 없는 설치에서는 `yd-db-expert` 가 있으면 `yd-*` 묶음을, 옵트인 스킬이 하나라도 있으면 옵트인 묶음을
+  설치한 것으로 본다.
+- 기본 설치를 `--update` 해도 옵트인 묶음이 새로 들어가지는 않는다. `--update --with-yd-skills` 는 기존 설치에
+  `yd-*` 묶음을 추가한다. `--update --no-yd-skills` 는 기록만 바꾸고, 이미 설치된 스킬은 지우지 않는다.
+- 스캐폴드 없이 스킬만 설치하는 방법(플러그인, `npx skills`, `install-skills.sh`)은 [SKILLS.md](SKILLS.md) 에 있다.
 
 ## 언어 (`--lang`)
 
@@ -193,9 +214,13 @@ agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --stack go --with-perso
 agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --lang en --forge github --stack bun
 ```
 
+`--lang en` 은 한국어 전용인 `yd-*` 스킬도 뺀다. 넣으려면 `--with-yd-skills` 를 준다
+([스킬 묶음](#스킬-묶음---with-yd-skills---no-yd-skills---with-personal-skills) 참조).
+
 `.claude/hooks/pre-commit.sh` 는 `--lang` 오버레이 대상이 아니다(스택 파셜이 삽입되는
-파일이라 메시지는 한국어 단일본이다). `--update` 는 저장된 언어로 기대 산출물을 만든다.
-언어를 바꾸려면 `--update --lang en` 또는 `--update --lang ko` 를 지정하고 `.new` 파일을 병합한다.
+파일이라 두 언어가 한 벌을 쓴다. 코드 동작에는 영향이 없다). 언어는 `.claude/.scaffold.json` 에
+기록되고, `--update` 는 그 언어로 설치한 결과와 비교한다. 영어 설치에 한국어 파일을 제안하던
+문제는 없어졌다.
 
 ## 사용법 1 — 스크립트
 
@@ -205,20 +230,79 @@ git clone https://github.com/leeyudok/agents-scaffold.git
 agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --forge github --stack nextjs,bun --name my-app
 ```
 
-대화형으로 쓰려면 `--forge`/`--stack`/`--name` 생략 → 프롬프트가 묻는다(forge 기본 github).
+대화형으로 쓰려면 `--forge`/`--stack`/`--lang` 을 생략한다. 프롬프트가 묻는다(forge 기본 github, 언어 기본 ko).
+없는 대상 디렉터리는 만든다.
+
+설치가 끝나면 요약(버전, 룰 파일·스킬·서브에이전트 수, 게이트)과 다음 단계를 찍는다. `AGENTS.md` 의 빈 섹션을
+채우고, 게이트가 스테이징된 `.env` 를 막는지 확인하고, 결과를 커밋하는 순서다.
 
 ### 옵션
 
 | 옵션 | 설명 |
 |---|---|
-| `<target-dir>` | 대상 디렉터리. 기본 `.` |
+| `<target-dir>` | 대상 디렉터리. 기본 `.`. 없으면 만든다(`--update`·`--uninstall`·`--dry-run` 은 만들지 않는다) |
 | `--forge <forge>` | `github`(기본) 또는 `gitlab` |
 | `--lang <lang>` | `ko`(기본) 또는 `en` |
-| `--stack <목록>` | 쉼표구분 스택 프리셋. 미지정 시 대화형 프롬프트 |
+| `--stack <목록>` | 쉼표구분 스택 프리셋. 미지정 시 대화형 프롬프트. 모르는 이름은 오류 |
 | `--name <name>` | `{{PROJECT_NAME}}` 치환값. 기본 = 대상 디렉터리명 |
-| `--with-personal-skills` | 메인테이너 환경 전용 `yd-*` 스킬 9개·에이전트 4개도 설치 (아래 참조) |
+| `--harness <harness>` | `claude`(기본)·`codex`·`agy`·`all` — [하네스](#하네스---harness) 참조 |
+| `--with-yd-skills` / `--no-yd-skills` | 한국어 `yd-*` 스킬 14개를 넣거나 뺀다. 기본값은 `ko` 설치에 포함, `en` 설치에 제외 |
+| `--with-personal-skills` | 메인테이너 환경 전용 `yd-*` 스킬 9개·에이전트 4개도 설치 |
 | `--yes` | 대화형 프롬프트 생략(비대화 모드) |
-| `--update` | 이미 부트스트랩된 프로젝트의 베이스 파일 최신화 (아래 참조) |
+| `--dry-run` | 아무것도 바꾸지 않는다. 설치·`--update`·`--uninstall` 이 할 일을 출력한다 (아래 참조) |
+| `--update` | 이미 부트스트랩된 프로젝트를 최신화 (아래 참조) |
+| `--force` | `--update`와 함께 쓴다. 변경된 파일을 고유한 `.bak-*`에 백업한 뒤 새 파일로 바꾼다. `--dry-run`으로 먼저 확인할 수 있다 |
+| `--uninstall` | 스캐폴드가 설치했고 사용자가 고치지 않은 파일을 제거 (아래 참조) |
+| `--list-stacks` | 쓸 수 있는 스택 프리셋을 한 줄에 하나씩 출력 |
+| `--version` | 스캐폴드 버전 출력(`agents-scaffold 1.0.0`) |
+| `-h`, `--help` | 사용법 출력 |
+
+값이 필요한 옵션에 값이 없으면 `Error: --stack needs a value` 로, 모르는 옵션은 `Unknown option` 으로 멈춘다.
+
+### 설치 선택 기록 — `.claude/.scaffold.json`
+
+설치와 `--update` 는 사용한 선택을 `.claude/.scaffold.json` 에 쓴다(#104).
+
+```json
+{
+  "scaffold_version": "1.0.0",
+  "name": "my-app",
+  "forge": "github",
+  "stacks": "nextjs,bun",
+  "lang": "en",
+  "harness": "claude",
+  "yd_skills": "0",
+  "personal_skills": "0"
+}
+```
+
+`--update`·`--uninstall`·`--dry-run` 은 이 파일을 읽어 설치했던 결과를 그대로 다시 만든다. `.claude/` 의 다른
+파일과 함께 커밋한다. 파일이 없으면(1.0.0 이전 설치) 프로젝트에서 선택을 추론한다. forge 는 `rules/forge.md`,
+스택은 `rules/<stack>.md`, 언어는 `AGENTS.md` 의 제목, 하네스는 있는 디렉터리로 판단한다. 이때 첫 출력 줄에
+`(recorded)` 대신 `(inferred)` 가 찍히고, `--update` 가 끝날 때 파일을 쓴다. 명령줄 옵션은 기록보다 우선한다.
+
+### 미리 보기 — `--dry-run`
+
+```bash
+agents-scaffold/bin/agents-scaffold.sh /path/to/repo --lang en --stack python --dry-run
+agents-scaffold/bin/agents-scaffold.sh --update /path/to/repo --dry-run
+agents-scaffold/bin/agents-scaffold.sh --uninstall /path/to/repo --dry-run
+```
+
+대상은 아무것도 바뀌지 않는다. 설치 미리 보기는 추가될 파일 수, 이미 같은 파일 수, 이미 있고 내용이 다른 파일을
+출력한다. `--update --dry-run` 은 추가되거나 `.new` 로 놓일 파일을, `--uninstall --dry-run` 은 지울 파일과 남길
+파일을 보여준다. 대상 디렉터리는 이미 있어야 한다.
+
+### 기존 프로젝트에 다시 설치
+
+일반 설치는 다시 돌려도 안전하다(#104).
+
+- 이미 있는 베이스 파일은 그대로 둔다. forge 프리셋·스택 프리셋·영어 오버레이에서 오는 파일은 다시 쓴다.
+- `AGENTS.md` 는 새로 만든다. 기존 파일이 새로 만든 것과 다르면 먼저 `AGENTS.md.bak-<timestamp>` 로 저장한다.
+  필요한 내용은 거기서 옮긴다.
+- 이미 `pre-commit.sh` 에 들어 있는 스택 게이트는 다시 넣지 않는다.
+
+`AGENTS.md` 를 새로 만들지 않고 갱신만 하려면 `--update` 를 쓴다.
 
 ### 원격 원커맨드 설치 (clone 불필요)
 
@@ -227,31 +311,64 @@ curl -fsSL https://raw.githubusercontent.com/leeyudok/agents-scaffold/main/bin/a
 ```
 
 로컬에 레포가 없는 상태(파이프 실행)로 감지되면 `AGENTS_SCAFFOLD_REPO`(기본
-`github.com/leeyudok/agents-scaffold`, env 로 오버라이드) tarball 을 임시 디렉터리에 받아 템플릿 소스로 쓴다. 브랜치/태그 지정은
-`AGENTS_SCAFFOLD_REF`(기본 `main`) 로 오버라이드.
+`github.com/leeyudok/agents-scaffold`, env 로 오버라이드) tarball 을 임시 디렉터리에 받아 템플릿 소스로 쓴다.
 
-### 베이스 갱신 — `--update`
+| 변수 | 뜻 |
+|---|---|
+| `AGENTS_SCAFFOLD_REPO` | tarball 을 받을 레포 URL. 기본값은 공식 GitHub 레포 |
+| `AGENTS_SCAFFOLD_REF` | 받을 브랜치 또는 태그. 기본 `main`. 태그는 1.0.0 부터 동작한다(#106) |
+| `AGENTS_SCAFFOLD_SHA256` | 선택. 받은 tarball 의 기대 SHA-256. 다르면 설치를 중단한다 |
+| `AGENTS_SCAFFOLD_NO_SYMLINK` | `1` 이면 `.claude/skills` 를 심볼릭 링크 대신 사본으로 만든다 |
 
-이미 부트스트랩된 프로젝트에 최신 베이스(`.claude/`, `AGENTS.md`)를
-반영한다. 이전 버전이 만든 `.gemini/settings.json` 은 건드리지 않는다(남아 있어도 무해).
-실디렉터리 `.claude/skills` 는 `.agents/skills` 가 없거나 내용이 같을 때만 원본으로 옮기고 링크한다(#61).
-둘 다 있고 내용이 다르면 옮기지 않고 수동 병합을 안내한다. 이전 뒤에는 베이스 스킬도 `.agents/skills`
-쪽으로 갱신한다.
+릴리스를 고정하고 검증하려면 아래 형식을 쓴다. 릴리스 태그가 생긴 뒤에 쓰는 형식이고, 아직 발행된 태그는 없다
+([SECURITY.md](../SECURITY.md#installing-safely) 참조).
+
+```bash
+export AGENTS_SCAFFOLD_REF=v1.0.0
+export AGENTS_SCAFFOLD_SHA256=<sha256 of that ref's source tarball>
+curl -fsSL https://raw.githubusercontent.com/leeyudok/agents-scaffold/v1.0.0/bin/agents-scaffold.sh | bash -s -- --lang en --yes
+```
+
+### 갱신 — `--update`
+
+이미 부트스트랩된 프로젝트를 최신화한다. `--update` 는 기록된 선택을 읽고, 그 선택으로 지금 설치하면 나올 결과를
+임시 디렉터리에 만든 뒤 프로젝트와 파일 단위로 비교한다(#104). 베이스만이 아니라 전체 결과와 비교하므로 forge·스택
+프리셋, 영어 오버레이, `.claude/hooks/pre-commit.sh` 도 비교 대상이다.
 
 ```bash
 agents-scaffold/bin/agents-scaffold.sh --update /path/to/existing-repo
+agents-scaffold/bin/agents-scaffold.sh --update /path/to/existing-repo --dry-run
 ```
 
-- 설치 시 forge·스택·언어·하네스·프로젝트 이름·개인 스킬 선택을 `.claude/.scaffold.json` 에 기록한다.
-  기록을 읽고 쓰려면 `python3` 가 필요하다. 없으면 설치는 계속하고 경고한다.
-- 기록이 없는 기존 설치는 지침·룰·어댑터에서 선택을 추론한다. 출력된 선택을 확인하고 필요하면 옵션으로 지정한다.
-- 같은 선택으로 최신 산출물을 합성해 비교한다. `pre-commit.sh` 도 선택한 스택 검사를 포함해 비교한다.
-- 파일이 같으면 건너뛴다. 다르면 기존 파일을 보존하고 새 버전을
-  `<file>.new` 로 저장한다. `{{PLACEHOLDER}}` 치환은 `.new` 파일에도 적용된다.
-- 실행 끝에 추가/갱신 대기/건너뜀/변경없음 목록을 요약 출력 — `.new` 파일은 `diff` 로 확인 후
-  수동 반영.
-- 재설치로 `AGENTS.md` 가 달라지면 기존 내용을 `AGENTS.md.bak-<시각>-<고유값>` 에 보관하고 경로를 알린다.
-  백업에서 프로젝트 지침을 복원한다. 기존 스택 검사는 중복 삽입하지 않는다.
+| 프로젝트의 파일 | `--update` 가 하는 일 |
+|---|---|
+| 새 버전과 같다 | 건너뛴다 |
+| 없다 | 추가한다 |
+| 다르다 | 그대로 두고 새 버전을 `<file>.new` 로 쓴다 |
+| `.claude/memory/MEMORY.md` | 사용자 파일이다. 없을 때만 추가하고 `.new` 는 만들지 않는다 |
+| 생성 어댑터(`.codex/`, `.agents/rules`, `.agents/agents`, `.agents/hooks.json`) | 프로젝트의 `.claude/` 에서 다시 생성한다 |
+
+- 끝에 추가·갱신 대기(`.new`)·변경 없음 목록을 요약해 찍는다. `.new` 는 `diff` 로 확인하고 직접 반영한다
+  ([TROUBLESHOOTING.md](TROUBLESHOOTING.md#--update-뒤의-new-파일) 참조).
+- `AGENTS.md` 도 다른 파일처럼 비교한다. 내용을 채운 뒤에는 업데이트 때마다 `AGENTS.md.new` 가 생긴다.
+- 없는 git pre-commit 훅을 연결하고, 기록된 선택을 다시 쓴다.
+- 명령줄 옵션은 기록보다 우선한다. `--update --harness all` 은 기존 프로젝트에 Codex·agy 어댑터를 추가하고,
+  `--update --stack nextjs,go` 는 다른 스택 조합과 비교한다.
+- 이전 버전이 만든 `.gemini/settings.json` 은 건드리지 않는다(남아 있어도 무해).
+- 실디렉터리 `.claude/skills` 는 `.agents/skills` 가 없거나 내용이 같을 때만 원본으로 옮기고 링크한다(#61).
+  둘 다 있고 내용이 다르면 옮기지 않고 수동 병합을 안내한다. 이전 뒤에는 베이스 스킬도 `.agents/skills`
+  쪽으로 갱신한다.
+
+### 제거 — `--uninstall`
+
+```bash
+agents-scaffold/bin/agents-scaffold.sh --uninstall /path/to/repo --dry-run
+agents-scaffold/bin/agents-scaffold.sh --uninstall /path/to/repo --yes
+```
+
+기록된 선택으로 설치했을 결과를 다시 만들고, 그것과 아직 같은 파일만 지운다(#106). 사용자가 고친 파일은 남기고
+목록으로 보여준다. `.claude/memory/` 와 스캐폴드가 만들지 않은 파일은 지우지 않는다. git pre-commit 훅은
+스캐폴드가 만든 한 줄짜리 훅일 때만 지운다. `--yes` 가 없으면 확인을 받고, 물어볼 터미널이 없으면 실행하지 않는다.
 
 ## 사용법 2 — GitLab 템플릿
 

@@ -50,6 +50,7 @@
     knowledge_graph.py       .claude 生态图谱 + --check 断链门禁
     personal-layer.sh        为三个 harness 开启/关闭个人附加指令 AGENTS.<NAME>.md (#92)
   settings.json               钩子接线 + 默认 deny 规则
+  .scaffold.json              安装时的选择（forge、技术栈、语言、harness、技能包）— 供 --update / --uninstall / --dry-run 读取（#104）
 AGENTS.md                 项目大脑 —— 规则 SSOT（P0/P1/P2 + 工作流）
 presets/                  预设片段（复制覆盖模型，#81 起按类型分组）
   stacks/<stack>/         各技术栈片段（规则 + pre-commit.partial.sh + AGENTS.partial.md）—— nextjs、bun、ops 等
@@ -75,4 +76,5 @@ tests/                    引导脚本的 bats 回归测试套件
 - **按路径作用域加载的规则**：frontmatter `paths:` 使规则仅在处理匹配文件时自动加载。
 - **多 agent 隔离**：并行 subagent 可能同时触碰同一文件时，使用 `isolation: "worktree"`。
 - **安装顺序**：基础复制 → forge 预设 → 技术栈预设 → （`--with-personal-skills`）`presets/skills/personal` → `--lang en` 覆盖层 → `{{PROJECT_NAME}}` 替换（跳过 `*/skills/yd-*/*`，保留 planner 模板的占位符）→ 移至 `.agents/skills` 并链接 `.claude/skills` → 生成 Codex/agy agent。
+- **记录选择，按重建结果比较**：安装会把所做的选择写入 `.claude/.scaffold.json`。`--update`、`--uninstall` 和 `--dry-run` 会按这些选择在临时目录里重新安装一遍，再逐个文件与项目比较 — 不只是基础文件，预设、英文覆盖层和 `pre-commit.sh` 也包括在内（#104）。没有该文件时，从项目中推断这些选择。
 - **技能测试**：每个技能带有 `tests/test_*.py` 和 `tests/claims.json`。`scripts/dev/run-skill-tests.sh` 逐技能运行；`tests/test_skill_contracts.py` 检查 claims 格式、引用路径和触发词重叠。

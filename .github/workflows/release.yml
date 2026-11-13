@@ -1,0 +1,43 @@
+# 릴리스(#106) — v* 태그를 밀면 오프라인 번들과 SHA256SUMS 를 GitHub 릴리스에 올린다.
+# 태그는 사람이 만든다: bin/agents-scaffold.sh 의 SCAFFOLD_VERSION 과 CHANGELOG.md 를 맞춘 뒤 `git tag v<버전>`.
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Tag must match SCAFFOLD_VERSION
+        run: |
+          want="v$(bin/agents-scaffold.sh --version | awk '{print $2}')"
+          if [ "$want" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::tag $GITHUB_REF_NAME does not match SCAFFOLD_VERSION ($want)"
+            exit 1
+          fi
+
+      - name: Build offline bundle
+        run: scripts/make-offline-bundle.sh --ref "$GITHUB_REF_NAME" --out dist
+
+      - name: Add the source tarball checksum (for AGENTS_SCAFFOLD_SHA256)
+        run: |
+          curl -fsSL "https://github.com/${GITHUB_REPOSITORY}/archive/${GITHUB_REF_NAME}.tar.gz" -o "dist/source-${GITHUB_REF_NAME}.tar.gz"
+          (cd dist && sha256sum "source-${GITHUB_REF_NAME}.tar.gz" >> SHA256SUMS && rm "source-${GITHUB_REF_NAME}.tar.gz")
+          cat dist/SHA256SUMS
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          awk '/^## /{n++} n==1' CHANGELOG.md > notes.md
+          gh release create "$GITHUB_REF_NAME" dist/* --title "$GITHUB_REF_NAME" --notes-file notes.md

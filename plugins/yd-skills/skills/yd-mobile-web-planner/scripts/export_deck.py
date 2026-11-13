@@ -18,7 +18,6 @@ PPT 를 편집 가능한 도형·텍스트로 만드는 것은 HTML/CSS 레이�
 stdlib 만 쓴다 — 이 저장소의 검증·생성 스크립트 공통 규약이다.
 """
 import argparse
-import html
 import math
 import json
 import os
