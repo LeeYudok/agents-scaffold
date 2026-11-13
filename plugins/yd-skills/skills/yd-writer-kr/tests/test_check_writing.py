@@ -338,6 +338,17 @@ class UpstageSummary(unittest.TestCase):
         self.assertEqual(out.splitlines(), ["- 2026-11-14 에 인덱스를 추가한다(#418).",
                                             "- 하루 4,000건씩 약 153일이 걸린다.", "- 셋째다."])
 
+    def test_empty_summary_retries_and_is_never_success(self):
+        replies = iter(["", ""])
+        code, out, err = self.run_main(self.SOURCE, lambda *args: next(replies))
+        self.assertEqual(code, 1)
+        self.assertIn("빈 요약", err)
+        self.assertEqual(out, "")
+        replies = iter(["", "- 인덱스를 추가한다."])
+        code, out, err = self.run_main(self.SOURCE, lambda *args: next(replies))
+        self.assertEqual(code, 0, err)
+        self.assertEqual(out, "- 인덱스를 추가한다.")
+
     def test_long_source_is_summarized_in_parts(self):
         paragraphs = ["첫째 단락이다. " * 4, "둘째 단락이다. " * 4, "셋째 단락이다. " * 4]
         calls = []

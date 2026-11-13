@@ -110,3 +110,25 @@ func TestSourceOptionThroughCLIAndBridge(t *testing.T) {
 		t.Errorf("bridge 결과: %s (%v)", stdout.String(), err)
 	}
 }
+
+func TestFullDatesCannotRecombineDifferentYears(t *testing.T) {
+	facts := newSourceFacts("2025-11-10에 검사했다. 다음 검사는 2026-11-11이다.")
+	if got := facts.compare("2026-11-10에 검사한다."); len(got) != 1 || got[0].Level != levelError {
+		t.Fatalf("존재하지 않는 연월일 조합을 통과시켰다: %+v", got)
+	}
+	if got := facts.compare("2025-11-10 검사했다. 2026-11-11 검사한다."); len(got) != 0 {
+		t.Fatalf("원문의 완전한 날짜는 통과해야 한다: %+v", got)
+	}
+}
+
+func TestSourceURLsMatchWholeValues(t *testing.T) {
+	facts := newSourceFacts("보고서는 https://example.com/report/123 이다.")
+	for _, url := range []string{"https://example.com/report/12", "https://example.com/report/123?extra=true"} {
+		if got := facts.compare(url); len(got) != 1 || got[0].Level != levelError {
+			t.Errorf("부분 일치 URL %q 를 통과시켰다: %+v", url, got)
+		}
+	}
+	if got := facts.compare("https://example.com/report/123"); len(got) != 0 {
+		t.Fatalf("원문 URL은 통과해야 한다: %+v", got)
+	}
+}

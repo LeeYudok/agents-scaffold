@@ -178,6 +178,8 @@ def main(argv: list[str] | None = None) -> int:
 
         def checked(summary: str):
             found = check_writing.check(summary, rules, chat=args.chat, max_len=MAX_LEN, source=text, lines=args.lines)
+            if not summary.strip():
+                found.append(check_writing.Finding(1, "오류", "요약 내용", "빈 요약", "원문에서 요약문을 작성한다", ""))
             return found, [f for f in found if f.level == "오류"]
 
         summary, basis = summarize(key, system, text, args.lines, budget)
