@@ -27,6 +27,12 @@ the section below and the issues labeled
    python3 -m unittest discover -s tests
    ```
 
+   The writing checker uses Rust 1.95+ (`cargo`). Its Python entry point delegates
+   to the Rust binary; set `CHECK_WRITING_BIN` to use an already built binary.
+   Run `cargo test --locked --manifest-path .claude/skills/yd-writer-kr/rust/Cargo.toml`
+   when changing the writing checker. Build artifacts belong in the user cache,
+   not in the skill or plugin payload.
+
    The same suite runs in CI on every PR — a green run is required to merge.
 5. **Pull request** against `main` with `Closes #<N>` in the description.
    Merging auto-closes the issue.

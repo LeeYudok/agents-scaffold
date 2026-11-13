@@ -160,6 +160,12 @@ class UpstageGuards(unittest.TestCase):
         self.assertEqual(code, 2)
         self.assertIn("보내지 않는다", err)
 
+    def test_native_checker_failure_is_reported_without_network(self):
+        with mock.patch.object(self.up.check_writing, "load_rules", side_effect=RuntimeError("Rust checker unavailable")):
+            code, err = self.run_main("본문이다.", {"UPSTAGE_API_KEY": "x", "HOME": self.tmp})
+        self.assertEqual(code, 2)
+        self.assertIn("Rust checker unavailable", err)
+
     def test_missing_key(self):
         code, err = self.run_main("본문이다.", {"HOME": self.tmp})
         self.assertEqual(code, 2)
