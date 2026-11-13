@@ -34,6 +34,8 @@ type sourceFacts struct {
 	years     map[string]bool
 	dates     map[string]bool
 	monthDays map[string]bool
+	yearless  map[string]bool
+	urls      map[string]bool
 	times     []string
 	refs      map[string]bool
 }
@@ -114,10 +116,11 @@ func refBounded(s string, start, end int) bool {
 
 func newSourceFacts(text string) *sourceFacts {
 	f := &sourceFacts{text: text, numbers: map[string]bool{}, years: map[string]bool{}, dates: map[string]bool{},
-		monthDays: map[string]bool{}, refs: map[string]bool{}}
+		monthDays: map[string]bool{}, yearless: map[string]bool{}, urls: map[string]bool{}, refs: map[string]bool{}}
 	// URL·날짜·시각·이슈 번호 안의 숫자는 수치로 세지 않는다. 세면 "2026-11-10" 의 10 이
 	// 요약이 지어낸 "10초" 를 통과시킨다(2026-11-13 시험에서 확인).
 	rest := take(text, factURL, nil, func(m []int) {
+		f.urls[normalizeURL(text[m[0]:m[1]])] = true
 		for _, ref := range factRefURL.FindAllStringSubmatch(text[m[0]:m[1]], -1) {
 			if ref[1] == "merge_requests" {
 				f.refs["!"+ref[2]] = true
@@ -131,6 +134,8 @@ func newSourceFacts(text string) *sourceFacts {
 		if full != "" {
 			f.dates[full] = true
 			f.years[strings.SplitN(full, "-", 2)[0]] = true
+		} else {
+			f.yearless[monthDay] = true
 		}
 		f.monthDays[monthDay] = true
 	})
@@ -162,6 +167,10 @@ func take(line string, re *regexp.Regexp, bounded func(string, int, int) bool, v
 	}
 	b.WriteString(line[last:])
 	return b.String()
+}
+
+func normalizeURL(value string) string {
+	return strings.TrimRight(strings.TrimRight(value, ".,;:!?"), "/")
 }
 
 func (f *sourceFacts) hasTime(key string) bool {
@@ -196,7 +205,7 @@ func (f *sourceFacts) compare(summary string) []Finding {
 		})
 		line = take(line, factURL, nil, func(m []int) {
 			url := strings.TrimRight(line[m[0]:m[1]], ".,;:!?")
-			if !strings.Contains(f.text, strings.TrimRight(url, "/")) {
+			if !f.urls[normalizeURL(url)] {
 				missing(levelError, "URL", url)
 			}
 		})
@@ -208,7 +217,7 @@ func (f *sourceFacts) compare(summary string) []Finding {
 			}
 			ok := f.monthDays[monthDay]
 			if full != "" {
-				ok = f.dates[full] || ok && (f.years[year] || f.numbers[year])
+				ok = f.dates[full] || f.yearless[monthDay] && (f.years[year] || f.numbers[year])
 			}
 			if !ok {
 				missing(levelError, "날짜", line[m[0]:m[1]])
