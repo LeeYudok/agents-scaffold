@@ -26,6 +26,7 @@ jobs:
           git ls-files -z -- '*.sh' ':!dotfiles/**' ':!plugins/**' ':!**/pre-commit.partial.sh' \
             | xargs -0 shellcheck -S warning
           shellcheck -S warning -s bash presets/stacks/*/.claude/hooks/pre-commit.partial.sh tests/*.bats
+          shellcheck -S warning .claude/skills/yd-writer-kr/scripts/check-writing
 
       # F(pyflakes)·E9(문법 오류)만 본다 — 스타일이 아니라 실제 결함을 잡는 규칙이다. 버전은 고정한다.
       - name: ruff
@@ -46,9 +47,34 @@ jobs:
         with:
           persist-credentials: false
 
-      # GNU parallel 이 있어야 bats --jobs 가 돈다.
       - name: Install bats-core and GNU parallel
-        run: sudo apt-get update -y && sudo apt-get install -y bats parallel
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: '1'
+          HOMEBREW_NO_INSTALL_CLEANUP: '1'
+          HOMEBREW_NO_ENV_HINTS: '1'
+        run: |
+          npm install --no-save --no-audit --no-fund --prefix "$RUNNER_TEMP/bats" bats@1.13.0
+          echo "$RUNNER_TEMP/bats/node_modules/.bin" >> "$GITHUB_PATH"
+          if ! command -v parallel >/dev/null; then
+            /home/linuxbrew/.linuxbrew/bin/brew install parallel
+            echo /home/linuxbrew/.linuxbrew/bin >> "$GITHUB_PATH"
+          fi
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache: false
+      - name: Build and check Go writing checker
+        working-directory: .claude/skills/yd-writer-kr/go
+        env:
+          GOTOOLCHAIN: local
+          CGO_ENABLED: "0"
+        run: |
+          test -z "$(gofmt -l .)" || { gofmt -l .; exit 1; }
+          go vet ./...
+          go test ./...
+          go build -trimpath -o "$RUNNER_TEMP/check-writing" .
+          echo "CHECK_WRITING_BIN=$RUNNER_TEMP/check-writing" >> "$GITHUB_ENV"
 
       - name: Run python unit tests
         run: python3 -m unittest discover -s tests -p 'test_*.py' -v
@@ -166,16 +192,29 @@ jobs:
           persist-credentials: false
       - name: 식별자 검사
         run: scripts/check-identifiers.sh
+      # python3·jq 는 러너에 이미 있다. zsh 는 apt 대신 러너에 깔린 Homebrew 로 받는다 — bottle 이 ghcr.io 에 있어
+      # apt 미러(azure.archive·archive.ubuntu.com) DNS 장애와 무관하다 (#111)
       - name: 문법 검사 도구 설치
-        run: sudo apt-get update -qq && sudo apt-get install -y zsh python3
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: '1'
+          HOMEBREW_NO_INSTALL_CLEANUP: '1'
+          HOMEBREW_NO_ENV_HINTS: '1'
+        run: |
+          command -v python3 jq
+          if ! command -v zsh >/dev/null; then
+            brew=/home/linuxbrew/.linuxbrew/bin/brew
+            "$brew" install zsh
+            mkdir -p "$RUNNER_TEMP/bin"
+            ln -sf "$("$brew" --prefix)/bin/zsh" "$RUNNER_TEMP/bin/zsh"
+            echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+          fi
+          "$(command -v zsh || echo "$RUNNER_TEMP/bin/zsh")" --version
       - name: 파일별 문법 검사
         run: scripts/check-syntax.sh
       # dotfiles 원본이 이 레포로 옮겨와(#76) 이 job 이 유일한 게이트다 — 밀폐형 시험(임시 HOME·모의 패키지 관리자)도 돌린다.
       # test-windows-paths.sh 는 실제 apt·curl 설치를 해서 제외한다(네트워크·sudo 의존).
-      - name: 시험 도구 설치
-        run: sudo apt-get install -y jq
       - name: 밀폐형 시험
         run: |
-          for t in test-agy-statusline test-codex-cost-hook test-codex-status-line test-install-safety test-windows-git; do
+          for t in test-agy-statusline test-codex-cost-hook test-codex-status-line test-install-safety test-windows-git test-yolo-wrapper; do
             echo "== $t"; bash "scripts/$t.sh"
           done

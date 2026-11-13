@@ -4,7 +4,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-for file in *.sh scripts/*.sh claude/*.sh agy/*.sh gitbash/bashrc gitbash/bash_profile; do
+for file in *.sh scripts/*.sh claude/*.sh agy/*.sh yolo/*.sh gitbash/bashrc gitbash/bash_profile; do
   bash -n "$file"
 done
 for file in zsh/zshrc.*; do

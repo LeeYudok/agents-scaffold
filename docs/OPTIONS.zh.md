@@ -199,6 +199,7 @@ agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --forge github --stack 
 | `--yes` | 跳过交互式提问（非交互模式） |
 | `--dry-run` | 不做任何改动。打印安装、`--update` 或 `--uninstall` 将要做的事（见下文） |
 | `--update` | 刷新已引导的项目（见下文） |
+| `--force` | 与 `--update` 一起使用。先将原文件保存为唯一的 `.bak-*`，再替换；可用 `--dry-run` 预览 |
 | `--uninstall` | 删除脚手架安装且你未改动的文件（见下文） |
 | `--list-stacks` | 逐行打印可用的技术栈预设 |
 | `--version` | 打印脚手架版本（`agents-scaffold 1.0.0`） |

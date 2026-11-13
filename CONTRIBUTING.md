@@ -27,6 +27,12 @@ the section below and the issues labeled
    python3 -m unittest discover -s tests
    ```
 
+   The writing checker uses Go 1.22+ and the standard library only. Its Python entry
+   point delegates to the Go binary; set `CHECK_WRITING_BIN` to use an already built binary.
+   Run `gofmt -l .`, `go vet ./...` and `go test ./...` in `.claude/skills/yd-writer-kr/go`
+   when changing the writing checker. Build artifacts belong in the user cache,
+   not in the skill or plugin payload.
+
    The same suite runs in CI on every PR — a green run is required to merge.
 5. **Pull request** against `main` with `Closes #<N>` in the description.
    Merging auto-closes the issue.

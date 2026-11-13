@@ -46,7 +46,7 @@ superpowers `brainstorming`·Ouroboros 와 작업마다 택일하며, 비교는 
 | [yd-oracle-expert](yd-oracle-expert/SKILL.md) | ○ | Oracle 고유 문제(빈 문자열 NULL·DATE 시각·VARCHAR2 바이트·ROWNUM) |
 | [yd-sqlite-expert](yd-sqlite-expert/SKILL.md) | ○ | SQLite 고유 문제(읽기 전용 조회·WAL·잠금·동적 테이블명) |
 | [yd-agents-yaml](yd-agents-yaml/SKILL.md) | — | `AGENTS.md` + `AGENTS.yaml` + 검증기 세팅·갱신 |
-| [yd-writer-kr](yd-writer-kr/SKILL.md) | ○ | 이슈·PR·문서·공지를 한국어로 쓰거나 고칠 때 |
+| [yd-writer-kr](yd-writer-kr/SKILL.md) | ○ | 이슈·PR·문서·공지를 한국어로 쓰거나 고치거나 요약할 때 |
 | [yd-cve-check](yd-cve-check/SKILL.md) | ○ | pnpm 의존성 CVE·GHSA·악성 패키지 점검과 보완(온라인 `pnpm audit`·폐쇄망 OSV 덤프, #79) |
 
 doksam-skills 의 `yd-handoff`·`yd-doc-sync`·`yd-memory-factcheck`·`yd-skill-evolve` 는 같은 역할의

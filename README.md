@@ -105,7 +105,7 @@ agents-scaffold/bin/agents-scaffold.sh --uninstall . --dry-run # preview removal
 | **Air-gapped and Windows ready** | An offline bundle installs with no network; Windows runs through Git Bash with a `.cmd` launcher ([docs/OFFLINE_INSTALL.en.md](docs/OFFLINE_INSTALL.en.md)). |
 | **Reversible** | `--dry-run` shows what would be written, `--update` never overwrites your edits, `--uninstall` takes the untouched files back out. |
 | **Self-improving** | `skill-evolve` / `agent-evolve` turn real mistakes into "Learned warnings" in the skill or agent that made them. |
-| **Tested** | 100+ bats regression tests for the installer, per-skill contract tests, a link checker for the docs, all in CI. |
+| **Tested** | 169 bats regression tests for the installer, per-skill contract tests, a link checker for the docs, all in CI. |
 
 ## What happens the moment it's installed
 

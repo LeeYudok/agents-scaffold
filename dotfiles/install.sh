@@ -14,6 +14,8 @@
 #   2.5. Nerd Fonts 설치 (JetBrainsMono, D2Coding; 마커 파일로 재설치 방지)
 #        WSL 에서는 건너뛰고 안내만 — 글리프는 Windows 쪽 터미널이 그리므로 폰트도 Windows 에 설치해야 한다
 #   3.   OS 에 맞는 zshrc 배치 (~/.zshrc). 머신별 alias/함수는 ~/.zshrc.local (미추적, 이 스크립트가 만들지 않음)
+#   3.5. yolo 래퍼 배치 (~/.local/share/dotfiles/bin/claude·agy) — `--yolo` 를 `--dangerously-skip-permissions` 로 바꿔 실행.
+#        PATH 에 있는 명령만. zshrc 가 이 디렉터리를 PATH 맨 앞에 둔다
 #   4.   Claude Code statusline 스크립트 배치 (~/.claude/statusline-command.sh)
 #        + settings.json 의 statusLine 키만 merge (python3, 원자적 쓰기)
 #   5.   Codex CLI status line — ~/.codex/config.toml 의 [tui] status_line 키만 merge (codex/status-line.py)
@@ -290,6 +292,24 @@ if [ "$OS" = "Darwin" ]; then SRC=zsh/zshrc.macos; else SRC=zsh/zshrc.linux; fi
 deploy_file "$SRC" "$HOME/.zshrc" zshrc
 info ".zshrc 배치 완료 ($SRC)"
 [ -f "$HOME/.zshrc.local" ] || info "참고: 머신별 alias/함수는 ~/.zshrc.local 에 (템플릿: zsh/zshrc.local.example). 없으면 건너뜀"
+
+# ── 3.5. yolo 래퍼 (claude·agy) ────────────────────────────
+# `--yolo` 를 `--dangerously-skip-permissions` 로 바꿔 실제 CLI 를 실행하는 파일 (#109). zshrc 가 YOLO_BIN 을 PATH 맨 앞에 둔다.
+# 셸 함수와 달리 비대화형 셸·bash·스크립트에서도 동작한다. 지금 PATH 에 있는 명령만 배치한다 —
+# 없는 명령의 래퍼를 두면 `command -v` 가 설치된 것으로 잘못 판단한다(6 단계의 agy 판단 포함).
+YOLO_BIN="$HOME/.local/share/dotfiles/bin"
+path_without() {        # path_without <디렉터리> — PATH 에서 그 디렉터리를 뺀 값
+  local out="" d IFS=:
+  for d in $PATH; do [ "$d" = "$1" ] || out="${out:+$out:}$d"; done
+  printf '%s' "$out"
+}
+for name in claude agy; do
+  if [ -e "$YOLO_BIN/$name" ] || (PATH="$(path_without "$YOLO_BIN")"; command -v "$name" >/dev/null); then
+    deploy_file yolo/wrapper.sh "$YOLO_BIN/$name" "yolo-$name"
+    chmod +x "$YOLO_BIN/$name"
+    info "yolo 래퍼 배치: $name --yolo → --dangerously-skip-permissions"
+  fi
+done
 
 # ── 4. Claude Code statusline ──────────────────────────────
 # 스크립트 복사 + settings.json 에 statusLine 키만 merge (다른 키는 건드리지 않음)

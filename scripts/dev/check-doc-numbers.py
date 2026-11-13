@@ -36,6 +36,13 @@ STACK_PATTERNS = [
     re.compile(r"(\d+) 种技术栈预设"),
     re.compile(r"スタックプリセット (\d+) 種"),
 ]
+TEST_PATTERNS = [
+    re.compile(r"(\d+) bats regression tests"),
+    re.compile(r"bats 회귀 테스트 (\d+)개"),
+    re.compile(r"(\d+) 个 bats 回归测试"),
+    re.compile(r"bats リグレッションテスト (\d+) 個"),
+    re.compile(r"(\d+) tests</b>"),
+]
 SKILLS_PATTERN = re.compile(r"(\d+) skills\b")
 LANG_ROW_PATTERN = re.compile(r"^\| `--lang (en|ko)`[^|]*\| (\d+) \|")
 VERSION_PATTERNS = {
@@ -69,6 +76,7 @@ def load_facts(root: Path) -> dict:
         for h in matrix["harnesses"]
     }
     return {
+        "tests": sum(len(re.findall(r'^@test "', p.read_text(encoding="utf-8"), re.MULTILINE)) for p in (root / "tests").glob("*.bats")),
         "stacks": len(stacks),
         "skills_ko": len(skills),
         "skills_en": len(skills) - len(yd),
@@ -87,6 +95,10 @@ def check_text(rel: str, text: str, facts: dict) -> list:
     harnesses = facts["harnesses"]
     for lineno, line in enumerate(text.splitlines(), 1):
         where = f"{rel}:{lineno}"
+        for pat in TEST_PATTERNS:
+            for m in pat.finditer(line):
+                if int(m.group(1)) != facts["tests"]:
+                    errors.append(f"{where}: 테스트 수 {m.group(1)} — 실제 {facts['tests']}개")
         for pat in STACK_PATTERNS:
             for m in pat.finditer(line):
                 if int(m.group(1)) != facts["stacks"]:

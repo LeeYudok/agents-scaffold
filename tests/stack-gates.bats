@@ -597,32 +597,30 @@ SH
   refute_logged '^uv'
 }
 
-@test "python gate blocks through uv run ruff in a uv project, falls back to ruff when uv cannot resolve it" {
+@test "python gate blocks on project ruff and falls back to PATH without running uv" {
   install_stack python
   fake uv <<'SH'
-case "$*" in
-  "run ruff --version") exit 0 ;;
-  "run ruff check .") echo "app/main.py:2:1: E999 SyntaxError"; exit 1 ;;
-esac
 exit 1
 SH
   fake ruff <<'SH'
 exit 0
 SH
+  mkdir -p .venv/bin
+  fake_at .venv/bin/ruff project-ruff <<'SH'
+echo "app/main.py:2:1: E999 SyntaxError"
+exit 1
+SH
   stage app/main.py uv.lock
   run_hook
   [ "$status" -eq 2 ]
   [[ "$output" == *"E999"* ]]
-
-  # uv 환경에 ruff 가 없으면 PATH 의 ruff 로 폴백한다
-  fake uv <<'SH'
-exit 1
-SH
+  refute_logged '^uv'
+  rm .venv/bin/ruff
   : > "$FAKE_LOG"
   run_hook
   [ "$status" -eq 0 ]
   grep -q '^ruff check' "$FAKE_LOG"
-  refute_logged '^uv run ruff check'
+  refute_logged '^uv'
 }
 
 @test "python gate blocks on mypy errors when mypy is configured" {
@@ -638,7 +636,7 @@ SH
   [ "$status" -eq 2 ]
   [[ "$output" == *"Blocked: mypy failed"* ]]
   [[ "$output" == *"Incompatible return value type"* ]]
-  grep -q '^mypy src' "$FAKE_LOG"
+  grep -q '^mypy \.' "$FAKE_LOG"
 }
 
 @test "python gate skips mypy when it is not configured" {
@@ -676,7 +674,7 @@ SH
   run_hook
   [ "$status" -eq 0 ]
   grep -q '^ruff check \.' "$FAKE_LOG"
-  grep -q '^mypy app' "$FAKE_LOG"
+  grep -q '^mypy \.' "$FAKE_LOG"
 }
 
 @test "python gate is a no-op without Python files" {

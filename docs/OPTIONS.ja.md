@@ -203,6 +203,7 @@ agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --forge github --stack 
 | `--yes` | 対話プロンプトをスキップ(非対話モード) |
 | `--dry-run` | 何も変更しない。インストール、`--update`、`--uninstall` が行う内容を表示する(後述) |
 | `--update` | ブートストラップ済みプロジェクトを更新(後述) |
+| `--force` | `--update` と併用。変更済みファイルを固有の `.bak-*` に保存してから置き換える。`--dry-run` で確認できる |
 | `--uninstall` | スキャフォールドがインストールし、あなたが変更していないファイルを削除(後述) |
 | `--list-stacks` | 利用できるスタックプリセットを 1 行に 1 つずつ表示 |
 | `--version` | スキャフォールドのバージョンを表示(`agents-scaffold 1.0.0`) |

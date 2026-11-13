@@ -45,6 +45,7 @@ Usage:
                  They are installed with --lang ko and left out with --lang en; these flags
                  override that default.
   --yes          Skip interactive prompts (non-interactive mode).
+  --force        With --update, replace differing files after saving unique .bak-* backups.
   --dry-run      Change nothing. Print the files an install (or --update) would add or overwrite.
   --update       Refresh an already-bootstrapped project. The choices made at install time
                  (forge, stacks, lang, harness, skill sets) are read from .claude/.scaffold.json
@@ -96,6 +97,7 @@ ASSUME_YES=0
 UPDATE=0
 UNINSTALL=0
 DRY_RUN=0
+FORCE=0
 LIST_STACKS=0
 HARNESS="claude"
 HARNESS_SET=0
@@ -125,6 +127,7 @@ while [ $# -gt 0 ]; do
     --update) UPDATE=1; shift ;;
     --uninstall) UNINSTALL=1; shift ;;
     --dry-run) DRY_RUN=1; shift ;;
+    --force) FORCE=1; shift ;;
     --list-stacks) LIST_STACKS=1; shift ;;
     --with-personal-skills) WITH_PERSONAL=1; shift ;;
     --with-yd-skills) WITH_YD=1; shift ;;
@@ -135,6 +138,11 @@ while [ $# -gt 0 ]; do
     *)   TARGET="$1"; shift ;;
   esac
 done
+
+if [ "$FORCE" -eq 1 ] && { [ "$UPDATE" -ne 1 ] || [ "$UNINSTALL" -eq 1 ]; }; then
+  echo "Error: --force is only supported with --update (existing files are backed up first)." >&2
+  exit 1
+fi
 
 if [ ! -d "$TARGET" ]; then
   if [ "$UPDATE" -eq 1 ] || [ "$UNINSTALL" -eq 1 ] || [ "$DRY_RUN" -eq 1 ] || [ "$LIST_STACKS" -eq 1 ]; then
@@ -195,7 +203,7 @@ fetch_remote_src() {
     echo "Error: downloaded template structure is invalid" >&2
     exit 1
   fi
-  echo "$extracted"
+  SRC="$extracted"
 }
 
 SRC_LOCAL=""
@@ -205,7 +213,7 @@ fi
 if [ -n "$SRC_LOCAL" ] && [ -d "$SRC_LOCAL/.claude" ] && [ -d "$SRC_LOCAL/presets" ]; then
   SRC="$SRC_LOCAL"
 else
-  SRC="$(fetch_remote_src)"
+  fetch_remote_src
 fi
 
 INPLACE=0
@@ -726,7 +734,23 @@ emit_hooks() {
 # --- #104: 설치 선택 기록. --update·--uninstall·--dry-run 이 같은 선택으로 기대 산출물을 다시 만든다.
 STATE_REL=".claude/.scaffold.json"
 
-json_escape() { printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g'; }
+json_escape() {
+  if command -v python3 >/dev/null 2>&1; then
+    printf '%s' "$1" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read(), ensure_ascii=False)[1:-1], end="")'
+  else
+    printf '%s' "$1" | awk 'BEGIN { first=1 } {
+      if (!first) printf "\\n"; first=0
+      for(i=1;i<=length($0);i++) {
+        c=substr($0,i,1)
+        if(c=="\\") printf "\\\\"
+        else if(c=="\"") printf "\\\""
+        else if(c=="\t") printf "\\t"
+        else if(c=="\r") printf "\\r"
+        else printf "%s",c
+      }
+    }'
+  fi
+}
 
 write_state() {
   [ -d "$TARGET/.claude" ] || return 0
@@ -747,8 +771,47 @@ STATE
 # 한 줄에 키 하나인 위 형식만 읽는다(python 없이 동작해야 한다)
 state_get() {
   [ -f "$TARGET/$STATE_REL" ] || return 0
+  if command -v python3 >/dev/null 2>&1; then
+    python3 - "$TARGET/$STATE_REL" "$1" <<'STATE_PY'
+import json, re, sys
+try:
+    with open(sys.argv[1], encoding="utf-8") as source:
+        data = json.load(source)
+    if not isinstance(data, dict):
+        raise ValueError("state must be an object")
+    if "schema_version" in data and data["schema_version"] != 1:
+        raise ValueError("unsupported schema_version")
+    for key, choices in (("forge", ("github", "gitlab")), ("lang", ("ko", "en")), ("harness", ("claude", "codex", "agy", "all"))):
+        if data.get(key) not in choices:
+            raise ValueError(f"invalid {key}")
+    stacks = data.get("stacks", "")
+    if isinstance(stacks, str):
+        stacks = [s for s in stacks.split(",") if s]
+    if not isinstance(stacks, list) or not all(isinstance(s, str) and re.fullmatch(r"[A-Za-z0-9_-]+", s) for s in stacks):
+        raise ValueError("invalid stacks")
+    name = data.get("name", "")
+    if not isinstance(name, str) or "\0" in name:
+        raise ValueError("invalid name")
+    values = dict(data, stacks=",".join(stacks))
+    values.setdefault("yd_skills", "1")
+    values.setdefault("personal_skills", "1" if data.get("with_personal_skills", False) else "0")
+    for key in ("yd_skills", "personal_skills"):
+        if str(values[key]) not in ("0", "1"):
+            raise ValueError(f"invalid {key}")
+    print(values.get(sys.argv[2], ""), end="")
+except (OSError, ValueError, TypeError) as error:
+    sys.exit(f"Invalid scaffold state: {error}")
+STATE_PY
+  else
+    # New installations keep the flat one-key-per-line format readable without Python.
+    # The older #104 array schema was written only when Python was available.
+    if grep -q '"schema_version"' "$TARGET/$STATE_REL"; then
+      echo "Error: python3 is required to migrate the older scaffold state." >&2
+      return 1
+    fi
   sed -n 's/^ *"'"$1"'": *"\(.*\)",\{0,1\} *$/\1/p' "$TARGET/$STATE_REL" | head -n1 \
     | sed -e 's/\\"/"/g' -e 's/\\\\/\\/g'
+  fi
 }
 
 target_has_skill() {
@@ -760,10 +823,20 @@ infer_state() {
   local s found=""
   FORGE="github"
   if grep -q 'forge-gitlab' "$TARGET/.claude/rules/forge.md" 2>/dev/null; then FORGE="gitlab"; fi
+  while IFS= read -r s; do
+    [ -d "$SRC/presets/stacks/$s" ] || continue
+    found="${found:+$found,}$s"
+  done < <(awk '/^\*\*[A-Za-z0-9_-]+\*\*$/ { a[++n]=substr($0,3,length($0)-4) } END { for(i=n;i>0;i--) print a[i] }' "$TARGET/AGENTS.md" 2>/dev/null)
   for s in $(available_stacks); do
+    case ",$found," in *",$s,"*) continue ;; esac
     if [ -f "$TARGET/.claude/rules/$s.md" ]; then found="${found:+$found,}$s"; fi
   done
   STACKS="$found"
+  if [ "$NAME_SET" -eq 0 ]; then
+    local recorded_name
+    recorded_name="$(sed -n 's/^# AGENTS.md — //p' "$TARGET/AGENTS.md" 2>/dev/null | head -n1)"
+    [ -z "$recorded_name" ] || NAME="$recorded_name"
+  fi
   LANG_OPT="ko"
   if [ -f "$TARGET/AGENTS.md" ] && ! grep -q '^## 응답 언어' "$TARGET/AGENTS.md" \
     && grep -q '^## Response language' "$TARGET/AGENTS.md"; then
@@ -793,6 +866,7 @@ resolve_recorded_options() {
   else
     infer_state
     STATE_SOURCE="inferred"
+    echo "No scaffold state found; inferring forge=$FORGE stacks=[$STACKS] lang=$LANG_OPT harness=$HARNESS." >&2
   fi
   [ -n "$cli_forge" ] && FORGE="$cli_forge"
   [ -n "$cli_lang" ] && LANG_OPT="$cli_lang"
@@ -938,7 +1012,17 @@ run_update() {
     elif cmp -s "$f" "$tgt"; then
       unchanged+=("$rel")
     else
-      if [ "$DRY_RUN" -eq 0 ]; then cp -p "$f" "$tgt.new"; fi
+      if [ "$DRY_RUN" -eq 0 ]; then
+        if [ "$FORCE" -eq 1 ]; then
+          local backup
+          backup="$(mktemp "$tgt.bak-$(date +%Y%m%d-%H%M%S)-XXXXXX")"
+          cp -p "$tgt" "$backup"
+          cp -p "$f" "$tgt"
+          echo "Replaced $rel; previous file saved to $backup" >&2
+        else
+          cp -p "$f" "$tgt.new"
+        fi
+      fi
       updated+=("$rel")
     fi
   done < <(stage_files .claude .agents/skills AGENTS.md)
@@ -947,7 +1031,11 @@ run_update() {
     echo "== --update --dry-run: nothing was changed ==" >&2
     echo "Would add: ${#added[@]}" >&2
     if [ "${#added[@]}" -gt 0 ]; then for rel in "${added[@]}"; do echo "  + $rel" >&2; done; fi
-    echo "Would stage as .new (your file differs): ${#updated[@]}" >&2
+    if [ "$FORCE" -eq 1 ]; then
+      echo "Would replace after backup: ${#updated[@]}" >&2
+    else
+      echo "Would stage as .new (your file differs): ${#updated[@]}" >&2
+    fi
     if [ "${#updated[@]}" -gt 0 ]; then for rel in "${updated[@]}"; do echo "  * $rel" >&2; done; fi
     echo "Unchanged: ${#unchanged[@]}" >&2
     return 0
@@ -998,7 +1086,11 @@ run_update() {
   if [ "${#added[@]}" -gt 0 ]; then
     for rel in "${added[@]}"; do echo "  + $rel" >&2; done
   fi
-  echo "Pending update (.new created, apply manually after diff): ${#updated[@]}" >&2
+  if [ "$FORCE" -eq 1 ]; then
+    echo "Updated with backups: ${#updated[@]}" >&2
+  else
+    echo "Pending update (.new created, apply manually after diff): ${#updated[@]}" >&2
+  fi
   if [ "${#updated[@]}" -gt 0 ]; then
     for rel in "${updated[@]}"; do echo "  * $rel -> $rel.new" >&2; done
   fi
@@ -1074,6 +1166,10 @@ fi
 if [ "$UPDATE" -eq 1 ]; then
   run_update
   exit 0
+fi
+
+if [ "$STAGE_MODE" != "1" ] && [ -f "$TARGET/$STATE_REL" ]; then
+  resolve_recorded_options
 fi
 
 # forge 미지정 + 대화형이면 묻는다 (기본 github)
@@ -1158,8 +1254,8 @@ echo "== agents-scaffold $SCAFFOLD_VERSION: target=$TARGET name=$NAME forge=$FOR
 # #104: 이미 있는 AGENTS.md 는 설치가 덮어쓴다 — 끝에서 달라졌으면 백업으로 남긴다
 PRE_AGENTS_MD=""
 if [ "$INPLACE" -eq 0 ] && [ -f "$TARGET/AGENTS.md" ]; then
-  PRE_AGENTS_MD="$(mktemp)"
-  cp "$TARGET/AGENTS.md" "$PRE_AGENTS_MD"
+  PRE_AGENTS_MD="$(mktemp "$TARGET/AGENTS.md.bak-$(date +%Y%m%d-%H%M%S)-XXXXXX")"
+  cp -p "$TARGET/AGENTS.md" "$PRE_AGENTS_MD"
 fi
 
 # #61: 이번 실행 전부터 있던 실디렉터리 .claude/skills 인지 기록 — 4.5 에서 사용자 소유 여부 판단에 쓴다
@@ -1229,10 +1325,13 @@ merge_preset() {
       if grep -qF "$marker" "$hook"; then
         local tmp
         tmp="$(mktemp)"
-        awk -v partial="$f" '
+        local stack_name="${pdir##*/}"
+        awk -v partial="$f" -v stack="$stack_name" '
           { print }
           /# --- STACK CHECKS/ && !ins {
+            print "# agents-scaffold: stack " stack " begin"
             while ((getline line < partial) > 0) print line
+            print "# agents-scaffold: stack " stack " end"
             close(partial); ins = 1
           }
         ' "$hook" > "$tmp" && mv "$tmp" "$hook"
@@ -1408,9 +1507,7 @@ write_state
 # #104: 설치 전의 AGENTS.md 가 지금 것과 다르면 백업으로 남긴다(같으면 버린다)
 if [ -n "$PRE_AGENTS_MD" ]; then
   if ! cmp -s "$PRE_AGENTS_MD" "$TARGET/AGENTS.md"; then
-    bak="AGENTS.md.bak-$(date +%Y%m%d-%H%M%S)"
-    mv "$PRE_AGENTS_MD" "$TARGET/$bak"
-    echo "== your previous AGENTS.md differed from the generated one — saved as $bak (merge what you need back) ==" >&2
+    echo "Previous AGENTS.md saved to $PRE_AGENTS_MD — restore your project instructions from this backup." >&2
   else
     rm -f "$PRE_AGENTS_MD"
   fi

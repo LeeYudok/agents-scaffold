@@ -251,6 +251,7 @@ agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --forge github --stack 
 | `--yes` | 대화형 프롬프트 생략(비대화 모드) |
 | `--dry-run` | 아무것도 바꾸지 않는다. 설치·`--update`·`--uninstall` 이 할 일을 출력한다 (아래 참조) |
 | `--update` | 이미 부트스트랩된 프로젝트를 최신화 (아래 참조) |
+| `--force` | `--update`와 함께 쓴다. 변경된 파일을 고유한 `.bak-*`에 백업한 뒤 새 파일로 바꾼다. `--dry-run`으로 먼저 확인할 수 있다 |
 | `--uninstall` | 스캐폴드가 설치했고 사용자가 고치지 않은 파일을 제거 (아래 참조) |
 | `--list-stacks` | 쓸 수 있는 스택 프리셋을 한 줄에 하나씩 출력 |
 | `--version` | 스캐폴드 버전 출력(`agents-scaffold 1.0.0`) |

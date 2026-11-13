@@ -26,6 +26,8 @@ dotfiles/
 │   ├── zshrc.macos            # macOS 용 — brew 기반(Apple Silicon/Intel 자동), eza/bat/zoxide/fzf/pyenv/pnpm/플러그인
 │   ├── zshrc.linux            # Linux 서버용 — 같은 구조의 미니멀판, 도구는 있을 때만 활성
 │   └── zshrc.local.example    # 머신별 alias/함수 템플릿(placeholder) → ~/.zshrc.local (미추적) 로 복사해 사용
+├── yolo/
+│   └── wrapper.sh             # `claude --yolo`·`agy --yolo` → `--dangerously-skip-permissions` 실행 파일 → ~/.local/share/dotfiles/bin/{claude,agy}
 ├── claude/
 │   └── statusline-command.sh  # Claude Code 하단 statusline 2줄 (경로·git·모델·컨텍스트 / 비용·캐시·한도·버전)
 ├── gitbash/
@@ -53,6 +55,7 @@ dotfiles/
     ├── test-codex-cost-hook.sh    # cost-hook.py 금액 계산 + hooks.py 왕복 시험 (임시 HOME)
     ├── test-agy-statusline.sh     # agy/settings.py 왕복 + statusline 렌더 시험 (임시 HOME)
     ├── test-windows-paths.sh      # Git Bash 거부·WSL 폰트 건너뛰기 시험 (임시 HOME)
+    ├── test-yolo-wrapper.sh       # yolo 래퍼 — 치환·비대화형 셸·가짜 cmux shim 루프 없음, Git Bash 함수
     └── test-windows-git.sh        # windows/·gitbash/ 정적 시험 (인코딩·줄바꿈·문법)
 ```
 
@@ -72,6 +75,7 @@ cd agents-scaffold/dotfiles && ./install.sh
 | 2 | starship.toml · eza 테마 | `starship/starship.toml` → `~/.config/starship.toml`, `eza/theme.yml` → `~/.config/eza/theme.yml`(v3 전용 eza 아이콘을 v2·v3 공통 글리프로 덮어씀) |
 | 2.5 | Nerd Fonts | GitHub 최신 릴리스에서 `JetBrainsMono`, `D2Coding` zip 을 받아 `.ttf`/`.otf` 를 폰트 디렉터리(macOS `~/Library/Fonts`, Linux `~/.local/share/fonts` + `fc-cache`)에 설치. 폰트별 `.nerd-font-<name>-installed` 마커 파일로 재설치 방지. **WSL 에서는 건너뛰고 안내만** 한다 — [Windows (WSL2)](#windows-wsl2) 참고. |
 | 3 | zshrc | OS 에 맞는 `zsh/zshrc.*` → `~/.zshrc`. 머신별 alias/함수는 `~/.zshrc.local`(미추적) 에 두며 스크립트가 만들지 않는다 — 없으면 안내만. |
+| 3.5 | yolo 래퍼 | `yolo/wrapper.sh` → `~/.local/share/dotfiles/bin/claude`·`agy` (+x). 지금 PATH 에 있는 명령만 배치한다 — 없는 명령의 래퍼가 있으면 `command -v` 가 설치된 것으로 판단한다. 명령을 나중에 설치했으면 다시 실행한다. 동작은 [zsh](#zsh-zshrcmacos--zshrclinux) 절. |
 | 4 | Claude statusline | `claude/statusline-command.sh` → `~/.claude/statusline-command.sh` (+x). 스크립트 런타임에 `jq` 필요 — 없으면 경고만. 이어서 **python3** 로 `~/.claude/settings.json` 의 `statusLine` 키만 merge (다른 키 불변, 파일 없으면 생성). 같은 디렉터리의 임시 파일에 쓰고 `os.replace` 로 교체하므로 중단돼도 원본이 깨지지 않고, 기존 파일 mode 를 보존한다. |
 | 5 | Codex status line | Codex 를 쓰는 머신(`codex` 명령 또는 `~/.codex` 존재)에서만. `codex/status-line.py apply` 로 `~/.codex/config.toml` 의 `[tui]` `status_line` 키만 merge (다른 테이블·키·주석 불변, 파일 없으면 생성). 비용 훅 `codex/cost-hook.py` 를 `~/.codex/cost-hook.py` 로 배치하고 `codex/hooks.py apply` 로 `~/.codex/hooks.json` 의 `Stop` 에 그 항목 하나만 추가한다(다른 훅 불변). 원자적 쓰기와 mode 보존은 4 단계와 같다. `hooks.json` 이 깨진 JSON 이면 0 단계에서 중단. |
 | 6 | Antigravity statusline | Antigravity CLI 를 쓰는 머신(`agy` 명령 또는 `~/.gemini/antigravity-cli` 존재)에서만. `agy/statusline-command.sh` → `~/.gemini/antigravity-cli/statusline-command.sh` (+x) 배치 후 `agy/settings.py apply` 로 `settings.json` 의 `statusLine` 키만 merge (다른 키 불변, 사용자가 둔 `padding`·`stack_with_default` 도 유지). 원자적 쓰기와 mode 보존은 4 단계와 같다. |
@@ -81,7 +85,7 @@ cd agents-scaffold/dotfiles && ./install.sh
 
 Linux 에서 sudo 권한이 없으면 **zsh 만 미리 설치돼 있으면 된다.** 나머지는 사용자 영역(`~/.local/bin`, `~/.local/share/zsh/plugins`)에 설치하거나 경고만 하고 넘어간다(jq 가 없으면 statusline 만 동작하지 않는다).
 
-멱등(idempotent): 재실행해도 안전하다. 배치 대상 파일(`starship.toml`·`eza/theme.yml`·`.zshrc`·`statusline-command.sh`(Claude·Antigravity)·`~/.codex/cost-hook.py`)은 기존 파일과 내용이 다를 때만 `.bak` 백업 후 덮어쓴다 — `.bak` 은 1세대만 유지되므로 두 번 연속 다른 내용을 배치하면 첫 백업은 사라진다.
+멱등(idempotent): 재실행해도 안전하다. 배치 대상 파일(`starship.toml`·`eza/theme.yml`·`.zshrc`·yolo 래퍼·`statusline-command.sh`(Claude·Antigravity)·`~/.codex/cost-hook.py`)은 기존 파일과 내용이 다를 때만 `.bak` 백업 후 덮어쓴다 — `.bak` 은 1세대만 유지되므로 두 번 연속 다른 내용을 배치하면 첫 백업은 사라진다.
 
 최초 실행 시 덮어쓸 파일의 원본과 설치 기록을 `~/.config/dotfiles/backup/` 에 남긴다(`<name>.orig` / `<name>.absent`, `brew-installed.txt`·`pkg-installed.txt`·`bin-installed.txt`, `settings.json.orig`, `codex-config.toml.orig`, `codex-hooks.json.absent`/`.present`, `agy-settings.json.orig`/`.absent`). 재실행해도 이 기록은 갱신하지 않으므로 몇 번을 돌려도 "설치 전 원본"이 보존된다. Nerd Font 는 설치한 파일명을 `.nerd-font-<name>-files.txt` manifest 로 남긴다.
 
@@ -218,6 +222,7 @@ windows\uninstall-git.cmd -KeepBackup
 - `~/.codex/config.toml` 도 `[tui]` 의 `status_line` 키만 설치 전 값으로 되돌린다. 설치 전에 키가 없었으면 키를 지우고, 그 결과 설치가 만든 `[tui]` 테이블이나 파일이 비면 같이 지운다. 설치가 Codex 단계를 건너뛴 머신에서는 아무것도 하지 않는다.
 - `~/.codex/hooks.json` 은 다른 도구도 자기 훅을 넣고 빼는 공유 파일이라 원본으로 통째 되돌리지 않고, 비용 훅 항목(`~/.codex/cost-hook.py` 를 가리키는 것)만 뺀다. 설치 전에 파일이 없었고 남는 훅도 없으면 파일을 지운다. `~/.codex/cost-hook.py` 는 다른 배치 파일과 같은 규칙으로 복원/삭제한다.
 - `~/.gemini/antigravity-cli/settings.json` 도 `statusLine` 키만 설치 전 값으로 되돌린다(설치 전에 없던 파일이고 남는 키가 없으면 파일 삭제). 스크립트는 다른 배치 파일과 같은 규칙으로 복원/삭제하고, 비게 된 `~/.gemini/antigravity-cli`·`~/.gemini` 는 지운다. 설치가 agy 단계를 건너뛴 머신에서는 아무것도 하지 않는다.
+- yolo 래퍼(`~/.local/share/dotfiles/bin/claude`·`agy`)도 같은 규칙으로 지우고, 비게 된 `~/.local/share/dotfiles/bin`·`~/.local/share/dotfiles` 를 지운다.
 - `~/.zshrc.local`, `~/.secrets.zsh`, `~/.claude/CLAUDE.md` 는 사용자 파일이므로 건드리지 않는다.
 - 폰트는 manifest 에 적힌 파일만 지운다. manifest 없이 설치된 옛 머신은 마커만 지우고 경고를 낸다.
 - `--purge` 는 `install.sh` 가 **새로 설치했다고 기록한 것만** 제거한다. 이미 깔려 있던 starship/eza 등은 건드리지 않는다. Linux 플러그인과 EPEL도 새로 설치에 성공한 패키지만 기록한다. sudo 없이 tarball 로 받은 플러그인은 `~/.local/share/zsh/plugins` 아래 기록된 디렉터리만 지운다.
@@ -244,7 +249,10 @@ starship 1.26 기준. `[palettes.catppuccin_mocha]` 로 색을 이름으로 참�
 
 - PATH 는 `typeset -U path` 로 중복 자동 제거. macOS 판은 `HOMEBREW_PREFIX` 를 자동 감지(Apple Silicon `/opt/homebrew`, Intel `/usr/local`, `brew shellenv` 가 이미 설정했으면 그 값)하고, rustup·JAVA_HOME(openjdk@21)·pnpm·Antigravity 등은 **디렉터리가 있을 때만** PATH 에 넣는다. starship/zoxide/fzf/eza/bat/플러그인도 없으면 조용히 건너뛴다.
 - 머신별 항목(SSH 호스트 alias, 컨테이너 접속 alias, 프로젝트 전용 함수·경로 등)은 `~/.zshrc.local`(미추적) 에 두고 두 zshrc 가 플러그인 직전에 `source` 한다. 새 머신은 `cp zsh/zshrc.local.example ~/.zshrc.local` 후 필요한 예시만 주석을 풀어 그 머신 값으로 채운다.
-- `claude --yolo`, `agy --yolo` → `--dangerously-skip-permissions`(권한 확인 없이 Claude Code·Antigravity CLI 실행). 각 명령을 감싸는 셸 함수가 `--yolo` 인자만 바꿔 넘기며, 해당 명령이 PATH 에 있을 때만 정의한다.
+- `claude --yolo`, `agy --yolo` → `--dangerously-skip-permissions`(권한 확인 없이 Claude Code·Antigravity CLI 실행). 셸 함수가 아니라 실행 파일(`~/.local/share/dotfiles/bin/claude`·`agy`, 3.5 단계)이 `--yolo` 인자만 바꿔 실제 CLI 를 `exec` 한다. 두 zshrc 가 그 디렉터리를 PATH 맨 앞에 두고 자식 프로세스가 PATH 를 물려받으므로 `zsh -c`·bash·스크립트·터미널 앱의 실행 템플릿에서도 동작한다. `--` 뒤의 인자는 바꾸지 않는다.
+  - 실제 실행 파일은 PATH 에서 래퍼 디렉터리 **뒤**에 있는 같은 이름 중 첫 번째다. 래퍼와 내용이 같은 사본과 cmux shim(`*/cmux-cli-shims/*`, `cmux.app/Contents/Resources/bin`)은 건너뛴다. cmux 래퍼는 PATH 에서 처음 만난 shim 이 아닌 파일을 실제 바이너리로 보고 실행하므로, cmux 안에서는 cmux shim → 래퍼 → 실제 CLI 순으로 실행되고 cmux 훅도 유지된다.
+  - Git Bash 는 Windows 실행 파일(`.exe`·`.cmd`) 탐색이 달라 래퍼 대신 `gitbash/bashrc` 에 같은 치환 함수를 두고 `export -f` 로 자식 bash 에 넘긴다.
+  - `claude doctor` 가 PATH 의 `claude` 가 설치 경로와 다르다고 표시할 수 있다. 실행에는 영향이 없다.
 - 개인 설정을 빼고 Claude Code 를 실행해 문제를 가려낼 때(바닐라 실행)는 아래 둘 중 하나를 쓴다. 래퍼 함수까지 건너뛰려면 `command claude` 로 부른다. Claude Code 2.1.293 기준이며, 자세한 로딩 규칙은 [공식 문서](https://code.claude.com/docs/en/memory)에 있다.
 
   ```bash
@@ -269,21 +277,21 @@ starship 1.26 기준. `[palettes.catppuccin_mocha]` 로 색을 이름으로 참�
 
 | 줄 | 내용 |
 |---|---|
-| 1행 | 경로 · git 브랜치/dirty · 모델명(추론 강도 · thinking · fast) · 컨텍스트 사용률 바와 입력/창 크기 · 출력 토큰 |
-| 2행 | 세션 비용 · 소요 시간(전체·API) · 변경 라인 수 · 프롬프트 캐시 적중률 · 5시간/주간 사용 한도와 리셋 시각 · 출력 스타일 · CLI 버전 |
+| 1행 | git 브랜치/dirty(`⎇ main ●`, 저장소 밖이면 `nogit`) · 경로 · 모델명(추론 강도(`medium` 은 `med`) · thinking `✦` · fast) · 컨텍스트 사용률 바와 입력/창 크기 · 출력 토큰 · 호스트 이름(macOS 는 ComputerName, 그 외 `hostname -s`) |
+| 2행 | 세션 비용 · 소요 시간(전체·API) · 변경 라인 수 · 프롬프트 캐시 적중률 · 5시간/주간 사용 한도와 리셋 시각(`(⟲)HH:MM`, 주간은 `M/D HH:MM`) · 출력 스타일 · CLI 버전 |
 
 ```
-dotfiles │ git: main │ Opus 5 (1M context) medium think │ █░░░░░░░░░ 10% (98k/1000k) ↑3
-$1.51 5m(api 1m) │ cache 95% │ 5h 16%~12:00  7d 48%~05:00 │ Proactive │ v2.1.278
+⎇ main │ dotfiles │ Opus 5.5 (1M context) med ✦ │ █░░░░░░░░░ 10% (98k/1000k) ↑3k │ macbook
+$1.51 5m(api 1m) │ cache 95% │ 5h 16% (⟲)12:00 │ 7d 64% (⟲)11/14 05:00 │ Proactive │ v2.1.322
 ```
 
-렌더 빈도가 높으므로 `jq` 는 한 번만 호출해 모든 필드를 US(0x1f) 구분자로 받는다(탭은 IFS 공백류라 빈 필드가 합쳐져 값이 밀린다). payload 에 없는 필드는 그 구간을 통째로 생략하므로, 해당 키를 주지 않는 CLI 버전에서도 나머지는 그대로 나온다. 컨텍스트는 60%/80% 에서 색이 바뀌고 `exceeds_200k_tokens` 가 참이면 경고색과 `>200k` 표시가 붙는다.
+렌더 빈도가 높으므로 `jq` 는 한 번만 호출해 모든 필드를 US(0x1f) 구분자로 받는다(탭은 IFS 공백류라 빈 필드가 합쳐져 값이 밀린다). payload 에 없는 필드는 그 구간을 통째로 생략하므로, 해당 키를 주지 않는 CLI 버전에서도 나머지는 그대로 나온다. 컨텍스트와 5시간·주간 사용 한도는 60%/80% 에서 색이 바뀌고, `exceeds_200k_tokens` 가 참이면 경고색과 `>200k` 표시가 붙는다.
 
 `install.sh` 는 스크립트를 배치하고 `~/.claude/settings.json` 의 `statusLine` 키 하나만 merge 한다. `settings.json` 전체와 `~/.claude/CLAUDE.md` 같은 개인 지침은 이 저장소가 관리하지 않는다.
 
 ## Antigravity CLI statusline
 
-Antigravity CLI(`agy`)는 Claude Code 와 같은 방식이다 — 에이전트 상태가 바뀔 때마다 `settings.json` 의 `statusLine.command` 를 실행해 상태 JSON 을 stdin 으로 넘기고, stdout 을 프롬프트 아래에 그린다. `agy/statusline-command.sh` 는 Claude statusline 과 같은 모양·색으로 **두 줄**을 출력한다. 런타임에 `jq` 가 필요하다.
+Antigravity CLI(`agy`)는 Claude Code 와 같은 방식이다 — 에이전트 상태가 바뀔 때마다 `settings.json` 의 `statusLine.command` 를 실행해 상태 JSON 을 stdin 으로 넘기고, stdout 을 프롬프트 아래에 그린다. `agy/statusline-command.sh` 는 Claude statusline 과 같은 색으로 **두 줄**을 출력한다. 1행 구간 순서(경로가 맨 앞)와 호스트 표시는 Claude statusline 과 다르다. 런타임에 `jq` 가 필요하다.
 
 | 줄 | 내용 |
 |---|---|

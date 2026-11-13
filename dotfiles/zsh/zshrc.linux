@@ -5,6 +5,10 @@
 typeset -U path PATH
 [ -d "$HOME/bin" ] && path=("$HOME/bin" $path)
 [ -d "$HOME/.local/bin" ] && path=("$HOME/.local/bin" $path)
+# dotfiles yolo 래퍼(`claude --yolo`, `agy --yolo` → `--dangerously-skip-permissions`, install.sh 3.5 단계, #109).
+# 같은 이름의 실제 실행 파일보다 앞서야 하므로 PATH 설정의 맨 마지막에 맨 앞으로 넣는다. 자식 프로세스가 PATH 를 물려받아
+# 비대화형 셸·bash·스크립트에서도 동작한다.
+[[ -d $HOME/.local/share/dotfiles/bin ]] && path=("$HOME/.local/share/dotfiles/bin" $path)
 export EDITOR=vim
 
 # locale — LANG 이 비었거나 C/POSIX 면 zsh 가 한글을 바이트 단위로 세어 입력·삭제 때 커서가 밀린다.
@@ -67,18 +71,6 @@ else
   alias la='ls -A'
 fi
 alias grep='grep --color=auto'
-# AI CLI: `claude --yolo`, `agy --yolo` → `--dangerously-skip-permissions`
-_yolo_exec() {
-  local cmd=$1 a
-  local -a args
-  shift
-  for a in "$@"; do
-    [[ "$a" == --yolo ]] && args+=(--dangerously-skip-permissions) || args+=("$a")
-  done
-  command "$cmd" "${args[@]}"
-}
-command -v claude >/dev/null && function claude { _yolo_exec claude "$@"; }
-command -v agy >/dev/null && function agy { _yolo_exec agy "$@"; }
 
 # ── 시크릿 (mode 600, 버전관리 제외) ────────────────────────
 [ -f "$HOME/.secrets.zsh" ] && source "$HOME/.secrets.zsh"

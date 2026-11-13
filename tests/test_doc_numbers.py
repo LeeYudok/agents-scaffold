@@ -30,6 +30,9 @@ def copy_inputs(dst: Path) -> None:
     (dst / "docs").mkdir()
     for name in ("index.html", "llms.txt", "harness-matrix.json"):
         shutil.copy(ROOT / "docs" / name, dst / "docs" / name)
+    (dst / "tests").mkdir()
+    for suite in (ROOT / "tests").glob("*.bats"):
+        shutil.copy(suite, dst / "tests" / suite.name)
     for stack in (ROOT / "presets" / "stacks").iterdir():
         if stack.is_dir():
             (dst / "presets" / "stacks" / stack.name).mkdir(parents=True)
@@ -65,6 +68,16 @@ class DocNumbersTest(unittest.TestCase):
     def test_untouched_copy_passes(self):
         result = run_check(self.tmp)
         self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_wrong_test_count_in_readme_fails(self):
+        path = self.tmp / "README.md"
+        import re
+        text = path.read_text()
+        text = re.sub(r"\d+ bats regression tests", "99999 bats regression tests", text)
+        path.write_text(text)
+        result = run_check(self.tmp)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("테스트 수", result.stderr)
 
     def test_wrong_stack_count_in_readme_fails(self):
         stacks = len(list((self.tmp / "presets" / "stacks").iterdir()))

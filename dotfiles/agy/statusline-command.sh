@@ -1,6 +1,6 @@
 #!/bin/bash
 # Antigravity CLI (agy) statusLine script
-# Reads the status JSON on stdin, prints a two-line status. claude/statusline-command.sh 와 같은 모양·색을 쓴다.
+# Reads the status JSON on stdin, prints a two-line status. claude/statusline-command.sh 와 같은 색을 쓴다(1행 구간 순서·호스트 표시는 다르다).
 #
 #   1행: 경로 │ git 브랜치 │ 모델 · 에이전트 상태 │ 컨텍스트 막대 · 사용률 (입력/창) · 출력 토큰
 #   2행: Gemini 5h·7d 사용률(리셋까지) │ 3P(타사 모델) 5h·7d │ 작업·산출물·서브에이전트 수 │ sandbox │ vim 모드 │ 버전

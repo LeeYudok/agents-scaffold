@@ -266,6 +266,7 @@ and commit the result.
 | `--yes` | Skip interactive prompts (non-interactive mode) |
 | `--dry-run` | Change nothing. Print what an install, `--update` or `--uninstall` would do (see below) |
 | `--update` | Refresh an already-bootstrapped project (see below) |
+| `--force` | With `--update`, replace changed files after saving unique `.bak-*` backups. Preview with `--dry-run` |
 | `--uninstall` | Remove what the scaffold installed and you did not change (see below) |
 | `--list-stacks` | Print the available stack presets, one per line |
 | `--version` | Print the scaffold version (`agents-scaffold 1.0.0`) |

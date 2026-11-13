@@ -1,6 +1,6 @@
 {
   "claims": [
-    {"id": "RULES-LOAD", "kind": "정상", "rule": "`검사` 열은 `scripts/check_writing.py` 가 읽는 정규식이다.", "test": "test_check_writing.py::test_rules_load_and_compile"},
+    {"id": "RULES-LOAD", "kind": "정상", "rule": "`검사` 열은 Go 검사기 `scripts/check-writing` 이 읽는 정규식이다.", "test": "test_check_writing.py::test_rules_load_and_compile"},
     {"id": "ROW-THREE-COLS", "kind": "실패", "rule": "이 파일이 금지 표현의 유일한 원본이다.", "test": "test_check_writing.py::test_every_row_has_check_column"},
     {"id": "ESCAPED-PIPE", "kind": "경계", "rule": "정규식 안의 `|` 는 표 구분자와 겹치므로 `\\|` 로 적는다.", "test": "test_check_writing.py::test_escaped_pipe_is_alternation"},
     {"id": "BAD-DOC-EXAMPLES", "kind": "실패", "rule": "오류: 금지 표현, 문어체의 ~함·~됨·~있음 종결, ISO 8601 시각, 이모지.", "test": "test_check_writing.py::test_bad_document_examples_fail"},
@@ -15,6 +15,17 @@
     {"id": "SECRET-BLOCK", "kind": "실패", "rule": "시크릿처럼 보이는 문자열이 있으면 스크립트가 멈춘다.", "test": "test_check_writing.py::test_secret_is_not_sent"},
     {"id": "MISSING-KEY", "kind": "도구오류", "rule": "키가 없으면 이 단계를 건너뛰고 직접 고친다.", "test": "test_check_writing.py::test_missing_key"},
     {"id": "DOC-STYLE", "kind": "경계", "rule": "~합니다 체도 쓸 수 있다", "test": "test_check_writing.py::test_doc_style_follows_majority_ending"},
-    {"id": "RETRY-ON-ERRORS", "kind": "정상", "rule": "검사기에 오류가 남으면 그 목록을 붙여 한 번 더 고친다.", "test": "test_check_writing.py::test_retry_when_errors_remain"}
+    {"id": "RETRY-ON-ERRORS", "kind": "정상", "rule": "검사기에 오류가 남으면 그 목록을 붙여 한 번 더 고친다.", "test": "test_check_writing.py::test_retry_when_errors_remain"},
+    {"id": "SOURCE-FACTS", "kind": "실패", "rule": "오류: 원문에 없는 날짜·시각·이슈 번호(`#N`·`!N`)·인라인 코드·URL.", "test": "test_check_writing.py::test_values_missing_from_source"},
+    {"id": "SOURCE-COPIED-PASS", "kind": "정상", "rule": "날짜는 `2026-11-13`·`2026.11.13`·`2026년 11월 13일`을 같은 날로 본다.", "test": "test_check_writing.py::test_copied_values_pass"},
+    {"id": "SOURCE-OPTIONAL", "kind": "경계", "rule": "`--source 원문` 을 주면 요약 글을 원문과 대조한다(#118).", "test": "test_check_writing.py::test_without_source_no_fact_check"},
+    {"id": "LINES-BUDGET", "kind": "실패", "rule": "`--lines N` 은 제목·빈 줄을 뺀 요약 줄 수가 N 을 넘으면 오류다.", "test": "test_check_writing.py::test_cli_source_and_lines"},
+    {"id": "SUMMARY-BAD-EXAMPLE", "kind": "실패", "rule": "날짜·이슈 번호가 원문과 다르고, 수치는 원문에 없다.", "test": "test_check_writing.py::test_bad_summary_is_caught_against_source"},
+    {"id": "SUMMARY-FIXED-EXAMPLE", "kind": "오탐", "rule": "고친 요약 (세 줄):", "test": "test_check_writing.py::test_fixed_summary_passes_against_source"},
+    {"id": "NEW-BANNED-RULES", "kind": "경계", "rule": "| ~할 필요가 있다 | ~해야 한다 |", "test": "test_check_writing.py::test_new_rules_catch_and_spare"},
+    {"id": "GO-LOOKAROUND-LIMIT", "kind": "도구오류", "rule": "경계 조건은 맨 앞 `(?<![...])`·맨 뒤 `(?![...])` 로만 적는다(#117).", "test": "test_native_cli.py::test_rule_file_is_read_at_runtime_and_invalid_regex_is_an_error"},
+    {"id": "SUMMARY-SECRET", "kind": "실패", "rule": "키·시크릿 차단·외부 전송 주의는 1차 교정과 같다.", "test": "test_check_writing.py::test_summary_secret_is_not_sent"},
+    {"id": "SUMMARY-RETRY-KEEP", "kind": "정상", "rule": "그래도 줄 수가 넘치면 앞에서 `--lines` 줄만 남긴다.", "test": "test_check_writing.py::test_retry_on_source_errors_then_keep_first_lines"},
+    {"id": "SUMMARY-CHUNKS", "kind": "경계", "rule": "원문이 12,000자를 넘으면 단락 경계에서 나눠 부분 요약을 만든 뒤 합쳐 다시 요약한다.", "test": "test_check_writing.py::test_long_source_is_summarized_in_parts"}
   ]
 }

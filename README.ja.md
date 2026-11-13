@@ -108,7 +108,7 @@ agents-scaffold/bin/agents-scaffold.sh --uninstall . --dry-run # preview removal
 | **閉域網と Windows に対応** | オフラインバンドルはネットワークなしでインストールでき、Windows は Git Bash と `.cmd` ランチャーで動きます([docs/OFFLINE_INSTALL.en.md](docs/OFFLINE_INSTALL.en.md))。 |
 | **元に戻せる** | `--dry-run` は書き込む内容を事前に見せ、`--update` はあなたの編集を上書きせず、`--uninstall` は手を付けていないファイルを取り除きます。 |
 | **自己改善** | `skill-evolve` / `agent-evolve` が実際のミスを、それを起こしたスキルやエージェントの「Learned warnings」に変えます。 |
-| **テスト済み** | インストーラーの bats リグレッションテスト 100 個以上、スキルごとの契約テスト、ドキュメントのリンクチェッカー。すべて CI で実行。 |
+| **テスト済み** | インストーラーの bats リグレッションテスト 169 個、スキルごとの契約テスト、ドキュメントのリンクチェッカー。すべて CI で実行。 |
 
 ## インストール直後に起きること
 

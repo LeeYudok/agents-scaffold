@@ -107,7 +107,7 @@ agents-scaffold/bin/agents-scaffold.sh --uninstall . --dry-run # preview removal
 | **支持内网与 Windows** | 离线包无需网络即可安装；Windows 通过 Git Bash 和 `.cmd` 启动器运行（[docs/OFFLINE_INSTALL.en.md](docs/OFFLINE_INSTALL.en.md)）。 |
 | **可以回退** | `--dry-run` 先展示将要写入的内容，`--update` 不会覆盖你的修改，`--uninstall` 会把没动过的文件原样撤走。 |
 | **自我改进** | `skill-evolve` / `agent-evolve` 会把真实错误提炼成 "Learned warnings"，写回犯错的那个技能或代理。 |
-| **经过测试** | 安装器有 100 多个 bats 回归测试，每个技能有契约测试，文档有链接检查器，全部在 CI 中运行。 |
+| **经过测试** | 安装器有 169 个 bats 回归测试，每个技能有契约测试，文档有链接检查器，全部在 CI 中运行。 |
 
 ## 装好之后会发生什么
 

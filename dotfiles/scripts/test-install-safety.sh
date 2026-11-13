@@ -233,6 +233,24 @@ with tempfile.TemporaryDirectory(prefix='dotfiles-safety-') as tmp:
         assert not (m.home / '.config/dotfiles/backup/pkg-installed.txt').exists()
     print('ok jq 패키지 설치 실패 시 경고하고 기록하지 않음')
 
+    # yolo 래퍼(#109): PATH 에 있는 명령만 배치하고, 래퍼가 PATH 앞에 있어도 없는 명령으로 번지지 않으며, 제거 때 지운다
+    m = Machine(base / 'yolo', installed=PLUGINS)
+    (m.bin / 'claude').symlink_to(shutil.which('true'))
+    before = snapshot(m.home)
+    m.run('install.sh')
+    yolo_bin = m.home / '.local/share/dotfiles/bin'
+    assert (yolo_bin / 'claude').read_bytes() == (ROOT / 'yolo/wrapper.sh').read_bytes()
+    assert os.access(yolo_bin / 'claude', os.X_OK)
+    assert not (yolo_bin / 'agy').exists()
+    m.env['PATH'] = str(yolo_bin) + ':' + str(m.bin)
+    m.run('install.sh')
+    assert sorted(p.name for p in yolo_bin.iterdir()) == ['claude']
+    assert not (m.home / '.gemini').exists()
+    m.run('uninstall.sh')
+    assert not (m.home / '.local/share/dotfiles').exists()
+    assert snapshot(m.home) == before
+    print('ok yolo 래퍼: PATH 에 있는 명령만 배치·재설치·제거')
+
     for manager, query in (('apt-get', 'dpkg-query'), ('dnf', 'rpm')):
         m = Machine(base / ('missing-' + query), manager)
         (m.bin / query).unlink()

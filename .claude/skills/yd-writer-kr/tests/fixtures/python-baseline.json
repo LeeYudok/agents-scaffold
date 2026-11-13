@@ -1,0 +1,1175 @@
+[
+  {
+    "text": "배포를 완료함.",
+    "chat": false,
+    "max_len": 60,
+    "findings": [
+      {
+        "line": 1,
+        "level": "오류",
+        "kind": "명사형 종결 (문어체 산출물만)",
+        "match": "함.",
+        "hint": "~함 → ~한다",
+        "context": "배포를 완료함."
+      }
+    ],
+    "prose": [
+      [
+        1,
+        "배포를 완료함.",
+        "배포를 완료함.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "배포를 완료함.",
+    "chat": true,
+    "max_len": 60,
+    "findings": [],
+    "prose": [
+      [
+        1,
+        "배포를 완료함.",
+        "배포를 완료함.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "설정 파일도 포함.",
+    "chat": false,
+    "max_len": 60,
+    "findings": [],
+    "prose": [
+      [
+        1,
+        "설정 파일도 포함.",
+        "설정 파일도 포함.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "설정 파일도 포함.",
+    "chat": true,
+    "max_len": 60,
+    "findings": [],
+    "prose": [
+      [
+        1,
+        "설정 파일도 포함.",
+        "설정 파일도 포함.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "협함.",
+    "chat": false,
+    "max_len": 60,
+    "findings": [],
+    "prose": [
+      [
+        1,
+        "협함.",
+        "협함.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "협함.",
+    "chat": true,
+    "max_len": 60,
+    "findings": [],
+    "prose": [
+      [
+        1,
+        "협함.",
+        "협함.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "함.",
+    "chat": false,
+    "max_len": 60,
+    "findings": [
+      {
+        "line": 1,
+        "level": "오류",
+        "kind": "명사형 종결 (문어체 산출물만)",
+        "match": "함.",
+        "hint": "~함 → ~한다",
+        "context": "함."
+      }
+    ],
+    "prose": [
+      [
+        1,
+        "함.",
+        "함.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "함.",
+    "chat": true,
+    "max_len": 60,
+    "findings": [],
+    "prose": [
+      [
+        1,
+        "함.",
+        "함.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "필요함.",
+    "chat": false,
+    "max_len": 60,
+    "findings": [
+      {
+        "line": 1,
+        "level": "오류",
+        "kind": "명사형 종결 (문어체 산출물만)",
+        "match": "함.",
+        "hint": "~함 → ~한다",
+        "context": "필요함."
+      },
+      {
+        "line": 1,
+        "level": "오류",
+        "kind": "명사형 종결 (문어체 산출물만)",
+        "match": "필요함",
+        "hint": "~필요함 → ~필요하다",
+        "context": "필요함."
+      }
+    ],
+    "prose": [
+      [
+        1,
+        "필요함.",
+        "필요함.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "필요함.",
+    "chat": true,
+    "max_len": 60,
+    "findings": [],
+    "prose": [
+      [
+        1,
+        "필요함.",
+        "필요함.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "에 대해 논의했다.",
+    "chat": false,
+    "max_len": 60,
+    "findings": [
+      {
+        "line": 1,
+        "level": "오류",
+        "kind": "영어 번역투",
+        "match": "에 대해",
+        "hint": "~에 대해 → ~을, ~를",
+        "context": "에 대해 논의했다."
+      }
+    ],
+    "prose": [
+      [
+        1,
+        "에 대해 논의했다.",
+        "에 대해 논의했다.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "에 대해 논의했다.",
+    "chat": true,
+    "max_len": 60,
+    "findings": [
+      {
+        "line": 1,
+        "level": "오류",
+        "kind": "영어 번역투",
+        "match": "에 대해",
+        "hint": "~에 대해 → ~을, ~를",
+        "context": "에 대해 논의했다."
+      }
+    ],
+    "prose": [
+      [
+        1,
+        "에 대해 논의했다.",
+        "에 대해 논의했다.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "일단락됐다.",
+    "chat": false,
+    "max_len": 60,
+    "findings": [],
+    "prose": [
+      [
+        1,
+        "일단락됐다.",
+        "일단락됐다.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "일단락됐다.",
+    "chat": true,
+    "max_len": 60,
+    "findings": [],
+    "prose": [
+      [
+        1,
+        "일단락됐다.",
+        "일단락됐다.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "일단 시작한다.",
+    "chat": false,
+    "max_len": 60,
+    "findings": [
+      {
+        "line": 1,
+        "level": "오류",
+        "kind": "군더더기",
+        "match": "일단",
+        "hint": "일단 → (삭제)",
+        "context": "일단 시작한다."
+      }
+    ],
+    "prose": [
+      [
+        1,
+        "일단 시작한다.",
+        "일단 시작한다.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "일단 시작한다.",
+    "chat": true,
+    "max_len": 60,
+    "findings": [
+      {
+        "line": 1,
+        "level": "오류",
+        "kind": "군더더기",
+        "match": "일단",
+        "hint": "일단 → (삭제)",
+        "context": "일단 시작한다."
+      }
+    ],
+    "prose": [
+      [
+        1,
+        "일단 시작한다.",
+        "일단 시작한다.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "나로부터 받았다.",
+    "chat": false,
+    "max_len": 60,
+    "findings": [
+      {
+        "line": 1,
+        "level": "오류",
+        "kind": "영어 번역투",
+        "match": "로부터",
+        "hint": "~로부터 → ~에서",
+        "context": "나로부터 받았다."
+      }
+    ],
+    "prose": [
+      [
+        1,
+        "나로부터 받았다.",
+        "나로부터 받았다.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "나로부터 받았다.",
+    "chat": true,
+    "max_len": 60,
+    "findings": [
+      {
+        "line": 1,
+        "level": "오류",
+        "kind": "영어 번역투",
+        "match": "로부터",
+        "hint": "~로부터 → ~에서",
+        "context": "나로부터 받았다."
+      }
+    ],
+    "prose": [
+      [
+        1,
+        "나로부터 받았다.",
+        "나로부터 받았다.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "2026-10-04T16:00:00+09:00 에 끝났다.",
+    "chat": false,
+    "max_len": 60,
+    "findings": [
+      {
+        "line": 1,
+        "level": "오류",
+        "kind": "시각 표기",
+        "match": "2026-10-04T16:00",
+        "hint": "YYYY-MM-DD HH:MM:SS.mmm (KST)",
+        "context": "2026-10-04T16:00:00+09:00 에 끝났다."
+      }
+    ],
+    "prose": [
+      [
+        1,
+        "2026-10-04T16:00:00+09:00 에 끝났다.",
+        "2026-10-04T16:00:00+09:00 에 끝났다.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "2026-10-04T16:00:00+09:00 에 끝났다.",
+    "chat": true,
+    "max_len": 60,
+    "findings": [
+      {
+        "line": 1,
+        "level": "오류",
+        "kind": "시각 표기",
+        "match": "2026-10-04T16:00",
+        "hint": "YYYY-MM-DD HH:MM:SS.mmm (KST)",
+        "context": "2026-10-04T16:00:00+09:00 에 끝났다."
+      }
+    ],
+    "prose": [
+      [
+        1,
+        "2026-10-04T16:00:00+09:00 에 끝났다.",
+        "2026-10-04T16:00:00+09:00 에 끝났다.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "배포가 끝났다 🚀",
+    "chat": false,
+    "max_len": 60,
+    "findings": [
+      {
+        "line": 1,
+        "level": "오류",
+        "kind": "이모지",
+        "match": "🚀",
+        "hint": "Phosphor 아이콘이나 글로 바꾼다",
+        "context": "배포가 끝났다 🚀"
+      }
+    ],
+    "prose": [
+      [
+        1,
+        "배포가 끝났다 🚀",
+        "배포가 끝났다 🚀",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "배포가 끝났다 🚀",
+    "chat": true,
+    "max_len": 60,
+    "findings": [
+      {
+        "line": 1,
+        "level": "오류",
+        "kind": "이모지",
+        "match": "🚀",
+        "hint": "Phosphor 아이콘이나 글로 바꾼다",
+        "context": "배포가 끝났다 🚀"
+      }
+    ],
+    "prose": [
+      [
+        1,
+        "배포가 끝났다 🚀",
+        "배포가 끝났다 🚀",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "## 설치 방법 정리함",
+    "chat": false,
+    "max_len": 60,
+    "findings": [],
+    "prose": [
+      [
+        1,
+        "## 설치 방법 정리함",
+        "설치 방법 정리함",
+        true
+      ]
+    ]
+  },
+  {
+    "text": "## 설치 방법 정리함",
+    "chat": true,
+    "max_len": 60,
+    "findings": [],
+    "prose": [
+      [
+        1,
+        "## 설치 방법 정리함",
+        "설치 방법 정리함",
+        true
+      ]
+    ]
+  },
+  {
+    "text": "#418 이슈 관련하여 고쳤다.",
+    "chat": false,
+    "max_len": 60,
+    "findings": [
+      {
+        "line": 1,
+        "level": "오류",
+        "kind": "doksam 에서 자주 새는 표현",
+        "match": "관련하여",
+        "hint": "~관련하여 → ~의, ~에서 (또는 삭제)",
+        "context": "#418 이슈 관련하여 고쳤다."
+      }
+    ],
+    "prose": [
+      [
+        1,
+        "#418 이슈 관련하여 고쳤다.",
+        "#418 이슈 관련하여 고쳤다.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "#418 이슈 관련하여 고쳤다.",
+    "chat": true,
+    "max_len": 60,
+    "findings": [
+      {
+        "line": 1,
+        "level": "오류",
+        "kind": "doksam 에서 자주 새는 표현",
+        "match": "관련하여",
+        "hint": "~관련하여 → ~의, ~에서 (또는 삭제)",
+        "context": "#418 이슈 관련하여 고쳤다."
+      }
+    ],
+    "prose": [
+      [
+        1,
+        "#418 이슈 관련하여 고쳤다.",
+        "#418 이슈 관련하여 고쳤다.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가다.",
+    "chat": false,
+    "max_len": 60,
+    "findings": [
+      {
+        "line": 1,
+        "level": "경고",
+        "kind": "긴 문장",
+        "match": "72자",
+        "hint": "60자 이하로 나눈다",
+        "context": "가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가"
+      }
+    ],
+    "prose": [
+      [
+        1,
+        "가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가다.",
+        "가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가다.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가다.",
+    "chat": true,
+    "max_len": 60,
+    "findings": [
+      {
+        "line": 1,
+        "level": "경고",
+        "kind": "긴 문장",
+        "match": "72자",
+        "hint": "60자 이하로 나눈다",
+        "context": "가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가"
+      }
+    ],
+    "prose": [
+      [
+        1,
+        "가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가다.",
+        "가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가다.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "---\ndescription: 에 있어서\n---\n본문이다.",
+    "chat": false,
+    "max_len": 60,
+    "findings": [],
+    "prose": [
+      [
+        4,
+        "본문이다.",
+        "본문이다.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "---\ndescription: 에 있어서\n---\n본문이다.",
+    "chat": true,
+    "max_len": 60,
+    "findings": [],
+    "prose": [
+      [
+        4,
+        "본문이다.",
+        "본문이다.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "```\n에 있어서 되어지다\n```\n문제없다.",
+    "chat": false,
+    "max_len": 60,
+    "findings": [],
+    "prose": [
+      [
+        4,
+        "문제없다.",
+        "문제없다.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "```\n에 있어서 되어지다\n```\n문제없다.",
+    "chat": true,
+    "max_len": 60,
+    "findings": [],
+    "prose": [
+      [
+        4,
+        "문제없다.",
+        "문제없다.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "~~~python\n에 있어서\n~~~",
+    "chat": false,
+    "max_len": 60,
+    "findings": [],
+    "prose": []
+  },
+  {
+    "text": "~~~python\n에 있어서\n~~~",
+    "chat": true,
+    "max_len": 60,
+    "findings": [],
+    "prose": []
+  },
+  {
+    "text": "`에 있어서` 는 코드다.",
+    "chat": false,
+    "max_len": 60,
+    "findings": [],
+    "prose": [
+      [
+        1,
+        "`에 있어서` 는 코드다.",
+        "는 코드다.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "`에 있어서` 는 코드다.",
+    "chat": true,
+    "max_len": 60,
+    "findings": [],
+    "prose": [
+      [
+        1,
+        "`에 있어서` 는 코드다.",
+        "는 코드다.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "| 에 있어서 | 표 |",
+    "chat": false,
+    "max_len": 60,
+    "findings": [],
+    "prose": []
+  },
+  {
+    "text": "| 에 있어서 | 표 |",
+    "chat": true,
+    "max_len": 60,
+    "findings": [],
+    "prose": []
+  },
+  {
+    "text": "> 에 있어서 인용이다",
+    "chat": false,
+    "max_len": 60,
+    "findings": [],
+    "prose": []
+  },
+  {
+    "text": "> 에 있어서 인용이다",
+    "chat": true,
+    "max_len": 60,
+    "findings": [],
+    "prose": []
+  },
+  {
+    "text": "에 있어서 면제한다 <!-- writer:allow -->",
+    "chat": false,
+    "max_len": 60,
+    "findings": [],
+    "prose": []
+  },
+  {
+    "text": "에 있어서 면제한다 <!-- writer:allow -->",
+    "chat": true,
+    "max_len": 60,
+    "findings": [],
+    "prose": []
+  },
+  {
+    "text": "<!--\n에 있어서\n-->\n확인함.",
+    "chat": false,
+    "max_len": 60,
+    "findings": [
+      {
+        "line": 4,
+        "level": "오류",
+        "kind": "명사형 종결 (문어체 산출물만)",
+        "match": "함.",
+        "hint": "~함 → ~한다",
+        "context": "확인함."
+      }
+    ],
+    "prose": [
+      [
+        4,
+        "확인함.",
+        "확인함.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "<!--\n에 있어서\n-->\n확인함.",
+    "chat": true,
+    "max_len": 60,
+    "findings": [],
+    "prose": [
+      [
+        4,
+        "확인함.",
+        "확인함.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "[에 있어서](https://example.com/에-있어서) 링크 글자는 본다",
+    "chat": false,
+    "max_len": 60,
+    "findings": [
+      {
+        "line": 1,
+        "level": "오류",
+        "kind": "일본어 투",
+        "match": "에 있어서",
+        "hint": "~에 있어서 → ~에서, ~에게",
+        "context": "에 있어서 링크 글자는 본다"
+      }
+    ],
+    "prose": [
+      [
+        1,
+        "[에 있어서](https://example.com/에-있어서) 링크 글자는 본다",
+        "에 있어서 링크 글자는 본다",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "[에 있어서](https://example.com/에-있어서) 링크 글자는 본다",
+    "chat": true,
+    "max_len": 60,
+    "findings": [
+      {
+        "line": 1,
+        "level": "오류",
+        "kind": "일본어 투",
+        "match": "에 있어서",
+        "hint": "~에 있어서 → ~에서, ~에게",
+        "context": "에 있어서 링크 글자는 본다"
+      }
+    ],
+    "prose": [
+      [
+        1,
+        "[에 있어서](https://example.com/에-있어서) 링크 글자는 본다",
+        "에 있어서 링크 글자는 본다",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "![이슈가 발생](pic.png)",
+    "chat": false,
+    "max_len": 60,
+    "findings": [
+      {
+        "line": 1,
+        "level": "오류",
+        "kind": "doksam 에서 자주 새는 표현",
+        "match": "이슈가 발생",
+        "hint": "~이슈가 발생하다 → 증상을 직접 쓴다 (실패한다, 멈춘다)",
+        "context": "이슈가 발생"
+      }
+    ],
+    "prose": [
+      [
+        1,
+        "![이슈가 발생](pic.png)",
+        "이슈가 발생",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "![이슈가 발생](pic.png)",
+    "chat": true,
+    "max_len": 60,
+    "findings": [
+      {
+        "line": 1,
+        "level": "오류",
+        "kind": "doksam 에서 자주 새는 표현",
+        "match": "이슈가 발생",
+        "hint": "~이슈가 발생하다 → 증상을 직접 쓴다 (실패한다, 멈춘다)",
+        "context": "이슈가 발생"
+      }
+    ],
+    "prose": [
+      [
+        1,
+        "![이슈가 발생](pic.png)",
+        "이슈가 발생",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "`🚀 2026-10-04T16:00:00` 는 코드다.",
+    "chat": false,
+    "max_len": 60,
+    "findings": [
+      {
+        "line": 1,
+        "level": "오류",
+        "kind": "이모지",
+        "match": "🚀",
+        "hint": "Phosphor 아이콘이나 글로 바꾼다",
+        "context": "는 코드다."
+      },
+      {
+        "line": 1,
+        "level": "오류",
+        "kind": "시각 표기",
+        "match": "2026-10-04T16:00",
+        "hint": "YYYY-MM-DD HH:MM:SS.mmm (KST)",
+        "context": "는 코드다."
+      }
+    ],
+    "prose": [
+      [
+        1,
+        "`🚀 2026-10-04T16:00:00` 는 코드다.",
+        "는 코드다.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "`🚀 2026-10-04T16:00:00` 는 코드다.",
+    "chat": true,
+    "max_len": 60,
+    "findings": [
+      {
+        "line": 1,
+        "level": "오류",
+        "kind": "이모지",
+        "match": "🚀",
+        "hint": "Phosphor 아이콘이나 글로 바꾼다",
+        "context": "는 코드다."
+      },
+      {
+        "line": 1,
+        "level": "오류",
+        "kind": "시각 표기",
+        "match": "2026-10-04T16:00",
+        "hint": "YYYY-MM-DD HH:MM:SS.mmm (KST)",
+        "context": "는 코드다."
+      }
+    ],
+    "prose": [
+      [
+        1,
+        "`🚀 2026-10-04T16:00:00` 는 코드다.",
+        "는 코드다.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "에 있어서 늦다. 다시 재검토한다.",
+    "chat": false,
+    "max_len": 60,
+    "findings": [
+      {
+        "line": 1,
+        "level": "오류",
+        "kind": "일본어 투",
+        "match": "에 있어서",
+        "hint": "~에 있어서 → ~에서, ~에게",
+        "context": "에 있어서 늦다."
+      },
+      {
+        "line": 1,
+        "level": "오류",
+        "kind": "중복 수식",
+        "match": "다시 재검토",
+        "hint": "다시 재검토하다 → 재검토하다",
+        "context": "다시 재검토한다."
+      }
+    ],
+    "prose": [
+      [
+        1,
+        "에 있어서 늦다. 다시 재검토한다.",
+        "에 있어서 늦다. 다시 재검토한다.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "에 있어서 늦다. 다시 재검토한다.",
+    "chat": true,
+    "max_len": 60,
+    "findings": [
+      {
+        "line": 1,
+        "level": "오류",
+        "kind": "일본어 투",
+        "match": "에 있어서",
+        "hint": "~에 있어서 → ~에서, ~에게",
+        "context": "에 있어서 늦다."
+      },
+      {
+        "line": 1,
+        "level": "오류",
+        "kind": "중복 수식",
+        "match": "다시 재검토",
+        "hint": "다시 재검토하다 → 재검토하다",
+        "context": "다시 재검토한다."
+      }
+    ],
+    "prose": [
+      [
+        1,
+        "에 있어서 늦다. 다시 재검토한다.",
+        "에 있어서 늦다. 다시 재검토한다.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "본문이다.\r\n작업을 진행한다.",
+    "chat": false,
+    "max_len": 60,
+    "findings": [
+      {
+        "line": 2,
+        "level": "오류",
+        "kind": "doksam 에서 자주 새는 표현",
+        "match": "을 진행한",
+        "hint": "~을 진행하다 → 구체 동사 (돌린다, 고친다, 옮긴다)",
+        "context": "작업을 진행한다."
+      }
+    ],
+    "prose": [
+      [
+        1,
+        "본문이다.",
+        "본문이다.",
+        false
+      ],
+      [
+        2,
+        "작업을 진행한다.",
+        "작업을 진행한다.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "본문이다.\r\n작업을 진행한다.",
+    "chat": true,
+    "max_len": 60,
+    "findings": [
+      {
+        "line": 2,
+        "level": "오류",
+        "kind": "doksam 에서 자주 새는 표현",
+        "match": "을 진행한",
+        "hint": "~을 진행하다 → 구체 동사 (돌린다, 고친다, 옮긴다)",
+        "context": "작업을 진행한다."
+      }
+    ],
+    "prose": [
+      [
+        1,
+        "본문이다.",
+        "본문이다.",
+        false
+      ],
+      [
+        2,
+        "작업을 진행한다.",
+        "작업을 진행한다.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "본문이다. 작업을 진행한다.",
+    "chat": false,
+    "max_len": 60,
+    "findings": [
+      {
+        "line": 2,
+        "level": "오류",
+        "kind": "doksam 에서 자주 새는 표현",
+        "match": "을 진행한",
+        "hint": "~을 진행하다 → 구체 동사 (돌린다, 고친다, 옮긴다)",
+        "context": "작업을 진행한다."
+      }
+    ],
+    "prose": [
+      [
+        1,
+        "본문이다.",
+        "본문이다.",
+        false
+      ],
+      [
+        2,
+        "작업을 진행한다.",
+        "작업을 진행한다.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "본문이다. 작업을 진행한다.",
+    "chat": true,
+    "max_len": 60,
+    "findings": [
+      {
+        "line": 2,
+        "level": "오류",
+        "kind": "doksam 에서 자주 새는 표현",
+        "match": "을 진행한",
+        "hint": "~을 진행하다 → 구체 동사 (돌린다, 고친다, 옮긴다)",
+        "context": "작업을 진행한다."
+      }
+    ],
+    "prose": [
+      [
+        1,
+        "본문이다.",
+        "본문이다.",
+        false
+      ],
+      [
+        2,
+        "작업을 진행한다.",
+        "작업을 진행한다.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "\n\n",
+    "chat": false,
+    "max_len": 60,
+    "findings": [],
+    "prose": []
+  },
+  {
+    "text": "\n\n",
+    "chat": true,
+    "max_len": 60,
+    "findings": [],
+    "prose": []
+  },
+  {
+    "text": "",
+    "chat": false,
+    "max_len": 60,
+    "findings": [],
+    "prose": []
+  },
+  {
+    "text": "",
+    "chat": true,
+    "max_len": 60,
+    "findings": [],
+    "prose": []
+  },
+  {
+    "text": "완벽하게 설계되었다.",
+    "chat": false,
+    "max_len": 60,
+    "findings": [
+      {
+        "line": 1,
+        "level": "오류",
+        "kind": "과장·모호",
+        "match": "완벽하게",
+        "hint": "완벽하게·완벽히 → (삭제하고 무엇을 하는지 쓴다)",
+        "context": "완벽하게 설계되었다."
+      }
+    ],
+    "prose": [
+      [
+        1,
+        "완벽하게 설계되었다.",
+        "완벽하게 설계되었다.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "완벽하게 설계되었다.",
+    "chat": true,
+    "max_len": 60,
+    "findings": [
+      {
+        "line": 1,
+        "level": "오류",
+        "kind": "과장·모호",
+        "match": "완벽하게",
+        "hint": "완벽하게·완벽히 → (삭제하고 무엇을 하는지 쓴다)",
+        "context": "완벽하게 설계되었다."
+      }
+    ],
+    "prose": [
+      [
+        1,
+        "완벽하게 설계되었다.",
+        "완벽하게 설계되었다.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "1. [x] **배포를 완료함.**",
+    "chat": false,
+    "max_len": 60,
+    "findings": [
+      {
+        "line": 1,
+        "level": "오류",
+        "kind": "명사형 종결 (문어체 산출물만)",
+        "match": "함.",
+        "hint": "~함 → ~한다",
+        "context": "배포를 완료함."
+      }
+    ],
+    "prose": [
+      [
+        1,
+        "1. [x] **배포를 완료함.**",
+        "배포를 완료함.",
+        false
+      ]
+    ]
+  },
+  {
+    "text": "1. [x] **배포를 완료함.**",
+    "chat": true,
+    "max_len": 60,
+    "findings": [],
+    "prose": [
+      [
+        1,
+        "1. [x] **배포를 완료함.**",
+        "배포를 완료함.",
+        false
+      ]
+    ]
+  }
+]

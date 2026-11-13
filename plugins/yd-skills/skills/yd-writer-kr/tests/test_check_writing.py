@@ -61,6 +61,20 @@ class BannedTable(unittest.TestCase):
         self.assertEqual(cw.split_row(r"| a | b | `x\|y` |"), ["a", "b", "`x|y`"])
 
 
+def skill_block(label):
+    """SKILL.md 에서 `<label>:` 다음 인용 블록 전체를 '> ' 를 떼어 돌려준다."""
+    lines = (SKILL / "SKILL.md").read_text(encoding="utf-8").splitlines()
+    start = next(i for i, line in enumerate(lines) if line.strip() == f"{label}:")
+    j = start + 1
+    while not lines[j].startswith(">"):
+        j += 1
+    out = []
+    while j < len(lines) and lines[j].startswith(">"):
+        out.append(lines[j][1:].lstrip(" "))
+        j += 1
+    return "\n".join(out)
+
+
 class SkillExamples(unittest.TestCase):
     """SKILL.md 의 나쁜 예는 잡히고, 고친 예는 통과해야 한다."""
 
@@ -81,6 +95,79 @@ class SkillExamples(unittest.TestCase):
     def test_chat_examples(self):
         self.assertTrue(errors(skill_examples("나쁜 채팅")[0], chat=True))
         self.assertEqual(errors(skill_examples("고친 채팅")[0], chat=True), [])
+
+
+class SummaryExamples(unittest.TestCase):
+    """SKILL.md 요약 예시: 나쁜 요약은 원문 대조에 걸리고, 고친 요약은 오류·경고 없이 통과한다 (#118)."""
+
+    def setUp(self):
+        self.source = skill_block("요약 원문")
+
+    def test_bad_summary_is_caught_against_source(self):
+        found = cw.check(skill_block("나쁜 요약 (세 줄)"), RULES, source=self.source, lines=3)
+        errors_found = {f.match for f in found if f.level == "오류"}
+        self.assertTrue({"2026-11-15", "#419", "완벽하게"} <= errors_found, found)
+        warnings = {f.match for f in found if f.level == "경고"}
+        self.assertTrue({"61", "5", "10"} <= warnings, found)
+
+    def test_fixed_summary_passes_against_source(self):
+        found = cw.check(skill_block("고친 요약 (세 줄)"), RULES, source=self.source, lines=3)
+        self.assertEqual(found, [])
+
+
+class SourceCheck(unittest.TestCase):
+    """--source 원문 대조와 --lines 줄 수 상한 (#118)."""
+
+    SOURCE = "2026-11-14 16:00 에 `closed_at` 인덱스를 추가한다(#418). 처리량은 하루 4,000건이다."
+
+    def test_copied_values_pass(self):
+        summary = "- 2026년 11월 14일 16:00 에 `closed_at` 인덱스를 추가한다(#418).\n- 하루 4000건이다."
+        self.assertEqual(cw.check(summary, RULES, source=self.SOURCE, lines=2), [])
+
+    def test_values_missing_from_source(self):
+        summary = "- 2026-11-15 17:00 에 `created_at` 인덱스를 추가한다(#419).\n- 하루 5,000건이다."
+        found = {(f.match, f.level) for f in cw.check(summary, RULES, source=self.SOURCE, lines=1)}
+        self.assertEqual(found, {("2026-11-15", "오류"), ("17:00", "오류"), ("created_at", "오류"),
+                                 ("#419", "오류"), ("5,000", "경고"), ("2줄", "오류")})
+
+    def test_without_source_no_fact_check(self):
+        self.assertEqual(cw.check("- #999 를 고쳤다.", RULES), [])
+
+    def test_cli_source_and_lines(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "원문.md"
+            source.write_text(self.SOURCE, encoding="utf-8")
+            summary = Path(tmp) / "요약.md"
+            summary.write_text("- #419 를 고쳤다.\n- 둘째 줄이다.\n", encoding="utf-8")
+            out = io.StringIO()
+            with redirect_stdout(out):
+                code = cw.main(["--source", str(source), "--lines", "1", str(summary)])
+            self.assertEqual(code, 1)
+            self.assertIn("'#419'", out.getvalue())
+            self.assertIn("'2줄'", out.getvalue())
+
+
+class NewBannedRules(unittest.TestCase):
+    """#118 에서 더한 번역투·군더더기 규칙. 잡을 문장과 잡지 않을 문장을 함께 둔다."""
+
+    CASES = [
+        ("설정을 다시 확인할 필요가 있다.", "필요가 있다", "설정을 다시 확인할 필요는 없다."),
+        ("이 작업은 관리자 권한을 필요로 한다.", "을 필요로 한", "이 작업에는 관리자 권한이 필요하다."),
+        ("가장 많이 쓰는 명령 중 하나다.", "가장 많이 쓰는 명령 중 하나", "가장 많이 쓰는 명령은 `ls` 다."),
+        ("경고에도 불구하고 배포했다.", "에도 불구하고", "경고가 있었는데도 배포했다."),
+        ("사용자로 하여금 다시 로그인하게 한다.", "로 하여금", "사용자가 다시 로그인하게 한다."),
+        ("키를 바꾸지 않으면 안 된다.", "지 않으면 안 된", "키를 바꿔야 한다."),
+        ("내일까지 고치도록 하겠습니다.", "도록 하겠", "내일까지 고치겠습니다."),
+        ("롤백하지 않을 수 없다.", "지 않을 수 없", "롤백해야 한다."),
+        ("백필을 수행한다.", "을 수행한", "백필을 돌린다."),
+        ("점검을 실시했다.", "을 실시했", "점검했다."),
+    ]
+
+    def test_new_rules_catch_and_spare(self):
+        for bad, match, good in self.CASES:
+            with self.subTest(bad=bad):
+                self.assertIn(match, [f.match for f in errors(bad)])
+                self.assertEqual(errors(good), [], good)
 
 
 class Checks(unittest.TestCase):
@@ -160,6 +247,12 @@ class UpstageGuards(unittest.TestCase):
         self.assertEqual(code, 2)
         self.assertIn("보내지 않는다", err)
 
+    def test_native_checker_failure_is_reported_without_network(self):
+        with mock.patch.object(self.up.check_writing, "load_rules", side_effect=RuntimeError("native checker unavailable")):
+            code, err = self.run_main("본문이다.", {"UPSTAGE_API_KEY": "x", "HOME": self.tmp})
+        self.assertEqual(code, 2)
+        self.assertIn("native checker unavailable", err)
+
     def test_missing_key(self):
         code, err = self.run_main("본문이다.", {"HOME": self.tmp})
         self.assertEqual(code, 2)
@@ -190,6 +283,92 @@ class UpstageGuards(unittest.TestCase):
         self.assertIn("에 있어서", calls[1])
         self.assertEqual(code, 0)
         self.assertEqual(out.getvalue().strip(), "백필 작업이 늦다.")
+
+
+class UpstageSummary(unittest.TestCase):
+    """upstage_summarize.py — 네트워크 없이 call 을 바꿔 끼워 흐름만 본다 (#118)."""
+
+    SOURCE = "2026-11-14 에 `closed_at` 인덱스를 추가한다(#418). 하루 4,000건씩 약 153일이 걸린다."
+
+    def setUp(self):
+        self.sm = load("upstage_summarize")
+        self.tmp = tempfile.mkdtemp()
+        self.addCleanup(lambda: __import__("shutil").rmtree(self.tmp))
+
+    def run_main(self, text, fake, args=(), env=None):
+        path = Path(self.tmp) / "src.md"
+        path.write_text(text, encoding="utf-8")
+        out, err = io.StringIO(), io.StringIO()
+        # env 를 주면 환경을 비운다(실제 키가 새어 들지 않게). 기본은 검사기 실행에 PATH 가 필요해 유지한다.
+        environ = mock.patch.dict(os.environ, env, clear=True) if env else mock.patch.dict(os.environ, {"UPSTAGE_API_KEY": "x"})
+        with environ, mock.patch.object(self.sm, "call", side_effect=fake), redirect_stdout(out), redirect_stderr(err):
+            code = self.sm.main([str(path), *args])
+        return code, out.getvalue().strip(), err.getvalue()
+
+    def test_summary_secret_is_not_sent(self):
+        code, _, err = self.run_main("토큰 ghp_abcdef 이다.", AssertionError("네트워크 호출 금지"))
+        self.assertEqual(code, 2)
+        self.assertIn("보내지 않는다", err)
+
+    def test_summary_missing_key(self):
+        code, _, err = self.run_main("본문이다.", AssertionError("네트워크 호출 금지"), env={"HOME": self.tmp})
+        self.assertEqual(code, 2)
+        self.assertIn("UPSTAGE_API_KEY", err)
+
+    def test_lines_must_be_positive(self):
+        code, _, err = self.run_main("본문이다.", AssertionError("네트워크 호출 금지"), args=["--lines", "0"])
+        self.assertEqual(code, 2)
+        self.assertIn("--lines", err)
+
+    def test_retry_on_source_errors_then_keep_first_lines(self):
+        calls = []
+
+        def fake(key, system, user, max_tokens):
+            calls.append((system, user))
+            if len(calls) == 1:
+                return "- 2026-11-15 에 인덱스를 추가한다(#419).\n- 둘째다.\n- 셋째다.\n- 넷째다."
+            return "- 2026-11-14 에 인덱스를 추가한다(#418).\n- 하루 4,000건씩 약 153일이 걸린다.\n- 셋째다.\n- 넷째다."
+
+        code, out, err = self.run_main(self.SOURCE, fake)
+        self.assertEqual(len(calls), 2, "오류가 남으면 한 번 더 고쳐야 한다")
+        self.assertIn("결론", calls[0][0], "줄 역할을 시스템 프롬프트에 넣는다")
+        self.assertIn("#419", calls[1][1])
+        self.assertIn(self.SOURCE, calls[1][1], "재시도에는 원문을 붙인다")
+        self.assertEqual(code, 0, err)
+        self.assertEqual(out.splitlines(), ["- 2026-11-14 에 인덱스를 추가한다(#418).",
+                                            "- 하루 4,000건씩 약 153일이 걸린다.", "- 셋째다."])
+
+    def test_empty_summary_retries_and_is_never_success(self):
+        replies = iter(["", ""])
+        code, out, err = self.run_main(self.SOURCE, lambda *args: next(replies))
+        self.assertEqual(code, 1)
+        self.assertIn("빈 요약", err)
+        self.assertEqual(out, "")
+        replies = iter(["", "- 인덱스를 추가한다."])
+        code, out, err = self.run_main(self.SOURCE, lambda *args: next(replies))
+        self.assertEqual(code, 0, err)
+        self.assertEqual(out, "- 인덱스를 추가한다.")
+
+    def test_long_source_is_summarized_in_parts(self):
+        paragraphs = ["첫째 단락이다. " * 4, "둘째 단락이다. " * 4, "셋째 단락이다. " * 4]
+        calls = []
+
+        def fake(key, system, user, max_tokens):
+            calls.append(user)
+            return "- 단락을 요약했다."
+
+        with mock.patch.object(self.sm, "CHUNK_CHARS", 60):
+            code, out, _ = self.run_main("\n\n".join(paragraphs), fake)
+        self.assertEqual(code, 0)
+        self.assertEqual(len(calls), 4, "부분 3번 + 합치기 1번")
+        self.assertIn("1/3", calls[0])
+        self.assertIn("부분별로 요약한", calls[3])
+
+    def test_chunks_keep_text_within_limit(self):
+        text = "\n\n".join(["가" * 30, "나" * 30, "다" * 150])
+        parts = self.sm.chunks(text, limit=70)
+        self.assertTrue(all(len(p) <= 70 for p in parts), [len(p) for p in parts])
+        self.assertEqual("".join(parts).replace("\n", ""), text.replace("\n", ""))
 
 
 if __name__ == "__main__":

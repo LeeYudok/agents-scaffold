@@ -141,16 +141,17 @@ def main(argv: list[str] | None = None) -> int:
         print("UPSTAGE_API_KEY 가 없다 (환경변수 또는 ~/workspace/.env.toml)", file=sys.stderr)
         return 2
 
-    rules = check_writing.load_rules()
-    system = SYSTEM.format(style=STYLE_CHAT if args.chat else doc_style(text), banned=banned_list(args.chat))
     budget = len(text) * 2 + 512
     try:
+        rules = check_writing.load_rules()
+        system = SYSTEM.format(style=STYLE_CHAT if args.chat else doc_style(text), banned=banned_list(args.chat))
         fixed = call(key, system, text, budget)
         left = [f for f in check_writing.check(fixed, rules, chat=args.chat) if f.level == "오류"]
         if left:
             retry = f"아래 글에 금지 표현이 남았다. 이것만 고치고 나머지는 그대로 둔다.\n\n{findings_text(left)}\n\n---\n{fixed}"
             fixed = call(key, system, retry, budget)
-    except (urllib.error.URLError, KeyError, json.JSONDecodeError) as e:
+        final = check_writing.check(fixed, rules, chat=args.chat)
+    except (urllib.error.URLError, KeyError, json.JSONDecodeError, RuntimeError, OSError) as e:
         print(f"Upstage 호출 실패: {e}", file=sys.stderr)
         return 2
 
@@ -158,7 +159,6 @@ def main(argv: list[str] | None = None) -> int:
         Path(args.output).write_text(fixed + "\n", encoding="utf-8")
     else:
         print(fixed)
-    final = check_writing.check(fixed, rules, chat=args.chat)
     errors = [f for f in final if f.level == "오류"]
     for f in final:
         print(f"검사 {f.line}: {f.level} [{f.kind}] '{f.match}' — {f.hint}", file=sys.stderr)
