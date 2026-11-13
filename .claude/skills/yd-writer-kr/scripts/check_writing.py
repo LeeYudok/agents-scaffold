@@ -78,9 +78,13 @@ def prose_lines(text: str):
     return (tuple(line) for line in _request("prose", text=text))
 
 
-def check(text: str, rules: list[Rule], chat: bool = False, max_len: int = 60) -> list[Finding]:
+def check(text: str, rules: list[Rule], chat: bool = False, max_len: int = 60,
+          source: str | None = None, lines: int = 0) -> list[Finding]:
+    """글 검사. source 를 주면 요약으로 보고 원문과 대조하고, lines 는 요약 줄 수 상한이다 (#118)."""
     specs = [dict(section=r.section, banned=r.banned, replacement=r.replacement, pattern=r.pattern.pattern) for r in rules]
-    return [Finding(**row) for row in _request("check", text=text, rules=specs, chat=chat, max_len=max_len)]
+    extra = {"source": source} if source is not None else {}
+    rows = _request("check", text=text, rules=specs, chat=chat, max_len=max_len, lines=lines, **extra)
+    return [Finding(**row) for row in rows]
 
 
 def main(argv: list[str] | None = None) -> int:

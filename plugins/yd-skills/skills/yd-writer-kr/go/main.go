@@ -1,4 +1,4 @@
-// check-writing 은 yd-writer-kr 의 한국어 글 검사기다 (#117).
+// check-writing 은 yd-writer-kr 의 한국어 글 검사기다 (#117). --source 는 요약을 원문과 대조한다 (#118).
 //
 // 표준 라이브러리만 쓴다. 외부 모듈이 없어 첫 빌드에 네트워크가 필요 없고 몇 초 안에 끝난다.
 // Rust 판(#115)은 release 빌드가 CPU 를 오래 점유해 Go 로 옮겼다.
@@ -12,6 +12,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -19,8 +20,11 @@ import (
 const version = "0.2.0"
 
 const usage = `yd-writer-kr 글 검사기
-Usage: check-writing [--chat] [--strict] [--max-len N] [--rules FILE] [--json] FILE...
-  -  표준 입력
+Usage: check-writing [--chat] [--strict] [--max-len N] [--rules FILE] [--json]
+                     [--source 원문] [--lines N] FILE...
+  -             표준 입력
+  --source F    요약을 원문 F 와 대조한다. 날짜·시각·이슈 번호·코드·URL 이 원문에 없으면 오류, 수치는 경고
+  --lines N     요약 줄 수(제목·빈 줄 제외)가 N 을 넘으면 오류
 종료 코드: 0 오류 없음, 1 글 검사 위반, 2 실행 불가`
 
 type options struct {
@@ -31,6 +35,8 @@ type options struct {
 	maxLen int
 	json   bool
 	bridge bool
+	source string
+	lines  int
 }
 
 type request struct {
@@ -40,6 +46,8 @@ type request struct {
 	MaxLen    *int        `json:"max_len"`
 	Rules     *[]RuleSpec `json:"rules"`
 	RulesPath *string     `json:"rules_path"`
+	Source    *string     `json:"source"`
+	Lines     int         `json:"lines"`
 }
 
 var errHelp = errors.New("help")
@@ -84,7 +92,7 @@ func parseArgs(args []string, stdout io.Writer) (*options, error) {
 	opts := &options{rules: defaultRules(), maxLen: 60}
 	var expanded []string
 	for _, arg := range args {
-		if key, value, ok := strings.Cut(arg, "="); ok && (key == "--max-len" || key == "--rules") {
+		if key, value, ok := strings.Cut(arg, "="); ok && (key == "--max-len" || key == "--rules" || key == "--source" || key == "--lines") {
 			expanded = append(expanded, key, value)
 		} else {
 			expanded = append(expanded, arg)
@@ -128,6 +136,20 @@ func parseArgs(args []string, stdout io.Writer) (*options, error) {
 			if opts.maxLen, err = positive("--max-len", value); err != nil {
 				return nil, err
 			}
+		case arg == "--source":
+			value, err := next(&i, "--source")
+			if err != nil {
+				return nil, err
+			}
+			opts.source = value
+		case arg == "--lines":
+			value, err := next(&i, "--lines")
+			if err != nil {
+				return nil, err
+			}
+			if opts.lines, err = positive("--lines", value); err != nil {
+				return nil, err
+			}
 		case arg == "--":
 			opts.paths = append(opts.paths, expanded[i+1:]...)
 			i = len(expanded)
@@ -141,6 +163,9 @@ func parseArgs(args []string, stdout io.Writer) (*options, error) {
 	}
 	if len(opts.paths) == 0 && !opts.bridge {
 		return nil, errors.New("검사할 파일을 지정한다. 표준 입력은 - 를 쓴다")
+	}
+	if opts.source == "-" && slices.Contains(opts.paths, "-") {
+		return nil, errors.New("원문과 요약을 모두 표준 입력으로 받을 수 없다")
 	}
 	return opts, nil
 }
@@ -200,7 +225,11 @@ func bridge(opts *options, stdin io.Reader) (any, error) {
 		if req.MaxLen != nil {
 			maxLen = *req.MaxLen
 		}
-		return engine.check(req.Text, req.Chat, maxLen), nil
+		var source *sourceFacts
+		if req.Source != nil {
+			source = newSourceFacts(*req.Source)
+		}
+		return withSummaryChecks(engine.check(req.Text, req.Chat, maxLen), req.Text, source, req.Lines), nil
 	}
 	return nil, fmt.Errorf("알 수 없는 요청: %s", req.Action)
 }
@@ -237,6 +266,14 @@ func report(opts *options, stdin io.Reader, stdout io.Writer) (int, error) {
 		Path     string    `json:"path"`
 		Findings []Finding `json:"findings"`
 	}
+	var source *sourceFacts
+	if opts.source != "" {
+		text, err := readInput(opts.source, stdin)
+		if err != nil {
+			return 0, err
+		}
+		source = newSourceFacts(text)
+	}
 	errorsCount, warnings := 0, 0
 	var reports []fileReport
 	for _, path := range opts.paths {
@@ -248,7 +285,7 @@ func report(opts *options, stdin io.Reader, stdout io.Writer) (int, error) {
 		if err != nil {
 			return 0, err
 		}
-		findings := engine.check(text, opts.chat, opts.maxLen)
+		findings := withSummaryChecks(engine.check(text, opts.chat, opts.maxLen), text, source, opts.lines)
 		for _, f := range findings {
 			if f.Level == levelError {
 				errorsCount++
