@@ -54,7 +54,7 @@ Workflow skills ship in English and Korean; `yd-*` specialist skills are written
 - [yd-nextjs-implementer](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-nextjs-implementer): implement those storyboards as a Next.js App Router or Vite + React app with traceability
 - [yd-blueprint](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-blueprint): project blueprint as JSONL data rendered by a Bun + Vite + React viewer
 - [yd-agents-yaml](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-agents-yaml): AGENTS.md + machine-readable AGENTS.yaml + validator for any repository
-- [yd-writer-kr](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-writer-kr): clear, evidence-backed Korean technical writing and editing
+- [yd-writer-kr](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-writer-kr): clear, evidence-backed Korean technical writing, editing and summarizing
 
 ## Skills (opt-in personal set, `--with-personal-skills`)
 

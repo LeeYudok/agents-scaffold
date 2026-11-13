@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# Rust 빌드는 사용자 캐시에 둔다. 스킬 배포본·플러그인 사본에 target/ 을 섞지 않는다 (#115).
+# Go 빌드는 사용자 캐시에 둔다. 스킬 배포본·플러그인 사본에 빌드 산출물을 섞지 않는다 (#115, #117).
+# 표준 라이브러리만 쓰므로 빌드에 네트워크가 필요 없다. GOTOOLCHAIN=local 은 go.mod 를 보고
+# 새 툴체인을 내려받는 것을 막는다. CGO_ENABLED=0 은 C 컴파일러 없이 정적 바이너리를 만든다.
 set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 if [ -n "${CHECK_WRITING_BIN:-}" ]; then
@@ -17,24 +19,32 @@ else
   echo 'check-writing: sha256sum 또는 shasum 이 필요하다' >&2
   exit 2
 fi
+# 지문에는 빌드 입력만 넣는다. _test.go 를 고쳐도 다시 빌드하지 않는다.
 fingerprint="$(
-  for source in "$root/rust/Cargo.toml" "$root/rust/Cargo.lock" "$root/rust/src/"*.rs; do
+  for source in "$root/go/go.mod" "$root/go/"*.go; do
+    case "$source" in *_test.go) continue ;; esac
     printf '%s\0' "${source##*/}"
     cat "$source"
     printf '\0'
   done | digest | cut -d ' ' -f1
 )"
-cache="${XDG_CACHE_HOME:-${HOME:?}/.cache}/yd-writer-kr/$(uname -s)-$(uname -m)/$fingerprint"
-binary="$cache/release/check-writing"
+cache="${XDG_CACHE_HOME:-${HOME:?}/.cache}/yd-writer-kr/go/$(uname -s)-$(uname -m)/$fingerprint"
+binary="$cache/check-writing"
 [ "$(uname -s | cut -c1-5)" != MINGW ] || binary="$binary.exe"
 if [ ! -x "$binary" ]; then
-  if ! command -v cargo >/dev/null 2>&1; then
-    echo 'check-writing: Rust 빌드에는 cargo 가 필요하다. 설치된 바이너리는 CHECK_WRITING_BIN 으로 지정한다' >&2
+  if ! command -v go >/dev/null 2>&1; then
+    echo 'check-writing: 빌드에는 Go 1.22 이상이 필요하다. 빌드한 바이너리는 CHECK_WRITING_BIN 으로 지정한다' >&2
     exit 2
   fi
-  if ! cargo build --quiet --release --locked --manifest-path "$root/rust/Cargo.toml" --target-dir "$cache"; then
-    echo 'check-writing: Rust 빌드 실패. 의존성을 준비하거나 CHECK_WRITING_BIN 을 지정한다' >&2
+  mkdir -p "$cache"
+  # 여러 프로세스가 함께 빌드해도 반쯤 쓴 파일을 실행하지 않게 임시 파일에 쓰고 옮긴다.
+  partial="$binary.$$.partial"
+  if ! (cd "$root/go" && GOTOOLCHAIN=local GOWORK=off GOFLAGS=-mod=readonly CGO_ENABLED=0 \
+      go build -trimpath -o "$partial" .); then
+    rm -f "$partial"
+    echo 'check-writing: Go 빌드 실패. Go 버전을 확인하거나 CHECK_WRITING_BIN 을 지정한다' >&2
     exit 2
   fi
+  mv -f "$partial" "$binary"
 fi
 exec "$binary" --rules "$root/references/banned-expressions.md" "$@"

@@ -19,18 +19,23 @@ jobs:
           echo "$RUNNER_TEMP/bats/node_modules/.bin" >> "$GITHUB_PATH"
           "$RUNNER_TEMP/bats/node_modules/.bin/bats" --version
 
-      # writer 검사기는 Rust 엔진을 사용한다 (#115). Python 호환 테스트도 같은 실행 파일을 쓴다.
-      - name: Build and check Rust writing checker
+      # writer 검사기는 Go 표준 라이브러리만 쓴다 (#117, Rust 판 #115 대체). Python 호환 테스트도 같은 실행 파일을 쓴다.
+      # go.mod 의 최소 버전(1.22)으로 돌려 하위 호환을 확인한다.
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache: false
+      - name: Build and check Go writing checker
+        working-directory: .claude/skills/yd-writer-kr/go
         env:
-          CARGO_TARGET_DIR: ${{ runner.temp }}/writer-rust
+          GOTOOLCHAIN: local
+          CGO_ENABLED: "0"
         run: |
-          rustup toolchain install 1.95.0 --profile minimal --component rustfmt --component clippy
-          manifest=.claude/skills/yd-writer-kr/rust/Cargo.toml
-          cargo +1.95.0 fmt --manifest-path "$manifest" --check
-          cargo +1.95.0 clippy --locked --manifest-path "$manifest" --all-targets -- -D warnings
-          cargo +1.95.0 test --locked --manifest-path "$manifest"
-          cargo +1.95.0 build --release --locked --manifest-path "$manifest"
-          echo "CHECK_WRITING_BIN=$CARGO_TARGET_DIR/release/check-writing" >> "$GITHUB_ENV"
+          test -z "$(gofmt -l .)" || { gofmt -l .; exit 1; }
+          go vet ./...
+          go test ./...
+          go build -trimpath -o "$RUNNER_TEMP/check-writing" .
+          echo "CHECK_WRITING_BIN=$RUNNER_TEMP/check-writing" >> "$GITHUB_ENV"
 
       - name: Run python unit tests
         run: python3 -m unittest discover -s tests -p 'test_*.py' -v

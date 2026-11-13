@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Rust 검사기의 Python 호환 계층 (#115).
+"""Go 검사기의 Python 호환 계층 (#115, #117).
 
 기존 python3 check_writing.py CLI와 Upstage의 import 인터페이스를 유지한다.
-글 전처리·규칙 파싱·위반 판정은 scripts/check-writing의 Rust 엔진이 담당한다.
+글 전처리·규칙 파싱·위반 판정은 scripts/check-writing의 Go 엔진이 담당한다.
 """
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 BANNED_MD = ROOT / "references" / "banned-expressions.md"
 NOUN_ENDING_SECTION = "명사형 종결"
-# Upstage의 기존 문체 집계 코드와 호환되는 인터페이스다. 분리는 Rust에 위임한다.
+# Upstage의 기존 문체 집계 코드와 호환되는 인터페이스다. 분리는 Go 엔진에 위임한다.
 
 
 def _command() -> list[str]:
@@ -34,7 +34,7 @@ def _request(action: str, **fields):
         capture_output=True, text=True,
     )
     if result.returncode:
-        raise RuntimeError(result.stderr.strip() or "Rust 검사기를 실행할 수 없다")
+        raise RuntimeError(result.stderr.strip() or "Go 검사기를 실행할 수 없다")
     return json.loads(result.stdout)
 
 
@@ -78,9 +78,13 @@ def prose_lines(text: str):
     return (tuple(line) for line in _request("prose", text=text))
 
 
-def check(text: str, rules: list[Rule], chat: bool = False, max_len: int = 60) -> list[Finding]:
+def check(text: str, rules: list[Rule], chat: bool = False, max_len: int = 60,
+          source: str | None = None, lines: int = 0) -> list[Finding]:
+    """글 검사. source 를 주면 요약으로 보고 원문과 대조하고, lines 는 요약 줄 수 상한이다 (#118)."""
     specs = [dict(section=r.section, banned=r.banned, replacement=r.replacement, pattern=r.pattern.pattern) for r in rules]
-    return [Finding(**row) for row in _request("check", text=text, rules=specs, chat=chat, max_len=max_len)]
+    extra = {"source": source} if source is not None else {}
+    rows = _request("check", text=text, rules=specs, chat=chat, max_len=max_len, lines=lines, **extra)
+    return [Finding(**row) for row in rows]
 
 
 def main(argv: list[str] | None = None) -> int:

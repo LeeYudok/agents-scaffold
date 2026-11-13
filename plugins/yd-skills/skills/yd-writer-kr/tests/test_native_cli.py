@@ -1,4 +1,4 @@
-"""Rust CLI/호환 계층의 종료 코드·배포 동작 (#115). 외부 API는 호출하지 않는다."""
+"""Go CLI/호환 계층의 종료 코드·배포 동작 (#115, #117). 외부 API는 호출하지 않는다."""
 import json
 import os
 from pathlib import Path
@@ -61,6 +61,10 @@ class NativeCli(unittest.TestCase):
             self.assertIn('정규식', bad.stderr)
             path.write_text('# no rules\n')
             self.assertEqual(native('--rules', str(path), '-', text='foo').returncode, 2)
+            path.write_text('## 시험\n| foo | bar | `fo(?!x)o` |\n')
+            middle = native('--rules', str(path), '-', text='foo')
+            self.assertEqual(middle.returncode, 2)
+            self.assertIn('맨 앞', middle.stderr, '전후방 탐색 위치 제약을 안내해야 한다')
 
     def test_multifile_json_and_unicode_line_numbers(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -78,10 +82,10 @@ class NativeCli(unittest.TestCase):
     def test_python_cli_matches_native_and_preserves_exit_code(self):
         import sys
         result = subprocess.run([sys.executable, str(SKILL / 'scripts' / 'check_writing.py'), '-'], input='배포를 완료함.', text=True, capture_output=True)
-        rust = native('-', text='배포를 완료함.')
-        self.assertEqual((result.returncode, result.stdout, result.stderr), (rust.returncode, rust.stdout, rust.stderr))
+        direct = native('-', text='배포를 완료함.')
+        self.assertEqual((result.returncode, result.stdout, result.stderr), (direct.returncode, direct.stdout, direct.stderr))
 
-    def test_launcher_can_use_native_binary_without_cargo(self):
+    def test_launcher_can_use_native_binary_without_go(self):
         binary = os.environ.get('CHECK_WRITING_BIN')
         if not binary:
             self.skipTest('CI 또는 CHECK_WRITING_BIN 을 지정한 검증에서 실행한다')
