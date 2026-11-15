@@ -20,3 +20,10 @@
 - [UI 한쪽 색 띠 금지](feedback_ui-no-accent-stripe.md) — 카드 가장자리 accent stripe 는 "AI 냄새". 상태는 테두리 색·배지 글자로
 - [로컬 HTML 렌더 QA](reference_local-html-render-qa.md) — 생성 HTML 은 headless Chrome 스크린샷으로 검수. 검증기 통과 ≠ 렌더 정상
 - [레포 영역 구분](project_layout-zones.md) — 설치 원본(`.claude`·`presets`)·레포 전용(`bin`·`scripts`·메모리)·플러그인 생성물(`plugins/`)·동봉 제품(`dotfiles/`). `.claude/` 에 레포 전용 파일을 두면 `is_repo_private()` 등록 (#80~#82)
+- [검색·설치 실측 함정](reference_repo-search-and-install-traps.md) — rg 는 .claude/ 를 건너뛴다(--hidden), 설치기·플러그인 생성기는 git ls-files 만 복사해 미스테이징 파일이 빠진다, zsh `$files` 무분할로 git add 실패, bats --jobs 는 GNU parallel 필요, 토큰은 출력 방식이 좌우
+- [cmux 안 claude 래퍼 함정](reference_cmux-claude-shim-traps.md) — cmux 는 PATH 첫 non-shim claude 를 실제로 보고 exec → 래퍼가 cmux shim 으로 되넘기면 무한 루프, 본문의 `exec claude` 류는 재진입 shim 판정, 플래그 수용 실측은 `--version` 말고 `-p ""` (#109)
+- [동봉 네이티브 도구는 Go](feedback_native-helper-go-not-rust.md) — 스킬에 넣어 사용자 머신에서 빌드하는 도구는 Rust 말고 Go 표준 라이브러리로. Rust release 빌드 CPU 부하로 사용자가 되돌림 (#117)
+- [네이버 블로그 게시 함정](reference_naver-blog-playwright.md) — 절차 원본은 옵트인 스킬 yd-naver-blog(#122). 카테고리 추가는 선택 카테고리 하위로, 새 카테고리는 저장 전 정렬 불가, 네이버 증권 API 저녁 시세는 시간외 값, doksamlabs 당일 행은 장전 값
+- [증시요약 게시 일정](user_naver-blog-market-schedule.md) — 평일 07:00·미장 개장 1시간 전(서머타임 21:30/그 외 22:30 KST), 블로그 diablodok "증시요약" 카테고리, 자동화 방식 미정 (개인)
+- [hwpx plan v2 함정](reference_hwpx-plan-v2-traps.md) — v2 표는 header+배열 rows, 키-값 rows 는 검증 통과 후 키 이름이 찍힌다, caption 무시, bullets style 은 government_report 전용, 샌드박스는 cwd 하나
+- [시크릿 마스킹을 sed 에 맡기지 않기](feedback_secret-redaction-bsd-sed.md) — BSD sed 는 \s 미지원이라 `KEY = "값"` 이 그대로 찍혔다(2026-11-14 네이버 API 시크릿 노출). 시크릿 파일은 키 이름만 뽑는다
