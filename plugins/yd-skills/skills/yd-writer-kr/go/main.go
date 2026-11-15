@@ -17,12 +17,14 @@ import (
 	"strings"
 )
 
-const version = "0.2.0"
+const version = "0.3.0"
 
 const usage = `yd-writer-kr 글 검사기
-Usage: check-writing [--chat] [--strict] [--max-len N] [--rules FILE] [--json]
+Usage: check-writing [--chat] [--prose] [--strict] [--max-len N] [--rules FILE] [--json]
                      [--source 원문] [--lines N] FILE...
   -             표준 입력
+  --chat        채팅 답장. 명사형 종결(~함·~임)을 보지 않는다
+  --prose       소설·에세이 같은 문학 산문. 피동형·중복 수식·일본어 투·영어 번역투만 보고 긴 문장 경고를 끈다
   --source F    요약을 원문 F 와 대조한다. 날짜·시각·이슈 번호·코드·URL 이 원문에 없으면 오류, 수치는 경고
   --lines N     요약 줄 수(제목·빈 줄 제외)가 N 을 넘으면 오류
 종료 코드: 0 오류 없음, 1 글 검사 위반, 2 실행 불가`
@@ -31,6 +33,7 @@ type options struct {
 	paths  []string
 	rules  string
 	chat   bool
+	prose  bool
 	strict bool
 	maxLen int
 	json   bool
@@ -39,10 +42,15 @@ type options struct {
 	lines  int
 }
 
+func (o *options) mode() CheckMode {
+	return CheckMode{Chat: o.chat, Prose: o.prose, MaxLen: o.maxLen}
+}
+
 type request struct {
 	Action    string      `json:"action"`
 	Text      string      `json:"text"`
 	Chat      bool        `json:"chat"`
+	Prose     bool        `json:"prose"`
 	MaxLen    *int        `json:"max_len"`
 	Rules     *[]RuleSpec `json:"rules"`
 	RulesPath *string     `json:"rules_path"`
@@ -116,6 +124,8 @@ func parseArgs(args []string, stdout io.Writer) (*options, error) {
 			return nil, errHelp
 		case arg == "--chat":
 			opts.chat = true
+		case arg == "--prose":
+			opts.prose = true
 		case arg == "--strict":
 			opts.strict = true
 		case arg == "--json":
@@ -229,7 +239,8 @@ func bridge(opts *options, stdin io.Reader) (any, error) {
 		if req.Source != nil {
 			source = newSourceFacts(*req.Source)
 		}
-		return withSummaryChecks(engine.check(req.Text, req.Chat, maxLen), req.Text, source, req.Lines), nil
+		mode := CheckMode{Chat: req.Chat, Prose: req.Prose, MaxLen: maxLen}
+		return withSummaryChecks(engine.check(req.Text, mode), req.Text, source, req.Lines), nil
 	}
 	return nil, fmt.Errorf("알 수 없는 요청: %s", req.Action)
 }
@@ -285,7 +296,7 @@ func report(opts *options, stdin io.Reader, stdout io.Writer) (int, error) {
 		if err != nil {
 			return 0, err
 		}
-		findings := withSummaryChecks(engine.check(text, opts.chat, opts.maxLen), text, source, opts.lines)
+		findings := withSummaryChecks(engine.check(text, opts.mode()), text, source, opts.lines)
 		for _, f := range findings {
 			if f.Level == levelError {
 				errorsCount++

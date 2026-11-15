@@ -79,11 +79,14 @@ def prose_lines(text: str):
 
 
 def check(text: str, rules: list[Rule], chat: bool = False, max_len: int = 60,
-          source: str | None = None, lines: int = 0) -> list[Finding]:
-    """글 검사. source 를 주면 요약으로 보고 원문과 대조하고, lines 는 요약 줄 수 상한이다 (#118)."""
+          source: str | None = None, lines: int = 0, prose: bool = False) -> list[Finding]:
+    """글 검사. source 를 주면 요약으로 보고 원문과 대조하고, lines 는 요약 줄 수 상한이다 (#118).
+
+    prose 는 소설·에세이 같은 문학 산문이다. 번역투·피동·중복 수식만 보고 긴 문장 경고를 끈다 (#126).
+    """
     specs = [dict(section=r.section, banned=r.banned, replacement=r.replacement, pattern=r.pattern.pattern) for r in rules]
     extra = {"source": source} if source is not None else {}
-    rows = _request("check", text=text, rules=specs, chat=chat, max_len=max_len, lines=lines, **extra)
+    rows = _request("check", text=text, rules=specs, chat=chat, prose=prose, max_len=max_len, lines=lines, **extra)
     return [Finding(**row) for row in rows]
 
 
