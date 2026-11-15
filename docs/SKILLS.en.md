@@ -73,3 +73,22 @@ Clone this repo and run `scripts/install-skills.sh`. It symlinks the skills into
 For Antigravity globals the two tools use different paths: `skills` 1.7.6 writes to
 `~/.gemini/antigravity-cli/skills`, while `install-skills.sh` uses `~/.gemini/config/skills`
 ([vercel-labs/skills#1483](https://github.com/vercel-labs/skills/pull/1483) would align them).
+
+## Skill quality checks
+
+- **Spec limits**: `tests/test_skill_contracts.py` checks `name` (equal to the directory, at most 64 characters),
+  `description` (at most 1024 characters), `SKILL.md` (under 500 lines) and `references/` (one level deep) in CI (#130).
+  Move detail into `references/` when a skill grows.
+- **Trigger evals**: every visible skill keeps `tests/triggers.json` with queries that should and should not trigger it
+  (#131). `tests/test_skill_triggers.py` checks the format in CI. The evaluation itself calls a model, so it is run by hand.
+
+```bash
+python3 scripts/dev/eval-skill-triggers.py --dry-run             # build the cases only (no model calls)
+python3 scripts/dev/eval-skill-triggers.py --skill yd-cve-check  # one skill
+python3 scripts/dev/eval-skill-triggers.py -j 4 --max-cost-usd 15
+```
+
+The runner bundles all visible skills into a temporary plugin and passes it to `claude plugin eval`
+(Claude Code 2.1.269 or later). Measured on 2026-11-15: about $0.07 per case; 187 of the 210 cases ran and 169 were
+correct (90%). Of the 18 misses, 17 were a skill that did not trigger, and `search-first` triggered on 1 of its 5 queries.
+After changing a description, rerun that skill with `--skill` and compare.

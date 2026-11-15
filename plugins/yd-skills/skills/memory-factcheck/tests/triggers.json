@@ -1,0 +1,46 @@
+[
+  {
+    "query": "메모리 정리해줘",
+    "should_trigger": true
+  },
+  {
+    "query": "에이전트 메모리 감사해줘. 낡은 거 있는지",
+    "should_trigger": true
+  },
+  {
+    "query": "라이브러리 교체했으니 메모리가 아직 맞는지 대조해줘",
+    "should_trigger": true
+  },
+  {
+    "query": "메모리 두 개가 서로 모순되는 것 같아. 확인해줘",
+    "should_trigger": true
+  },
+  {
+    "query": "audit my memory files",
+    "should_trigger": true
+  },
+  {
+    "query": "README 가 실제랑 맞는지 문서 현행화 해줘",
+    "should_trigger": false,
+    "expect": "docs-sync"
+  },
+  {
+    "query": "이 실수 스킬에 박아줘",
+    "should_trigger": false,
+    "expect": "skill-evolve"
+  },
+  {
+    "query": "이 사실 메모리에 저장해줘",
+    "should_trigger": false
+  },
+  {
+    "query": "메모리 누수 나는 Go 코드 봐줘",
+    "should_trigger": false,
+    "expect": "yd-go-expert"
+  },
+  {
+    "query": "세션 넘기게 상태 남겨",
+    "should_trigger": false,
+    "expect": "handoff"
+  }
+]

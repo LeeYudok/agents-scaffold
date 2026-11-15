@@ -1,0 +1,47 @@
+[
+  {
+    "query": "이 화면설계서랑 Business Rules 대로 웹앱 구현해줘",
+    "should_trigger": true
+  },
+  {
+    "query": "Storyboard 를 Next.js App Router 로 만들어줘",
+    "should_trigger": true
+  },
+  {
+    "query": "기획 문서 기준으로 Vite + React SPA 구현해줘",
+    "should_trigger": true
+  },
+  {
+    "query": "화면 ID 추적표 만들면서 구현 시작하자",
+    "should_trigger": true
+  },
+  {
+    "query": "화면설계서의 핵심 User Flow 가 구현한 웹앱에서 동작하는지 검증해줘",
+    "should_trigger": true
+  },
+  {
+    "query": "화면설계서 만들어줘",
+    "should_trigger": false,
+    "expect": "yd-mobile-web-planner"
+  },
+  {
+    "query": "이 버튼 컴포넌트 리팩터링해줘",
+    "should_trigger": false,
+    "expect": "yd-react-expert"
+  },
+  {
+    "query": "Vite 설정만 고쳐줘",
+    "should_trigger": false,
+    "expect": "yd-frontend-build"
+  },
+  {
+    "query": "타입 경계 점검해줘",
+    "should_trigger": false,
+    "expect": "yd-typescript"
+  },
+  {
+    "query": "청사진 화면 띄워줘",
+    "should_trigger": false,
+    "expect": "yd-blueprint"
+  }
+]

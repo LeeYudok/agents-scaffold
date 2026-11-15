@@ -1,0 +1,45 @@
+[
+  {
+    "query": "프로젝트 상태 한눈에 보여줘",
+    "should_trigger": true
+  },
+  {
+    "query": "작업 시작 전에 상태 점검해줘",
+    "should_trigger": true
+  },
+  {
+    "query": "지금 브랜치랑 최근 이슈 현황 알려줘",
+    "should_trigger": true
+  },
+  {
+    "query": "status 스킬로 현황 점검해줘",
+    "should_trigger": true
+  },
+  {
+    "query": "빌드·테스트·git 상태 한 번에 조회해줘",
+    "should_trigger": true
+  },
+  {
+    "query": "여기서 끊자. 상태 남겨",
+    "should_trigger": false,
+    "expect": "handoff"
+  },
+  {
+    "query": "이 PR 리뷰해줘",
+    "should_trigger": false,
+    "expect": "review"
+  },
+  {
+    "query": "청사진으로 구현 현황표 만들어줘",
+    "should_trigger": false,
+    "expect": "yd-blueprint"
+  },
+  {
+    "query": "테스트만 돌려줘",
+    "should_trigger": false
+  },
+  {
+    "query": "git log 보여줘",
+    "should_trigger": false
+  }
+]

@@ -1,0 +1,45 @@
+[
+  {
+    "query": "이 저장소에 AGENTS.yaml 만들어줘",
+    "should_trigger": true
+  },
+  {
+    "query": "ews 처럼 에이전트 지침 세팅해줘",
+    "should_trigger": true
+  },
+  {
+    "query": "포트 바꿨으니 AGENTS.yaml 고쳐줘",
+    "should_trigger": true
+  },
+  {
+    "query": "에이전트 지침 정리해줘. 사람용이랑 기계용으로",
+    "should_trigger": true
+  },
+  {
+    "query": "check-agents-yaml.sh 검증기까지 세팅해줘",
+    "should_trigger": true
+  },
+  {
+    "query": "README 문서 현행화 해줘",
+    "should_trigger": false,
+    "expect": "docs-sync"
+  },
+  {
+    "query": "docker-compose yaml 문법 오류 고쳐줘",
+    "should_trigger": false
+  },
+  {
+    "query": "청사진 화면 띄워줘",
+    "should_trigger": false,
+    "expect": "yd-blueprint"
+  },
+  {
+    "query": "스킬 고쳐줘",
+    "should_trigger": false,
+    "expect": "skill-evolve"
+  },
+  {
+    "query": "GitHub Actions 워크플로 yaml 만들어줘",
+    "should_trigger": false
+  }
+]

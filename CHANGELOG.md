@@ -19,6 +19,8 @@ First tagged release. Everything before it shipped from `main` without a version
 - `yd-writer-kr` checker: paragraph and list rules (repeated sentence endings, sentence-initial conjunctions, a colon
   opening a list, bound nouns, bold-prefixed list items), a third severity `참고` that never changes the exit code, and an
   optional `--morph` pass that runs only when kiwipiepy is installed.
+- Trigger queries (`tests/triggers.json`) for the 21 visible skills and `scripts/dev/eval-skill-triggers.py`, a manual runner
+  that scores them with `claude plugin eval`.
 
 ### Changed
 - `--update` replays the recorded choices (or infers them for older installs) and compares against that result,
