@@ -161,6 +161,10 @@ class NewBannedRules(unittest.TestCase):
         ("롤백하지 않을 수 없다.", "지 않을 수 없", "롤백해야 한다."),
         ("백필을 수행한다.", "을 수행한", "백필을 돌린다."),
         ("점검을 실시했다.", "을 실시했", "점검했다."),
+        # 2026-11-15 번역 소설 검사에서 놓친 꼴 (#126). 예문은 직접 썼다.
+        ("문이 저절로 닫혀졌다.", "닫혀졌", "문이 저절로 닫혔다."),
+        ("배포를 실수로 해 버렸다.", "해 버렸", "배포를 실수로 했다."),
+        ("공동생활에 있어서는 인내가 필요하다.", "에 있어서", "공동생활에는 인내가 필요하다."),
     ]
 
     def test_new_rules_catch_and_spare(self):
@@ -214,6 +218,26 @@ class Checks(unittest.TestCase):
 
     def test_frontmatter_skipped(self):
         self.assertEqual(errors("---\ndescription: 에 있어서\n---\n본문이다."), [])
+
+    def test_eitsseo_existential_clause_passes(self):
+        # "있다 + -어서" 는 번역투가 아니다 (#126)
+        for text in ("깃대가 마당 한가운데에 있어서 잘 보인다.", "설정이 서버에 있어서 권한이 필요하다.",
+                     "비밀번호가 코드에 있어서는 안 된다.", "전화기가 복도에 있어서, 모두 그곳을 쓴다."):
+            with self.subTest(text=text):
+                self.assertEqual(errors(text), [])
+
+    def test_prose_mode_keeps_translationese_only(self):
+        narration = "그 말에 그는 웃지 않을 수 없었다. " + "가" * 70 + "다."
+        self.assertTrue(cw.check(narration, RULES))
+        self.assertEqual(cw.check(narration, RULES, prose=True), [])
+        found = cw.check("그 일에 대해 오래 생각했다.", RULES, prose=True)
+        self.assertEqual([(f.kind, f.match) for f in found], [("영어 번역투", "에 대해")])
+        with tempfile.NamedTemporaryFile("w", suffix=".md", delete=False, encoding="utf-8") as f:
+            f.write(narration)
+        self.addCleanup(os.unlink, f.name)
+        with redirect_stdout(io.StringIO()):
+            self.assertEqual(cw.main(["--prose", "--strict", f.name]), 0)
+            self.assertEqual(cw.main([f.name]), 1)
 
 
 class SelfCheck(unittest.TestCase):
