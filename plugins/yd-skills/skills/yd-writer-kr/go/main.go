@@ -17,7 +17,7 @@ import (
 	"strings"
 )
 
-const version = "0.3.0"
+const version = "0.4.0"
 
 const usage = `yd-writer-kr 글 검사기
 Usage: check-writing [--chat] [--prose] [--strict] [--max-len N] [--rules FILE] [--json]
@@ -27,6 +27,7 @@ Usage: check-writing [--chat] [--prose] [--strict] [--max-len N] [--rules FILE] 
   --prose       소설·에세이 같은 문학 산문. 피동형·중복 수식·일본어 투·영어 번역투만 보고 긴 문장 경고를 끈다
   --source F    요약을 원문 F 와 대조한다. 날짜·시각·이슈 번호·코드·URL 이 원문에 없으면 오류, 수치는 경고
   --lines N     요약 줄 수(제목·빈 줄 제외)가 N 을 넘으면 오류
+심각도: 오류 → 종료 코드 1, 경고 → --strict 일 때만 1, 참고 → 종료 코드에 영향 없음
 종료 코드: 0 오류 없음, 1 글 검사 위반, 2 실행 불가`
 
 type options struct {
@@ -285,7 +286,7 @@ func report(opts *options, stdin io.Reader, stdout io.Writer) (int, error) {
 		}
 		source = newSourceFacts(text)
 	}
-	errorsCount, warnings := 0, 0
+	errorsCount, warnings, notes := 0, 0, 0
 	var reports []fileReport
 	for _, path := range opts.paths {
 		name := path
@@ -298,9 +299,12 @@ func report(opts *options, stdin io.Reader, stdout io.Writer) (int, error) {
 		}
 		findings := withSummaryChecks(engine.check(text, opts.mode()), text, source, opts.lines)
 		for _, f := range findings {
-			if f.Level == levelError {
+			switch f.Level {
+			case levelError:
 				errorsCount++
-			} else {
+			case levelNote:
+				notes++
+			default:
 				warnings++
 			}
 			if !opts.json {
@@ -310,7 +314,7 @@ func report(opts *options, stdin io.Reader, stdout io.Writer) (int, error) {
 		reports = append(reports, fileReport{name, findings})
 	}
 	if opts.json {
-		data, err := marshal(map[string]any{"files": reports, "errors": errorsCount, "warnings": warnings})
+		data, err := marshal(map[string]any{"files": reports, "errors": errorsCount, "warnings": warnings, "notes": notes})
 		if err != nil {
 			return 0, err
 		}
@@ -319,6 +323,9 @@ func report(opts *options, stdin io.Reader, stdout io.Writer) (int, error) {
 		suffix := ""
 		if opts.strict {
 			suffix = " (--strict)"
+		}
+		if notes > 0 {
+			suffix = fmt.Sprintf(", 참고 %d건", notes) + suffix
 		}
 		fmt.Fprintf(stdout, "오류 %d건, 경고 %d건%s\n", errorsCount, warnings, suffix)
 	}

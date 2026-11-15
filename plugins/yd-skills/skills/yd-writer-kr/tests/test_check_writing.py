@@ -165,6 +165,9 @@ class NewBannedRules(unittest.TestCase):
         ("문이 저절로 닫혀졌다.", "닫혀졌", "문이 저절로 닫혔다."),
         ("배포를 실수로 해 버렸다.", "해 버렸", "배포를 실수로 했다."),
         ("공동생활에 있어서는 인내가 필요하다.", "에 있어서", "공동생활에는 인내가 필요하다."),
+        # 근거 없는 평가어 (#132)
+        ("혁신적인 구조로 바꿨다.", "혁신적", "구조를 모듈 3개로 나눴다."),
+        ("획기적으로 빨라졌다.", "획기적", "응답 시간이 2초에서 0.4초로 줄었다."),
     ]
 
     def test_new_rules_catch_and_spare(self):
@@ -238,6 +241,85 @@ class Checks(unittest.TestCase):
         with redirect_stdout(io.StringIO()):
             self.assertEqual(cw.main(["--prose", "--strict", f.name]), 0)
             self.assertEqual(cw.main([f.name]), 1)
+
+
+class StructureRules(unittest.TestCase):
+    """문단·목록 단위 검사와 심각도 3단계 (#132). 예문은 직접 썼다."""
+
+    def levels(self, text, **kw):
+        return {f.kind: f.level for f in cw.check(text, RULES, max_len=200, **kw)}
+
+    def test_repeated_ending_warns_in_a_paragraph_only(self):
+        text = "설정을 바꿀 수 있다. 값을 읽을 수 있다. 결과를 볼 수 있다."
+        self.assertEqual(self.levels(text).get("종결 반복"), "경고")
+        self.assertNotIn("종결 반복", self.levels("설정을 바꿀 수 있다. 값을 읽을 수 있다.\n\n결과를 볼 수 있다."))
+        self.assertNotIn("종결 반복", self.levels("- 설정을 바꿀 수 있다.\n- 값을 읽을 수 있다.\n- 결과를 볼 수 있다."))
+        self.assertNotIn("종결 반복", self.levels("바꿀 수 있어요. 읽을 수 있어요. 볼 수 있어요.", chat=True))
+
+    def test_sentence_initial_conjunctions_warn_at_three(self):
+        self.assertEqual(self.levels("또한 캐시를 지운다. 그리고 서버를 띄운다. 따라서 로그를 본다.").get("문두 접속사"), "경고")
+        self.assertNotIn("문두 접속사", self.levels("또한 캐시를 지운다. 그리고 서버를 띄운다. 로그를 본다."))
+
+    def test_colon_before_a_list_warns_only_after_a_predicate(self):
+        self.assertEqual(self.levels("다음 순서로 진행합니다:\n\n- 이슈를 등록한다").get("콜론 뒤 목록"), "경고")
+        self.assertNotIn("콜론 뒤 목록", self.levels("진행 순서:\n\n- 이슈를 등록한다"))
+        self.assertNotIn("콜론 뒤 목록", self.levels("```\n다음 순서로 진행합니다:\n- 이슈를 등록한다\n```"))
+
+    def test_bound_nouns_are_a_note(self):
+        self.assertEqual(self.levels("확인할 수 있는 것은 값이 다르다는 점이다.").get("의존명사"), "참고")
+        self.assertNotIn("의존명사", self.levels("점수를 수정한 것이다."))
+
+    def test_notes_never_change_the_exit_code(self):
+        text = "- **속도**: 빠르다\n- **안정성**: 높다\n- **비용**: 낮다\n"
+        self.assertEqual(self.levels(text), {"굵은 머리말 목록": "참고"})
+        with tempfile.NamedTemporaryFile("w", suffix=".md", delete=False, encoding="utf-8") as f:
+            f.write(text)
+        self.addCleanup(os.unlink, f.name)
+        out = io.StringIO()
+        with redirect_stdout(out):
+            self.assertEqual(cw.main(["--strict", f.name]), 0)
+        self.assertIn("참고 1건", out.getvalue())
+
+    def test_prose_mode_skips_structure_rules(self):
+        text = "그는 웃고 있었다. 나도 웃고 있었다. 모두 웃고 있었다."
+        self.assertEqual(cw.check(text, RULES, prose=True), [])
+
+
+class MorphOption(unittest.TestCase):
+    """--morph 는 kiwipiepy 가 있을 때만 돈다 (#132). CI 는 kiwipiepy 를 깔지 않는다."""
+
+    TEXT = "확인할 건 값이 다르다는 게 문제라는 걸 아는지다.\n"
+
+    def run_morph(self, modules):
+        with tempfile.NamedTemporaryFile("w", suffix=".md", delete=False, encoding="utf-8") as f:
+            f.write(self.TEXT)
+        self.addCleanup(os.unlink, f.name)
+        out, err = io.StringIO(), io.StringIO()
+        with mock.patch.dict(sys.modules, modules), redirect_stdout(out), redirect_stderr(err):
+            code = cw.main(["--morph", "--strict", f.name])
+        return code, out.getvalue(), err.getvalue()
+
+    def test_morph_is_skipped_without_kiwipiepy(self):
+        code, out, err = self.run_morph({"kiwipiepy": None})
+        self.assertEqual(code, 0)
+        self.assertIn("kiwipiepy 가 없어 형태소 검사를 건너뛴다", err)
+        self.assertNotIn("형태소 참고", out)
+
+    def test_morph_counts_contracted_bound_nouns(self):
+        from types import ModuleType, SimpleNamespace
+
+        class FakeKiwi:
+            def split_into_sents(self, text, return_tokens=False):
+                forms = ["건", "것", "거"] if "건" in text else []  # kiwipiepy 가 준말을 푼 꼴
+                tokens = [SimpleNamespace(form=form, tag="NNB") for form in forms]
+                return [SimpleNamespace(text=text, tokens=tokens)]
+
+        fake = ModuleType("kiwipiepy")
+        fake.Kiwi = FakeKiwi
+        code, out, _err = self.run_morph({"kiwipiepy": fake})
+        self.assertEqual(code, 0, "참고는 --strict 에서도 종료 코드를 바꾸지 않는다")
+        self.assertIn("[의존명사(형태소)] '3회'", out)
+        self.assertIn("형태소 참고 1건", out)
 
 
 class SelfCheck(unittest.TestCase):

@@ -16,6 +16,9 @@ First tagged release. Everything before it shipped from `main` without a version
 - `SECURITY.md`, `CODE_OF_CONDUCT.md`, a release workflow that publishes the offline bundle with `SHA256SUMS`.
 - Contract tests for the agentskills limits: `name` equals the directory and is at most 64 characters, `description` is at most
   1024 characters, `SKILL.md` stays under 500 lines. `handoff` and `yd-mobile-web-planner` moved their templates to `references/`.
+- `yd-writer-kr` checker: paragraph and list rules (repeated sentence endings, sentence-initial conjunctions, a colon
+  opening a list, bound nouns, bold-prefixed list items), a third severity `참고` that never changes the exit code, and an
+  optional `--morph` pass that runs only when kiwipiepy is installed.
 
 ### Changed
 - `--update` replays the recorded choices (or infers them for older installs) and compares against that result,

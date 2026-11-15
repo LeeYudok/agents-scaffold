@@ -68,7 +68,8 @@ func newEngine(specs []RuleSpec) (*Engine, error) {
 
 func (e *Engine) check(text string, mode CheckMode) []Finding {
 	out := []Finding{}
-	for _, line := range proseLines(text) {
+	lines := proseLines(text)
+	for _, line := range lines {
 		for _, found := range emoji.FindAllString(line.Raw, -1) {
 			out = append(out, newFinding(line.No, levelError, "이모지", found, "Phosphor 아이콘이나 글로 바꾼다", line.Clean))
 		}
@@ -94,7 +95,17 @@ func (e *Engine) check(text string, mode CheckMode) []Finding {
 				out = append(out, newFinding(line.No, levelWarning, "긴 문장", fmt.Sprintf("%d자", n),
 					fmt.Sprintf("%d자 이하로 나눈다", mode.MaxLen), sentence))
 			}
+			if n := boundNouns(sentence); !line.Heading && !mode.Prose && n >= boundNounMax {
+				out = append(out, newFinding(line.No, levelNote, "의존명사", fmt.Sprintf("%d회", n),
+					"것·수·점이 한 문장에 몰렸다. 가리키는 대상을 명사로 쓰거나 서술어로 푼다", sentence))
+			}
 		}
+	}
+	if !mode.Prose {
+		// 문단·목록 단위 검사는 실용문 기준이라 산문 모드에서는 건너뛴다. 줄 순서를 지키려고 안정 정렬한다.
+		out = append(out, paragraphFindings(lines, mode)...)
+		out = append(out, listFindings(text)...)
+		slices.SortStableFunc(out, func(a, b Finding) int { return a.Line - b.Line })
 	}
 	return out
 }
