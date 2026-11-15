@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: "End a session and hand it off to the next one — if collaboration infrastructure (GitHub, GitLab, Forgejo, Jira, Plane, Slack) exists, write resumable state as the body of an issue in that tracker and hand over a single issue URL — in that case do not create HANDOFF.md in the repo (no pointer file either). Only in a folder with no tracker, write the full content into HANDOFF.md itself and finish with that file. At a boundary where the work issue was closed, leave a single comment on the next work issue instead of a dedicated issue. The receiving side reads the issue URL or file, checks the recorded claims against reality, then continues the work, and when done leaves the result and closes. Use when context hits 40-50%, when told \"let's stop here / save state / pick up / resume\" (Korean: \"여기서 끊자 / 상태 남겨 / 이어받아 / 재개\"), or when a handoff URL or file path is pasted in."
+description: "Use when ending a session to hand it off to the next one, or when picking up a handoff someone left. Use when context hits 40-50%, when told \"let's stop here / save state / pick up / resume\" (Korean: \"여기서 끊자 / 상태 남겨 / 이어받아 / 재개\"), or when a handoff issue URL or HANDOFF.md path is pasted in. With collaboration infrastructure (GitHub, GitLab, Forgejo, Jira, Plane, Slack) the handoff goes into a tracker issue; only a folder with no tracker gets HANDOFF.md."
 ---
 
 # Session handoff
@@ -390,89 +390,8 @@ If two or more open handoffs pile up, it's unclear which is current — keep **o
 
 ## Templates
 
-### Body — scratch file → issue/comment body, or `HANDOFF.md` without infrastructure
-
-````markdown
-# HANDOFF — <one-line summary>
-
-- Issue: <URL>  (or "none — this file is the source of truth" if there's no tracker)
-- Written: <YYYY-MM-DD HH:MM:SS.mmm>
-- Work issue/PR: #<N> · #<M> (<status>)
-- Branch: `<branch>`  ·  Worktree: `<path>` (or "none — create one")
-- HEAD: `<sha>` (<pushed or not>)
-
-## Where things stand
-
-<Facts about what's done / not done. No "mostly working.">
-
-## Verification results (raw)
-
-```
-<Last run of tests/build/gates, verbatim. "Not run" if it wasn't.>
-```
-
-## Currently running
-
-| Target | Address | How it was started |
-| --- | --- | --- |
-| <local server> | <http://127.0.0.1:port> | <command + working directory> |
-| <tunnel/proxy> | <127.0.0.1:port> | <script path, pid> |
-
-## Open decisions
-
-<What a human needs to decide. Include the options and the consequence of each.>
-
-## Next command to run
-
-```bash
-# Copy-pasteable, including the working directory
-cd <absolute-path>
-<command>
-```
-
-## Gotchas
-
-<What tripped things up this time — tool/platform quirks, signals easy to misread, etc.>
-
-## Machine-readable state
-
-```yaml
-schema_version: "1"
-meta:
-  written_at: "<YYYY-MM-DD HH:MM:SS.mmm>"
-  location: "<absolute path of the working directory>"
-  issue: "<issue URL or none>"
-  branch: "<branch>"
-  head: "<sha>"
-  read_first: ["<file to read first>"]
-state:
-  <services, ports, revisions needed to resume — project-specific keys>
-last_verification:
-  - check: "<what was checked>"
-    result: "<raw result, or not run if it wasn't>"
-    verified_after_fix: false
-next_steps:
-  - id: "1"
-    do: "<what to do>"
-    check: "<command to check against>"
-    needs_user_confirmation: false
-open_decisions: []
-cautions: []
-```
-````
-
-### Old pointer format — for reading and deciding on deletion (not created from 2026-10-06 on)
-
-```markdown
-# HANDOFF (pointer)
-
-The session handoff body lives in a <tracker> issue. This file only points to its location.
-
-- Current handoff: <issue URL>
-- Written: <YYYY-MM-DD HH:MM:SS.mmm>
-- Summary: <one line — what's blocked and what it's waiting on>
-- Full list: <URL of the handoff-labeled issue list>
-```
+The templates for the body, `HANDOFF.yaml` and the pointer file are in [references/template.md](references/template.md).
+Read that file before writing the body and fill it in as is.
 
 ---
 

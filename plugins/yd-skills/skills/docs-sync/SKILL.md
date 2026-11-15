@@ -1,6 +1,6 @@
 ---
 name: docs-sync
-description: 문서 현행화(docs-sync) — 코드·구성이 바뀐 뒤(디렉터리 삭제·이동, 포트·명령·의존성 변경, 큰 리팩터링 머지) 에이전트 지침(AGENTS.md·CLAUDE.md)·README·규칙(.claude/rules)·스킬·docs 가 실제와 어긋난 곳을 찾아 고친다. 지워지거나 옮겨진 경로를 가리키는 참조를 스크립트로 뽑고, 현행 지시와 시점 기록을 갈라 현행만 고친다. "문서 현행화", "문서 최신화", "README 갱신", "문서 드리프트 확인", "docs-sync", "남은 참조 정리" 요청과, 동작·경로·버전·수치를 바꾼 PR 을 올리기 직전에 쓴다. 문서의 주장을 실제와 대조하고 다국어 짝 파일을 함께 고친다. 메모리 감사는 memory-factcheck, AGENTS.yaml 세팅은 yd-agents-yaml 이 맡는다.
+description: 문서 현행화(docs-sync) — 코드·구성이 바뀐 뒤(디렉터리 삭제·이동, 포트·명령·의존성 변경, 큰 리팩터링 머지) 에이전트 지침(AGENTS.md·CLAUDE.md)·README·규칙(.claude/rules)·스킬·docs 가 실제와 어긋났을 때 사용한다. "문서 현행화", "문서 최신화", "README 갱신", "문서 드리프트 확인", "docs-sync", "남은 참조 정리" 요청과, 동작·경로·버전·수치를 바꾼 PR 을 올리기 직전에 쓴다. 메모리 감사는 memory-factcheck, AGENTS.yaml 세팅은 yd-agents-yaml 이 맡는다.
 ---
 
 # docs-sync

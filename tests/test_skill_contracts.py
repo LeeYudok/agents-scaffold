@@ -5,8 +5,9 @@
 2. 문서가 가리키는 스크립트·참조 경로가 실제로 있는가 — 경로가 틀리면 에이전트는 오류 없이 그 단계를 건너뛴다.
 3. 이미 있는 스킬을 "(추가 예정)" 으로 적어 두지 않았는가.
 4. 스킬 description(트리거)끼리 판별 어휘가 겹치지 않는가 — 겹치면 한 요청에 여러 스킬이 뜬다.
+5. agentskills 규격 한도 — name·description 길이, SKILL.md 500줄 미만, references 한 단계(#130).
 
-대상: .claude/skills/*(기본)·presets/skills/personal/.claude/skills/*(옵트인). 영어 오버레이는 대상이 아니다.
+대상: .claude/skills/*(기본)·presets/skills/personal/.claude/skills/*(옵트인). 영어 오버레이는 5번(규격 한도)만 대상이다.
 """
 import ast
 import itertools
@@ -251,6 +252,74 @@ class TestTriggerBoundaries(unittest.TestCase):
         planted["fake-a"] = "고래 상어 해파리 산호초 를 다룰 때 사용한다. 심해는 fake-b 를 쓴다."
         planted["fake-b"] = "고래 상어 해파리 산호초 조사를 할 때 사용한다."
         self.assertFalse([(a, b) for _, a, b, _ in overlaps(planted) if {a, b} == {"fake-a", "fake-b"}])
+
+
+EN_ROOT = REPO / "presets" / "lang" / "en" / "base" / ".claude" / "skills"
+NAME_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
+NAME_MAX, DESCRIPTION_MAX, SKILL_MD_MAX_LINES = 64, 1024, 500
+
+
+def spec_dirs():
+    """규격 한도는 설치되는 모든 SKILL.md 가 대상이다 — 영어 오버레이도 그대로 배포된다."""
+    en = sorted(d for d in EN_ROOT.iterdir() if (d / "SKILL.md").is_file()) if EN_ROOT.is_dir() else []
+    return skill_dirs() + en
+
+
+def frontmatter_value(skill: Path, key: str) -> str:
+    """frontmatter 의 한 줄 값(따옴표 제거). 값이 여러 줄이면 이어 붙인다."""
+    front = (skill / "SKILL.md").read_text(encoding="utf-8").split("---\n", 2)[1]
+    match = re.search(rf"^{key}:[ \t]*(.*(?:\n[ \t]+.*)*)", front, re.M)
+    if not match:
+        return ""
+    value = " ".join(match.group(1).split())
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+        value = value[1:-1].replace('\\"', '"')
+    return value.lstrip(">|- ").strip()
+
+
+class TestSpecLimits(unittest.TestCase):
+    """agentskills 규격 한도(#130): name·description 길이, SKILL.md 줄 수, references 깊이."""
+
+    def test_names_match_directory_and_fit_the_spec(self):
+        bad = []
+        for skill in spec_dirs():
+            name = frontmatter_value(skill, "name")
+            if name != skill.name or not NAME_RE.match(name) or len(name) > NAME_MAX:
+                bad.append(f"{skill.relative_to(REPO)}: name={name!r}")
+        self.assertEqual(bad, [], "name 은 폴더명과 같고 소문자·숫자·하이픈 64자 이하여야 한다:\n" + "\n".join(bad))
+
+    def test_descriptions_fit_the_spec(self):
+        bad = []
+        for skill in spec_dirs():
+            size = len(frontmatter_value(skill, "description"))
+            if not 1 <= size <= DESCRIPTION_MAX:
+                bad.append(f"{skill.relative_to(REPO)}: {size}자")
+        self.assertEqual(bad, [], f"description 은 1~{DESCRIPTION_MAX}자여야 한다:\n" + "\n".join(bad))
+
+    def test_skill_md_stays_under_500_lines(self):
+        bad = []
+        for skill in spec_dirs():
+            lines = len((skill / "SKILL.md").read_text(encoding="utf-8").splitlines())
+            if lines >= SKILL_MD_MAX_LINES:
+                bad.append(f"{skill.relative_to(REPO)}: {lines}줄")
+        self.assertEqual(bad, [], "SKILL.md 가 500줄 이상이다 — 상세 내용을 references/ 로 옮긴다:\n" + "\n".join(bad))
+
+    def test_references_are_one_level_deep(self):
+        nested = [str(d.relative_to(REPO)) for skill in spec_dirs()
+                  for d in (skill / "references").glob("*/") if d.is_dir()]
+        self.assertEqual(nested, [], "references/ 아래에 하위 폴더를 두지 않는다:\n" + "\n".join(nested))
+
+    def test_frontmatter_value_reads_quoted_and_folded_values(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            skill = Path(tmp) / "demo"
+            skill.mkdir()
+            (skill / "SKILL.md").write_text(
+                '---\nname: demo\ndescription: "a \\"b\\" c"\nmetadata:\n  internal: true\n---\n', encoding="utf-8")
+            self.assertEqual(frontmatter_value(skill, "name"), "demo")
+            self.assertEqual(frontmatter_value(skill, "description"), 'a "b" c')
+            (skill / "SKILL.md").write_text("---\nname: demo\ndescription: >-\n  one\n  two\n---\n", encoding="utf-8")
+            self.assertEqual(frontmatter_value(skill, "description"), "one two")
 
 
 if __name__ == "__main__":

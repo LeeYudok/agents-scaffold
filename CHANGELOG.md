@@ -14,6 +14,8 @@ First tagged release. Everything before it shipped from `main` without a version
 - An install summary with next steps (fill in `AGENTS.md`, check the gate, commit).
 - `AGENTS_SCAFFOLD_REF` accepts tags; `AGENTS_SCAFFOLD_SHA256` verifies the downloaded template.
 - `SECURITY.md`, `CODE_OF_CONDUCT.md`, a release workflow that publishes the offline bundle with `SHA256SUMS`.
+- Contract tests for the agentskills limits: `name` equals the directory and is at most 64 characters, `description` is at most
+  1024 characters, `SKILL.md` stays under 500 lines. `handoff` and `yd-mobile-web-planner` moved their templates to `references/`.
 
 ### Changed
 - `--update` replays the recorded choices (or infers them for older installs) and compares against that result,
