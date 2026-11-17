@@ -335,8 +335,12 @@ class TestSpecLimits(unittest.TestCase):
         self.assertEqual(bad, [], "SKILL.md 가 500줄 이상이다 — 상세 내용을 references/ 로 옮긴다:\n" + "\n".join(bad))
 
     def test_references_are_one_level_deep(self):
+        # 도구가 이름으로 골라 읽는 자료 폴더만 예외로 둔다. 문서를 폴더로 한 단계 더 나누는 것은 막는다.
+        # yd-writer-kr 의 profiles/ 는 검사기가 --profile 이름으로 찾는 표기 프로필이다(#137).
+        data_dirs = {"yd-writer-kr/references/profiles"}
         nested = [str(d.relative_to(REPO)) for skill in spec_dirs()
-                  for d in (skill / "references").glob("*/") if d.is_dir()]
+                  for d in (skill / "references").glob("*/")
+                  if d.is_dir() and f"{skill.name}/references/{d.name}" not in data_dirs]
         self.assertEqual(nested, [], "references/ 아래에 하위 폴더를 두지 않는다:\n" + "\n".join(nested))
 
     def test_frontmatter_value_reads_quoted_and_folded_values(self):
