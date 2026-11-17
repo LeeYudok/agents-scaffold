@@ -883,5 +883,4 @@ files:
   tests/test_check_writing.py: 검사기, 교정, 요약 테스트
   tests/test_native_cli.py: Go 바이너리 명령행 테스트
   tests/test_writing_tasks.py: 쓰기 과제와 채점기 테스트
-  tests/triggers.json: 스킬을 불러야 하는 요청과 부르지 말아야 하는 요청의 예 (스킬 트리거 검사용)
   tests/test_flow_map.py: 지도 검증기 테스트
