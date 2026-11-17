@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Upstage Solar 로 한국어 글을 요약한다 (stdlib only, #118).
+"""Upstage Solar 나 OpenAI 호환 사내 엔드포인트로 한국어 글을 요약한다 (stdlib only, #118).
 
 흐름: Solar 요약 → check-writing 글 검사와 원문 대조(--source) → 오류나 긴 줄이 남으면 그 목록과
 원문을 붙여 한 번 더 고친다 → 그래도 줄 수가 넘치면 앞에서 --lines 줄만 남긴다 → 최종 검사 결과와
@@ -13,7 +13,8 @@
     python3 upstage_summarize.py 원문.md --lines 1        # 한 줄 요약
     python3 upstage_summarize.py 원문.md --chat -o 요약.txt
 
-키·시크릿 차단·금지 표현 프롬프트는 upstage_proofread.py 와 같다. 본문이 외부 API 로 나간다.
+키·시크릿 차단·금지 표현 프롬프트는 upstage_proofread.py 와 같다. 본문이 API 로 나간다.
+WRITER_LLM_BASE_URL·WRITER_LLM_MODEL 을 지정하면 Upstage 대신 그 엔드포인트를 부른다 (#137).
 
 exit 0 = 요약 완료(검사 오류 0), 1 = 요약했지만 검사 오류가 남음, 2 = 실행 불가
 """
@@ -150,23 +151,24 @@ def summarize(key: str, system: str, text: str, lines: int, budget: int) -> tupl
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description="Upstage Solar 한국어 요약 + 원문 대조 검사")
+    ap = argparse.ArgumentParser(description="한국어 요약 + 원문 대조 검사 (Upstage Solar 또는 WRITER_LLM_BASE_URL)")
     ap.add_argument("path", help="요약할 원문 파일. - 는 표준 입력")
     ap.add_argument("-o", "--output", help="요약을 쓸 파일 (기본: 표준 출력)")
     ap.add_argument("--lines", type=int, default=3, help="요약 줄 수 상한 (기본 3)")
     ap.add_argument("--chat", action="store_true", help="채팅 대화체")
+    ap.add_argument("--profile", default="", help="표기 프로필 (기본 doksam)")
     args = ap.parse_args(argv)
     if args.lines < 1:
         print("--lines 는 1 이상이어야 한다", file=sys.stderr)
         return 2
 
-    text = sys.stdin.read() if args.path == "-" else Path(args.path).read_text(encoding="utf-8")
+    text = sys.stdin.read() if args.path == "-" else Path(args.path).read_text(encoding="utf-8-sig")
     if proof.SECRET.search(text):
         print("시크릿처럼 보이는 문자열이 있어 외부 API 로 보내지 않는다", file=sys.stderr)
         return 2
-    key = proof.api_key()
-    if not key:
-        print("UPSTAGE_API_KEY 가 없다 (환경변수 또는 ~/workspace/.env.toml)", file=sys.stderr)
+    key, reason = proof.ready()
+    if reason:
+        print(reason, file=sys.stderr)
         return 2
 
     budget = max(proof.MIN_MAX_TOKENS, args.lines * 300 + 512)
@@ -177,7 +179,8 @@ def main(argv: list[str] | None = None) -> int:
                                banned=proof.banned_list(args.chat))
 
         def checked(summary: str):
-            found = check_writing.check(summary, rules, chat=args.chat, max_len=MAX_LEN, source=text, lines=args.lines)
+            found = check_writing.check(summary, rules, chat=args.chat, max_len=MAX_LEN, source=text, lines=args.lines,
+                                        profile=args.profile)
             if not summary.strip():
                 found.append(check_writing.Finding(1, "오류", "요약 내용", "빈 요약", "원문에서 요약문을 작성한다", ""))
             return found, [f for f in found if f.level == "오류"]
@@ -195,7 +198,7 @@ def main(argv: list[str] | None = None) -> int:
             summary = keep_lines(summary, args.lines)
             final, errors = checked(summary)
     except (urllib.error.URLError, KeyError, json.JSONDecodeError, RuntimeError, OSError) as e:
-        print(f"Upstage 호출 실패: {e}", file=sys.stderr)
+        print(f"LLM 호출 실패: {e}", file=sys.stderr)
         return 2
 
     if args.output:
@@ -209,4 +212,5 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
+    check_writing.utf8_stdio()
     sys.exit(main())

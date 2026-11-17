@@ -2,6 +2,7 @@
 
 import importlib.util
 import io
+import json
 import os
 import re
 import sys
@@ -475,6 +476,152 @@ class UpstageSummary(unittest.TestCase):
         parts = self.sm.chunks(text, limit=70)
         self.assertTrue(all(len(p) <= 70 for p in parts), [len(p) for p in parts])
         self.assertEqual("".join(parts).replace("\n", ""), text.replace("\n", ""))
+
+
+class Expansion(unittest.TestCase):
+    """#137 — 참고 문헌 확장 규칙, 경고·횟수 옵션, 표기 프로필."""
+
+    CASES = json.loads((SKILL / "tests" / "fixtures" / "expansion-cases.json").read_text(encoding="utf-8"))
+
+    @staticmethod
+    def by_banned(text, banned, **kw):
+        return [f for f in cw.check(text, RULES, **kw) if f.hint.startswith(banned + " → ")]
+
+    def section(self, name):
+        """name 절의 규칙마다 잡을 예문과 오탐 예문이 있고, 그대로 판정되는지 본다."""
+        banned = {r.banned for r in RULES if r.section == name}
+        cases = [c for c in self.CASES if c["banned"] in banned]
+        self.assertTrue(banned, f"금지 표현 표에 {name} 절이 없다")
+        self.assertEqual({c["banned"] for c in cases}, banned, "규칙마다 예문이 있어야 한다")
+        for case in cases:
+            self.assertTrue(case["flagged"] and case["passed"], case["banned"])
+            for text in case["flagged"]:
+                with self.subTest(banned=case["banned"], flagged=text):
+                    self.assertEqual([(f.match, f.level) for f in self.by_banned(text, case["banned"])],
+                                     [(case["want"], case["level"])])
+                    self.assertEqual(self.by_banned(text, case["banned"], prose=True), [], "산문 모드는 보지 않는다")
+            for text in case["passed"]:
+                with self.subTest(banned=case["banned"], passed=text):
+                    self.assertEqual(self.by_banned(text, case["banned"]), [])
+
+    def test_redundant_pairs_catch_and_spare(self):
+        self.section("겹말")
+
+    def test_stacked_particles_catch_and_spare(self):
+        self.section("조사 겹침·일본어 투 보강")
+
+    def test_stretched_predicates_catch_and_spare(self):
+        self.section("늘어지는 서술어")
+
+    def test_filler_words_catch_and_spare(self):
+        self.section("군더더기 낱말")
+
+    def test_overuse_counts_catch_and_spare(self):
+        self.section("남용 (한 문장 안의 횟수)")
+
+    def test_every_case_belongs_to_an_expansion_rule(self):
+        banned = {r.banned for r in RULES}
+        self.assertEqual([c["banned"] for c in self.CASES if c["banned"] not in banned], [])
+
+    def test_count_rule_fires_once_per_sentence_as_warning(self):
+        rule = next(r for r in RULES if r.banned == "한 문장에 ~의 3개 이상")
+        self.assertEqual((rule.level, rule.min_count), ("경고", 3))
+        found = cw.check("서버의 설정의 기본값의 출처의 기록을 찾는다. 서버의 설정을 찾는다.", RULES)
+        self.assertEqual([(f.match, f.level) for f in found], [("4회", "경고")])
+        with tempfile.NamedTemporaryFile("w", suffix=".md", encoding="utf-8") as f:
+            f.write("여러 파일들을 지웠다.\n")
+            f.flush()
+            with redirect_stdout(io.StringIO()):
+                self.assertEqual(cw.main([f.name]), 0, "경고만 있으면 종료 코드는 0 이다")
+                self.assertEqual(cw.main(["--strict", f.name]), 1)
+
+    def test_default_profile_is_doksam(self):
+        text = "배포 시각은 2026-11-17T09:00:00+09:00 이다."
+        default = cw.check(text, RULES)
+        self.assertEqual([f.kind for f in default], ["시각 표기"])
+        self.assertEqual(cw.check(text, RULES, profile="doksam"), default)
+
+    def test_profile_switches_checks_and_adds_rules(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "acme.md"
+            path.write_text("## 표기 검사\n| 검사 | 수준 | 안내 |\n|---|---|---|\n| 시각 표기 | 끔 | - |\n\n"
+                            "## acme 표현\n| 금지 | 대체 | 검사 |\n|---|---|---|\n| 금일 | 오늘 | `금일` |\n", encoding="utf-8")
+            found = cw.check("금일 2026-11-17T09:00:00+09:00 에 배포한다.", RULES, profile=str(path))
+            self.assertEqual([(f.kind, f.match) for f in found], [("acme 표현", "금일")])
+            with self.assertRaises(RuntimeError):
+                cw.check("본문이다.", RULES, profile=str(Path(tmp) / "missing.md"))
+
+
+class CustomEndpoint(unittest.TestCase):
+    """WRITER_LLM_BASE_URL — 폐쇄망의 OpenAI 호환 엔드포인트 (#137). 실제 네트워크는 쓰지 않는다."""
+
+    BASE = "http://llm.internal:8000/v1"
+
+    def setUp(self):
+        self.up = load("upstage_proofread")
+        self.sm = load("upstage_summarize")
+        self.tmp = tempfile.mkdtemp()
+        self.addCleanup(lambda: __import__("shutil").rmtree(self.tmp))
+        self.requests = []
+
+    def urlopen(self, req, timeout=None):
+        self.requests.append(req)
+        return io.BytesIO(json.dumps({"choices": [{"message": {"content": "백필 작업이 늦다."}}]}).encode())
+
+    def run_main(self, module, text, extra, args=()):
+        path = Path(self.tmp) / "in.md"
+        path.write_text(text, encoding="utf-8")
+        env = {k: v for k, v in os.environ.items() if not k.startswith("WRITER_LLM") and k != "UPSTAGE_API_KEY"}
+        out, err = io.StringIO(), io.StringIO()
+        with mock.patch.dict(os.environ, env | {"HOME": self.tmp} | extra, clear=True), \
+                mock.patch.object(self.up.urllib.request, "urlopen", side_effect=self.urlopen), \
+                redirect_stdout(out), redirect_stderr(err):
+            code = module.main([str(path), *args])
+        return code, out.getvalue().strip(), err.getvalue()
+
+    def test_base_url_replaces_upstage(self):
+        code, out, err = self.run_main(self.up, "백필 작업이 늦어지고 있는 중이다.",
+                                       {"WRITER_LLM_BASE_URL": self.BASE + "/", "WRITER_LLM_MODEL": "qwen", "UPSTAGE_API_KEY": "upstage-key"})
+        self.assertEqual((code, out), (0, "백필 작업이 늦다."), err)
+        self.assertTrue(self.requests)
+        for req in self.requests:
+            self.assertEqual(req.full_url, self.BASE + "/chat/completions")
+            self.assertNotIn("upstage", req.full_url)
+            self.assertIsNone(req.get_header("Authorization"), "Upstage 키를 다른 호스트로 보내지 않는다")
+            self.assertEqual(json.loads(req.data)["model"], "qwen")
+
+    def test_base_url_sends_its_own_key(self):
+        code, _, err = self.run_main(self.up, "백필 작업이 늦다.",
+                                     {"WRITER_LLM_BASE_URL": self.BASE, "WRITER_LLM_MODEL": "qwen", "WRITER_LLM_API_KEY": "internal"})
+        self.assertEqual(code, 0, err)
+        self.assertEqual(self.requests[0].get_header("Authorization"), "Bearer internal")
+
+    def test_base_url_requires_model(self):
+        code, _, err = self.run_main(self.up, "본문이다.", {"WRITER_LLM_BASE_URL": self.BASE})
+        self.assertEqual(code, 2)
+        self.assertIn("WRITER_LLM_MODEL", err)
+        self.assertEqual(self.requests, [])
+
+    def test_secret_is_blocked_on_custom_endpoint(self):
+        for module in (self.up, self.sm):
+            code, _, err = self.run_main(module, "토큰은 glpat-abcdefghijklmnop 이다.",
+                                         {"WRITER_LLM_BASE_URL": self.BASE, "WRITER_LLM_MODEL": "qwen"})
+            self.assertEqual(code, 2)
+            self.assertIn("보내지 않는다", err)
+        self.assertEqual(self.requests, [])
+
+    def test_default_endpoint_is_upstage(self):
+        code, _, err = self.run_main(self.up, "백필 작업이 늦다.", {"UPSTAGE_API_KEY": "upstage-key"})
+        self.assertEqual(code, 0, err)
+        self.assertEqual(self.requests[0].full_url, self.up.API)
+        self.assertEqual(self.requests[0].get_header("Authorization"), "Bearer upstage-key")
+        self.assertEqual(json.loads(self.requests[0].data)["model"], self.up.MODEL)
+
+    def test_summary_uses_custom_endpoint_without_key(self):
+        code, out, err = self.run_main(self.sm, "백필 작업이 늦다. 원인은 쿼리다.",
+                                       {"WRITER_LLM_BASE_URL": self.BASE, "WRITER_LLM_MODEL": "qwen"}, args=["--lines", "1"])
+        self.assertEqual((code, out), (0, "백필 작업이 늦다."), err)
+        self.assertEqual({req.full_url for req in self.requests}, {self.BASE + "/chat/completions"})
 
 
 if __name__ == "__main__":

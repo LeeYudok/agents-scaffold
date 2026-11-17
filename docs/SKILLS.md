@@ -9,7 +9,7 @@
 |---|---|---|---|
 | `--lang ko` (기본) | 24 | 19 | 워크플로 스킬(한국어)과 `yd-*` 전문 스킬 14개, 그 에이전트 12개 |
 | `--lang en` | 10 | 7 | 워크플로 스킬(영어) |
-| 어느 쪽이든 `--with-personal-skills` | +9 | +4 | 메인테이너 환경 전용 `yd-*` 스킬 |
+| 어느 쪽이든 `--with-personal-skills` | +11 | +4 | 메인테이너 환경 전용 스킬 |
 
 **워크플로 스킬 10개**: `review`, `status`, `search-first`, `security-precheck`, `docs-sync`, `handoff`,
 `memory-factcheck`, `skill-evolve`, `grill-me`, 그리고 `example-skill`. `example-skill` 은 스킬을 새로 만들 때
@@ -24,7 +24,7 @@
 |---|---|
 | `--with-yd-skills` | 영어 설치에 `yd-*` 14개와 그 에이전트를 넣는다 |
 | `--no-yd-skills` | 한국어 설치에서 뺀다 |
-| `--with-personal-skills` | 옵트인 10개도 설치한다. 특정 GitLab·호스트·ui.doksam.com·FinGuard 를 전제하므로 다른 환경에서는 쓰기 어렵다 |
+| `--with-personal-skills` | 옵트인 11개도 설치한다. 특정 GitLab·호스트·ui.doksam.com·FinGuard·Hugo 블로그를 전제하므로 다른 환경에서는 쓰기 어렵다 |
 
 선택은 `.claude/.scaffold.json` 에 기록되고, `--update` 는 같은 묶음을 유지한다. 스킬별 표와 작성 규약은
 [.claude/skills/README.md](../.claude/skills/README.md) 에 있다.
@@ -43,7 +43,7 @@ codex plugin marketplace add LeeYudok/agents-scaffold && codex plugin add yd-ski
 ```
 
 - `yd-skills` 에는 `yd-*` 14개와 `handoff`·`docs-sync`·`memory-factcheck`·`skill-evolve` 가, `yd-skills-personal`
-  에는 옵트인 10개가 들어 있다. 둘 다 한국어다.
+  에는 옵트인 11개가 들어 있다. 둘 다 한국어다.
 - Claude Code 에서는 플러그인 스킬 이름 앞에 플러그인 이름이 붙는다(`yd-skills:yd-pg-expert`).
 - 플러그인은 스킬만 싣는다. Claude Code 플러그인은 rules 를, Codex 플러그인은 서브에이전트를 싣지 못하므로
   프로젝트 규칙·훅·서브에이전트는 설치 스크립트가 맡는다.

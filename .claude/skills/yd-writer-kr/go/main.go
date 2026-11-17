@@ -15,32 +15,36 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 )
 
 const version = "0.4.0"
 
 const usage = `yd-writer-kr 글 검사기
-Usage: check-writing [--chat] [--prose] [--strict] [--max-len N] [--rules FILE] [--json]
+Usage: check-writing [--chat] [--prose] [--strict] [--max-len N] [--rules FILE] [--profile 이름] [--json]
                      [--source 원문] [--lines N] FILE...
   -             표준 입력
   --chat        채팅 답장. 명사형 종결(~함·~임)을 보지 않는다
   --prose       소설·에세이 같은 문학 산문. 피동형·중복 수식·일본어 투·영어 번역투만 보고 긴 문장 경고를 끈다
   --source F    요약을 원문 F 와 대조한다. 날짜·시각·이슈 번호·코드·URL 이 원문에 없으면 오류, 수치는 경고
   --lines N     요약 줄 수(제목·빈 줄 제외)가 N 을 넘으면 오류
+  --rules F     금지 표현 표. 지정하지 않으면 환경변수 CHECK_WRITING_RULES, 실행 파일 위쪽의 references/ 순으로 찾는다
+  --profile P   표기 프로필. 규칙 파일 옆 profiles/P.md 를 읽는다(.md 경로도 된다). 기본 doksam
 심각도: 오류 → 종료 코드 1, 경고 → --strict 일 때만 1, 참고 → 종료 코드에 영향 없음
 종료 코드: 0 오류 없음, 1 글 검사 위반, 2 실행 불가`
 
 type options struct {
-	paths  []string
-	rules  string
-	chat   bool
-	prose  bool
-	strict bool
-	maxLen int
-	json   bool
-	bridge bool
-	source string
-	lines  int
+	paths   []string
+	rules   string
+	chat    bool
+	prose   bool
+	strict  bool
+	maxLen  int
+	json    bool
+	bridge  bool
+	source  string
+	lines   int
+	profile string
 }
 
 func (o *options) mode() CheckMode {
@@ -57,6 +61,7 @@ type request struct {
 	RulesPath *string     `json:"rules_path"`
 	Source    *string     `json:"source"`
 	Lines     int         `json:"lines"`
+	Profile   string      `json:"profile"`
 }
 
 var errHelp = errors.New("help")
@@ -72,6 +77,10 @@ func marshal(value any) ([]byte, error) {
 }
 
 func defaultRules() string {
+	// 윈도우처럼 bash 래퍼 없이 실행 파일을 바로 부를 때 규칙 파일 위치를 알려 준다 (#137).
+	if path := os.Getenv("CHECK_WRITING_RULES"); path != "" {
+		return path
+	}
 	if executable, err := os.Executable(); err == nil {
 		dir := filepath.Dir(executable)
 		for range 2 {
@@ -101,7 +110,7 @@ func parseArgs(args []string, stdout io.Writer) (*options, error) {
 	opts := &options{rules: defaultRules(), maxLen: 60}
 	var expanded []string
 	for _, arg := range args {
-		if key, value, ok := strings.Cut(arg, "="); ok && (key == "--max-len" || key == "--rules" || key == "--source" || key == "--lines") {
+		if key, value, ok := strings.Cut(arg, "="); ok && (key == "--max-len" || key == "--rules" || key == "--source" || key == "--lines" || key == "--profile") {
 			expanded = append(expanded, key, value)
 		} else {
 			expanded = append(expanded, arg)
@@ -139,6 +148,12 @@ func parseArgs(args []string, stdout io.Writer) (*options, error) {
 				return nil, err
 			}
 			opts.rules = value
+		case arg == "--profile":
+			value, err := next(&i, "--profile")
+			if err != nil {
+				return nil, err
+			}
+			opts.profile = value
 		case arg == "--max-len":
 			value, err := next(&i, "--max-len")
 			if err != nil {
@@ -187,13 +202,21 @@ func readInput(path string, stdin io.Reader) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("표준 입력: %w", err)
 		}
-		return string(data), nil
+		return decode("표준 입력", data)
 	}
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return "", fmt.Errorf("%s: 파일을 읽을 수 없다: %w", path, err)
 	}
-	return string(data), nil
+	return decode(path, data)
+}
+
+// decode 는 윈도우 편집기가 붙이는 BOM 을 떼고, UTF-8 이 아닌 글(CP949 등)은 엉뚱한 결과 대신 실행 불가로 알린다 (#137).
+func decode(name string, data []byte) (string, error) {
+	if !utf8.Valid(data) {
+		return "", fmt.Errorf("%s: UTF-8 이 아니다. UTF-8 로 저장한 뒤 다시 검사한다", name)
+	}
+	return strings.TrimPrefix(string(data), "\uFEFF"), nil
 }
 
 func bridge(opts *options, stdin io.Reader) (any, error) {
@@ -214,18 +237,21 @@ func bridge(opts *options, stdin io.Reader) (any, error) {
 		return splitRow(req.Text), nil
 	case "rules", "check":
 		var specs []RuleSpec
+		path := opts.rules
+		if req.RulesPath != nil {
+			path = *req.RulesPath
+		}
 		if req.Rules != nil {
 			specs = *req.Rules
-		} else {
-			path := opts.rules
-			if req.RulesPath != nil {
-				path = *req.RulesPath
-			}
-			if specs, err = loadRules(path); err != nil {
-				return nil, err
-			}
+		} else if specs, err = loadRules(path); err != nil {
+			return nil, err
 		}
-		engine, err := newEngine(specs)
+		// 프로필의 금지 표현은 check 가 잇는다. rules 요청은 금지 표현 표만 돌려줘 호출부가 되돌려 보내도 겹치지 않는다.
+		profile, err := loadProfile(req.Profile, path)
+		if err != nil {
+			return nil, err
+		}
+		engine, err := newProfileEngine(specs, profile)
 		if err != nil {
 			return nil, err
 		}
@@ -270,7 +296,11 @@ func report(opts *options, stdin io.Reader, stdout io.Writer) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	engine, err := newEngine(specs)
+	profile, err := loadProfile(opts.profile, opts.rules)
+	if err != nil {
+		return 0, err
+	}
+	engine, err := newProfileEngine(specs, profile)
 	if err != nil {
 		return 0, err
 	}

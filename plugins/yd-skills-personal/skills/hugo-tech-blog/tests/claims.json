@@ -1,0 +1,14 @@
+{
+  "claims": [
+    {"id": "VALID-CHAPTER", "kind": "정상", "rule": "Chapter files are named `NN-topic.md` and begin with TOML frontmatter.", "test": "scripts/check_hugo_content/checker_test.go::TestValidChapterPasses"},
+    {"id": "FRONTMATTER-CLOSE", "kind": "실패", "rule": "A chapter is invalid when the closing TOML frontmatter delimiter `+++` is missing.", "test": "scripts/check_hugo_content/checker_test.go::TestMissingClosingFrontmatterFails"},
+    {"id": "TITLE-NUMBER", "kind": "실패", "rule": "A chapter is invalid when its filename chapter number and `title` prefix disagree.", "test": "scripts/check_hugo_content/checker_test.go::TestTitleFilenameMismatchFails"},
+    {"id": "BOM-CRLF", "kind": "실패", "rule": "Keep UTF-8 without BOM and LF line endings.", "test": "scripts/check_hugo_content/checker_test.go::TestBomAndCrlfFail"},
+    {"id": "HEADING-SEQUENCE", "kind": "실패", "rule": "Number top-level sections continuously: `## 1.`, `## 2.`, and so on.", "test": "scripts/check_hugo_content/checker_test.go::TestTopLevelHeadingsMustBeContinuous"},
+    {"id": "FENCE-BALANCE", "kind": "실패", "rule": "Keep code fences balanced and include a language when useful.", "test": "scripts/check_hugo_content/checker_test.go::TestUnbalancedFenceFails"},
+    {"id": "FENCE-SKIP", "kind": "경계", "rule": "Ignore trailing whitespace and TODO/FIXME markers inside fenced code blocks.", "test": "scripts/check_hugo_content/checker_test.go::TestFencedContentIsIgnored"},
+    {"id": "TODO-PLACEHOLDER", "kind": "실패", "rule": "Outside code fences, `TODO:` and `FIXME:` placeholders are invalid; prose or examples that mention TODO/FIXME are allowed.", "test": "scripts/check_hugo_content/checker_test.go::TestStandaloneTodoPlaceholderFails"},
+    {"id": "TODO-EXAMPLES", "kind": "오탐", "rule": "Outside code fences, `TODO:` and `FIXME:` placeholders are invalid; prose or examples that mention TODO/FIXME are allowed.", "test": "scripts/check_hugo_content/checker_test.go::TestTodoExamplesAreNotPlaceholders"},
+    {"id": "DIRECTORY-FILTER", "kind": "경계", "rule": "A directory scan ignores Markdown files that do not match `NN-topic.md`.", "test": "scripts/check_hugo_content/checker_test.go::TestDirectoryScanIgnoresNonChapterMarkdown"}
+  ]
+}

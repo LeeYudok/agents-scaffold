@@ -1,8 +1,8 @@
 # yd-skills-personal
 
-agents-scaffold 메인테이너 환경 전용 스킬 묶음이다(`--with-personal-skills` 와 같은 9개). git-sync·git-ship·
-claude-auth-sync·finguard·doksam-ui·script-editor·sdlc-orchestrator·session-recording·agents-mem·naver-blog 를 담고,
-특정 서버·계정·사내 도구를 전제하는 내용이 있어 범용 묶음과 나눴다. 스킬 본문은 한국어다.
+agents-scaffold 메인테이너 환경 전용 스킬 묶음이다(`--with-personal-skills` 와 같은 11개). hugo-tech-blog·git-sync·
+git-ship·claude-auth-sync·finguard·doksam-ui·script-editor·sdlc-orchestrator·session-recording·agents-mem·naver-blog
+를 담고, 특정 서버·계정·사내 도구·Hugo 블로그를 전제하는 내용이 있어 범용 묶음과 나눴다. 스킬 본문은 한국어다.
 
 ```bash
 claude plugin install yd-skills-personal@agents-scaffold

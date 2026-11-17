@@ -20,7 +20,7 @@ Usage:
                  English base, after base copy + forge merge + stack merge.
   --name         {{PROJECT_NAME}} substitution value. Default = target directory name.
   --with-personal-skills
-                 Also install the opt-in yd-* skills/agents tied to the maintainer's environment
+                 Also install the opt-in skills/agents tied to the maintainer's environment
                  (presets/skills/personal: GitLab agents-mem, host sync, ui.doksam.com, FinGuard, ...).
                  Korean only. --update refreshes them when the target already has any of them.
   --harness      Target agent harness: claude (default), codex, agy, or all.
@@ -104,7 +104,7 @@ HARNESS_SET=0
 WITH_PERSONAL=0
 WITH_YD=""                 # ""=언어 기본값(ko 1, en 0), 1/0=명시(#105)
 STAGE_MODE="${AGENTS_SCAFFOLD_STAGE:-0}"   # 1=--update·--dry-run·--uninstall 이 비교용으로 부르는 내부 설치
-PERSONAL_PRESET="presets/skills/personal"   # #78: 옵트인 yd-* 스킬·에이전트 묶음
+PERSONAL_PRESET="presets/skills/personal"   # #78: 옵트인 스킬·에이전트 묶음
 
 # 값이 필요한 옵션에 값이 없으면 set -u 의 "unbound variable" 대신 무엇이 빠졌는지 말한다(#106)
 need_value() {
@@ -1369,7 +1369,7 @@ for s in "${STACK_ARR[@]:-}"; do
   merge_preset "$(stack_dir "$s")"
 done
 
-# 2b-2) #78: 옵트인 yd-* 스킬 묶음. 스택과 같은 merge_preset 경로라 skills_to_ssot 전에 .claude/skills 로
+# 2b-2) #78: 옵트인 스킬 묶음. 스택과 같은 merge_preset 경로라 skills_to_ssot 전에 .claude/skills 로
 #       들어가 .agents/skills 원본으로 옮겨진다. 한국어 전용이라 lang/en 오버레이가 없다.
 if [ "$WITH_PERSONAL" -eq 1 ]; then
   merge_preset "$SRC/$PERSONAL_PRESET"

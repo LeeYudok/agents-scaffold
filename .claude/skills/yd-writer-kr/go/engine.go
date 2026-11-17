@@ -1,6 +1,7 @@
 package main
 
 import (
+	"cmp"
 	"fmt"
 	"regexp"
 	"slices"
@@ -55,26 +56,36 @@ func newFinding(line int, level, kind, match, hint, context string) Finding {
 
 // Engine 은 컴파일한 금지 표현 규칙으로 글을 검사한다.
 type Engine struct {
-	rules []Rule
+	rules   []Rule
+	profile Profile
 }
 
+// newEngine 은 내장 doksam 표기 검사로 엔진을 만든다.
 func newEngine(specs []RuleSpec) (*Engine, error) {
-	rules, err := compileRules(specs)
+	return newProfileEngine(specs, builtinProfile())
+}
+
+// newProfileEngine 은 금지 표현 뒤에 프로필의 금지 표현을 잇는다.
+func newProfileEngine(specs []RuleSpec, profile Profile) (*Engine, error) {
+	rules, err := compileRules(slices.Concat(specs, profile.Rules))
 	if err != nil {
 		return nil, err
 	}
-	return &Engine{rules}, nil
+	return &Engine{rules, profile}, nil
 }
 
 func (e *Engine) check(text string, mode CheckMode) []Finding {
 	out := []Finding{}
 	lines := proseLines(text)
 	for _, line := range lines {
-		for _, found := range emoji.FindAllString(line.Raw, -1) {
-			out = append(out, newFinding(line.No, levelError, "이모지", found, "Phosphor 아이콘이나 글로 바꾼다", line.Clean))
-		}
-		for _, found := range isoTime.FindAllString(line.Raw, -1) {
-			out = append(out, newFinding(line.No, levelError, "시각 표기", found, "YYYY-MM-DD HH:MM:SS.mmm (KST)", line.Clean))
+		for _, check := range notationChecks {
+			rule, on := e.profile.Checks[check.kind]
+			if !on {
+				continue
+			}
+			for _, found := range check.re.FindAllString(line.Raw, -1) {
+				out = append(out, newFinding(line.No, rule.Level, check.kind, found, rule.Hint, line.Clean))
+			}
 		}
 		for _, sentence := range sentences(line.Clean) {
 			sentence = strings.TrimSpace(sentence)
@@ -86,9 +97,18 @@ func (e *Engine) check(text string, mode CheckMode) []Finding {
 				if mode.skips(rule.Spec.Section, line.Heading) {
 					continue
 				}
-				for _, found := range rule.findAll(sentence) {
-					hint := rule.Spec.Banned + " → " + rule.Spec.Replacement
-					out = append(out, newFinding(line.No, levelError, rule.Spec.Section, found, hint, sentence))
+				found := rule.findAll(sentence)
+				hint := rule.Spec.Banned + " → " + rule.Spec.Replacement
+				level := cmp.Or(rule.Spec.Level, levelError)
+				if rule.Spec.MinCount > 1 {
+					// 흔한 낱말은 하나만 나와도 잡으면 오탐이 많다. 한 문장 안의 횟수로 한 건만 낸다 (#137).
+					if len(found) >= rule.Spec.MinCount {
+						out = append(out, newFinding(line.No, level, rule.Spec.Section, fmt.Sprintf("%d회", len(found)), hint, sentence))
+					}
+					continue
+				}
+				for _, match := range found {
+					out = append(out, newFinding(line.No, level, rule.Spec.Section, match, hint, sentence))
 				}
 			}
 			if n := utf8.RuneCountInString(sentence); !line.Heading && !mode.Prose && n > mode.MaxLen {

@@ -16,6 +16,7 @@ import re
 import unittest
 from collections import Counter
 from pathlib import Path
+from typing import Optional
 
 REPO = Path(__file__).resolve().parent.parent
 SKILL_ROOTS = (REPO / ".claude" / "skills", REPO / "presets" / "skills" / "personal" / ".claude" / "skills")
@@ -63,6 +64,36 @@ def collected_tests(path: Path) -> set[str]:
             and f.name.startswith("test")}
 
 
+def collected_go_tests(path: Path) -> set[str]:
+    """`go test` 가 실행하는 이름 — 패키지 안의 TestXxx 함수."""
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return set()
+    return set(re.findall(r"(?m)^func\s+(Test[A-Za-z0-9_]*)\s*\(", text))
+
+
+def claim_test_path(skill: Path, file: str) -> Optional[Path]:
+    """claims.json 의 테스트 경로를 푼다.
+
+    Python 계약 테스트는 기존처럼 tests/test_*.py 로 두고, Go 스킬은 스킬 루트
+    기준 경로(scripts/.../checker_test.go)를 쓸 수 있게 한다.
+    """
+    if re.fullmatch(r"test_\w+\.py", file):
+        return skill / "tests" / file
+    if re.fullmatch(r"[A-Za-z0-9_/.-]+_test\.go", file):
+        return skill / file
+    return None
+
+
+def has_running_claim_test(path: Path, name: str) -> bool:
+    if path.suffix == ".py":
+        return name.startswith("test_") and name in collected_tests(path)
+    if path.suffix == ".go":
+        return name.startswith("Test") and name in collected_go_tests(path)
+    return False
+
+
 
 def claim_errors(skill):
     path = skill / "tests" / "claims.json"
@@ -88,10 +119,9 @@ def claim_errors(skill):
         if len(rule) < 6 or "\n" in rule or rule != rule.strip() or rule not in docs:
             problems.append(f"rule 이 문서에 그대로 없다: {rule[:40]}")
         file, _, name = test.partition("::")
-        tfile = skill / "tests" / file
-        if not (re.fullmatch(r"test_\w+\.py", file) and name.startswith("test_") and tfile.is_file()
-                and name in collected_tests(tfile)):
-            problems.append(f"unittest 가 실행하는 test 메서드가 없다: {test}")
+        tfile = claim_test_path(skill, file)
+        if tfile is None or not tfile.is_file() or not has_running_claim_test(tfile, name):
+            problems.append(f"unittest 또는 go test 가 실행하는 테스트가 없다: {test}")
         if test in tests:
             problems.append("test 중복")
         ids.add(c.get("id"))
