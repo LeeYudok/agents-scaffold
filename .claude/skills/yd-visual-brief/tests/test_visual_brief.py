@@ -128,6 +128,19 @@ class Figures(unittest.TestCase):
         self.assertEqual(xs, sorted(xs))
         self.assertEqual(len(xs), 4)
 
+    def test_receipt_totals_the_lines_and_flags_only_marked_ones(self):
+        svg = figures.receipt(self.p, {"title": "청구서", "lines": [
+            {"name": "요금제", "amount": 69000, "flag": "큰 요금제", "mark": "1"},
+            {"name": "할부금", "amount": 1500}]})
+        self.assertIn("70,500원", svg)
+        self.assertEqual(svg.count(f'r="10" fill="{self.p["signal"]}"'), 1)
+
+    def test_waterfall_ends_at_start_minus_steps(self):
+        svg = figures.waterfall(self.p, {"start": {"label": "지금", "value": 94300}, "end_label": "바꾼 뒤",
+                                         "steps": [{"label": "해지", "value": 25300}, {"label": "감면", "value": 11000}]})
+        self.assertIn(">58,000원<", svg)
+        self.assertIn("−25,300원", svg)
+
     def test_figures_use_only_palette_colours(self):
         allowed = {v.lower() for v in self.p.values()} | {"#ffffff"}
         for kind, builder in (("architecture", figures.architecture), ("metro", figures.metro),

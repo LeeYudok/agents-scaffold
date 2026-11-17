@@ -7,6 +7,8 @@
   compare_rows(p, spec)   행별 대비 그림
   gantt(p, spec)          일정 막대그림
   dumbbell(p, spec)       같은 항목의 두 값
+  receipt(p, spec)        항목별 내역서
+  waterfall(p, spec)      줄어드는 과정
 자료 형식은 references/figures.md 에 있다.
 """
 import datetime as dt
@@ -387,8 +389,77 @@ def dumbbell(p, spec):
     return c.svg()
 
 
+def receipt(p, spec):
+    """항목별 내역서. 문제가 있는 줄에 경고색 표시와 옆 설명을 붙인다."""
+    lines = spec["lines"]
+    height = 178 + len(lines) * 46
+    c = Canvas(p, 1100, height, "receipt")
+    LX, W = 40, 520
+    c.box(LX, 16, W, height - 32, stroke=p["ink"], width=1.6)
+    c.text(LX + 28, 58, spec["title"], 18, 800)
+    c.text(LX + W - 28, 58, spec.get("sub", ""), 12, 400, p["muted"], "end")
+    c.o.append(f'<line x1="{LX + 28}" y1="76" x2="{LX + W - 28}" y2="76" stroke="{p["ink"]}" stroke-width="2"/>')
+    unit = spec.get("unit", "원")
+    for i, line in enumerate(lines):
+        y = 112 + i * 46
+        bad = line.get("flag")
+        c.text(LX + 28, y, line["name"], 14.5, 700 if bad else 500)
+        c.text(LX + W - 28, y, f'{line["amount"]:,}{unit}', 14.5, 700, anchor="end")
+        c.o.append(f'<line x1="{LX + 28}" y1="{y + 16}" x2="{LX + W - 28}" y2="{y + 16}" stroke="{p["line"]}" stroke-dasharray="2 4"/>')
+        if bad:
+            c.o.append(f'<rect x="{LX + 12}" y="{y - 22}" width="6" height="32" fill="{p["signal"]}"/>')
+            c.path(f"M{LX + W + 4} {y - 5} H{LX + W + 46}", p["signal"], 1.6)
+            c.flag(LX + W + 60, y - 5, line.get("mark", "!"))
+            c.text(LX + W + 80, y - 9, bad, 14, 700)
+            if line.get("why"):
+                c.text(LX + W + 80, y + 9, line["why"], 12, 400, p["muted"])
+    ty = 112 + len(lines) * 46 + 8
+    c.o.append(f'<line x1="{LX + 28}" y1="{ty - 22}" x2="{LX + W - 28}" y2="{ty - 22}" stroke="{p["ink"]}" stroke-width="2"/>')
+    c.text(LX + 28, ty + 8, spec.get("total_label", "합계"), 16, 800)
+    c.text(LX + W - 28, ty + 8, f'{sum(line["amount"] for line in lines):,}{unit}', 22, 800, anchor="end")
+    return c.svg()
+
+
+def waterfall(p, spec):
+    """줄어드는 과정. 처음 값에서 단계마다 깎여 마지막 값이 남는다."""
+    steps = spec["steps"]
+    start = spec["start"]
+    c = Canvas(p, 1100, 420, "waterfall")
+    n = len(steps) + 2
+    bw, gap, base, top = 120, (1040 - 120 * n) / (n - 1), 330, 60
+    scale = (base - top) / start["value"]
+    unit = spec.get("unit", "원")
+
+    def bar(i, value, y0, fill, label, note, color=None):
+        x = 30 + i * (bw + gap)
+        h = value * scale
+        c.box(x, y0, bw, h, fill=fill, stroke=fill)
+        c.text(x + bw / 2, y0 - 10, f"{note}{value:,}{unit}", 15, 800, color, "middle")
+        c.text(x + bw / 2, base + 26, label, 13.5, 700, anchor="middle")
+        return x
+
+    running = start["value"]
+    x = bar(0, running, base - running * scale, p["muted"], start["label"], "")
+    for i, step in enumerate(steps, 1):
+        y0 = base - running * scale
+        nx = 30 + i * (bw + gap)
+        c.path(f"M{x + bw} {y0:.0f} H{nx}", p["line"], 1.5, "3 4")
+        x = bar(i, step["value"], y0, p["signal"], step["label"], "−", p["signal"])
+        if step.get("note"):
+            c.text(x + bw / 2, base + 44, step["note"], 11.5, 400, p["muted"], "middle")
+        running -= step["value"]
+    nx = 30 + (n - 1) * (bw + gap)
+    c.path(f"M{x + bw} {base - running * scale:.0f} H{nx}", p["line"], 1.5, "3 4")
+    bar(n - 1, running, base - running * scale, p["accent"], spec["end_label"], "", p["accent"])
+    c.o.append(f'<line x1="20" y1="{base}" x2="1080" y2="{base}" stroke="{p["ink"]}" stroke-width="1.6"/>')
+    if spec.get("caption"):
+        c.text(550, 400, spec["caption"], 12, 400, p["muted"], "middle")
+    return c.svg()
+
+
 if __name__ == "__main__":
     import sys
     spec = json.loads(Path(sys.argv[2]).read_text(encoding="utf-8"))
-    builder = {"architecture": architecture, "metro": metro, "compare_rows": compare_rows, "gantt": gantt, "dumbbell": dumbbell}[sys.argv[1]]
+    builder = {"architecture": architecture, "metro": metro, "compare_rows": compare_rows, "gantt": gantt, "dumbbell": dumbbell,
+               "receipt": receipt, "waterfall": waterfall}[sys.argv[1]]
     print(builder(palette(spec.get("palette", "ink-cobalt")), spec))

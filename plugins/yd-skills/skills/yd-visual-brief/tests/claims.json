@@ -14,6 +14,8 @@
     {"id": "OUTSIDE-BOUNDARY", "kind": "경계", "rule": "경계 밖 시스템 하나.", "test": "test_visual_brief.py::test_architecture_puts_outside_system_beyond_the_boundary"},
     {"id": "CUT-LINE", "kind": "정상", "rule": "뺀 이유가 있으면 경고색 점선", "test": "test_visual_brief.py::test_metro_draws_a_cut_line_dashed_in_signal_colour"},
     {"id": "EXIT-CODES", "kind": "도구오류", "rule": "종료 코드는 오류가 없으면 0, 있으면 1, 사용법이나 파일 문제면 2 다.", "test": "test_visual_brief.py::test_missing_file_exits_two"},
+    {"id": "RECEIPT-TOTAL", "kind": "정상", "rule": "합계는 금액을 더해 계산한다", "test": "test_visual_brief.py::test_receipt_totals_the_lines_and_flags_only_marked_ones"},
+    {"id": "WATERFALL-END", "kind": "정상", "rule": "값은 처음 값에서 단계를 빼서 계산한다", "test": "test_visual_brief.py::test_waterfall_ends_at_start_minus_steps"},
     {"id": "EXAMPLE-CLEAN", "kind": "정상", "rule": "예제는 `assets/example/brief.json` 에 있다.", "test": "test_visual_brief.py::test_example_builds_clean"}
   ]
 }

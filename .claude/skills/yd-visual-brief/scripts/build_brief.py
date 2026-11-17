@@ -16,7 +16,8 @@ import figures  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 FIGURES = {"architecture": figures.architecture, "metro": figures.metro, "compare_rows": figures.compare_rows,
-           "gantt": figures.gantt, "dumbbell": figures.dumbbell}
+           "gantt": figures.gantt, "dumbbell": figures.dumbbell, "receipt": figures.receipt,
+           "waterfall": figures.waterfall}
 
 
 def mark(text):
