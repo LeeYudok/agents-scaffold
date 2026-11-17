@@ -4,7 +4,7 @@
 # 이 레포에서 SKILL.md 를 고치면 세 런타임에 바로 반영된다.
 #
 # 대상: .claude/skills 의 yd-* 와 doksam 출신 4종(handoff·docs-sync·memory-factcheck·skill-evolve).
-#       --personal 이면 presets/skills/personal 의 옵트인 yd-* 도. scaffold 베이스 스킬
+#       --personal 이면 presets/skills/personal 의 옵트인 스킬도. scaffold 베이스 스킬
 #       (review·status 등)은 {{PROJECT_NAME}} 치환이 필요해 프로젝트 설치(bin/agents-scaffold.sh) 전용이다.
 #
 # 설치 원천은 매번 다시 만드는 .skills-dist/skills/<스킬>/ 다(git 무시). 스킬 폴더의 항목은 원본을 가리키는

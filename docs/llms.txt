@@ -79,6 +79,7 @@ Installed by `--lang ko` (the default) or with `--with-yd-skills`.
 - yd-finguard: FinGuard CLI source vulnerability scan with a severity gate and bounded fix loop
 - yd-doksam-ui, yd-sdlc-orchestrator, yd-script-editor, yd-session-recording: maintainer-specific UI standard, SDLC orchestration, narration editing and session recording
 - yd-naver-blog: post to a Naver blog with Playwright MCP — body paste, tags, category create/reorder/move, publish on confirmation
+- hugo-tech-blog: write and revise Hugo tech-blog posts, with content checks and yd-writer-kr delegation
 
 ## Optional
 
