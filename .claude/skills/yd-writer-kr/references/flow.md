@@ -158,7 +158,7 @@ flowchart TD
 
 | 단계 | 할 일 | 문서 절 | 쓰는 것 | 다음 |
 |---|---|---|---|---|
-| `check`<br>검사기를 돌린다<br>(도구) | 문체 단계에서 고른 모드(기본, --chat, --prose)와 --profile 을 준다.<br>코드 블록·인라인 코드·표·인용·URL 은 검사기가 보지 않는다. | 검사 도구<br>검사기 — Go `scripts/check-writing` | `scripts/check-writing` | `fix` — 종료 코드 1 (오류가 있다)<br>`check-broken` — 종료 코드 2 (실행 불가)<br>`warnings` — 종료 코드 0 |
+| `check`<br>검사기를 돌린다<br>(도구) | 문체 단계에서 고른 모드(기본, --chat, --prose)와 --profile 을 준다.<br>코드 블록·인라인 코드·표·인용·URL 은 검사기가 보지 않는다.<br>준말(건·게·걸)까지 의존명사로 세려면 Python 호환 계층 check_writing.py 에 --morph 를 준다. kiwipiepy 가 없으면 건너뛴다. | 검사 도구<br>검사기 — Go `scripts/check-writing` | `scripts/check-writing`<br>`scripts/check_writing.py` | `fix` — 종료 코드 1 (오류가 있다)<br>`check-broken` — 종료 코드 2 (실행 불가)<br>`warnings` — 종료 코드 0 |
 | `check-broken`<br>검사기가 실행되지 않는 원인을 푼다<br>(단계) | 오류 메시지를 읽는다. Go 없음, 규칙 파일 없음, UTF-8 아님, 잘못된 옵션 가운데 하나다.<br>실행 환경은 tool-setup 단계의 방법으로 맞춘다.<br>풀리지 않으면 검사기 없이 끝내지 않는다. 실행하지 못했다고 보고한다. | 폐쇄망·윈도우 — 빌드한 바이너리 쓰기 |  | `check` |
 | `fix`<br>오류를 고친다<br>(단계) | 금지 표현은 표의 오른쪽 칸으로 바꾼다.<br>문어체의 명사형 종결(~함, ~됨, ~있음)은 서술형으로 바꾼다.<br>표기 위반(ISO 8601 시각, 이모지)은 프로필 형식으로 바꾼다.<br>고치면 안 되는 줄(인용, 존재 용법의 에 있어서)만 writer:allow 로 면제한다. | Learned warnings | `references/banned-expressions.md` | `check` |
 | `warnings`<br>경고를 하나씩 보고 고칠지 정한다<br>(관문) | 60자를 넘는 문장은 나눌 수 있는지 본다. 의미를 자르면서까지 맞추지 않는다.<br>조사 겹침, 늘어지는 서술어, 군더더기 낱말, 몰린 의·적·것·들을 본다.<br>고쳐서 뜻이 흐려지면 그대로 둔다.<br>**통과 조건**: 모든 경고를 고쳤거나 둘 이유를 정했다 |  |  | `check` — 고친 문장이 있다<br>`checklist` — 더 고칠 것이 없다 |
@@ -208,7 +208,7 @@ flowchart TD
 | `m-go`<br>검사기 Go 코드를 고친다<br>(단계) | go 폴더에서 gofmt -l . 의 출력이 없어야 한다.<br>go vet ./... 와 go test ./... 를 통과해야 한다.<br>기존 결과(python-baseline.json 64개 사례)가 바뀌지 않아야 한다.<br>옵션이나 환경변수를 더하면 이 지도의 tools 에도 적는다. |  | `go/`<br>`tests/fixtures/` | `m-test` |
 | `m-docs`<br>원칙·형식·점검표·흐름을 고친다<br>(단계) | SKILL.md 를 고친다. claims.json 의 rule 문장은 문서에 그대로 있어야 한다.<br>절을 더하면 이 지도의 단계 doc 에 연결한다.<br>흐름을 바꾸면 flow.yaml 을 고치고 flow_map 의 --write 로 flow.md 를 다시 만든다.<br>실측으로 확인한 함정은 Learned warnings 에 날짜와 함께 적는다. | 흐름 지도 검증 — `scripts/flow_map.py` | `SKILL.md`<br>`tests/claims.json`<br>`references/flow.yaml`<br>`references/flow.md`<br>`scripts/flow_map.py` | `m-test` |
 | `m-binaries`<br>반입용 바이너리를 만든다<br>(도구) | 플랫폼을 주지 않으면 windows/amd64, linux/amd64, darwin/arm64 를 만든다.<br>릴리스에 올릴 때 SHA256SUMS 에 더한다. |  | `scripts/build-binaries.sh` | `m-test` |
-| `m-test`<br>테스트와 지도 검증을 돌린다<br>(관문) | tests 폴더의 unittest 를 모두 돌린다.<br>flow_map 의 --check 로 지도에 빠진 것이 없는지 본다.<br>SKILL.md 와 금지 표현 파일이 검사기를 통과하는지 본다.<br>**통과 조건**: 테스트와 지도 검증이 모두 통과한다 |  | `scripts/flow_map.py`<br>`tests/test_check_writing.py`<br>`tests/test_native_cli.py`<br>`tests/test_writing_tasks.py`<br>`tests/test_flow_map.py` | `m-eval-gate` |
+| `m-test`<br>테스트와 지도 검증을 돌린다<br>(관문) | tests 폴더의 unittest 를 모두 돌린다.<br>flow_map 의 --check 로 지도에 빠진 것이 없는지 본다.<br>SKILL.md 와 금지 표현 파일이 검사기를 통과하는지 본다.<br>description 을 고쳤으면 triggers.json 의 발동 질문도 맞춘다. 형식은 저장소의 test_skill_triggers 가 본다.<br>**통과 조건**: 테스트와 지도 검증이 모두 통과한다 |  | `scripts/flow_map.py`<br>`tests/test_check_writing.py`<br>`tests/test_native_cli.py`<br>`tests/test_writing_tasks.py`<br>`tests/test_flow_map.py`<br>`tests/triggers.json` | `m-eval-gate` |
 | `m-eval-gate`<br>원칙이나 금지 표현을 크게 바꿨는가<br>(갈림) |  |  |  | `e-prompts` — 그렇다<br>`m-done` — 아니다 |
 | `m-done`<br>저장소 규칙대로 올린다<br>(끝) | 이슈, 브랜치, 커밋, PR 은 그 저장소의 규칙을 따른다. |  |  |  |
 
@@ -448,6 +448,7 @@ python3 <스킬경로>/scripts/flow_map.py --check
 | `scripts/flow_map.py` | 지도 검증과 flow.md 생성 |
 | `go/` | 검사기 Go 엔진과 그 테스트 |
 | `tests/claims.json` | 문서의 단언과 그 단언을 확인하는 테스트의 짝 |
+| `tests/triggers.json` | 스킬 발동 평가 질문. 발동해야 하는 질문과 발동하면 안 되는 질문 |
 | `tests/fixtures/` | 검사기 테스트 자료. 기존 결과 64개 사례, 규칙별 예문, 프로필 예 |
 | `tests/writing-tasks/` | 품질 평가 과제 12개와 원자료 |
 | `tests/test_check_writing.py` | 검사기, 교정, 요약 테스트 |

@@ -278,10 +278,11 @@ nodes:
     do:
       - 문체 단계에서 고른 모드(기본, --chat, --prose)와 --profile 을 준다.
       - 코드 블록·인라인 코드·표·인용·URL 은 검사기가 보지 않는다.
+      - 준말(건·게·걸)까지 의존명사로 세려면 Python 호환 계층 check_writing.py 에 --morph 를 준다. kiwipiepy 가 없으면 건너뛴다.
     doc:
       - 검사 도구
       - 검사기 — Go `scripts/check-writing`
-    uses: [check-writing]
+    uses: [check-writing, scripts/check_writing.py]
     next:
       - to: fix
         when: 종료 코드 1 (오류가 있다)
@@ -604,8 +605,9 @@ nodes:
       - tests 폴더의 unittest 를 모두 돌린다.
       - flow_map 의 --check 로 지도에 빠진 것이 없는지 본다.
       - SKILL.md 와 금지 표현 파일이 검사기를 통과하는지 본다.
+      - description 을 고쳤으면 triggers.json 의 발동 질문도 맞춘다. 형식은 저장소의 test_skill_triggers 가 본다.
     pass: 테스트와 지도 검증이 모두 통과한다
-    uses: [flow-map, tests/test_check_writing.py, tests/test_native_cli.py, tests/test_writing_tasks.py, tests/test_flow_map.py]
+    uses: [flow-map, tests/test_check_writing.py, tests/test_native_cli.py, tests/test_writing_tasks.py, tests/test_flow_map.py, tests/triggers.json]
     next:
       - to: m-eval-gate
 
@@ -875,6 +877,7 @@ files:
   scripts/flow_map.py: 지도 검증과 flow.md 생성
   go/: 검사기 Go 엔진과 그 테스트
   tests/claims.json: 문서의 단언과 그 단언을 확인하는 테스트의 짝
+  tests/triggers.json: 스킬 발동 평가 질문. 발동해야 하는 질문과 발동하면 안 되는 질문
   tests/fixtures/: 검사기 테스트 자료. 기존 결과 64개 사례, 규칙별 예문, 프로필 예
   tests/writing-tasks/: 품질 평가 과제 12개와 원자료
   tests/test_check_writing.py: 검사기, 교정, 요약 테스트
