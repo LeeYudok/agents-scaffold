@@ -41,6 +41,11 @@
     {"id": "LLM-DEFAULT-UPSTAGE", "kind": "정상", "rule": "지정하지 않으면 Upstage 를 부른다.", "test": "test_check_writing.py::test_default_endpoint_is_upstage"},
     {"id": "TASKS-FORMAT", "kind": "정상", "rule": "과제는 이슈 본문, 공지, 장애 보고, 회의록 요약에 3개씩 12개다.", "test": "test_writing_tasks.py::test_twelve_tasks_three_per_kind"},
     {"id": "TASKS-SCORER", "kind": "실패", "rule": "채점기는 꼭 들어갈 사실, 첫머리의 결론, 넣으면 안 되는 내용, 검사기 오류, 원문 대조 오류를 본다.", "test": "test_writing_tasks.py::test_bad_notice_loses_the_points_it_should"},
-    {"id": "TASKS-BLIND", "kind": "경계", "rule": "`--blind` 가 어느 쪽 글인지 가린 비교지를 만든다.", "test": "test_writing_tasks.py::test_blind_sheet_hides_which_folder_wrote_what"}
+    {"id": "TASKS-BLIND", "kind": "경계", "rule": "`--blind` 가 어느 쪽 글인지 가린 비교지를 만든다.", "test": "test_writing_tasks.py::test_blind_sheet_hides_which_folder_wrote_what"},
+    {"id": "FLOW-COVERS", "kind": "정상", "rule": "지도에 없는 절·옵션·환경변수·파일이 있으면 검증이 실패한다.", "test": "test_flow_map.py::test_map_covers_the_whole_skill"},
+    {"id": "FLOW-OPTION", "kind": "실패", "rule": "스크립트에 옵션이나 환경변수를 더하면 지도에도 적는다.", "test": "test_flow_map.py::test_new_script_option_must_be_on_the_map"},
+    {"id": "FLOW-GATES", "kind": "경계", "rule": "쓰기·고치기·요약 어느 길로 가도 검사기와 점검표를 거쳐야 끝난다.", "test": "test_flow_map.py::test_every_work_path_passes_the_checker_and_a_checklist"},
+    {"id": "FLOW-MD-DRIFT", "kind": "실패", "rule": "`flow.md` 는 손으로 고치지 않는다.", "test": "test_flow_map.py::test_flow_md_must_be_regenerated"},
+    {"id": "FLOW-YAML-SUBSET", "kind": "도구오류", "rule": "`flow.yaml` 은 YAML 가운데 맵, 목록, 큰따옴표 문자열만 쓴다.", "test": "test_flow_map.py::test_values_that_yaml_reads_differently_are_errors"}
   ]
 }
