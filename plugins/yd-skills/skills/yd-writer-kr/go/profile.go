@@ -43,6 +43,8 @@ func builtinProfile() Profile {
 	return Profile{Checks: map[string]Notation{
 		kindEmoji:   {levelError, "Phosphor 아이콘이나 글로 바꾼다"},
 		kindISOTime: {levelError, "YYYY-MM-DD HH:MM:SS.mmm (KST)"},
+	}, Rules: []RuleSpec{
+		{Section: "고유명사 표기", Banned: "앤스로픽", Replacement: "앤트로픽", Pattern: "앤스로픽"},
 	}}
 }
 
