@@ -120,7 +120,7 @@ Codex 側の制約がもう 2 点、設計に効いてきます。
 |---|---|---|
 | `--lang ko`(デフォルト) | 24 — ワークフロー 10 + `yd-*` 14 | 19 — 7 + `yd-*` 12 |
 | `--lang en` | 10 — ワークフロースキル | 7 |
-| `--with-personal-skills` を追加 | +10 | +4 |
+| `--with-personal-skills` を追加 | +11 | +4 |
 
 ワークフロースキル 10 個は `review`・`status`・`search-first`・`security-precheck`・`docs-sync`・`handoff`・
 `memory-factcheck`・`skill-evolve`・`grill-me` と、テンプレートの `example-skill` です。`yd-*` 14 個は
@@ -134,9 +134,9 @@ Codex 側の制約がもう 2 点、設計に効いてきます。
 | `--no-yd-skills` | 入れない。`--lang en` のデフォルト。`yd-*` スキルは韓国語で書かれており、英語オーバーレイがないため(#105) |
 | `--with-personal-skills` | オプトインバンドル `presets/skills/personal/` もスタックプリセットの後にマージする |
 
-オプトインバンドルはスキル 10 個(`yd-agents-mem`・`yd-claude-auth-sync`・`yd-git-sync`・`yd-git-ship`・`yd-doksam-ui`・
-`yd-finguard`・`yd-sdlc-orchestrator`・`yd-script-editor`・`yd-session-recording`・`yd-naver-blog`)とエージェント 4 個です。
-特定の GitLab・ホスト・ui.doksam.com・FinGuard を前提とするため、他の環境向けではありません。
+オプトインバンドルはスキル 11 個(`hugo-tech-blog`・`yd-agents-mem`・`yd-claude-auth-sync`・`yd-git-sync`・`yd-git-ship`・
+`yd-doksam-ui`・`yd-finguard`・`yd-sdlc-orchestrator`・`yd-script-editor`・`yd-session-recording`・`yd-naver-blog`)と
+エージェント 4 個です。特定の GitLab・ホスト・ui.doksam.com・FinGuard・Hugo ブログを前提とするため、他の環境向けではありません。
 
 ```bash
 agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --lang en --stack go --with-yd-skills
@@ -199,7 +199,7 @@ agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --forge github --stack 
 | `--name <name>` | `{{PROJECT_NAME}}` の置換値。デフォルトは対象ディレクトリ名 |
 | `--harness <harness>` | `claude`(デフォルト)、`codex`、`agy`、`all` — [ハーネス](#ハーネス---harness)を参照 |
 | `--with-yd-skills` / `--no-yd-skills` | 韓国語の `yd-*` スキル 14 個を入れる/入れない。デフォルトは `ko` で入れ、`en` で入れない |
-| `--with-personal-skills` | メンテナー環境専用の `yd-*` スキル 10 個とエージェント 4 個もインストール |
+| `--with-personal-skills` | メンテナー環境専用のスキル 11 個とエージェント 4 個もインストール |
 | `--yes` | 対話プロンプトをスキップ(非対話モード) |
 | `--dry-run` | 何も変更しない。インストール、`--update`、`--uninstall` が行う内容を表示する(後述) |
 | `--update` | ブートストラップ済みプロジェクトを更新(後述) |
