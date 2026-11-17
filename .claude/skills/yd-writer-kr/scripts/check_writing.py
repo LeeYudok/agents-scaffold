@@ -28,10 +28,11 @@ def _command() -> list[str]:
 
 
 def _request(action: str, **fields):
+    # encoding 을 정해 둔다. 윈도우의 기본 인코딩(CP949)으로는 Go 엔진의 UTF-8 JSON 을 읽지 못한다 (#137).
     result = subprocess.run(
         [*_command(), "--bridge"],
         input=json.dumps(dict(action=action, **({"rules_path": str(BANNED_MD)} | fields)), ensure_ascii=False),
-        capture_output=True, text=True,
+        capture_output=True, text=True, encoding="utf-8",
     )
     if result.returncode:
         raise RuntimeError(result.stderr.strip() or "Go 검사기를 실행할 수 없다")
@@ -53,6 +54,8 @@ class Rule:
     banned: str
     replacement: str
     pattern: re.Pattern
+    level: str = "오류"
+    min_count: int = 1  # 2 이상이면 한 문장 안에서 그 횟수만큼 나올 때만 잡는다 (#137)
 
 
 @dataclass
@@ -71,7 +74,8 @@ def split_row(row: str) -> list[str]:
 
 def load_rules(path: Path = BANNED_MD) -> list[Rule]:
     records = _request("rules", rules_path=str(path))
-    return [Rule(r["section"], r["banned"], r["replacement"], re.compile(r["pattern"])) for r in records]
+    return [Rule(r["section"], r["banned"], r["replacement"], re.compile(r["pattern"]),
+                 r.get("level") or "오류", r.get("min_count") or 1) for r in records]
 
 
 def prose_lines(text: str):
@@ -79,21 +83,32 @@ def prose_lines(text: str):
 
 
 def check(text: str, rules: list[Rule], chat: bool = False, max_len: int = 60,
-          source: str | None = None, lines: int = 0, prose: bool = False) -> list[Finding]:
+          source: str | None = None, lines: int = 0, prose: bool = False, profile: str = "") -> list[Finding]:
     """글 검사. source 를 주면 요약으로 보고 원문과 대조하고, lines 는 요약 줄 수 상한이다 (#118).
 
     prose 는 소설·에세이 같은 문학 산문이다. 번역투·피동·중복 수식만 보고 긴 문장 경고를 끈다 (#126).
+    profile 은 표기 프로필 이름이나 경로다. 비우면 doksam 이다 (#137).
     """
-    specs = [dict(section=r.section, banned=r.banned, replacement=r.replacement, pattern=r.pattern.pattern) for r in rules]
+    specs = [dict(section=r.section, banned=r.banned, replacement=r.replacement, pattern=r.pattern.pattern,
+                  level=r.level, min_count=r.min_count) for r in rules]
     extra = {"source": source} if source is not None else {}
-    rows = _request("check", text=text, rules=specs, chat=chat, prose=prose, max_len=max_len, lines=lines, **extra)
+    rows = _request("check", text=text, rules=specs, chat=chat, prose=prose, max_len=max_len, lines=lines,
+                    profile=profile, **extra)
     return [Finding(**row) for row in rows]
+
+
+def utf8_stdio() -> None:
+    """파이프로 나가는 출력을 UTF-8 로 맞춘다. 윈도우의 기본값(CP949·CP1252)은 한글이나 화살표에서 실패한다 (#137)."""
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8")
 
 
 def main(argv: list[str] | None = None) -> int:
     try:
         # stdout/stderr remain the Python CLI streams for callers using redirect_stdout.
-        result = subprocess.run([*_command(), *(sys.argv[1:] if argv is None else argv)], capture_output=True, text=True)
+        result = subprocess.run([*_command(), *(sys.argv[1:] if argv is None else argv)],
+                                capture_output=True, text=True, encoding="utf-8")
     except OSError as error:
         print(f"check-writing: {error}", file=sys.stderr)
         return 2
@@ -103,4 +118,5 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
+    utf8_stdio()
     sys.exit(main())

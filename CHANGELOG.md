@@ -8,6 +8,9 @@ Notable changes to agents-scaffold. Versions follow [Semantic Versioning](https:
 First tagged release. Everything before it shipped from `main` without a version.
 
 ### Added
+- `yd-writer-kr`: warning-level and per-sentence count rules drawn from five more style guides, notation profiles
+  (`--profile`, `references/profiles/`), an OpenAI-compatible endpoint for proofreading and summaries
+  (`WRITER_LLM_BASE_URL`), and prebuilt `check-writing` binaries for Windows, Linux and macOS on each release (#137).
 - `--version`, `--list-stacks`, `--dry-run` and `--uninstall`.
 - `.claude/.scaffold.json` records the choices made at install time (forge, stacks, language, harness, skill sets).
 - `--with-yd-skills` / `--no-yd-skills`. English installs (`--lang en`) no longer receive the Korean-only `yd-*` skills by default.

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"unicode/utf8"
 )
@@ -14,6 +15,9 @@ type RuleSpec struct {
 	Banned      string `json:"banned"`
 	Replacement string `json:"replacement"`
 	Pattern     string `json:"pattern"`
+	// Level 이 비면 오류다. MinCount 가 2 이상이면 한 문장 안에서 그 횟수만큼 나올 때만 한 건으로 잡는다 (#137).
+	Level    string `json:"level,omitempty"`
+	MinCount int    `json:"min_count,omitempty"`
 }
 
 // Rule 은 컴파일한 규칙이다.
@@ -61,14 +65,26 @@ func loadRules(path string) ([]RuleSpec, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", path, err)
 	}
+	specs, err := parseRules(path, string(data))
+	if err != nil {
+		return nil, err
+	}
+	if len(specs) == 0 {
+		return nil, fmt.Errorf("%s: 검사 규칙이 없다", path)
+	}
+	return specs, nil
+}
+
+// parseRules 는 `금지 | 대체 | 검사` 표를 읽는다. 프로필의 표기 검사 절은 모양이 달라 건너뛴다.
+func parseRules(path, text string) ([]RuleSpec, error) {
 	var specs []RuleSpec
 	section := ""
-	for index, line := range strings.Split(string(data), "\n") {
+	for index, line := range strings.Split(strings.TrimPrefix(text, "\uFEFF"), "\n") {
 		line = strings.TrimSuffix(line, "\r")
 		if title, ok := strings.CutPrefix(line, "## "); ok {
 			section = strings.TrimSpace(title)
 		}
-		if !strings.HasPrefix(line, "|") || strings.Trim(line, "|- \t") == "" {
+		if section == notationSection || !strings.HasPrefix(line, "|") || strings.Trim(line, "|- \t") == "" {
 			continue
 		}
 		cells := splitRow(line)
@@ -81,12 +97,40 @@ func loadRules(path string) ([]RuleSpec, error) {
 		if cells[2] == "" || cells[2] == "-" {
 			continue
 		}
-		specs = append(specs, RuleSpec{section, cells[0], cells[1], strings.Trim(cells[2], "`")})
-	}
-	if len(specs) == 0 {
-		return nil, fmt.Errorf("%s: 검사 규칙이 없다", path)
+		spec := RuleSpec{Section: section, Banned: cells[0], Replacement: cells[1]}
+		var err error
+		if spec.Pattern, spec.Level, spec.MinCount, err = parseCheck(cells[2]); err != nil {
+			return nil, fmt.Errorf("%s:%d: %w", path, index+1, err)
+		}
+		specs = append(specs, spec)
 	}
 	return specs, nil
+}
+
+var countOption = regexp.MustCompile(`^([0-9]+)회$`)
+
+// parseCheck 는 검사 칸을 정규식과 옵션으로 나눈다. 옵션은 닫는 백틱 뒤에 적는다: `정규식` 경고 3회
+func parseCheck(cell string) (pattern, level string, minCount int, err error) {
+	end := strings.LastIndex(cell, "`")
+	if !strings.HasPrefix(cell, "`") || end == 0 {
+		return strings.Trim(cell, "`"), "", 0, nil
+	}
+	for _, option := range strings.Fields(cell[end+1:]) {
+		count := countOption.FindStringSubmatch(option)
+		switch {
+		case option == levelWarning:
+			level = levelWarning
+		case option == levelError:
+			level = ""
+		case count != nil:
+			if minCount, _ = strconv.Atoi(count[1]); minCount < 2 {
+				return "", "", 0, fmt.Errorf("횟수 옵션은 2회 이상이어야 한다: %s", option)
+			}
+		default:
+			return "", "", 0, fmt.Errorf("알 수 없는 검사 옵션: %s (경고, N회 만 쓴다)", option)
+		}
+	}
+	return cell[1:end], level, minCount, nil
 }
 
 func compileRules(specs []RuleSpec) ([]Rule, error) {
