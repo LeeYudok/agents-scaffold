@@ -44,11 +44,13 @@ jobs:
           if ($LASTEXITCODE -ne 2) { throw "없는 프로필: exit $LASTEXITCODE" }
           exit 0
 
-      # Windows PowerShell 5 의 -Encoding UTF8 은 BOM 을 붙인다. 메모장으로 저장한 글과 같은 모양이다.
+      # BOM 이 붙은 글은 메모장으로 저장한 글과 같은 모양이다.
+      # Windows PowerShell 5 는 BOM 없는 스크립트를 ANSI 로 읽어 한글 리터럴이 깨진다. 그래서 글("배포를 완료함.")을 코드 포인트로 만든다.
       - name: Run on a file with BOM (Windows PowerShell 5)
         shell: powershell
         run: |
-          Set-Content -Path bom.md -Value "배포를 완료함." -Encoding UTF8
+          $text = -join [char[]](0xBC30,0xD3EC,0xB97C,0x0020,0xC644,0xB8CC,0xD568,0x002E)
+          [IO.File]::WriteAllText("$PWD\\bom.md", $text, (New-Object Text.UTF8Encoding $true))
           & $env:CHECK_WRITING_BIN bom.md
           if ($LASTEXITCODE -ne 1) { throw "bom.md: exit $LASTEXITCODE" }
           exit 0
