@@ -170,19 +170,19 @@ Codex 쪽 추가 제약 두 가지도 설계에 영향을 준다.
 
 | 설치 | 스킬 | 서브에이전트 |
 |---|---|---|
-| `--lang ko` (기본) | 24 — 워크플로 10 + `yd-*` 14 | 19 — 7 + `yd-*` 12 |
+| `--lang ko` (기본) | 25 — 워크플로 10 + `yd-*` 15 | 20 — 7 + `yd-*` 13 |
 | `--lang en` | 10 — 워크플로 스킬 | 7 |
 | `--with-personal-skills` 추가 | +11 | +4 |
 
 워크플로 스킬 10개는 `review`·`status`·`search-first`·`security-precheck`·`docs-sync`·`handoff`·
-`memory-factcheck`·`skill-evolve`·`grill-me` 와 템플릿 `example-skill` 이다. `yd-*` 14개는
+`memory-factcheck`·`skill-evolve`·`grill-me` 와 템플릿 `example-skill` 이다. `yd-*` 15개는
 [LeeYudok/doksam-skills](https://github.com/LeeYudok/doksam-skills) 에서 옮겨 온 13개(DB·Go·React·TypeScript·빌드·
-화면설계·글쓰기 등)와 의존성 CVE 점검 `yd-cve-check`(#79)다. 딸린 에이전트 12개(`.claude/agents/yd-*.md`)도 함께
+화면설계·글쓰기 등)와 의존성 CVE 점검 `yd-cve-check`(#79), 그림 중심 결재 문서 `yd-visual-brief`(#153)다. 딸린 에이전트 13개(`.claude/agents/yd-*.md`)도 함께
 들어간다(#78).
 
 | 옵션 | 효과 |
 |---|---|
-| `--with-yd-skills` | `yd-*` 14개와 그 에이전트를 설치한다. `--lang ko` 의 기본값 |
+| `--with-yd-skills` | `yd-*` 15개와 그 에이전트를 설치한다. `--lang ko` 의 기본값 |
 | `--no-yd-skills` | 뺀다. `--lang en` 의 기본값이다. `yd-*` 스킬은 한국어로 쓰여 있고 영어 오버레이가 없다(#105) |
 | `--with-personal-skills` | 옵트인 묶음 `presets/skills/personal/` 도 스택 프리셋 다음에 머지한다 |
 
@@ -246,7 +246,7 @@ agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --forge github --stack 
 | `--stack <목록>` | 쉼표구분 스택 프리셋. 미지정 시 대화형 프롬프트. 모르는 이름은 오류 |
 | `--name <name>` | `{{PROJECT_NAME}}` 치환값. 기본 = 대상 디렉터리명 |
 | `--harness <harness>` | `claude`(기본)·`codex`·`agy`·`all` — [하네스](#하네스---harness) 참조 |
-| `--with-yd-skills` / `--no-yd-skills` | 한국어 `yd-*` 스킬 14개를 넣거나 뺀다. 기본값은 `ko` 설치에 포함, `en` 설치에 제외 |
+| `--with-yd-skills` / `--no-yd-skills` | 한국어 `yd-*` 스킬 15개를 넣거나 뺀다. 기본값은 `ko` 설치에 포함, `en` 설치에 제외 |
 | `--with-personal-skills` | 메인테이너 환경 전용 스킬 11개·에이전트 4개도 설치 |
 | `--yes` | 대화형 프롬프트 생략(비대화 모드) |
 | `--dry-run` | 아무것도 바꾸지 않는다. 설치·`--update`·`--uninstall` 이 할 일을 출력한다 (아래 참조) |

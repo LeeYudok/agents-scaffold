@@ -1,0 +1,10 @@
+[
+  {"query": "이 자료들로 사업계획서 써줘. 부장님 결재용이야", "should_trigger": true},
+  {"query": "보고 자료를 그림으로 한눈에 보이게 만들어줘", "should_trigger": true},
+  {"query": "시스템 구성도랑 흐름도 넣어서 제안서 한 장으로 정리해줘", "should_trigger": true},
+  {"query": "현황 보고 문서 만들어줘. 글 말고 그림 위주로", "should_trigger": true},
+  {"query": "이 PR 본문 좀 읽기 쉽게 다듬어줘", "should_trigger": false, "expect": "yd-writer-kr"},
+  {"query": "프로젝트 구현 현황 청사진 갱신해줘", "should_trigger": false, "expect": "yd-blueprint"},
+  {"query": "쇼핑몰 앱 화면설계서 만들어줘", "should_trigger": false, "expect": "yd-mobile-web-planner"},
+  {"query": "회의록 세 줄로 요약해줘", "should_trigger": false, "expect": "yd-writer-kr"}
+]

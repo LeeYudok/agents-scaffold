@@ -103,7 +103,7 @@ agents-scaffold/bin/agents-scaffold.sh --uninstall . --dry-run # preview removal
 | **实测，而非假设** | 每一条关于 harness 的说法都是 [docs/harness-matrix.json](docs/harness-matrix.json) 中的实测记录：Claude Code 2.1.318 为 **full** 级别；Codex（codex-cli 0.166.0）和 Antigravity（agy 1.5.0）为 **baseline** — 门禁和 `AGENTS.md` 生效，按路径作用域加载的规则到不了它们。full 级别的实测记录过期时 CI 会失败。 |
 | **13 种技术栈预设** | Next.js、Spring Boot、Java web（JSP）、Bun、Python、Go、Rust、Ruby on Rails、.NET、PHP Laravel、Android、Flutter、ops — 每种都会添加规则，除 ops 外还各自添加 build/lint/test 门禁。支持 GitHub 或 GitLab forge，输出可选韩文或英文。 |
 | **按路径作用域加载的规则** | 规则只在代理触碰匹配文件时才加载，上下文保持精简，而不是一开始就灌入全部约定。 |
-| **开箱即用的技能** | 英文安装包含 10 个工作流技能（review、status、handoff、docs-sync、安全预检等）。韩文安装再加上 14 个 `yd-*` 专家技能，共 24 个。见[技能](#技能)。 |
+| **开箱即用的技能** | 英文安装包含 10 个工作流技能（review、status、handoff、docs-sync、安全预检等）。韩文安装再加上 15 个 `yd-*` 专家技能，共 25 个。见[技能](#技能)。 |
 | **支持内网与 Windows** | 离线包无需网络即可安装；Windows 通过 Git Bash 和 `.cmd` 启动器运行（[docs/OFFLINE_INSTALL.en.md](docs/OFFLINE_INSTALL.en.md)）。 |
 | **可以回退** | `--dry-run` 先展示将要写入的内容，`--update` 不会覆盖你的修改，`--uninstall` 会把没动过的文件原样撤走。 |
 | **自我改进** | `skill-evolve` / `agent-evolve` 会把真实错误提炼成 "Learned warnings"，写回犯错的那个技能或代理。 |
@@ -154,7 +154,7 @@ Blocked: a .env-type file is staged. Commit is not allowed.
 | 安装方式 | 技能数 | 内容 |
 |---|---|---|
 | `--lang en` | 10 | 工作流技能：`review`、`status`、`search-first`、`security-precheck`、`docs-sync`、`handoff`、`memory-factcheck`、`skill-evolve`、`grill-me`，以及模板 `example-skill` |
-| `--lang ko`（默认） | 24 | 上述 10 个加上 14 个 `yd-*` 专家技能：PostgreSQL、Oracle、SQLite、关系型设计、Go、React、TypeScript、Vite/pnpm 构建、界面设计、韩文写作、依赖 CVE 检查 |
+| `--lang ko`（默认） | 25 | 上述 10 个加上 15 个 `yd-*` 专家技能：PostgreSQL、Oracle、SQLite、关系型设计、Go、React、TypeScript、Vite/pnpm 构建、界面设计、韩文写作、以图为主的审批文档、依赖 CVE 检查 |
 
 `yd-*` 技能是用韩文写的，所以英文安装不包含它们。`--with-yd-skills` 可以把它们加进英文安装，
 `--no-yd-skills` 则从韩文安装中去掉。这些技能也可以脱离脚手架单独安装 — 作为 Claude Code / Codex 插件，

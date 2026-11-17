@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{TITLE}}</title>
+<style>
+:root{{{ROOT}}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.7 "Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;-webkit-font-smoothing:antialiased;word-break:keep-all}
+.wrap{max-width:1120px;margin:0 auto;padding:0 32px}
+.hero{padding:88px 0 0}
+.hero small{letter-spacing:.16em;font-weight:600;color:var(--muted);font-size:12px}
+.hero h1{font-size:54px;line-height:1.16;margin:28px 0;letter-spacing:-.035em;font-weight:800}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.hero p{margin:0;max-width:640px;font-size:17px}
+.kpi{display:grid;grid-template-columns:repeat({{KPI_COUNT}},1fr);margin-top:64px;border-top:2px solid var(--ink);border-bottom:1px solid var(--line)}
+.kpi div{padding:22px 24px 24px 0;border-right:1px solid var(--line);margin-right:24px}
+.kpi div:last-child{border:0;margin:0}
+.kpi b{display:block;font-size:34px;line-height:1.2;letter-spacing:-.03em;font-weight:800}
+.kpi span{font-size:13.5px;color:var(--muted);line-height:1.55;display:block;margin-top:6px}
+.kpi .q b{color:var(--signal)}
+section{padding:112px 0 0}
+.no{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.16em;display:flex;align-items:center;gap:14px}
+.no:after{content:"";flex:1;height:1px;background:var(--line)}
+h2{font-size:38px;line-height:1.24;margin:22px 0 14px;letter-spacing:-.03em;font-weight:800;max-width:820px}
+.lead{max-width:680px;margin:0 0 36px;font-size:17px}
+.card{background:#fff;border:1px solid var(--line);border-radius:4px;padding:28px 24px;margin-top:8px}
+.card svg{width:100%;height:auto;display:block}
+.note{font-size:13px;color:var(--muted);margin:14px 0 0;max-width:820px}
+.cols{display:grid;grid-template-columns:repeat(3,1fr);gap:0 32px}
+.why{margin-top:36px}
+.why>div{border-top:1px solid var(--ink);padding-top:18px}
+.why b{display:block;font-size:17px;margin-bottom:6px}
+.why p{margin:0;font-size:14.5px}
+.docs{border-top:2px solid var(--ink);gap:0}
+.doc{border-right:1px solid var(--line);padding:22px 28px 8px 0;margin-right:28px}
+.doc:last-child{border:0;margin:0;padding-right:0}
+.doc .tab{font-weight:800;font-size:20px;letter-spacing:-.02em;margin-bottom:18px}
+.doc .tab small{display:block;font-weight:500;font-size:12.5px;color:var(--muted);margin-top:2px}
+.doc.main .tab{color:var(--accent)}
+.doc dl{margin:0;font-size:14.5px}
+.doc dt{color:var(--muted);font-size:12px;font-weight:600;letter-spacing:.04em;margin-top:14px}
+.doc dd{margin:2px 0 0}
+.doc dd em{font-style:normal;font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.chip{border:1px solid var(--line);border-radius:3px;padding:3px 9px;font-size:13px;background:#fff}
+.chip.cut{text-decoration:line-through;text-decoration-color:var(--signal);text-decoration-thickness:1.5px;color:var(--muted)}
+.chip.ask{border-color:var(--signal)}
+.ab{display:grid;grid-template-columns:150px 1fr 1fr;font-size:14.5px;margin-top:22px;border-top:1px solid var(--line)}
+.ab>*{padding:13px 16px 13px 0;border-bottom:1px solid var(--line)}
+.ab b{font-size:14px}
+.ab .a{border-left:3px solid var(--accent);padding-left:14px}
+.ab .b{border-left:3px solid var(--signal);padding-left:14px}
+.ab small{color:var(--muted);display:block;font-size:12px}
+.waffle{display:grid;gap:8px;margin:0 0 30px}
+.waffle i{aspect-ratio:1;border-radius:3px}
+.waffle .have,.n.have{background:var(--ink)}
+.waffle .grow{background:#fff;border:2px solid var(--ink)}
+.waffle .need{background:var(--signal)}
+.have .n{font-size:56px;font-weight:800;line-height:1;letter-spacing:-.04em;background:none}
+.have .n.grow{-webkit-text-stroke:2px var(--ink);color:transparent}
+.have .n.need{color:var(--signal)}
+.have h3{margin:6px 0 8px;font-size:15px}
+.have ul{margin:0;padding-left:17px;font-size:14.5px}
+.org{display:grid;grid-template-columns:repeat(3,1fr);font-size:14.5px;margin-top:40px;border-top:2px solid var(--ink)}
+.org div{padding:16px 24px 16px 0;border-bottom:1px solid var(--line)}
+.org .top{grid-column:1/-1;display:flex;gap:56px;flex-wrap:wrap;font-weight:700;font-size:17px}
+.org small{display:block;color:var(--muted);font-size:12px;font-weight:600;letter-spacing:.04em}
+.keys{list-style:none;padding:0;margin:28px 0 0;display:grid;grid-template-columns:repeat(2,1fr);gap:0 40px;counter-reset:k;border-top:2px solid var(--ink)}
+.keys li{counter-increment:k;position:relative;padding:14px 0 14px 38px;border-bottom:1px solid var(--line);font-size:14px;line-height:1.6}
+.keys li:before{content:counter(k);position:absolute;left:0;top:15px;width:22px;height:22px;border-radius:50%;background:var(--signal);color:#fff;font-weight:800;font-size:12px;display:grid;place-items:center}
+.keys b{display:block;font-size:15px}
+.dec{display:grid;grid-template-columns:repeat(3,1fr);gap:0 32px}
+.dec>div{border-top:2px solid var(--ink);padding:18px 0 44px}
+.dec .n{font-size:13px;font-weight:700;color:var(--signal);letter-spacing:.12em}
+.dec b{display:block;font-size:22px;margin:4px 0 14px;letter-spacing:-.025em}
+.opt{display:flex;gap:10px;align-items:stretch;font-size:13.5px}
+.opt span{flex:1;background:#fff;border:1px solid var(--line);border-radius:3px;padding:9px 12px;line-height:1.5}
+.opt u{text-decoration:none;align-self:center;color:var(--muted);font-size:12px}
+.dec p{font-size:13.5px;margin:12px 0 0}
+details{margin:96px 0}
+summary{cursor:pointer;font-weight:700;font-size:16px;padding:18px 0;border-top:2px solid var(--ink);border-bottom:1px solid var(--line)}
+#full{white-space:pre-wrap;font:inherit;font-size:14.5px;max-width:860px;padding:28px 0;margin:0}
+@media(max-width:860px){.kpi,.cols,.dec,.org,.keys,.ab{grid-template-columns:1fr}.hero h1{font-size:36px}h2{font-size:28px}.card{overflow-x:auto;padding:20px}.card svg{min-width:860px}.kpi div,.doc{border-right:0}.waffle{gap:4px}}
+@media print{section{break-inside:avoid;padding-top:48px}details{display:none}}
+</style>
+<div class="wrap">
+<div class="hero">
+<small>{{EYEBROW}}</small>
+<h1>{{H1}}</h1>
+<p>{{LEAD}}</p>
+<div class="kpi">{{KPIS}}</div>
+</div>
+{{BODY}}
+{{TAIL}}
+</div>
+</html>

@@ -8,6 +8,10 @@ Notable changes to agents-scaffold. Versions follow [Semantic Versioning](https:
 First tagged release. Everything before it shipped from `main` without a version.
 
 ### Added
+- `yd-visual-brief`: builds a one-page, diagram-first brief (HTML) for business plans and approval documents from a
+  single `brief.json` — a layered architecture diagram, a metro-style flow map, comparison rows, a schedule and decision
+  cards drawn as SVG, three curated palettes, and `check_brief.py` for contrast, hue count, text size and missing
+  diagrams (#153).
 - `yd-writer-kr`: warning-level and per-sentence count rules drawn from five more style guides, notation profiles
   (`--profile`, `references/profiles/`), an OpenAI-compatible endpoint for proofreading and summaries
   (`WRITER_LLM_BASE_URL`), and prebuilt `check-writing` binaries for Windows, Linux and macOS on each release (#137).

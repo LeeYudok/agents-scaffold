@@ -8,7 +8,7 @@ Key facts:
 - One source, three harnesses: `AGENTS.md` is read natively by Claude Code (v2.1.277+, only when no `CLAUDE.md` exists), Codex and Antigravity. Codex subagents/hooks and Antigravity rules/subagents/hooks are generated from `.claude/`.
 - Claims are measured, not assumed: `docs/harness-matrix.json` records live measurements per harness version (Claude Code 2.1.318 full tier; Codex codex-cli 0.166.0 and Antigravity agy 1.5.0 baseline tier, measured 2026-11-04). CI fails when a full-tier measurement expires.
 - 13 stack presets (Next.js, Spring Boot, Java web/JSP, Bun, Python, Go, Rust, Ruby on Rails, .NET, PHP Laravel, Android, Flutter, ops). Each adds rules, and all but ops add a build/lint/test gate. GitHub or GitLab forge. Korean (default) or English (`--lang en`) output.
-- Skills: an English install ships 10 skills (workflow skills). A Korean install ships 24 skills (the same 10 plus 14 Korean-language `yd-*` expert skills). `--with-yd-skills` / `--no-yd-skills` override the default.
+- Skills: an English install ships 10 skills (workflow skills). A Korean install ships 25 skills (the same 10 plus 15 Korean-language `yd-*` expert skills). `--with-yd-skills` / `--no-yd-skills` override the default.
 - Install choices are recorded in `.claude/.scaffold.json`. `--update` replays them and writes `<file>.new` next to any file you changed; `--uninstall` removes only unmodified files; `--dry-run` previews an install, update or uninstall.
 - Re-running the installer saves a changed `AGENTS.md` as `AGENTS.md.bak-<timestamp>` and does not insert a stack gate twice. An unknown `--stack` is an error. A missing target directory is created.
 - Works offline (air-gapped bundle) and on Windows (Git Bash, `.cmd` launcher).
@@ -70,6 +70,7 @@ Installed by `--lang ko` (the default) or with `--with-yd-skills`.
 - [yd-blueprint](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-blueprint): project blueprint as JSONL data rendered by a Bun + Vite + React viewer
 - [yd-agents-yaml](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-agents-yaml): AGENTS.md + machine-readable AGENTS.yaml + validator for any repository
 - [yd-writer-kr](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-writer-kr): clear, evidence-backed Korean technical writing, editing and summarizing
+- [yd-visual-brief](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-visual-brief): one-page diagram-first briefs (architecture, flow, schedule, decisions) built as SVG from a JSON file
 
 ## Skills (opt-in personal set, `--with-personal-skills`)
 

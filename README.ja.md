@@ -104,7 +104,7 @@ agents-scaffold/bin/agents-scaffold.sh --uninstall . --dry-run # preview removal
 | **想定ではなく実測** | ハーネスに関する主張はすべて [docs/harness-matrix.json](docs/harness-matrix.json) の実測値です。Claude Code 2.1.318 は **full** ティア、Codex(codex-cli 0.166.0)と Antigravity(agy 1.5.0)は **baseline** ティアです。baseline ではゲートと `AGENTS.md` は成立し、paths スコープのルールは届きません。full ティアの実測の有効期限が切れると CI が失敗します。 |
 | **スタックプリセット 13 種** | Next.js、Spring Boot、Java web(JSP)、Bun、Python、Go、Rust、Ruby on Rails、.NET、PHP Laravel、Android、Flutter、ops — それぞれがルールを追加し、ops 以外は build/lint/test ゲートも追加します。forge は GitHub か GitLab、出力は韓国語か英語。 |
 | **paths スコープのルール** | ルールはエージェントがマッチするファイルを触っている間だけロードされるため、すべての規約を先頭ロードせずコンテキストがスリムに保たれます。 |
-| **すぐ使えるスキル** | 英語インストールにはワークフロースキル 10 個(review、status、handoff、docs-sync、セキュリティ事前点検 など)が入ります。韓国語インストールには `yd-*` 専門スキル 14 個が加わり、合計 24 個です。[スキル](#スキル)を参照。 |
+| **すぐ使えるスキル** | 英語インストールにはワークフロースキル 10 個(review、status、handoff、docs-sync、セキュリティ事前点検 など)が入ります。韓国語インストールには `yd-*` 専門スキル 15 個が加わり、合計 25 個です。[スキル](#スキル)を参照。 |
 | **閉域網と Windows に対応** | オフラインバンドルはネットワークなしでインストールでき、Windows は Git Bash と `.cmd` ランチャーで動きます([docs/OFFLINE_INSTALL.en.md](docs/OFFLINE_INSTALL.en.md))。 |
 | **元に戻せる** | `--dry-run` は書き込む内容を事前に見せ、`--update` はあなたの編集を上書きせず、`--uninstall` は手を付けていないファイルを取り除きます。 |
 | **自己改善** | `skill-evolve` / `agent-evolve` が実際のミスを、それを起こしたスキルやエージェントの「Learned warnings」に変えます。 |
@@ -156,7 +156,7 @@ Blocked: a .env-type file is staged. Commit is not allowed.
 | インストール | スキル数 | 内容 |
 |---|---|---|
 | `--lang en` | 10 | ワークフロースキル: `review`、`status`、`search-first`、`security-precheck`、`docs-sync`、`handoff`、`memory-factcheck`、`skill-evolve`、`grill-me`、そしてテンプレートの `example-skill` |
-| `--lang ko`(デフォルト) | 24 | 上記 10 個に `yd-*` 専門スキル 14 個: PostgreSQL、Oracle、SQLite、リレーショナル設計、Go、React、TypeScript、Vite/pnpm ビルド、画面設計、韓国語ライティング、依存関係の CVE 点検 |
+| `--lang ko`(デフォルト) | 25 | 上記 10 個に `yd-*` 専門スキル 15 個: PostgreSQL、Oracle、SQLite、リレーショナル設計、Go、React、TypeScript、Vite/pnpm ビルド、画面設計、韓国語ライティング、図解中心の決裁文書、依存関係の CVE 点検 |
 
 `yd-*` スキルは韓国語で書かれているため、英語インストールには入りません。`--with-yd-skills` で英語インストールに追加でき、
 `--no-yd-skills` で韓国語インストールから外せます。スキルはスキャフォールドなしでも単独でインストールできます —

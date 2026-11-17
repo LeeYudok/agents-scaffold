@@ -8,20 +8,20 @@ Which skills an install gets, and how to install the skills without the scaffold
 | Install | Skills | Subagents | Contents |
 |---|---|---|---|
 | `--lang en` | 10 | 7 | The workflow skills, in English |
-| `--lang ko` (default) | 24 | 19 | The workflow skills in Korean plus 14 `yd-*` expert skills and their 12 agents |
+| `--lang ko` (default) | 25 | 20 | The workflow skills in Korean plus 15 `yd-*` expert skills and their 13 agents |
 | either, with `--with-personal-skills` | +11 | +4 | skills tied to the maintainer's environment |
 
 **The 10 workflow skills**: `review`, `status`, `search-first`, `security-precheck`, `docs-sync`, `handoff`,
 `memory-factcheck`, `skill-evolve`, `grill-me`, and `example-skill` — a template to copy when you write your own.
 
-**The 14 `yd-*` expert skills**: `yd-pg-expert`, `yd-oracle-expert`, `yd-sqlite-expert`, `yd-db-expert`,
+**The 15 `yd-*` expert skills**: `yd-pg-expert`, `yd-oracle-expert`, `yd-sqlite-expert`, `yd-db-expert`,
 `yd-go-expert`, `yd-react-expert`, `yd-typescript`, `yd-frontend-build`, `yd-cve-check`, `yd-mobile-web-planner`,
-`yd-nextjs-implementer`, `yd-blueprint`, `yd-agents-yaml`, `yd-writer-kr`. They are written in Korean and have no
+`yd-nextjs-implementer`, `yd-blueprint`, `yd-agents-yaml`, `yd-writer-kr`, `yd-visual-brief`. They are written in Korean and have no
 English overlay, which is why `--lang en` leaves them out.
 
 | Option | Effect |
 |---|---|
-| `--with-yd-skills` | Add the 14 `yd-*` skills (and their agents) to an English install |
+| `--with-yd-skills` | Add the 15 `yd-*` skills (and their agents) to an English install |
 | `--no-yd-skills` | Leave them out of a Korean install |
 | `--with-personal-skills` | Also install the 11 opt-in skills. They assume a specific GitLab, hosts, ui.doksam.com, FinGuard and a Hugo blog, so they are not meant for other environments |
 
@@ -41,7 +41,7 @@ claude plugin marketplace add LeeYudok/agents-scaffold && claude plugin install 
 codex plugin marketplace add LeeYudok/agents-scaffold && codex plugin add yd-skills@agents-scaffold
 ```
 
-- `yd-skills` carries the 14 `yd-*` skills plus `handoff`, `docs-sync`, `memory-factcheck` and `skill-evolve`.
+- `yd-skills` carries the 15 `yd-*` skills plus `handoff`, `docs-sync`, `memory-factcheck` and `skill-evolve`.
   `yd-skills-personal` carries the 11 opt-in ones. Both are Korean.
 - In Claude Code, plugin skills are namespaced (`yd-skills:yd-pg-expert`).
 - A plugin carries skills only. Project rules, hooks and subagents come from the installer, because Claude Code
@@ -55,12 +55,12 @@ codex plugin marketplace add LeeYudok/agents-scaffold && codex plugin add yd-ski
 plugin marketplace) and installs the ones you pick into any agent it supports:
 
 ```bash
-npx skills add LeeYudok/agents-scaffold                            # pick from the 21 general skills
+npx skills add LeeYudok/agents-scaffold                            # pick from the 22 general skills
 npx skills add LeeYudok/agents-scaffold --skill yd-cve-check -a claude-code
 INSTALL_INTERNAL_SKILLS=1 npx skills add LeeYudok/agents-scaffold  # also the scaffold-only and personal ones
 ```
 
-The 21 are the 7 workflow skills that run on their own plus the 14 `yd-*` skills. `review` and `security-precheck`
+The 22 are the 7 workflow skills that run on their own plus the 15 `yd-*` skills. `review` and `security-precheck`
 need the scaffold's subagents and `example-skill` is a template, so the three are hidden from the CLI
 (`metadata.internal`) and come with the installer. `.claude/skills/` holds the Korean originals; the English
 versions of the workflow skills come with a `--lang en` install.

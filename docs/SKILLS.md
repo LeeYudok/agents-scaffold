@@ -7,7 +7,7 @@
 
 | 설치 | 스킬 | 서브에이전트 | 내용 |
 |---|---|---|---|
-| `--lang ko` (기본) | 24 | 19 | 워크플로 스킬(한국어)과 `yd-*` 전문 스킬 14개, 그 에이전트 12개 |
+| `--lang ko` (기본) | 25 | 20 | 워크플로 스킬(한국어)과 `yd-*` 전문 스킬 15개, 그 에이전트 13개 |
 | `--lang en` | 10 | 7 | 워크플로 스킬(영어) |
 | 어느 쪽이든 `--with-personal-skills` | +11 | +4 | 메인테이너 환경 전용 스킬 |
 
@@ -15,14 +15,14 @@
 `memory-factcheck`, `skill-evolve`, `grill-me`, 그리고 `example-skill`. `example-skill` 은 스킬을 새로 만들 때
 복제하는 템플릿이다.
 
-**`yd-*` 전문 스킬 14개**: `yd-pg-expert`, `yd-oracle-expert`, `yd-sqlite-expert`, `yd-db-expert`,
+**`yd-*` 전문 스킬 15개**: `yd-pg-expert`, `yd-oracle-expert`, `yd-sqlite-expert`, `yd-db-expert`,
 `yd-go-expert`, `yd-react-expert`, `yd-typescript`, `yd-frontend-build`, `yd-cve-check`, `yd-mobile-web-planner`,
-`yd-nextjs-implementer`, `yd-blueprint`, `yd-agents-yaml`, `yd-writer-kr`. 한국어로 쓰여 있고 영어 오버레이가 없다.
+`yd-nextjs-implementer`, `yd-blueprint`, `yd-agents-yaml`, `yd-writer-kr`, `yd-visual-brief`. 한국어로 쓰여 있고 영어 오버레이가 없다.
 그래서 `--lang en` 설치에는 넣지 않는다.
 
 | 옵션 | 효과 |
 |---|---|
-| `--with-yd-skills` | 영어 설치에 `yd-*` 14개와 그 에이전트를 넣는다 |
+| `--with-yd-skills` | 영어 설치에 `yd-*` 15개와 그 에이전트를 넣는다 |
 | `--no-yd-skills` | 한국어 설치에서 뺀다 |
 | `--with-personal-skills` | 옵트인 11개도 설치한다. 특정 GitLab·호스트·ui.doksam.com·FinGuard·Hugo 블로그를 전제하므로 다른 환경에서는 쓰기 어렵다 |
 
@@ -42,7 +42,7 @@ claude plugin marketplace add LeeYudok/agents-scaffold && claude plugin install 
 codex plugin marketplace add LeeYudok/agents-scaffold && codex plugin add yd-skills@agents-scaffold
 ```
 
-- `yd-skills` 에는 `yd-*` 14개와 `handoff`·`docs-sync`·`memory-factcheck`·`skill-evolve` 가, `yd-skills-personal`
+- `yd-skills` 에는 `yd-*` 15개와 `handoff`·`docs-sync`·`memory-factcheck`·`skill-evolve` 가, `yd-skills-personal`
   에는 옵트인 11개가 들어 있다. 둘 다 한국어다.
 - Claude Code 에서는 플러그인 스킬 이름 앞에 플러그인 이름이 붙는다(`yd-skills:yd-pg-expert`).
 - 플러그인은 스킬만 싣는다. Claude Code 플러그인은 rules 를, Codex 플러그인은 서브에이전트를 싣지 못하므로
@@ -56,12 +56,12 @@ codex plugin marketplace add LeeYudok/agents-scaffold && codex plugin add yd-ski
 마켓플레이스)을 찾아, 고른 것만 지원하는 에이전트에 설치한다.
 
 ```bash
-npx skills add LeeYudok/agents-scaffold                            # pick from the 21 general skills
+npx skills add LeeYudok/agents-scaffold                            # pick from the 22 general skills
 npx skills add LeeYudok/agents-scaffold --skill yd-cve-check -a claude-code
 INSTALL_INTERNAL_SKILLS=1 npx skills add LeeYudok/agents-scaffold  # also the scaffold-only and personal ones
 ```
 
-21개는 단독으로 도는 워크플로 스킬 7개와 `yd-*` 14개다. `review`·`security-precheck` 는 스캐폴드 서브에이전트가
+22개는 단독으로 도는 워크플로 스킬 7개와 `yd-*` 15개다. `review`·`security-precheck` 는 스캐폴드 서브에이전트가
 있어야 돌고 `example-skill` 은 템플릿이라, 이 셋은 CLI 에서 숨기고(`metadata.internal`) 설치 스크립트로만 받는다.
 `.claude/skills/` 에 있는 것은 한국어 원본이다. 워크플로 스킬의 영어판은 `--lang en` 설치로 받는다.
 

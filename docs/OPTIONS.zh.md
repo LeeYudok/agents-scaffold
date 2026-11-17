@@ -118,19 +118,19 @@ Codex（codex-cli 0.166.0）与 agy（1.5.0）会在不调用任何工具的情�
 
 | 安装方式 | 技能 | 子代理 |
 |---|---|---|
-| `--lang ko`（默认） | 24 — 10 个工作流技能 + 14 个 `yd-*` | 19 — 7 + 12 个 `yd-*` |
+| `--lang ko`（默认） | 25 — 10 个工作流技能 + 15 个 `yd-*` | 20 — 7 + 13 个 `yd-*` |
 | `--lang en` | 10 — 工作流技能 | 7 |
 | 加上 `--with-personal-skills` | +11 | +4 |
 
 10 个工作流技能是 `review`、`status`、`search-first`、`security-precheck`、`docs-sync`、`handoff`、
-`memory-factcheck`、`skill-evolve`、`grill-me` 以及模板 `example-skill`。14 个 `yd-*` 技能包括从
+`memory-factcheck`、`skill-evolve`、`grill-me` 以及模板 `example-skill`。15 个 `yd-*` 技能包括从
 [LeeYudok/doksam-skills](https://github.com/LeeYudok/doksam-skills) 迁入的 13 个（DB、Go、React、TypeScript、构建、
-界面设计、韩文写作等）和依赖 CVE 检查 `yd-cve-check`（#79）；它们附带的 12 个代理（`.claude/agents/yd-*.md`）
+界面设计、韩文写作等）、依赖 CVE 检查 `yd-cve-check`（#79）和以图为主的审批文档 `yd-visual-brief`（#153）；它们附带的 13 个代理（`.claude/agents/yd-*.md`）
 也一并安装（#78）。
 
 | 选项 | 效果 |
 |---|---|
-| `--with-yd-skills` | 安装 14 个 `yd-*` 技能及其代理。`--lang ko` 的默认行为 |
+| `--with-yd-skills` | 安装 15 个 `yd-*` 技能及其代理。`--lang ko` 的默认行为 |
 | `--no-yd-skills` | 不安装。`--lang en` 的默认行为，因为 `yd-*` 技能是用韩文写的，没有英文覆盖层（#105） |
 | `--with-personal-skills` | 在技术栈预设之后再合并可选包 `presets/skills/personal/` |
 
@@ -194,7 +194,7 @@ agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --forge github --stack 
 | `--stack <list>` | 逗号分隔的技术栈预设列表。省略时进入交互式提问。未知名称会报错 |
 | `--name <name>` | `{{PROJECT_NAME}}` 的替换值。默认 = 目标目录名 |
 | `--harness <harness>` | `claude`（默认）、`codex`、`agy` 或 `all` — 见 [Harness](#harness--harness) |
-| `--with-yd-skills` / `--no-yd-skills` | 安装或略去 14 个韩文 `yd-*` 技能。默认：`ko` 安装包含，`en` 安装不包含 |
+| `--with-yd-skills` / `--no-yd-skills` | 安装或略去 15 个韩文 `yd-*` 技能。默认：`ko` 安装包含，`en` 安装不包含 |
 | `--with-personal-skills` | 额外安装绑定维护者环境的 11 个技能和 4 个代理 |
 | `--yes` | 跳过交互式提问（非交互模式） |
 | `--dry-run` | 不做任何改动。打印安装、`--update` 或 `--uninstall` 将要做的事（见下文） |

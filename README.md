@@ -101,7 +101,7 @@ agents-scaffold/bin/agents-scaffold.sh --uninstall . --dry-run # preview removal
 | **Measured, not assumed** | Every harness claim is a live measurement in [docs/harness-matrix.json](docs/harness-matrix.json): Claude Code 2.1.318 is at the **full** tier; Codex (codex-cli 0.166.0) and Antigravity (agy 1.5.0) are at **baseline** — the gate and `AGENTS.md` hold, path-scoped rules do not reach them. CI fails when a full-tier measurement expires. |
 | **13 stack presets** | Next.js, Spring Boot, Java web (JSP), Bun, Python, Go, Rust, Ruby on Rails, .NET, PHP Laravel, Android, Flutter, ops — each adds rules, and all but ops add a build/lint/test gate. GitHub or GitLab forge, Korean or English output. |
 | **Path-scoped rules** | A rule loads only while the agent touches matching files, so context stays lean instead of front-loading every convention. |
-| **Skills out of the box** | 10 workflow skills in an English install (review, status, handoff, docs-sync, security pre-check, ...). A Korean install adds 14 `yd-*` expert skills, 24 in total. See [Skills](#skills). |
+| **Skills out of the box** | 10 workflow skills in an English install (review, status, handoff, docs-sync, security pre-check, ...). A Korean install adds 15 `yd-*` expert skills, 25 in total. See [Skills](#skills). |
 | **Air-gapped and Windows ready** | An offline bundle installs with no network; Windows runs through Git Bash with a `.cmd` launcher ([docs/OFFLINE_INSTALL.en.md](docs/OFFLINE_INSTALL.en.md)). |
 | **Reversible** | `--dry-run` shows what would be written, `--update` never overwrites your edits, `--uninstall` takes the untouched files back out. |
 | **Self-improving** | `skill-evolve` / `agent-evolve` turn real mistakes into "Learned warnings" in the skill or agent that made them. |
@@ -154,7 +154,7 @@ One minute after install, the agent behaves like a teammate who knows the rules 
 | Install | Skills | What they are |
 |---|---|---|
 | `--lang en` | 10 | Workflow skills: `review`, `status`, `search-first`, `security-precheck`, `docs-sync`, `handoff`, `memory-factcheck`, `skill-evolve`, `grill-me`, and the `example-skill` template |
-| `--lang ko` (default) | 24 | The same 10 plus 14 `yd-*` expert skills: PostgreSQL, Oracle, SQLite, relational design, Go, React, TypeScript, Vite/pnpm builds, screen design, Korean writing, dependency CVE checks |
+| `--lang ko` (default) | 25 | The same 10 plus 15 `yd-*` expert skills: PostgreSQL, Oracle, SQLite, relational design, Go, React, TypeScript, Vite/pnpm builds, screen design, Korean writing, diagram-first briefs, dependency CVE checks |
 
 The `yd-*` skills are written in Korean, so an English install leaves them out. `--with-yd-skills` adds them to an
 English install and `--no-yd-skills` drops them from a Korean one. The skills also install on their own, without the
