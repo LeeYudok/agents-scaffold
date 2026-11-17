@@ -246,6 +246,10 @@ for (const t of tags) { await page.keyboard.type(t, { delay: 10 }); await page.k
 2026-11-17 에 고쳤다(#141). 옛 이름은 "증시요약"이다. 근거는 2026-11-14 상위 16개 분석(#124)과 2026-11-17 같은 날 글 12개 비교다. 표본이 작고 공감 수는 이웃 수 영향이 커서 인과는 아니다.
 본문은 yd-writer-kr 의 "해설·분석 글" 형식으로 쓰고 `--source` 대조를 통과시킨다.
 
+**전체 단계의 원본은 `busan/naver` 레포의 `AGENTS.yaml` `x-report-flow` 다**(#144). 사람용 설명은 그 레포의 `docs/blog/report-flow.md` 에 있다.
+리포트를 쓸 때는 그 맵의 `steps` 21개를 `order` 순서로 따른다. `gate` 가 맞지 않으면 다음 단계로 가지 않고, `stop_if` 에 걸리면 멈춘다. 글에는 `required_sections` 13개가 모두 있어야 한다.
+이 절은 글 형식만 다룬다. 단계가 맵과 다르면 맵이 우선한다.
+
 **올리는 순서**: 글은 www.doksam.com(`busan/www` 의 `site/content/blog/market-{open,close}-YYYY-MM-DD.md`)에 먼저 올려 사용자가 확인한다. 네이버 블로그에는 확인이 끝난 뒤 마지막에 올린다(2026-11-17 사용자 지시).
 
 | | 아침: 개장 전 리포트 | 밤: 마감 리포트 |
