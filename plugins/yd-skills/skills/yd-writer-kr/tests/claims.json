@@ -38,6 +38,9 @@
     {"id": "LLM-BASE-URL", "kind": "정상", "rule": "`WRITER_LLM_BASE_URL` 을 지정하면 Upstage 를 부르지 않는다.", "test": "test_check_writing.py::test_base_url_replaces_upstage"},
     {"id": "LLM-MODEL-REQUIRED", "kind": "도구오류", "rule": "`WRITER_LLM_MODEL` 은 필수다.", "test": "test_check_writing.py::test_base_url_requires_model"},
     {"id": "LLM-SECRET-BLOCK", "kind": "실패", "rule": "시크릿 차단은 엔드포인트를 바꿔도 그대로다.", "test": "test_check_writing.py::test_secret_is_blocked_on_custom_endpoint"},
-    {"id": "LLM-DEFAULT-UPSTAGE", "kind": "정상", "rule": "지정하지 않으면 Upstage 를 부른다.", "test": "test_check_writing.py::test_default_endpoint_is_upstage"}
+    {"id": "LLM-DEFAULT-UPSTAGE", "kind": "정상", "rule": "지정하지 않으면 Upstage 를 부른다.", "test": "test_check_writing.py::test_default_endpoint_is_upstage"},
+    {"id": "TASKS-FORMAT", "kind": "정상", "rule": "과제는 이슈 본문, 공지, 장애 보고, 회의록 요약에 3개씩 12개다.", "test": "test_writing_tasks.py::test_twelve_tasks_three_per_kind"},
+    {"id": "TASKS-SCORER", "kind": "실패", "rule": "채점기는 꼭 들어갈 사실, 첫머리의 결론, 넣으면 안 되는 내용, 검사기 오류, 원문 대조 오류를 본다.", "test": "test_writing_tasks.py::test_bad_notice_loses_the_points_it_should"},
+    {"id": "TASKS-BLIND", "kind": "경계", "rule": "`--blind` 가 어느 쪽 글인지 가린 비교지를 만든다.", "test": "test_writing_tasks.py::test_blind_sheet_hides_which_folder_wrote_what"}
   ]
 }
