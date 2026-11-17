@@ -1,0 +1,45 @@
+[
+  {
+    "query": "여기서 끊자. 상태 남겨줘",
+    "should_trigger": true
+  },
+  {
+    "query": "컨텍스트 거의 찼어. 다음 세션에 넘길 수 있게 핸드오프 써줘",
+    "should_trigger": true
+  },
+  {
+    "query": "이 핸드오프 이슈 이어받아: https://github.com/acme/app/issues/12",
+    "should_trigger": true
+  },
+  {
+    "query": "HANDOFF.md 읽고 재개해줘",
+    "should_trigger": true
+  },
+  {
+    "query": "세션 넘기게 지금 어디까지 했는지 이슈로 남겨",
+    "should_trigger": true
+  },
+  {
+    "query": "지금 프로젝트 상태 한눈에 보여줘",
+    "should_trigger": false,
+    "expect": "status"
+  },
+  {
+    "query": "이 스레드 세 줄 요약해줘",
+    "should_trigger": false,
+    "expect": "yd-writer-kr"
+  },
+  {
+    "query": "메모리 정리해줘",
+    "should_trigger": false,
+    "expect": "memory-factcheck"
+  },
+  {
+    "query": "커밋하고 푸시해줘",
+    "should_trigger": false
+  },
+  {
+    "query": "이슈 하나 등록해줘",
+    "should_trigger": false
+  }
+]

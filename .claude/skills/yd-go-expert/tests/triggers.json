@@ -1,0 +1,46 @@
+[
+  {
+    "query": "이 Go 코드 리뷰해줘",
+    "should_trigger": true
+  },
+  {
+    "query": "goroutine 누수 나는 것 같아. 봐줘",
+    "should_trigger": true
+  },
+  {
+    "query": "Go 에러 처리 방식 리팩터링해줘",
+    "should_trigger": true
+  },
+  {
+    "query": "net/http 서버에 타임아웃 넣어줘",
+    "should_trigger": true
+  },
+  {
+    "query": "go:embed 로 정적 파일 묶어줘",
+    "should_trigger": true
+  },
+  {
+    "query": "이 TypeScript 타입 봐줘",
+    "should_trigger": false,
+    "expect": "yd-typescript"
+  },
+  {
+    "query": "PostgreSQL 실행계획 봐줘",
+    "should_trigger": false,
+    "expect": "yd-pg-expert"
+  },
+  {
+    "query": "Vite 빌드 설정해줘",
+    "should_trigger": false,
+    "expect": "yd-frontend-build"
+  },
+  {
+    "query": "React 훅 리팩터링해줘",
+    "should_trigger": false,
+    "expect": "yd-react-expert"
+  },
+  {
+    "query": "파이썬 스크립트 고쳐줘",
+    "should_trigger": false
+  }
+]

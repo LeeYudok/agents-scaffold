@@ -79,6 +79,7 @@ type ProseLine struct {
 	Raw     string
 	Clean   string
 	Heading bool
+	List    bool // 목록 항목. JSON 에는 내보내지 않는다 (Python 호환 계층은 네 칸을 읽는다)
 }
 
 func (p ProseLine) MarshalJSON() ([]byte, error) {
@@ -101,9 +102,11 @@ func proseLines(text string) []ProseLine {
 		clean = emphasis.ReplaceAllString(clean, "")
 		isHeading := heading.MatchString(clean)
 		clean = heading.ReplaceAllString(clean, "")
-		clean = listMark.ReplaceAllString(strings.TrimRightFunc(clean, unicode.IsSpace), "")
+		clean = strings.TrimRightFunc(clean, unicode.IsSpace)
+		isList := listMark.MatchString(clean)
+		clean = listMark.ReplaceAllString(clean, "")
 		if strings.TrimSpace(clean) != "" {
-			out = append(out, ProseLine{line.No, line.Raw, strings.TrimSpace(clean), isHeading})
+			out = append(out, ProseLine{line.No, line.Raw, strings.TrimSpace(clean), isHeading, isList})
 		}
 	}
 	return out

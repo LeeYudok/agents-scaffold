@@ -1,0 +1,45 @@
+[
+  {
+    "query": "디렉터리 옮긴 뒤로 README 가 안 맞는 것 같아. 문서 현행화 해줘",
+    "should_trigger": true
+  },
+  {
+    "query": "포트 바꿨으니까 문서 최신화 부탁해",
+    "should_trigger": true
+  },
+  {
+    "query": "리팩터링 머지했는데 문서 드리프트 확인해줘",
+    "should_trigger": true
+  },
+  {
+    "query": "지운 폴더를 가리키는 남은 참조 정리해줘",
+    "should_trigger": true
+  },
+  {
+    "query": "PR 올리기 전에 README 갱신할 거 있는지 봐줘",
+    "should_trigger": true
+  },
+  {
+    "query": "메모리 파일이 너무 많아. 감사해줘",
+    "should_trigger": false,
+    "expect": "memory-factcheck"
+  },
+  {
+    "query": "이 저장소에 AGENTS.yaml 만들어줘",
+    "should_trigger": false,
+    "expect": "yd-agents-yaml"
+  },
+  {
+    "query": "이 README 문장 좀 읽기 쉽게 다듬어줘",
+    "should_trigger": false,
+    "expect": "yd-writer-kr"
+  },
+  {
+    "query": "이 함수에 주석 달아줘",
+    "should_trigger": false
+  },
+  {
+    "query": "새 기능 설명하는 블로그 글 써줘",
+    "should_trigger": false
+  }
+]

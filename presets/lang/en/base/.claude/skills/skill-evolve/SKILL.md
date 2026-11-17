@@ -1,6 +1,6 @@
 ---
 name: skill-evolve
-description: A meta-skill that turns user feedback or an agent's failure cases into rules in this repository's skill SKILL.md files. Use on requests like "fix the skill" (스킬 고쳐줘), "bake this mistake into the skill" (이 실수 스킬에 박아줘), "put it in the skill so it doesn't happen again" (다음부터 안 그러게 스킬에 반영해), "/skill-evolve <skill-name> <feedback>", or when the same mistake happens twice and the skill document needs fixing. Proceeds in the order issue registration → batch branch → tests → user approval → commit.
+description: A meta-skill that turns user feedback or an agent's failure cases into rules in this repository's skill SKILL.md files. Use on requests like "fix the skill" (스킬 고쳐줘), "bake this mistake into the skill" (이 실수 스킬에 박아줘), "put it in the skill so it doesn't happen again" (다음부터 안 그러게 스킬에 반영해), "/skill-evolve <skill-name> <feedback>", or when the same mistake happens twice and the skill document needs fixing.
 ---
 
 # Role

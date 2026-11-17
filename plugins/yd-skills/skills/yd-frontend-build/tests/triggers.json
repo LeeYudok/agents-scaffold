@@ -1,0 +1,47 @@
+[
+  {
+    "query": "pnpm 워크스페이스 설정해줘",
+    "should_trigger": true
+  },
+  {
+    "query": "Vite 빌드가 깨져. 설정 봐줘",
+    "should_trigger": true
+  },
+  {
+    "query": "번들 크기 줄여줘",
+    "should_trigger": true
+  },
+  {
+    "query": "pnpm-lock.yaml 충돌 정리해줘",
+    "should_trigger": true
+  },
+  {
+    "query": "폐쇄망에서 폰트·라이브러리 self-host 하게 바꿔줘",
+    "should_trigger": true
+  },
+  {
+    "query": "이 컴포넌트 리렌더 줄여줘",
+    "should_trigger": false,
+    "expect": "yd-react-expert"
+  },
+  {
+    "query": "타입 에러 고쳐줘",
+    "should_trigger": false,
+    "expect": "yd-typescript"
+  },
+  {
+    "query": "pnpm 취약점 점검해줘",
+    "should_trigger": false,
+    "expect": "yd-cve-check"
+  },
+  {
+    "query": "화면설계서대로 Next.js 로 구현해줘",
+    "should_trigger": false,
+    "expect": "yd-nextjs-implementer"
+  },
+  {
+    "query": "Go 빌드 태그 설정해줘",
+    "should_trigger": false,
+    "expect": "yd-go-expert"
+  }
+]

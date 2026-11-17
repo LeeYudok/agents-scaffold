@@ -30,6 +30,7 @@ Usage: check-writing [--chat] [--prose] [--strict] [--max-len N] [--rules FILE] 
   --lines N     요약 줄 수(제목·빈 줄 제외)가 N 을 넘으면 오류
   --rules F     금지 표현 표. 지정하지 않으면 환경변수 CHECK_WRITING_RULES, 실행 파일 위쪽의 references/ 순으로 찾는다
   --profile P   표기 프로필. 규칙 파일 옆 profiles/P.md 를 읽는다(.md 경로도 된다). 기본 doksam
+심각도: 오류 → 종료 코드 1, 경고 → --strict 일 때만 1, 참고 → 종료 코드에 영향 없음
 종료 코드: 0 오류 없음, 1 글 검사 위반, 2 실행 불가`
 
 type options struct {
@@ -315,7 +316,7 @@ func report(opts *options, stdin io.Reader, stdout io.Writer) (int, error) {
 		}
 		source = newSourceFacts(text)
 	}
-	errorsCount, warnings := 0, 0
+	errorsCount, warnings, notes := 0, 0, 0
 	var reports []fileReport
 	for _, path := range opts.paths {
 		name := path
@@ -328,9 +329,12 @@ func report(opts *options, stdin io.Reader, stdout io.Writer) (int, error) {
 		}
 		findings := withSummaryChecks(engine.check(text, opts.mode()), text, source, opts.lines)
 		for _, f := range findings {
-			if f.Level == levelError {
+			switch f.Level {
+			case levelError:
 				errorsCount++
-			} else {
+			case levelNote:
+				notes++
+			default:
 				warnings++
 			}
 			if !opts.json {
@@ -340,7 +344,7 @@ func report(opts *options, stdin io.Reader, stdout io.Writer) (int, error) {
 		reports = append(reports, fileReport{name, findings})
 	}
 	if opts.json {
-		data, err := marshal(map[string]any{"files": reports, "errors": errorsCount, "warnings": warnings})
+		data, err := marshal(map[string]any{"files": reports, "errors": errorsCount, "warnings": warnings, "notes": notes})
 		if err != nil {
 			return 0, err
 		}
@@ -349,6 +353,9 @@ func report(opts *options, stdin io.Reader, stdout io.Writer) (int, error) {
 		suffix := ""
 		if opts.strict {
 			suffix = " (--strict)"
+		}
+		if notes > 0 {
+			suffix = fmt.Sprintf(", 참고 %d건", notes) + suffix
 		}
 		fmt.Fprintf(stdout, "오류 %d건, 경고 %d건%s\n", errorsCount, warnings, suffix)
 	}

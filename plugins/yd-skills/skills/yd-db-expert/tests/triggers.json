@@ -1,0 +1,46 @@
+[
+  {
+    "query": "주문 테이블 스키마 정규화 봐줘",
+    "should_trigger": true
+  },
+  {
+    "query": "소프트 삭제를 어떻게 설계할지 정해줘",
+    "should_trigger": true
+  },
+  {
+    "query": "이 SQL 조회가 N+1 인지 봐줘",
+    "should_trigger": true
+  },
+  {
+    "query": "목록 쿼리를 OFFSET 대신 커서 페이징으로 바꾸자",
+    "should_trigger": true
+  },
+  {
+    "query": "DB 스키마 마이그레이션 단계를 어떻게 나눌지 설계해줘",
+    "should_trigger": true
+  },
+  {
+    "query": "CREATE INDEX CONCURRENTLY 써도 되는지 봐줘",
+    "should_trigger": false,
+    "expect": "yd-pg-expert"
+  },
+  {
+    "query": "ORA-01555 오류 원인 찾아줘",
+    "should_trigger": false,
+    "expect": "yd-oracle-expert"
+  },
+  {
+    "query": "SQLite WAL 잠금 문제 봐줘",
+    "should_trigger": false,
+    "expect": "yd-sqlite-expert"
+  },
+  {
+    "query": "ALTER TABLE 롤백 SQL 만들어줘",
+    "should_trigger": false
+  },
+  {
+    "query": "Go 에서 DB 커넥션 풀 코드 리뷰해줘",
+    "should_trigger": false,
+    "expect": "yd-go-expert"
+  }
+]

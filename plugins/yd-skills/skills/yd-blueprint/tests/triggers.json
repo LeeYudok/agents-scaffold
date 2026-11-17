@@ -1,0 +1,47 @@
+[
+  {
+    "query": "이 프로젝트 청사진 만들어줘",
+    "should_trigger": true
+  },
+  {
+    "query": "구조도랑 구현 현황표 화면으로 띄워줘",
+    "should_trigger": true
+  },
+  {
+    "query": "프론트·백엔드 경계를 도면으로 그려줘",
+    "should_trigger": true
+  },
+  {
+    "query": "청사진의 근거 코드 경로가 낡았는지 검사해줘",
+    "should_trigger": true
+  },
+  {
+    "query": "blueprint 데이터에 남은 작업 추가해줘",
+    "should_trigger": true
+  },
+  {
+    "query": "모바일 앱 화면설계서 만들어줘",
+    "should_trigger": false,
+    "expect": "yd-mobile-web-planner"
+  },
+  {
+    "query": "Vite 빌드 설정 고쳐줘",
+    "should_trigger": false,
+    "expect": "yd-frontend-build"
+  },
+  {
+    "query": "AGENTS.yaml 만들어줘",
+    "should_trigger": false,
+    "expect": "yd-agents-yaml"
+  },
+  {
+    "query": "이 React 컴포넌트 리팩터링해줘",
+    "should_trigger": false,
+    "expect": "yd-react-expert"
+  },
+  {
+    "query": "프로젝트 상태 보여줘",
+    "should_trigger": false,
+    "expect": "status"
+  }
+]

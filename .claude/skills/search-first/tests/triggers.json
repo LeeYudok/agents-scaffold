@@ -1,0 +1,45 @@
+[
+  {
+    "query": "날짜 포맷 유틸 하나 추가해줘",
+    "should_trigger": true
+  },
+  {
+    "query": "CSV 파서 새로 짜줘",
+    "should_trigger": true
+  },
+  {
+    "query": "재시도 로직 넣을 라이브러리 추가하자",
+    "should_trigger": true
+  },
+  {
+    "query": "슬랙 알림 보내는 기능 넣어줘",
+    "should_trigger": true
+  },
+  {
+    "query": "이미지 리사이즈 기능 만들어줘",
+    "should_trigger": true
+  },
+  {
+    "query": "이 함수 이름 바꿔줘",
+    "should_trigger": false
+  },
+  {
+    "query": "테스트 실패하는 거 고쳐줘",
+    "should_trigger": false
+  },
+  {
+    "query": "pnpm 취약점 점검해줘",
+    "should_trigger": false,
+    "expect": "yd-cve-check"
+  },
+  {
+    "query": "이 문서 다듬어줘",
+    "should_trigger": false,
+    "expect": "yd-writer-kr"
+  },
+  {
+    "query": "프로젝트 상태 보여줘",
+    "should_trigger": false,
+    "expect": "status"
+  }
+]

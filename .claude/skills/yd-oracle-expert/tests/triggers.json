@@ -1,0 +1,46 @@
+[
+  {
+    "query": "Oracle 에서 빈 문자열이 NULL 로 들어가는 문제 봐줘",
+    "should_trigger": true
+  },
+  {
+    "query": "PostgreSQL 쿼리를 Oracle 로 옮겨줘",
+    "should_trigger": true
+  },
+  {
+    "query": "ORA-00942 오류 원인 찾아줘",
+    "should_trigger": true
+  },
+  {
+    "query": "PL/SQL 프로시저 작성해줘",
+    "should_trigger": true
+  },
+  {
+    "query": "ROWNUM 페이징 쿼리 고쳐줘",
+    "should_trigger": true
+  },
+  {
+    "query": "timestamptz 컬럼 설계 봐줘",
+    "should_trigger": false,
+    "expect": "yd-pg-expert"
+  },
+  {
+    "query": "스키마 정규화 봐줘",
+    "should_trigger": false,
+    "expect": "yd-db-expert"
+  },
+  {
+    "query": "SQLite 마이그레이션 해줘",
+    "should_trigger": false,
+    "expect": "yd-sqlite-expert"
+  },
+  {
+    "query": "MySQL 인덱스 봐줘",
+    "should_trigger": false
+  },
+  {
+    "query": "Go 에서 Oracle 드라이버 연결 코드 짜줘",
+    "should_trigger": false,
+    "expect": "yd-go-expert"
+  }
+]

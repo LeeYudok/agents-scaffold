@@ -73,3 +73,21 @@ INSTALL_INTERNAL_SKILLS=1 npx skills add LeeYudok/agents-scaffold  # also the sc
 Antigravity 전역 설치 경로는 두 도구가 서로 다르다. `skills` 1.7.6 은 `~/.gemini/antigravity-cli/skills` 에 쓰고
 `install-skills.sh` 는 `~/.gemini/config/skills` 를 쓴다
 ([vercel-labs/skills#1483](https://github.com/vercel-labs/skills/pull/1483) 이 들어가면 같아진다).
+
+## 스킬 품질 검사
+
+- **규격 한도**: `tests/test_skill_contracts.py` 가 `name`(폴더명과 같고 64자 이하), `description`(1024자 이하),
+  `SKILL.md`(500줄 미만), `references/`(한 단계)를 CI 에서 검사한다(#130). 길어지면 상세 내용을 `references/` 로 옮긴다.
+- **발동 평가**: 노출 스킬마다 `tests/triggers.json` 에 발동해야 하는 질문과 발동하면 안 되는 질문을 둔다(#131).
+  형식은 `tests/test_skill_triggers.py` 가 CI 에서 검사한다. 실제 평가는 모델을 호출하므로 손으로 돌린다.
+
+```bash
+python3 scripts/dev/eval-skill-triggers.py --dry-run             # 케이스만 만든다(모델 호출 없음)
+python3 scripts/dev/eval-skill-triggers.py --skill yd-cve-check  # 한 스킬만
+python3 scripts/dev/eval-skill-triggers.py -j 4 --max-cost-usd 15
+```
+
+실행기는 노출 스킬 전부를 임시 플러그인으로 묶어 `claude plugin eval`(Claude Code 2.1.269 이상)에 넘긴다.
+2026-11-15 실측에서 한 건에 약 0.07달러가 들었다. 210건 가운데 187건을 돌려 169건이 맞았다(90%).
+틀린 18건 가운데 17건은 발동하지 않은 경우였고, `search-first` 는 5건 중 1건만 발동했다.
+description 을 고친 뒤에는 그 스킬만 `--skill` 로 다시 돌려 비교한다.

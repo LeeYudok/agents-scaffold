@@ -1,0 +1,47 @@
+[
+  {
+    "query": "중고거래 앱 화면설계서 만들어줘",
+    "should_trigger": true
+  },
+  {
+    "query": "예약 서비스 모바일 웹 IA 짜줘",
+    "should_trigger": true
+  },
+  {
+    "query": "커뮤니티 앱 스토리보드 그려줘",
+    "should_trigger": true
+  },
+  {
+    "query": "이 서비스 와이어프레임이랑 Business Rules 써줘",
+    "should_trigger": true
+  },
+  {
+    "query": "기획서에 결제 화면 추가해줘",
+    "should_trigger": true
+  },
+  {
+    "query": "화면설계서대로 구현해줘",
+    "should_trigger": false,
+    "expect": "yd-nextjs-implementer"
+  },
+  {
+    "query": "프로젝트 청사진 만들어줘",
+    "should_trigger": false,
+    "expect": "yd-blueprint"
+  },
+  {
+    "query": "이 기획안 구현 전에 심문해줘",
+    "should_trigger": false,
+    "expect": "grill-me"
+  },
+  {
+    "query": "React 컴포넌트 만들어줘",
+    "should_trigger": false,
+    "expect": "yd-react-expert"
+  },
+  {
+    "query": "보고서 문장 다듬어줘",
+    "should_trigger": false,
+    "expect": "yd-writer-kr"
+  }
+]

@@ -62,6 +62,9 @@ the section below and the issues labeled
   `yd-*` skill or handoff/docs-sync/memory-factcheck/skill-evolve, run `python3 scripts/dev/build-plugins.py` and commit
   the copies with the change (#82; CI fails on drift).
 - **Maintainer scripts** (`scripts/dev/`): CI and measurement tools. `scripts/` itself holds only user-facing tools.
+- **Skill triggers** (`.claude/skills/<name>/tests/triggers.json`): a new visible skill needs at least three queries that
+  should trigger it and three that should not (CI checks the format). `scripts/dev/eval-skill-triggers.py` runs them
+  through `claude plugin eval`; it calls a model, so run it by hand after changing a `description` (#131).
 - **Bootstrap script** (`bin/agents-scaffold.sh`): the only piece of logic that
   copies files, applies presets, and substitutes placeholders. Changes here
   affect every mode of consumption — test them with the bats suite.

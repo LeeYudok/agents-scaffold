@@ -1,0 +1,45 @@
+[
+  {
+    "query": "grill-me 로 이 기능 아이디어 검증해줘",
+    "should_trigger": true
+  },
+  {
+    "query": "구현 전에 이 스펙 좀 굽자. 압박 질문 해줘",
+    "should_trigger": true
+  },
+  {
+    "query": "이 기획 심문해줘. 구멍 찾아줘",
+    "should_trigger": true
+  },
+  {
+    "query": "내 설계안 grill 해줘",
+    "should_trigger": true
+  },
+  {
+    "query": "만들기 전에 이 요청을 빡세게 따져 물어봐",
+    "should_trigger": true
+  },
+  {
+    "query": "이 PR 코드 리뷰해줘",
+    "should_trigger": false,
+    "expect": "review"
+  },
+  {
+    "query": "화면설계서 만들어줘",
+    "should_trigger": false,
+    "expect": "yd-mobile-web-planner"
+  },
+  {
+    "query": "이 문서 요약해줘",
+    "should_trigger": false,
+    "expect": "yd-writer-kr"
+  },
+  {
+    "query": "이 버그 고쳐줘",
+    "should_trigger": false
+  },
+  {
+    "query": "테스트 돌려줘",
+    "should_trigger": false
+  }
+]

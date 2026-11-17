@@ -1,0 +1,45 @@
+[
+  {
+    "query": "이 글 다듬어줘",
+    "should_trigger": true
+  },
+  {
+    "query": "번역투 빼고 읽기 쉽게 고쳐줘",
+    "should_trigger": true
+  },
+  {
+    "query": "이 회의록 세 줄 요약해줘",
+    "should_trigger": true
+  },
+  {
+    "query": "PR 본문 한국어로 써줘",
+    "should_trigger": true
+  },
+  {
+    "query": "공지 메일 초안 써줘",
+    "should_trigger": true
+  },
+  {
+    "query": "README 가 코드랑 맞는지 문서 현행화 해줘",
+    "should_trigger": false,
+    "expect": "docs-sync"
+  },
+  {
+    "query": "이 문서 영어로 번역해줘",
+    "should_trigger": false
+  },
+  {
+    "query": "화면설계서 써줘",
+    "should_trigger": false,
+    "expect": "yd-mobile-web-planner"
+  },
+  {
+    "query": "이 코드 주석을 영어로 바꿔줘",
+    "should_trigger": false
+  },
+  {
+    "query": "세션 상태 남겨줘",
+    "should_trigger": false,
+    "expect": "handoff"
+  }
+]
