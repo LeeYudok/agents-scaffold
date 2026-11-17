@@ -208,7 +208,7 @@ flowchart TD
 | `m-go`<br>검사기 Go 코드를 고친다<br>(단계) | go 폴더에서 gofmt -l . 의 출력이 없어야 한다.<br>go vet ./... 와 go test ./... 를 통과해야 한다.<br>기존 결과(python-baseline.json 64개 사례)가 바뀌지 않아야 한다.<br>옵션이나 환경변수를 더하면 이 지도의 tools 에도 적는다. |  | `go/`<br>`tests/fixtures/` | `m-test` |
 | `m-docs`<br>원칙·형식·점검표·흐름을 고친다<br>(단계) | SKILL.md 를 고친다. claims.json 의 rule 문장은 문서에 그대로 있어야 한다.<br>절을 더하면 이 지도의 단계 doc 에 연결한다.<br>흐름을 바꾸면 flow.yaml 을 고치고 flow_map 의 --write 로 flow.md 를 다시 만든다.<br>실측으로 확인한 함정은 Learned warnings 에 날짜와 함께 적는다. | 흐름 지도 검증 — `scripts/flow_map.py` | `SKILL.md`<br>`tests/claims.json`<br>`references/flow.yaml`<br>`references/flow.md`<br>`scripts/flow_map.py` | `m-test` |
 | `m-binaries`<br>반입용 바이너리를 만든다<br>(도구) | 플랫폼을 주지 않으면 windows/amd64, linux/amd64, darwin/arm64 를 만든다.<br>릴리스에 올릴 때 SHA256SUMS 에 더한다. |  | `scripts/build-binaries.sh` | `m-test` |
-| `m-test`<br>테스트와 지도 검증을 돌린다<br>(관문) | tests 폴더의 unittest 를 모두 돌린다.<br>flow_map 의 --check 로 지도에 빠진 것이 없는지 본다.<br>SKILL.md 와 금지 표현 파일이 검사기를 통과하는지 본다.<br>**통과 조건**: 테스트와 지도 검증이 모두 통과한다 |  | `scripts/flow_map.py`<br>`tests/test_check_writing.py`<br>`tests/test_native_cli.py`<br>`tests/test_writing_tasks.py`<br>`tests/test_flow_map.py` | `m-eval-gate` |
+| `m-test`<br>테스트와 지도 검증을 돌린다<br>(관문) | tests 폴더의 unittest 를 모두 돌린다.<br>flow_map 의 --check 로 지도에 빠진 것이 없는지 본다.<br>SKILL.md 와 금지 표현 파일이 검사기를 통과하는지 본다.<br>**통과 조건**: 테스트와 지도 검증이 모두 통과한다 |  | `scripts/flow_map.py`<br>`tests/test_check_writing.py`<br>`tests/test_native_cli.py`<br>`tests/test_writing_tasks.py`<br>`tests/test_flow_map.py`<br>`tests/triggers.json` | `m-eval-gate` |
 | `m-eval-gate`<br>원칙이나 금지 표현을 크게 바꿨는가<br>(갈림) |  |  |  | `e-prompts` — 그렇다<br>`m-done` — 아니다 |
 | `m-done`<br>저장소 규칙대로 올린다<br>(끝) | 이슈, 브랜치, 커밋, PR 은 그 저장소의 규칙을 따른다. |  |  |  |
 
@@ -453,6 +453,7 @@ python3 <스킬경로>/scripts/flow_map.py --check
 | `tests/test_check_writing.py` | 검사기, 교정, 요약 테스트 |
 | `tests/test_native_cli.py` | Go 바이너리 명령행 테스트 |
 | `tests/test_writing_tasks.py` | 쓰기 과제와 채점기 테스트 |
+| `tests/triggers.json` | 스킬을 불러야 하는 요청과 부르지 말아야 하는 요청의 예 (스킬 트리거 검사용) |
 | `tests/test_flow_map.py` | 지도 검증기 테스트 |
 
 ## 지도를 고칠 때

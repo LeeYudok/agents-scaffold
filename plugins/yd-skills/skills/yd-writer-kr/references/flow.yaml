@@ -605,7 +605,7 @@ nodes:
       - flow_map 의 --check 로 지도에 빠진 것이 없는지 본다.
       - SKILL.md 와 금지 표현 파일이 검사기를 통과하는지 본다.
     pass: 테스트와 지도 검증이 모두 통과한다
-    uses: [flow-map, tests/test_check_writing.py, tests/test_native_cli.py, tests/test_writing_tasks.py, tests/test_flow_map.py]
+    uses: [flow-map, tests/test_check_writing.py, tests/test_native_cli.py, tests/test_writing_tasks.py, tests/test_flow_map.py, tests/triggers.json]
     next:
       - to: m-eval-gate
 
@@ -880,4 +880,5 @@ files:
   tests/test_check_writing.py: 검사기, 교정, 요약 테스트
   tests/test_native_cli.py: Go 바이너리 명령행 테스트
   tests/test_writing_tasks.py: 쓰기 과제와 채점기 테스트
+  tests/triggers.json: 스킬을 불러야 하는 요청과 부르지 말아야 하는 요청의 예 (스킬 트리거 검사용)
   tests/test_flow_map.py: 지도 검증기 테스트
