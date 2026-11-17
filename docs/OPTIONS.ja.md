@@ -118,19 +118,19 @@ Codex 側の制約がもう 2 点、設計に効いてきます。
 
 | インストール | スキル | サブエージェント |
 |---|---|---|
-| `--lang ko`(デフォルト) | 24 — ワークフロー 10 + `yd-*` 14 | 19 — 7 + `yd-*` 12 |
+| `--lang ko`(デフォルト) | 25 — ワークフロー 10 + `yd-*` 15 | 20 — 7 + `yd-*` 13 |
 | `--lang en` | 10 — ワークフロースキル | 7 |
 | `--with-personal-skills` を追加 | +11 | +4 |
 
 ワークフロースキル 10 個は `review`・`status`・`search-first`・`security-precheck`・`docs-sync`・`handoff`・
-`memory-factcheck`・`skill-evolve`・`grill-me` と、テンプレートの `example-skill` です。`yd-*` 14 個は
+`memory-factcheck`・`skill-evolve`・`grill-me` と、テンプレートの `example-skill` です。`yd-*` 15 個は
 [LeeYudok/doksam-skills](https://github.com/LeeYudok/doksam-skills) から移した 13 個(DB・Go・React・TypeScript・ビルド・
-画面設計・韓国語ライティングなど)と、依存関係の CVE 点検 `yd-cve-check`(#79)です。付属するエージェント 12 個
+画面設計・韓国語ライティングなど)と、依存関係の CVE 点検 `yd-cve-check`(#79)、図解中心の決裁文書 `yd-visual-brief`(#153)です。付属するエージェント 13 個
 (`.claude/agents/yd-*.md`)も一緒にインストールされます(#78)。
 
 | オプション | 効果 |
 |---|---|
-| `--with-yd-skills` | `yd-*` 14 個とそのエージェントをインストールする。`--lang ko` のデフォルト |
+| `--with-yd-skills` | `yd-*` 15 個とそのエージェントをインストールする。`--lang ko` のデフォルト |
 | `--no-yd-skills` | 入れない。`--lang en` のデフォルト。`yd-*` スキルは韓国語で書かれており、英語オーバーレイがないため(#105) |
 | `--with-personal-skills` | オプトインバンドル `presets/skills/personal/` もスタックプリセットの後にマージする |
 
@@ -198,7 +198,7 @@ agents-scaffold/bin/agents-scaffold.sh /path/to/new-repo --forge github --stack 
 | `--stack <list>` | カンマ区切りのスタックプリセット。省略時は対話的にプロンプト。未知の名前はエラー |
 | `--name <name>` | `{{PROJECT_NAME}}` の置換値。デフォルトは対象ディレクトリ名 |
 | `--harness <harness>` | `claude`(デフォルト)、`codex`、`agy`、`all` — [ハーネス](#ハーネス---harness)を参照 |
-| `--with-yd-skills` / `--no-yd-skills` | 韓国語の `yd-*` スキル 14 個を入れる/入れない。デフォルトは `ko` で入れ、`en` で入れない |
+| `--with-yd-skills` / `--no-yd-skills` | 韓国語の `yd-*` スキル 15 個を入れる/入れない。デフォルトは `ko` で入れ、`en` で入れない |
 | `--with-personal-skills` | メンテナー環境専用のスキル 11 個とエージェント 4 個もインストール |
 | `--yes` | 対話プロンプトをスキップ(非対話モード) |
 | `--dry-run` | 何も変更しない。インストール、`--update`、`--uninstall` が行う内容を表示する(後述) |

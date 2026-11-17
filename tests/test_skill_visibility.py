@@ -39,8 +39,8 @@ class SkillVisibilityTests(unittest.TestCase):
         visible = [
             p.parent.name for p in sorted(BASE.glob("*/SKILL.md")) if not is_internal(p)
         ]
-        self.assertEqual(len(visible), 21, visible)  # workflow 7 + yd-* 14
-        self.assertEqual(sum(n.startswith("yd-") for n in visible), 14)
+        self.assertEqual(len(visible), 22, visible)  # workflow 7 + yd-* 15
+        self.assertEqual(sum(n.startswith("yd-") for n in visible), 15)
         for name in visible:
             self.assertNotIn(name, SCAFFOLD_ONLY)
 

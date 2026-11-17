@@ -1,0 +1,8 @@
+{
+  "roles": ["paper", "ink", "accent", "signal", "muted", "line", "soft", "tint"],
+  "palettes": {
+    "ink-cobalt": {"label": "먹과 코발트", "mood": "차분하고 또렷하다. 기술·금융 문서의 기본값", "paper": "#fbfbf8", "ink": "#111318", "accent": "#2445d4", "signal": "#e8590c", "muted": "#6a6f79", "line": "#dcdcd6", "soft": "#f3f3f0", "tint": "#f4f6fe"},
+    "forest-terracotta": {"label": "숲과 테라코타", "mood": "따뜻하고 안정적이다. 운영·조직·교육 문서", "paper": "#f8f6f0", "ink": "#1c2321", "accent": "#1f6f5c", "signal": "#c8553d", "muted": "#66706b", "line": "#dedacf", "soft": "#efece3", "tint": "#e8f1ed"},
+    "sea-coral": {"label": "바다와 산호", "mood": "밝고 가볍다. 서비스·제품 소개 문서", "paper": "#f7f9f9", "ink": "#10202b", "accent": "#0f6e8c", "signal": "#d94f38", "muted": "#5f6e77", "line": "#d7dedf", "soft": "#edf1f1", "tint": "#e6f2f5"}
+  }
+}

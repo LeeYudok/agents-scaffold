@@ -104,7 +104,7 @@ agents-scaffold/bin/agents-scaffold.sh --uninstall . --dry-run # preview removal
 | **가정이 아니라 실측** | 하네스에 관한 주장은 모두 [docs/harness-matrix.json](docs/harness-matrix.json) 의 실측값이다. Claude Code 2.1.318 은 **full** 등급, Codex(codex-cli 0.166.0)와 Antigravity(agy 1.5.0)는 **baseline** 등급이다. baseline 에서는 게이트와 `AGENTS.md` 는 성립하고 paths 스코프 룰은 닿지 않는다. full 등급의 실측이 만료되면 CI 가 실패한다. |
 | **스택 프리셋 13종** | Next.js, Spring Boot, Java web(JSP), Bun, Python, Go, Rust, Ruby on Rails, .NET, PHP Laravel, Android, Flutter, ops. 각각 룰을 더하고, ops 를 뺀 나머지는 build/lint/test 게이트도 더한다. forge 는 GitHub 또는 GitLab, 출력 언어는 한국어 또는 영어. |
 | **paths 스코프 룰** | 에이전트가 매칭 파일을 만질 때만 룰이 로드된다. 모든 컨벤션을 미리 싣지 않으니 컨텍스트가 가볍다. |
-| **기본 제공 스킬** | 영어 설치는 워크플로 스킬 10개(review, status, handoff, docs-sync, 보안 사전점검 등)다. 한국어 설치는 `yd-*` 전문 스킬 14개가 더해져 모두 24개다. [스킬](#스킬) 참조. |
+| **기본 제공 스킬** | 영어 설치는 워크플로 스킬 10개(review, status, handoff, docs-sync, 보안 사전점검 등)다. 한국어 설치는 `yd-*` 전문 스킬 15개가 더해져 모두 25개다. [스킬](#스킬) 참조. |
 | **폐쇄망·Windows 지원** | 오프라인 번들은 네트워크 없이 설치된다. Windows 는 Git Bash 와 `.cmd` 런처로 돌아간다([docs/OFFLINE_INSTALL.md](docs/OFFLINE_INSTALL.md)). |
 | **되돌릴 수 있다** | `--dry-run` 은 무엇을 쓸지 미리 보여주고, `--update` 는 사용자가 고친 파일을 덮어쓰지 않고, `--uninstall` 은 손대지 않은 파일을 도로 걷어낸다. |
 | **자기개선** | `skill-evolve` / `agent-evolve` 가 실제 실수를, 그 실수를 낸 스킬·에이전트의 "Learned warnings" 로 바꾼다. |
@@ -156,7 +156,7 @@ Blocked: a .env-type file is staged. Commit is not allowed.
 | 설치 | 스킬 | 내용 |
 |---|---|---|
 | `--lang en` | 10 | 워크플로 스킬: `review`, `status`, `search-first`, `security-precheck`, `docs-sync`, `handoff`, `memory-factcheck`, `skill-evolve`, `grill-me`, 그리고 `example-skill` 템플릿 |
-| `--lang ko` (기본) | 24 | 위 10개에 `yd-*` 전문 스킬 14개: PostgreSQL, Oracle, SQLite, 관계형 설계, Go, React, TypeScript, Vite/pnpm 빌드, 화면설계, 한국어 글쓰기, 의존성 CVE 점검 |
+| `--lang ko` (기본) | 25 | 위 10개에 `yd-*` 전문 스킬 15개: PostgreSQL, Oracle, SQLite, 관계형 설계, Go, React, TypeScript, Vite/pnpm 빌드, 화면설계, 한국어 글쓰기, 그림 중심 결재 문서, 의존성 CVE 점검 |
 
 `yd-*` 스킬은 한국어로 쓰여 있어서 영어 설치에는 넣지 않는다. `--with-yd-skills` 는 영어 설치에 넣고,
 `--no-yd-skills` 는 한국어 설치에서 뺀다. 스킬은 스캐폴드 없이 따로 설치할 수도 있다. Claude Code / Codex

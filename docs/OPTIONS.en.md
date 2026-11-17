@@ -181,19 +181,19 @@ Two further Codex constraints shape the design:
 
 | Install | Skills | Subagents |
 |---|---|---|
-| `--lang ko` (default) | 24 — 10 workflow skills + 14 `yd-*` | 19 — 7 + 12 `yd-*` |
+| `--lang ko` (default) | 25 — 10 workflow skills + 15 `yd-*` | 20 — 7 + 13 `yd-*` |
 | `--lang en` | 10 — the workflow skills | 7 |
 | with `--with-personal-skills` | +11 | +4 |
 
 The 10 workflow skills are `review`, `status`, `search-first`, `security-precheck`, `docs-sync`, `handoff`,
-`memory-factcheck`, `skill-evolve`, `grill-me` and the `example-skill` template. The 14 `yd-*` skills are the 13 moved
+`memory-factcheck`, `skill-evolve`, `grill-me` and the `example-skill` template. The 15 `yd-*` skills are the 13 moved
 over from [LeeYudok/doksam-skills](https://github.com/LeeYudok/doksam-skills) (DB, Go, React, TypeScript, builds,
-screen design, Korean writing, ...) plus `yd-cve-check` for dependency CVE checks (#79); their 12 agents
+screen design, Korean writing, ...) plus `yd-cve-check` for dependency CVE checks (#79) and `yd-visual-brief` for diagram-first briefs (#153); their 13 agents
 (`.claude/agents/yd-*.md`) travel with them (#78).
 
 | Option | Effect |
 |---|---|
-| `--with-yd-skills` | Install the 14 `yd-*` skills and their agents. The default for `--lang ko` |
+| `--with-yd-skills` | Install the 15 `yd-*` skills and their agents. The default for `--lang ko` |
 | `--no-yd-skills` | Leave them out. The default for `--lang en`, because the `yd-*` skills are written in Korean and have no English overlay (#105) |
 | `--with-personal-skills` | Also merge the opt-in bundle `presets/skills/personal/` after the stack presets |
 
@@ -262,7 +262,7 @@ and commit the result.
 | `--stack <list>` | Comma-separated stack presets. Prompts interactively when omitted. An unknown name is an error |
 | `--name <name>` | `{{PROJECT_NAME}}` substitution value. Default = target directory name |
 | `--harness <harness>` | `claude` (default), `codex`, `agy` or `all` — see [Harness](#harness---harness) |
-| `--with-yd-skills` / `--no-yd-skills` | Install or leave out the 14 Korean `yd-*` skills. Default: in for `ko`, out for `en` |
+| `--with-yd-skills` / `--no-yd-skills` | Install or leave out the 15 Korean `yd-*` skills. Default: in for `ko`, out for `en` |
 | `--with-personal-skills` | Also install the 11 opt-in skills and 4 agents tied to the maintainer's environment |
 | `--yes` | Skip interactive prompts (non-interactive mode) |
 | `--dry-run` | Change nothing. Print what an install, `--update` or `--uninstall` would do (see below) |
