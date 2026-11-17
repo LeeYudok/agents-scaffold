@@ -7,7 +7,7 @@
     {"id": "FIXED-EXAMPLES", "kind": "오탐", "rule": "고친 문장:", "test": "test_check_writing.py::test_fixed_examples_pass"},
     {"id": "CHAT-MODE", "kind": "정상", "rule": "채팅: 명사형 종결은 보지 않는다", "test": "test_check_writing.py::test_chat_examples"},
     {"id": "NOUN-ENDING-DOC-ONLY", "kind": "경계", "rule": "명사형 종결 표는 문어체 산출물(이슈·MR·문서·공지)에만 적용한다.", "test": "test_check_writing.py::test_noun_ending_doc_only"},
-    {"id": "ISO-EMOJI", "kind": "실패", "rule": "ISO 8601 의 `T`·`+09:00` 은 쓰지 않는다.", "test": "test_check_writing.py::test_iso_time_and_emoji"},
+    {"id": "ISO-EMOJI", "kind": "실패", "rule": "doksam 프로필은 ISO 8601 시각과 이모지를 오류로 잡는다.", "test": "test_check_writing.py::test_iso_time_and_emoji"},
     {"id": "SKIP-ZONES", "kind": "오탐", "rule": "코드 블록·인라인 코드·표·인용·URL 은 보지 않는다.", "test": "test_check_writing.py::test_skipped_zones"},
     {"id": "HASH-NUMBER", "kind": "경계", "rule": "#418 이슈 관련하여", "test": "test_check_writing.py::test_hash_number_is_not_heading"},
     {"id": "LONG-SENTENCE", "kind": "경계", "rule": "경고: 60자를 넘는 문장.", "test": "test_check_writing.py::test_long_sentence_warning_and_strict"},
@@ -26,6 +26,18 @@
     {"id": "GO-LOOKAROUND-LIMIT", "kind": "도구오류", "rule": "경계 조건은 맨 앞 `(?<![...])`·맨 뒤 `(?![...])` 로만 적는다(#117).", "test": "test_native_cli.py::test_rule_file_is_read_at_runtime_and_invalid_regex_is_an_error"},
     {"id": "SUMMARY-SECRET", "kind": "실패", "rule": "키·시크릿 차단·외부 전송 주의는 1차 교정과 같다.", "test": "test_check_writing.py::test_summary_secret_is_not_sent"},
     {"id": "SUMMARY-RETRY-KEEP", "kind": "정상", "rule": "그래도 줄 수가 넘치면 앞에서 `--lines` 줄만 남긴다.", "test": "test_check_writing.py::test_retry_on_source_errors_then_keep_first_lines"},
-    {"id": "SUMMARY-CHUNKS", "kind": "경계", "rule": "원문이 12,000자를 넘으면 단락 경계에서 나눠 부분 요약을 만든 뒤 합쳐 다시 요약한다.", "test": "test_check_writing.py::test_long_source_is_summarized_in_parts"}
+    {"id": "SUMMARY-CHUNKS", "kind": "경계", "rule": "원문이 12,000자를 넘으면 단락 경계에서 나눠 부분 요약을 만든 뒤 합쳐 다시 요약한다.", "test": "test_check_writing.py::test_long_source_is_summarized_in_parts"},
+    {"id": "REDUNDANT-PAIRS", "kind": "경계", "rule": "뜻이 같은 말을 겹쳐 쓴 표현이다(배상복).", "test": "test_check_writing.py::test_redundant_pairs_catch_and_spare"},
+    {"id": "STACKED-PARTICLES", "kind": "경계", "rule": "이오덕이 지적한 일본어 투 가운데 `일본어 투` 절에 없던 것이다.", "test": "test_check_writing.py::test_stacked_particles_catch_and_spare"},
+    {"id": "STRETCHED-PREDICATES", "kind": "경계", "rule": "한 낱말로 끝낼 서술어를 늘인 표현이다(배상복·김정선).", "test": "test_check_writing.py::test_stretched_predicates_catch_and_spare"},
+    {"id": "FILLER-WORDS", "kind": "경계", "rule": "지워도 뜻이 달라지지 않는 낱말이다(진서).", "test": "test_check_writing.py::test_filler_words_catch_and_spare"},
+    {"id": "OVERUSE-COUNTS", "kind": "오탐", "rule": "하나만 나오면 문제가 아닌 낱말이다(김정선).", "test": "test_check_writing.py::test_overuse_counts_catch_and_spare"},
+    {"id": "COUNT-RULE", "kind": "경계", "rule": "`3회`: 한 문장 안에서 3번 이상 나올 때만 한 건으로 낸다.", "test": "test_check_writing.py::test_count_rule_fires_once_per_sentence_as_warning"},
+    {"id": "PROFILE-DEFAULT", "kind": "정상", "rule": "`--profile` 을 주지 않으면 `doksam.md` 를 읽는다.", "test": "test_check_writing.py::test_default_profile_is_doksam"},
+    {"id": "PROFILE-SWITCH", "kind": "경계", "rule": "수준은 `오류`, `경고`, `끔` 가운데 하나다.", "test": "test_check_writing.py::test_profile_switches_checks_and_adds_rules"},
+    {"id": "LLM-BASE-URL", "kind": "정상", "rule": "`WRITER_LLM_BASE_URL` 을 지정하면 Upstage 를 부르지 않는다.", "test": "test_check_writing.py::test_base_url_replaces_upstage"},
+    {"id": "LLM-MODEL-REQUIRED", "kind": "도구오류", "rule": "`WRITER_LLM_MODEL` 은 필수다.", "test": "test_check_writing.py::test_base_url_requires_model"},
+    {"id": "LLM-SECRET-BLOCK", "kind": "실패", "rule": "시크릿 차단은 엔드포인트를 바꿔도 그대로다.", "test": "test_check_writing.py::test_secret_is_blocked_on_custom_endpoint"},
+    {"id": "LLM-DEFAULT-UPSTAGE", "kind": "정상", "rule": "지정하지 않으면 Upstage 를 부른다.", "test": "test_check_writing.py::test_default_endpoint_is_upstage"}
   ]
 }

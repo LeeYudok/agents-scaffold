@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Upstage Solar 로 한국어 글을 1차 교정한다 (stdlib only).
+"""Upstage Solar 나 OpenAI 호환 사내 엔드포인트로 한국어 글을 1차 교정한다 (stdlib only).
 
 흐름: Solar 교정 → check_writing.py 검사 → 오류가 남으면 그 목록을 붙여 한 번 더
 교정 → 최종 검사 결과와 함께 출력한다. 결과는 **교정 후보**다. 뜻이 바뀌지 않았는지는
@@ -15,7 +15,12 @@
 키는 환경변수 UPSTAGE_API_KEY 를 쓰고, 없으면 ~/workspace/.env.toml 의
 UPSTAGE_API_KEY (최상위 또는 [llm]) 를 읽는다. 키를 출력하지 않는다.
 
-본문이 외부 API 로 나간다. 시크릿처럼 보이는 문자열이 있으면 보내지 않고 멈춘다.
+폐쇄망에서는 OpenAI 호환 사내 엔드포인트를 부른다 (#137).
+    WRITER_LLM_BASE_URL  예: http://llm.internal:8000/v1  (지정하면 Upstage 를 부르지 않는다)
+    WRITER_LLM_MODEL     그 엔드포인트의 모델 이름 (필수)
+    WRITER_LLM_API_KEY   키가 필요한 엔드포인트만. Upstage 키를 다른 호스트로 보내지 않는다
+
+본문이 API 로 나간다. 엔드포인트가 어디든 시크릿처럼 보이는 문자열이 있으면 보내지 않고 멈춘다.
 고객 데이터·비공개 문서인지는 이 스크립트가 판단할 수 없다 — 부르는 쪽이 정한다.
 
 exit 0 = 교정 완료(검사 오류 0), 1 = 교정했지만 검사 오류가 남음, 2 = 실행 불가
@@ -87,6 +92,28 @@ def doc_style(text: str) -> str:
 STYLE_CHAT = "- 채팅 대화체다. ~요·~함 같은 종결은 그대로 둔다."
 
 
+def endpoint() -> tuple[str, str, str | None]:
+    """(주소, 모델, 키). WRITER_LLM_BASE_URL 을 주면 그 OpenAI 호환 엔드포인트를 쓰고, 아니면 Upstage 다.
+
+    사내 엔드포인트에는 WRITER_LLM_API_KEY 만 보낸다. Upstage 키를 다른 호스트로 보내지 않는다.
+    """
+    base = os.environ.get("WRITER_LLM_BASE_URL", "").strip().rstrip("/")
+    if not base:
+        return API, MODEL, api_key()
+    return f"{base}/chat/completions", os.environ.get("WRITER_LLM_MODEL", "").strip(), os.environ.get("WRITER_LLM_API_KEY") or None
+
+
+def ready() -> tuple[str | None, str]:
+    """(키, 실행할 수 없는 이유). 이유가 비어 있으면 부를 수 있다. 사내 엔드포인트는 키가 없어도 된다."""
+    custom = bool(os.environ.get("WRITER_LLM_BASE_URL", "").strip())
+    _, model, key = endpoint()
+    if custom and not model:
+        return None, "WRITER_LLM_BASE_URL 을 지정하면 WRITER_LLM_MODEL 도 지정한다"
+    if not custom and not key:
+        return None, "UPSTAGE_API_KEY 가 없다 (환경변수 또는 ~/workspace/.env.toml)"
+    return key, ""
+
+
 def api_key() -> str | None:
     key = os.environ.get("UPSTAGE_API_KEY")
     if key:
@@ -107,15 +134,18 @@ def banned_list(chat: bool) -> str:
     return "\n".join(rows)
 
 
-def call(key: str, system: str, user: str, max_tokens: int) -> str:
+def call(key: str | None, system: str, user: str, max_tokens: int) -> str:
+    url, model, _ = endpoint()
+    headers = {"Content-Type": "application/json"}
+    if key:
+        headers["Authorization"] = f"Bearer {key}"
     body = json.dumps({
-        "model": MODEL,
+        "model": model,
         "temperature": 0,
         "max_tokens": max(max_tokens, MIN_MAX_TOKENS),
         "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
     }).encode()
-    req = urllib.request.Request(API, data=body, headers={
-        "Authorization": f"Bearer {key}", "Content-Type": "application/json"})
+    req = urllib.request.Request(url, data=body, headers=headers)
     with urllib.request.urlopen(req, timeout=120) as resp:
         data = json.load(resp)
     return (data["choices"][0]["message"].get("content") or "").strip()
@@ -126,19 +156,20 @@ def findings_text(findings) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description="Upstage Solar 한국어 교정 + 검사")
+    ap = argparse.ArgumentParser(description="한국어 교정 + 검사 (Upstage Solar 또는 WRITER_LLM_BASE_URL)")
     ap.add_argument("path", help="교정할 파일. - 는 표준 입력")
     ap.add_argument("-o", "--output", help="고친 글을 쓸 파일 (기본: 표준 출력)")
     ap.add_argument("--chat", action="store_true", help="채팅 대화체")
+    ap.add_argument("--profile", default="", help="표기 프로필 (기본 doksam)")
     args = ap.parse_args(argv)
 
-    text = sys.stdin.read() if args.path == "-" else Path(args.path).read_text(encoding="utf-8")
+    text = sys.stdin.read() if args.path == "-" else Path(args.path).read_text(encoding="utf-8-sig")
     if SECRET.search(text):
         print("시크릿처럼 보이는 문자열이 있어 외부 API 로 보내지 않는다", file=sys.stderr)
         return 2
-    key = api_key()
-    if not key:
-        print("UPSTAGE_API_KEY 가 없다 (환경변수 또는 ~/workspace/.env.toml)", file=sys.stderr)
+    key, reason = ready()
+    if reason:
+        print(reason, file=sys.stderr)
         return 2
 
     budget = len(text) * 2 + 512
@@ -146,13 +177,13 @@ def main(argv: list[str] | None = None) -> int:
         rules = check_writing.load_rules()
         system = SYSTEM.format(style=STYLE_CHAT if args.chat else doc_style(text), banned=banned_list(args.chat))
         fixed = call(key, system, text, budget)
-        left = [f for f in check_writing.check(fixed, rules, chat=args.chat) if f.level == "오류"]
+        left = [f for f in check_writing.check(fixed, rules, chat=args.chat, profile=args.profile) if f.level == "오류"]
         if left:
             retry = f"아래 글에 금지 표현이 남았다. 이것만 고치고 나머지는 그대로 둔다.\n\n{findings_text(left)}\n\n---\n{fixed}"
             fixed = call(key, system, retry, budget)
-        final = check_writing.check(fixed, rules, chat=args.chat)
+        final = check_writing.check(fixed, rules, chat=args.chat, profile=args.profile)
     except (urllib.error.URLError, KeyError, json.JSONDecodeError, RuntimeError, OSError) as e:
-        print(f"Upstage 호출 실패: {e}", file=sys.stderr)
+        print(f"LLM 호출 실패: {e}", file=sys.stderr)
         return 2
 
     if args.output:
@@ -167,4 +198,5 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
+    check_writing.utf8_stdio()
     sys.exit(main())

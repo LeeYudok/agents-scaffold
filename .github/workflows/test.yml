@@ -9,6 +9,73 @@ permissions:
   contents: read
 
 jobs:
+  # yd-writer-kr 검사기를 윈도우에서 bash 없이 실행 파일만으로 돌린다 (#137).
+  # 빌드 뒤의 단계는 go 를 부르지 않는다. 릴리스에 올리는 바이너리와 같은 스크립트로 만든다.
+  writer-windows:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    env:
+      CHECK_WRITING_RULES: ${{ github.workspace }}\.claude\skills\yd-writer-kr\references\banned-expressions.md
+      CHECK_WRITING_BIN: ${{ github.workspace }}\out\check-writing-windows-amd64.exe
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache: false
+      - name: Build the windows binary
+        shell: bash
+        run: .claude/skills/yd-writer-kr/scripts/build-binaries.sh out windows/amd64
+
+      - name: Run from PowerShell 7
+        shell: pwsh
+        run: |
+          [Console]::OutputEncoding = [Text.Encoding]::UTF8
+          Set-Content -Path ok.md -Value "본문이다." -Encoding utf8
+          Set-Content -Path bad.md -Value "배포를 완료함. 여러 파일들을 지웠다." -Encoding utf8
+          & $env:CHECK_WRITING_BIN ok.md
+          if ($LASTEXITCODE -ne 0) { throw "ok.md: exit $LASTEXITCODE" }
+          $report = & $env:CHECK_WRITING_BIN --json bad.md | ConvertFrom-Json
+          if ($LASTEXITCODE -ne 1) { throw "bad.md: exit $LASTEXITCODE" }
+          if ($report.errors -ne 1 -or $report.warnings -ne 1) { throw "bad.md: $($report | ConvertTo-Json -Depth 5)" }
+          & $env:CHECK_WRITING_BIN --profile none ok.md
+          if ($LASTEXITCODE -ne 2) { throw "없는 프로필: exit $LASTEXITCODE" }
+          exit 0
+
+      # BOM 이 붙은 글은 메모장으로 저장한 글과 같은 모양이다.
+      # Windows PowerShell 5 는 BOM 없는 스크립트를 ANSI 로 읽어 한글 리터럴이 깨진다. 그래서 글("배포를 완료함.")을 코드 포인트로 만든다.
+      - name: Run on a file with BOM (Windows PowerShell 5)
+        shell: powershell
+        run: |
+          $text = -join [char[]](0xBC30,0xD3EC,0xB97C,0x0020,0xC644,0xB8CC,0xD568,0x002E)
+          [IO.File]::WriteAllText("$PWD\\bom.md", $text, (New-Object Text.UTF8Encoding $true))
+          & $env:CHECK_WRITING_BIN bom.md
+          if ($LASTEXITCODE -ne 1) { throw "bom.md: exit $LASTEXITCODE" }
+          exit 0
+
+      - name: Run from cmd
+        shell: cmd
+        run: |
+          chcp 65001
+          "%CHECK_WRITING_BIN%" ok.md
+          if errorlevel 1 exit /b 1
+          "%CHECK_WRITING_BIN%" bad.md
+          if not errorlevel 1 exit /b 1
+          if errorlevel 2 exit /b 1
+          exit /b 0
+
+      # Python 호환 계층은 CHECK_WRITING_BIN 이 있으면 bash 를 거치지 않는다.
+      - name: Run the Python layer with the binary
+        shell: pwsh
+        run: |
+          python .claude\skills\yd-writer-kr\scripts\check_writing.py bad.md
+          if ($LASTEXITCODE -ne 1) { throw "check_writing.py: exit $LASTEXITCODE" }
+          python .github\scripts\writer_windows_check.py
+          if ($LASTEXITCODE -ne 0) { throw "writer_windows_check.py: exit $LASTEXITCODE" }
+          exit 0
+
   # 정적 검사 (#107). 여기서 걸리는 것은 실행 전에 잡히는 종류다 — 쓰지 않는 import, 셸 인용 실수, 워크플로 문법.
   lint:
     runs-on: ubuntu-latest
