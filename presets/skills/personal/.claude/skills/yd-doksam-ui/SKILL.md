@@ -37,7 +37,7 @@ ui.doksam.com(doksam-ui)은 shadcn/ui 기반 디자인 토큰, 브랜드 프로�
 | `https://ui.doksam.com/llms.txt` | 기계 판독 카탈로그 — 설치 가능한 전 항목·install 명령·의존성·브랜드 프로필 목록 | A |
 | `https://ui.doksam.com/rules.md` | 사용 규칙 markdown 원문 (`curl -s https://ui.doksam.com/rules.md`) | A |
 | `https://ui.doksam.com/components` 등 | 라이브 데모 + 코드 스니펫 | A |
-| 레포의 `lib/rules-markdown.ts` (`RULES_SECTIONS`) | 규칙 조항의 **진짜 원본** — 위 `rules.md` 가 여기서 파생된다 | B |
+| 레포의 `lib/rules-markdown.ts` (`RULES_SECTIONS`) | 규칙 조항의 **진짜 원본** — 위 `rules.md` 가 여기서 파생된다. GitLab 클론(`busan/doksam-ui`)에는 이 파일이 없고 생성물 `content/rules.mdx` 만 있다 — 원본은 GitHub SSOT `LeeYudok/doksam-ui` 에 있다 | B |
 
 **Fallback 규칙 (모드 A):** `curl` 이 실패하거나 폐쇄망이라 접근할 수 없으면 조용히 넘어가지 말고 **즉시 사용자에게 네트워크 차단 사실을 보고**한 뒤, §4 다이제스트만으로 보수적으로 진행한다. 없는 컴포넌트를 지어내지 말고 기본 HTML/CSS 로 대체한다.
 
@@ -72,6 +72,8 @@ doksam-ui 는 개별 화면을 만드는 앱이 아니라 **다른 프로젝트�
 그 외 파운데이션: `/tokens`, `/profiles`, `/icons`, `/rules`.
 테마 `themes/index.ts` · 폰트 `fonts/index.ts` · 프로필 `profiles/index.ts` · shadcn 배포 `registry.json`(루트).
 
+**배포 형태** — doksam-ui 는 `output: "export"` 정적 사이트다. `pnpm build` 가 `out/` 에 사이트 전체를 파일로 내고 서버·middleware 는 없다. 로케일 접두사 없는 주소(`/components/x`)를 기본 로케일(`/ko/components/x`)로 보이게 하는 일은 서빙하는 쪽(운영 nginx `try_files`, 로컬 `pnpm start` 의 `scripts/static/serve.mjs`)이 한다. 새 라우트는 빌드 때 전부 미리 렌더되어야 하므로 요청 시 렌더나 middleware 에 기대지 않는다.
+
 **레지스트리에 등록하지 않으면 페이지·사이드바에 나타나지 않는다.** 파일만 추가하고 끝내는 것이 가장 흔한 실수다.
 
 ## 3.2 컴포넌트 계층 구분
@@ -81,7 +83,7 @@ doksam-ui 는 개별 화면을 만드는 앱이 아니라 **다른 프로젝트�
 - `primitive` — shadcn CLI 가 `components/ui/` 에 설치한 저수준 빌딩블록. **수정 금지.**
 - `composition` — 프리미티브를 조합한 상위 컴포넌트. `components/<name>.tsx` (kebab-case).
 
-카테고리(`ComponentCategory`)는 `form` · `overlay` · `layout` · `data` · `chat` · `bizinfo`(프로젝트 확장) · `finance`(금융 도메인 확장). 도메인 색이 짙은 것을 공통 카테고리에 넣지 않는다 — 확장 카테고리가 그 용도다.
+카테고리(`ComponentCategory`)는 `form` · `overlay` · `navigation` · `layout` · `feedback` · `display` · `data` · `chat` · `bizinfo`(프로젝트 확장) · `finance`(금융 도메인 확장) 10종이다. 도메인 색이 짙은 것을 공통 카테고리에 넣지 않는다 — 확장 카테고리가 그 용도다.
 
 ### 새 컴포넌트를 만들 기준
 
@@ -140,7 +142,7 @@ export const donts = ["...", "..."]  // 2~3개 권장
 
 **밀도** — `<html data-density="compact|comfortable">` 을 프로필이 지정하고 `app/globals.css` 의 밀도 층이 소비한다. 속성이 없으면 아무 규칙도 걸리지 않는다(하위호환).
 
-**테마 초기화** — hydration 이전에 끝낸다. `app/layout.tsx` `<head>` 의 인라인 `THEME_INIT_SCRIPT` 가 localStorage 를 읽어 `<html>` 에 `data-theme`/`data-font`/`dark` 를 직접 세팅한다. `useEffect` 만으로 적용하면 FOUC(테마 깜빡임)가 난다.
+**테마 초기화** — hydration 이전에 끝낸다. `app/[locale]/layout.tsx` `<head>` 의 인라인 `THEME_INIT_SCRIPT` 가 localStorage 를 읽어 `<html>` 에 `data-theme`/`data-font`/`dark` 를 직접 세팅한다. `useEffect` 만으로 적용하면 FOUC(테마 깜빡임)가 난다.
 
 ## 3.7 다국어
 
@@ -171,7 +173,7 @@ pnpm gen:llms         # registry.json → public/llms.txt (AI 발견용 카탈�
 | 패턴 컴포넌트 | `components/patterns/<name>.tsx` | kebab-case |
 | 쇼케이스 셸 | `components/showcase/<name>.tsx` | kebab-case |
 | 데모 | `components/demos/<slug>.demo.tsx` | slug 는 레지스트리 slug 와 동일 |
-| 라우트 | `app/<segment>/page.tsx` (+ `loading.tsx`, `error.tsx`) | |
+| 라우트 | `app/[locale]/<segment>/page.tsx` (+ `loading.tsx`, `error.tsx`) | |
 | 레지스트리·유틸 | `lib/<domain>/registry.ts`, `lib/<name>.ts` | |
 | 훅 | `hooks/use-<name>.ts` | |
 | 테스트 | 대상 파일 옆 `<name>.test.ts(x)` | vitest |
