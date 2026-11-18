@@ -28,7 +28,7 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
    {
      slug: "<slug>",
      title: "<Title>",
-     category: "form" | "overlay" | "layout" | "data" | "chat" | "bizinfo" | "finance",
+     category: "form" | "overlay" | "navigation" | "layout" | "feedback" | "display" | "data" | "chat" | "bizinfo" | "finance",
      layer: "primitive" | "composition",
      description: "한 줄 설명(한국어).",
      status: "done",
@@ -68,7 +68,7 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
 
 패턴 = 화면 단위 조합 규칙. 컴포넌트 단품이 아니라 "이 상황엔 이렇게 조립한다"를 보여준다.
 
-1. **라우트** — `app/patterns/<slug>/page.tsx` + `loading.tsx` + `error.tsx`
+1. **라우트** — `app/[locale]/patterns/<slug>/page.tsx` + `loading.tsx` + `error.tsx`
    - `main` 은 상위 layout 이 렌더한다 — 페이지에서 중복 렌더 금지.
    - 에러 UI 는 `div role="alert"`.
 2. **레지스트리 등록** — `lib/patterns/registry.ts`
@@ -89,12 +89,12 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
 
 템플릿 = 완성된 화면 하나. 프로필(테마+폰트)을 지정해 "이 조합이면 이렇게 보인다"를 증명한다.
 
-1. **라우트 디렉터리** — `app/templates/<slug>/`
+1. **라우트 디렉터리** — `app/[locale]/templates/<slug>/`
    - `layout.tsx` 가 컨테이너(`max-w-[1300px] mx-auto`)와 `main` 을 소유한다.
    - `page.tsx` + `loading.tsx` + `error.tsx`.
-   - 하위 화면이 있으면 `app/templates/<slug>/<sub>/page.tsx`.
+   - 하위 화면이 있으면 `app/[locale]/templates/<slug>/<sub>/page.tsx`.
    - 내부 전용 컴포넌트·목 데이터는 `_components/`, `_data/` (언더스코어 = 라우트 제외).
-   - 뼈대는 `app/templates/_blueprint/blueprint.tsx` 참고.
+   - 뼈대는 `app/[locale]/templates/_blueprint/blueprint.tsx` 참고.
 2. **레지스트리 등록** — `lib/templates/registry.ts`
    ```ts
    {
