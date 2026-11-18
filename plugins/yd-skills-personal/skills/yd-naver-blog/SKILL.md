@@ -18,7 +18,7 @@ metadata:
 - **발행은 사용자 확인 뒤에만 누른다.** 기본 동작은 임시저장이다. 발행 설정 창의 최종 "발행" 버튼은 "발행해", "ㄱㄱ" 같은 명시 지시가 있을 때만 누른다.
 - **카테고리 삭제는 사용자가 이름을 짚어 지시할 때만 한다.** 카테고리를 지우면 그 안의 글과 예약 글이 모두 지워진다(삭제 확인창 문구, 2026-11-13 실측). 글이 1개 이상이면 멈추고 글을 먼저 옮길지 묻는다.
 - **강조를 빼고 저장하지 않는다.** 본문·사진 → 원고 대조 → 강조 → 다시 대조 → 임시저장 순서다. 증시 리포트 글의 면책 문장은 빨강 굵게가 필수다.
-- **브라우저 프로필이 잡혀 있으면 기다린다.** `Browser is already in use` 가 나오면 다른 세션이 같은 프로필(`~/.cache/playwright-claude`)을 쓰는 중이다. 그 창이 글 수정 화면이면 닫는 순간 고치던 내용이 사라진다. 프로세스를 죽이지 않는다. 어느 세션이 잡았는지(`ps` 로 그 Chrome 의 부모 프로세스와 작업 폴더) 알려 주고 사용자가 닫게 한다.
+- **브라우저 프로필이 잡혀 있으면 복사본으로 띄운다.** `Browser is already in use` 가 나오면 다른 세션이 같은 프로필(`~/.cache/playwright-claude`)을 쓰는 중이다. 그 창이 글 수정 화면이면 닫는 순간 고치던 내용이 사라지므로 프로세스를 죽이지 않는다. 기다리지도 않는다. 8절 "프로필이 잡혀 있을 때" 순서대로 프로필 복사본으로 Chrome 을 하나 더 띄워 작업한다(2026-11-18 사용자 지시).
 - 파일 저장(스크린샷·스냅샷)은 작업 디렉터리와 `.playwright-mcp/` 안에서만 된다. 스크래치패드 경로는 거부된다. 작업이 끝나면 `.playwright-mcp/` 를 지운다.
 
 ## 1. 글쓰기 화면 열기
@@ -116,6 +116,18 @@ async (page) => {
 
 새로 쓰는 원고라면 굵게만은 붙여넣는 HTML 에 `<b>` 로 넣어도 된다. 색과 크기는 붙여넣기로 들어가는지 확인하지 못했으니 스크립트로 넣는다.
 
+### 표와 코드 블록 넣기 — 기술 글
+
+2026-11-18 Codex 설정 글(코드 13개, 표 7개)에서 실측했다.
+
+- `<table><tbody><tr><td>` 를 붙여넣으면 표 컴포넌트(`.se-component.se-table`)가 된다. 머리 행은 `<td><b>` 로 굵게 넣는다.
+- 코드는 삽입 막대의 **소스코드** 버튼(`button.se-code-toolbar-button`)으로 커서 자리에 코드 컴포넌트를 만든 뒤, 클립보드에 평문을 쓰고 `Meta+V` 로 붙여넣는다. 줄바꿈이 그대로 남는다. 코드 컴포넌트 뒤에는 빈 문단이 저절로 생기므로 다음 구간은 그 문단에 붙여넣는다.
+- 코드 블록을 누르면 뜨는 막대에서 배경을 고른다. 흰 배경은 본문과 구분되지 않으니 **어두운 배경**(`button.se-code-code_black-toolbar-button`)을 쓴다. 적용되면 컴포넌트 class 가 `se-l-code_black` 이 된다. 언어를 고르는 메뉴는 없고 색칠은 에디터가 추측한다.
+- 이미 넣은 코드의 글을 바꿀 때는 `.se-code-source` 를 눌러 `textarea.se-code-source-editor` 를 연 뒤 `Meta+A` 와 붙여넣기로 바꾸고, `inputValue()` 로 원고와 대조한다.
+- 모바일(폭 390)에서 코드는 가로 스크롤로 숨는다. 긴 줄은 오른쪽이 잘린 것처럼 보인다. 줄을 약 36칸(한글은 2칸)으로 다시 짠다. 줄 끝 주석은 윗줄로 올리고, 긴 출력은 띄어쓰기에서 끊어 들여쓴다. 설정 블록은 `# 파일 경로`, 터미널 블록은 `$ 명령` 으로 시작한다. 다시 짠 설정은 원래 도구로 다시 검증한다(예: `codex --strict-config`).
+- 넘침은 모바일 미리보기에서 `.se-module-code` 의 `scrollWidth > clientWidth` 로 센다. 0 이어야 한다.
+- 원문 링크는 안내 문장과 주소를 두 줄로 나눈다(2026-11-18 사용자가 직접 이렇게 고쳤다).
+
 ## 3. 임시저장
 
 - 저장 버튼은 `#mainFrame` 안의 `button[class*="save_btn"]`, 임시저장 개수는 `button[class*="save_count_btn"]` 다.
@@ -187,6 +199,29 @@ for (const t of tags) { await page.keyboard.type(t, { delay: 10 }); await page.k
 3. 카테고리 선택 상자(`button[class*="selectbox_button"]`)를 누르고 `[class*="selectbox"] li` 중 원하는 이름을 고른다. 하위 카테고리는 "하위 카테고리\n이름" 으로 읽힌다.
 4. 태그는 유지된다. 개수를 세어 확인한 뒤 `button[class*="confirm_btn"]` 을 누른다.
 5. 이동한 URL 에 `categoryNo=` 가 붙는다. 글 화면의 카테고리 이름으로 확인한다.
+
+## 8. 프로필이 잡혀 있을 때 — 복사본 Chrome
+
+Playwright MCP 대신 직접 띄운 Chrome 에 CDP(크롬 원격 디버깅 연결)로 붙어 작업한다. 2026-11-18 에 이 방식으로 글 등록, 발행한 글 수정, 카테고리 추가와 이동을 끝까지 했다.
+
+1. 프로필을 복사한다. 캐시는 뺀다(약 400MB → 22MB).
+   ```bash
+   rsync -a --exclude 'Default/Cache' --exclude 'Default/Code Cache' --exclude 'Default/Service Worker' \
+     --exclude 'Singleton*' ~/.cache/playwright-claude/ ~/.cache/playwright-claude-2/
+   ```
+2. 복사본으로 Chrome 을 띄운다. **`--use-mock-keychain --password-store=basic` 을 반드시 준다.** Playwright 가 이 옵션으로 쿠키를 암호화해 두어서, 빼면 복사본이 로그인 화면으로 간다(실측).
+   ```bash
+   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --user-data-dir="$HOME/.cache/playwright-claude-2" \
+     --use-mock-keychain --password-store=basic --remote-debugging-port=9333 \
+     --no-first-run --no-default-browser-check "https://blog.naver.com/GoBlogWrite.naver" &
+   ```
+3. 단계마다 Node 스크립트로 붙는다. `playwright-core` 는 npx 캐시의 `@playwright/mcp` 에 들어 있다(`ls -d <npm 캐시>/_npx/*/node_modules/playwright-core`). `createRequire` 로 불러 `chromium.connectOverCDP("http://127.0.0.1:9333")` 를 쓰고, 끝날 때 `browser.close()` 대신 `process.exit()` 한다. CDP 연결에서 `close()` 는 그 Chrome 을 끌 수 있다.
+4. 글쓰기 화면의 에디터는 `iframe#mainFrame` 안, 수정 화면(`PostUpdateForm`)과 관리 화면의 `papermain` 은 위 절차와 같다.
+5. 사진은 이 방식에서 `Promise.all([page.waitForEvent("filechooser"), 사진 버튼.click()])` 뒤 `chooser.setFiles(경로)` 로 바로 넣는다. MCP 모달 문제가 없다.
+6. "작성 중인 글이 있습니다" 창이 뜨면 원래 프로필을 쓰는 세션의 자동저장본일 수 있다. 취소하면 새 글로 시작하지만 그 자동저장본이 덮일 수 있다. 취소했다면 사용자에게 알린다.
+7. 끝나면 복사본 Chrome 을 끄고(`pkill -f 'user-data-dir=.*playwright-claude-2'`) 복사본 폴더를 지운다. 로그인 쿠키가 들어 있다.
+
+발행 여부는 브라우저 없이 `https://rss.blog.naver.com/<블로그ID>.xml` 이나 `m.blog.naver.com/<블로그ID>/<글번호>` 로 확인할 수 있다.
 
 ## 에디터 도움말에서 확인한 것
 
@@ -306,3 +341,6 @@ www 판에서는 색 강조를 `<strong class="hl">`(핵심 수치), `hl hl-lg`(
 - (2026-11-17) 다른 Claude 세션이 Playwright 프로필을 잡고 있어 글쓰기 화면을 열지 못했다. 강제로 닫지 않고 사용자에게 알렸다. 그 사이 글을 www.doksam.com 에 먼저 올려 확인받았고, 이 순서가 기본이 됐다 (#141).
 - (2026-11-17) 네이버 블로그 검색 결과를 `m.blog.naver.com/api/search/post` 로 한 번 받은 뒤 robots.txt 가 `/api/` 를 막는 것을 확인했다. 그 뒤로는 검색 MCP(`naver_search`)를 쓴다 (#141).
 - (2026-11-17) 같은 날 증시 글 12개와 비교하니 우리 글은 정확하지만 해석이 없었다. 질문 하나로 글을 묶고 해석과 반증 조건을 적는 형식으로 바꿨다 (#141).
+- (2026-11-18) 프로필이 잡혀 "기다린다" 규칙대로 멈췄더니 사용자가 "하나 더 만들어서 하면 되잖아"라고 했다. 같은 날 다른 세션은 약 10분 기다렸다. 복사본 Chrome 절(8절)을 더하고 규칙을 바꿨다 (#155).
+- (2026-11-18) 긴 문단 끝에 이어 붙이려고 마지막 문단을 누르고 `End` 를 눌렀더니 화면상 줄 끝에 붙어 문단 몇 개가 중간에서 잘려 섞였다. 마지막 문단의 오른쪽 아래 모서리를 마우스로 누른 뒤 `End` 를 눌러 고쳤다 (#155).
+- (2026-11-18) 기술 글의 코드 블록을 흰 배경 그대로 두었더니 본문과 구분되지 않고 모바일에서 긴 줄이 잘려 보였다. 어두운 배경과 약 36칸 줄로 고쳤다(2절 "표와 코드 블록 넣기") (#155).
