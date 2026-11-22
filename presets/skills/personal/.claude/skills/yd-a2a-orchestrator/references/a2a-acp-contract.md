@@ -62,6 +62,13 @@ a2a-acp-bridge coord handoff -agent codex -to codex-glm
 발신자는 `from_agent`(CLI `-from`) → 환경변수 `A2A_AGENT_ID` → MCP `clientInfo.name` 추정 →
 `user` 순으로 정한다. **발신자를 밝혀 위임하면 응답(`reply`)이 그 발신자의 수신함으로 돌아온다.**
 
+동적 에이전트 ID(`codex-glm`·`codex-deepseek` 등)는 `agents.json` 발견·보드 메시지·수신함에는
+참여하지만, MCP/CLI 위임 도구가 그 ID를 직접 실행 대상으로 받는 것은 아니다. 현재 위임 도구는
+`agy`·`codex`·`claude` 세 런타임 경로를 제공한다. 동적 Codex 래퍼를 실제로 실행하려면 CLI에서
+`A2A_CODEX_COMMAND=codex-deepseek ask-codex ...` 처럼 명령을 재정의한다. 이 호출의 결과는
+`agent: codex` 로 반환되므로, 작업 DAG와 검증 증거에는 반환된 `codex`와 실제 래퍼
+`codex-deepseek`를 구분해 기록한다.
+
 ## 3. 위임 도구와 권한 모드
 
 | 도구 | CLI | 런타임 | 기본 권한 |

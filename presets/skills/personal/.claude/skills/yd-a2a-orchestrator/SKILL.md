@@ -86,6 +86,11 @@ DAG 최상위에는 지금 새 작업을 받을 수 있는 에이전트 목록(`
 - 파일 수정을 맡길 때만 `workspace-write`·`acceptEdits` 를 명시한다.
 - 긴 작업은 `async` 로 던지고 `a2a_task_status`·수신함으로 회수한다.
 - 저장소를 지정하려면 `cwd` 를 그 작업의 워크트리로 준다.
+- **동적 에이전트 ID 를 직접 위임 대상으로 지정할 수 있다고 가정하지 않는다.** MCP/CLI 위임
+  경로는 기본적으로 `agy`·`codex`·`claude` 세 런타임만 실행한다. `codex-glm`·`codex-deepseek`
+  같은 동적 ID 는 발견·보드 메시지에는 보이지만, 직접 실행하려면 CLI에서
+  `A2A_CODEX_COMMAND=codex-deepseek` 처럼 래퍼를 지정한다. 이때 결과의 `agent` 는 여전히
+  `codex` 로 기록되므로 DAG·증거에는 실제 실행 명령과 반환된 에이전트 ID 를 구분해 적는다.
 
 ## 5. 검증 증거 (Verification Evidence)
 
@@ -140,3 +145,7 @@ python3 <스킬경로>/scripts/check_task_dag.py <dag.json> --root <워크스페
 - (2026-11-22) 교차 리뷰에서 검증기가 SKILL.md 의 완료 선행조건·워크트리 격리·MR/push 반영
   확인·재배정 상한을 실제로 강제하지 않는 구멍이 나왔다. 규칙을 문서에만 두지 말고
   `check_task_dag.py` 의 필수 검증과 음성 테스트로 함께 박는다 (#161).
+- (2026-11-22) `agents.json` 에 `codex-glm`·`codex-deepseek` 가 보여도 MCP/CLI 위임 도구가
+  그 ID 를 직접 실행하는 것은 아니었다. 동적 Codex 래퍼는
+  `A2A_CODEX_COMMAND=codex-deepseek ask-codex ...` 처럼 CLI 환경변수로 실행하고, 반환된
+  `agent: codex` 와 실제 래퍼 이름을 증거에 따로 적는다 (#161).
