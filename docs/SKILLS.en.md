@@ -9,7 +9,7 @@ Which skills an install gets, and how to install the skills without the scaffold
 |---|---|---|---|
 | `--lang en` | 10 | 7 | The workflow skills, in English |
 | `--lang ko` (default) | 25 | 20 | The workflow skills in Korean plus 15 `yd-*` expert skills and their 13 agents |
-| either, with `--with-personal-skills` | +11 | +4 | skills tied to the maintainer's environment |
+| either, with `--with-personal-skills` | +12 | +4 | skills tied to the maintainer's environment |
 
 **The 10 workflow skills**: `review`, `status`, `search-first`, `security-precheck`, `docs-sync`, `handoff`,
 `memory-factcheck`, `skill-evolve`, `grill-me`, and `example-skill` — a template to copy when you write your own.
@@ -23,7 +23,7 @@ English overlay, which is why `--lang en` leaves them out.
 |---|---|
 | `--with-yd-skills` | Add the 15 `yd-*` skills (and their agents) to an English install |
 | `--no-yd-skills` | Leave them out of a Korean install |
-| `--with-personal-skills` | Also install the 11 opt-in skills. They assume a specific GitLab, hosts, ui.doksam.com, FinGuard and a Hugo blog, so they are not meant for other environments |
+| `--with-personal-skills` | Also install the 12 opt-in skills. They assume a specific GitLab, hosts, ui.doksam.com, FinGuard and a Hugo blog, so they are not meant for other environments |
 
 The choice is recorded in `.claude/.scaffold.json`, so `--update` keeps the same sets. The per-skill table and the
 authoring rules are in [.claude/skills/README.md](../.claude/skills/README.md) (Korean).
@@ -42,7 +42,7 @@ codex plugin marketplace add LeeYudok/agents-scaffold && codex plugin add yd-ski
 ```
 
 - `yd-skills` carries the 15 `yd-*` skills plus `handoff`, `docs-sync`, `memory-factcheck` and `skill-evolve`.
-  `yd-skills-personal` carries the 11 opt-in ones. Both are Korean.
+  `yd-skills-personal` carries the 12 opt-in ones. Both are Korean.
 - In Claude Code, plugin skills are namespaced (`yd-skills:yd-pg-expert`).
 - A plugin carries skills only. Project rules, hooks and subagents come from the installer, because Claude Code
   plugins cannot ship rules and Codex plugins cannot ship subagents.

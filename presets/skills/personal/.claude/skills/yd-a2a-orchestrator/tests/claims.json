@@ -1,0 +1,172 @@
+{
+  "claims": [
+    {
+      "id": "COORDINATOR-SINGLE",
+      "kind": "정상",
+      "rule": "지휘권을 쥔 에이전트 한 명과 리스 term 을 적는다",
+      "test": "test_check_task_dag.py::test_complete_dag_passes"
+    },
+    {
+      "id": "COORDINATOR-MISSING",
+      "kind": "도구오류",
+      "rule": "식별된 `agent_id` 가 없으면 거부된다",
+      "test": "test_check_task_dag.py::test_missing_coordinator_is_failure"
+    },
+    {
+      "id": "TASK-ID-UNIQUE",
+      "kind": "경계",
+      "rule": "작업 ID 는 DAG 안에서 유일해야 한다.",
+      "test": "test_check_task_dag.py::test_duplicate_task_id_is_failure"
+    },
+    {
+      "id": "DEP-EXISTS",
+      "kind": "실패",
+      "rule": "의존 대상 작업 ID 가 모두 있어야 한다.",
+      "test": "test_check_task_dag.py::test_missing_dependency_is_failure"
+    },
+    {
+      "id": "DEP-ACYCLIC",
+      "kind": "실패",
+      "rule": "의존 관계에 순환이 있으면 안 된다.",
+      "test": "test_check_task_dag.py::test_dependency_cycle_is_failure"
+    },
+    {
+      "id": "DEP-FINISHED",
+      "kind": "실패",
+      "rule": "앞 작업이 끝나지 않았으면 뒤 작업을 완료로 적을 수 없다.",
+      "test": "test_check_task_dag.py::test_done_task_with_unfinished_dependency_is_failure"
+    },
+    {
+      "id": "OWNER-NE-REVIEWER",
+      "kind": "실패",
+      "rule": "담당(owner)과 리뷰어(reviewer)는 서로 달라야 한다.",
+      "test": "test_check_task_dag.py::test_owner_and_reviewer_must_differ"
+    },
+    {
+      "id": "STATE-ENUM",
+      "kind": "경계",
+      "rule": "작업 상태는 todo·working·blocked·done·failed 중 하나다.",
+      "test": "test_check_task_dag.py::test_unknown_state_is_failure"
+    },
+    {
+      "id": "DONE-NEEDS-ZERO-EXIT",
+      "kind": "실패",
+      "rule": "완료로 적은 작업은 검증 명령이 모두 exit_code 0 이어야 한다.",
+      "test": "test_check_task_dag.py::test_done_with_nonzero_exit_is_failure"
+    },
+    {
+      "id": "DONE-NEEDS-ARTIFACT-HASH",
+      "kind": "실패",
+      "rule": "완료로 적은 작업은 산출물 경로와 64자리 소문자 hex sha256 이 있어야 한다.",
+      "test": "test_check_task_dag.py::test_done_with_bad_hash_is_failure"
+    },
+    {
+      "id": "ARTIFACT-HASH-RECHECK",
+      "kind": "실패",
+      "rule": "해시는 검증기가 다시 대조한다.",
+      "test": "test_check_task_dag.py::test_verify_files_detects_changed_artifact"
+    },
+    {
+      "id": "DONE-NEEDS-CHECKS",
+      "kind": "경계",
+      "rule": "완료로 적은 작업은 검증 명령이 모두 exit_code 0 이어야 한다.",
+      "test": "test_check_task_dag.py::test_done_without_checks_is_failure"
+    },
+    {
+      "id": "DONE-NEEDS-ARTIFACT-PATH",
+      "kind": "실패",
+      "rule": "완료로 적은 작업은 산출물 경로와 64자리 소문자 hex sha256 이 있어야 한다.",
+      "test": "test_check_task_dag.py::test_done_without_artifact_is_failure"
+    },
+    {
+      "id": "RETRY-CAP-THREE",
+      "kind": "경계",
+      "rule": "실패 재배정은 같은 작업에서 최대 3회까지다.",
+      "test": "test_check_task_dag.py::test_retry_cap_is_failure"
+    },
+    {
+      "id": "TODO-IS-NOT-DONE",
+      "kind": "오탐",
+      "rule": "미구현·추가 예정 표기가 남은 기록은 완료가 아니다.",
+      "test": "test_check_task_dag.py::test_todo_marker_is_failure"
+    },
+    {
+      "id": "UNREADABLE-EXIT2",
+      "kind": "도구오류",
+      "rule": "기록 파일을 읽지 못하면 검증기는 exit 2 를 낸다.",
+      "test": "test_check_task_dag.py::test_unreadable_input_is_tool_error"
+    },
+    {
+      "id": "HASH-COMMAND",
+      "kind": "정상",
+      "rule": "해시는 `check_task_dag.py hash <경로>` 로 구한다.",
+      "test": "test_check_task_dag.py::test_hash_subcommand_matches_sha256"
+    },
+    {
+      "id": "DAG-EXIT-CODES",
+      "kind": "정상",
+      "rule": "위반이 없으면 0, 있으면 1, 입력을 읽지 못하면 2",
+      "test": "test_check_task_dag.py::test_cli_exit_codes"
+    },
+    {
+      "id": "WORKTREE-ISOLATION",
+      "kind": "정상",
+      "rule": "동시에 도는 작업은 각자 워크트리와 브랜치를 가진다.",
+      "test": "test_check_task_dag.py::test_worktree_isolation_allows_parallel_tasks"
+    },
+    {
+      "id": "WORKTREE-ACTIVE-CONFLICT",
+      "kind": "실패",
+      "rule": "동시에 도는 작업은 각자 워크트리와 브랜치를 가진다.",
+      "test": "test_check_task_dag.py::test_active_tasks_share_worktree_is_failure"
+    },
+    {
+      "id": "WORKTREE-BRANCH-CONFLICT",
+      "kind": "실패",
+      "rule": "동시에 도는 작업은 각자 워크트리와 브랜치를 가진다.",
+      "test": "test_check_task_dag.py::test_active_tasks_share_branch_is_failure"
+    },
+    {
+      "id": "WORKTREE-FIELDS",
+      "kind": "실패",
+      "rule": "같은 저장소 안에서 `worktree`나 `branch`가 겹치면 위반이다.",
+      "test": "test_check_task_dag.py::test_missing_isolation_field_is_failure"
+    },
+    {
+      "id": "POOL-RETURNED",
+      "kind": "정상",
+      "rule": "작업을 끝낸 에이전트는 MR/push 반영을 확인한 뒤 풀(`pool`)에 반환한다.",
+      "test": "test_check_task_dag.py::test_finished_agent_is_returned_to_pool"
+    },
+    {
+      "id": "POOL-MERGE-EVIDENCE",
+      "kind": "실패",
+      "rule": "검증 명령(`checks`)의 하나로 남긴다(예: `gh pr view <n> --json state,mergeCommit`).",
+      "test": "test_check_task_dag.py::test_done_without_merge_evidence_is_failure"
+    },
+    {
+      "id": "POOL-BUSY-EXCLUDED",
+      "kind": "실패",
+      "rule": "아직 끝나지 않은 작업(todo·working·blocked)을 쥔 에이전트는 풀(`pool`)에 있으면 안 된다.",
+      "test": "test_check_task_dag.py::test_busy_agent_in_pool_is_failure"
+    },
+    {
+      "id": "POOL-REQUIRED",
+      "kind": "도구오류",
+      "rule": "작업 DAG 에는 풀(`pool`) 목록이 있어야 한다.",
+      "test": "test_check_task_dag.py::test_missing_pool_is_failure"
+    },
+    {
+      "id": "POOL-UNIQUE",
+      "kind": "경계",
+      "rule": "풀(`pool`)의 에이전트 ID 는 중복되면 안 된다.",
+      "test": "test_check_task_dag.py::test_duplicate_pool_entry_is_failure"
+    },
+    {
+      "id": "ATTEMPTS-REQUIRED",
+      "kind": "도구오류",
+      "rule": "각 작업은 `attempts`(시도 횟수, 최초 1회부터)를 적는다.",
+      "test": "test_check_task_dag.py::test_missing_attempts_is_failure"
+    }
+  ]
+}
