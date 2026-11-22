@@ -8,6 +8,11 @@ Notable changes to agents-scaffold. Versions follow [Semantic Versioning](https:
 First tagged release. Everything before it shipped from `main` without a version.
 
 ### Added
+- `yd-a2a-orchestrator`: coordinates multi-repo work across the A2A/ACP agent pool — a single coordinator
+  lease with CAS failover, a task DAG validated by `scripts/check_task_dag.py` (unique IDs, dependency
+  existence, cycle detection, owner ≠ reviewer, evidence hashes), worktree isolation, cross-agent
+  verification evidence and bounded failure reassignment. It defers single-repo web E2E to
+  `yd-sdlc-orchestrator` and same-host Orca workers to `orchestration` (#161).
 - `yd-visual-brief`: builds a one-page, diagram-first brief (HTML) for business plans and approval documents from a
   single `brief.json` — a layered architecture diagram, a metro-style flow map, comparison rows, a schedule and decision
   cards drawn as SVG, three curated palettes, and `check_brief.py` for contrast, hue count, text size and missing

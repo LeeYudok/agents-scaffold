@@ -1,0 +1,3 @@
+interface:
+  display_name: "YD A2A Orchestrator"
+  short_description: "A2A/ACP 에이전트 풀로 저장소 작업을 지휘·위임·검증한다"
