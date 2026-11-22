@@ -13,6 +13,7 @@ DAG 형식(최소):
 
     {
       "coordinator": {"agent": "codex", "term": 7},
+      "pool": ["codex-glm"],
       "tasks": [
         {"id": "t1", "owner": "codex-glm", "reviewer": "claude",
          "repo": "dok3search", "branch": "batch/codex-glm-20261122-ab12cd34",
@@ -34,6 +35,10 @@ import sys
 from pathlib import Path
 
 STATES = ("todo", "working", "blocked", "done", "failed")
+#: 아직 끝나지 않아 에이전트를 풀에 반환할 수 없는 상태.
+ACTIVE_STATES = ("todo", "working", "blocked")
+#: 끝나서 에이전트를 풀에 반환해야 하는 상태.
+TERMINAL_STATES = ("done", "failed")
 #: 실패 재배정 상한 — 최초 시도 1회 + 재배정 3회.
 MAX_ATTEMPTS = 4
 TODO_WORDS = ("추가 예정", "미구현", "TODO", "FIXME")
@@ -144,6 +149,29 @@ def check_dependencies(tasks: list[dict], errors: list[str]) -> None:
             visit(node, [])
 
 
+def check_pool(data: dict, tasks: list[dict], errors: list[str]) -> None:
+    """에이전트 풀 목록과 작업 묶임·풀림을 검사한다 (SKILL.md §3)."""
+    pool = data.get("pool")
+    if pool is None:
+        errors.append("pool(에이전트 풀) 목록이 없다 — 새 작업을 받을 수 있는 에이전트를 적는다")
+        return
+    if not isinstance(pool, list) or not all(isinstance(a, str) and a.strip() for a in pool):
+        errors.append("pool 은 에이전트 ID 문자열 목록이어야 한다")
+        return
+    if len(pool) != len(set(pool)):
+        errors.append("풀(pool)의 에이전트 ID 가 중복됐다")
+    active = {t.get("owner") for t in tasks
+              if isinstance(t, dict) and t.get("state") in ACTIVE_STATES}
+    finished = {t.get("owner") for t in tasks
+                if isinstance(t, dict) and t.get("state") in TERMINAL_STATES}
+    for a in sorted(set(pool)):
+        if a in active:
+            errors.append(f"pool: {a} 가 아직 끝나지 않은 작업을 쥐고 있다 — 풀에 있으면 안 된다")
+    for a in sorted(x for x in finished if isinstance(x, str) and x):
+        if a not in active and a not in pool:
+            errors.append(f"pool: {a} 가 작업을 끝냈는데 풀에 반환되지 않았다")
+
+
 def check(data: dict) -> list[str]:
     errors: list[str] = []
     if not isinstance(data, dict):
@@ -160,6 +188,7 @@ def check(data: dict) -> list[str]:
         check_task(i, t, seen, errors)
         if isinstance(t.get("id"), str):
             seen.add(t["id"])
+    check_pool(data, tasks, errors)
     check_dependencies(tasks, errors)
     return errors
 

@@ -40,6 +40,7 @@ def task(tid, owner="codex-glm", reviewer="claude", state="done", deps=None,
 def good():
     return {
         "coordinator": {"agent": "codex", "term": 7},
+        "pool": ["codex-glm", "codex-deepseek"],
         "tasks": [
             task("t1"),
             task("t2", owner="codex-deepseek", reviewer="codex", deps=["t1"]),
@@ -113,6 +114,29 @@ class TaskDag(unittest.TestCase):
         d = good()
         del d["coordinator"]
         self.assertTrue(any("coordinator" in e for e in m.check(d)))
+
+    def test_missing_pool_is_failure(self):
+        d = good()
+        del d["pool"]
+        self.assertTrue(any("pool(에이전트 풀) 목록이 없다" in e for e in m.check(d)))
+
+    def test_finished_agent_is_returned_to_pool(self):
+        d = good()
+        d["pool"] = ["codex-glm"]  # codex-deepseek 는 t2 를 끝냈는데 풀에 없다
+        self.assertTrue(any("풀에 반환되지 않았다" in e for e in m.check(d)))
+
+    def test_busy_agent_in_pool_is_failure(self):
+        d = good()
+        d["tasks"][1]["state"] = "working"
+        d["tasks"][1]["artifact"] = ""
+        d["tasks"][1]["sha256"] = ""
+        d["tasks"][1]["checks"] = []
+        self.assertTrue(any("풀에 있으면 안 된다" in e for e in m.check(d)))
+
+    def test_duplicate_pool_entry_is_failure(self):
+        d = good()
+        d["pool"] = ["codex-glm", "codex-glm", "codex-deepseek"]
+        self.assertTrue(any("중복" in e for e in m.check(d)))
 
     def test_retry_cap_is_failure(self):
         d = good()

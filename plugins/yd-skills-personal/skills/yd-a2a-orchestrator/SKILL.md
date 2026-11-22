@@ -47,6 +47,9 @@ metadata:
 각 작업은 담당(`owner`), 리뷰어(`reviewer`), 저장소·브랜치·워크트리, 의존 관계(`depends_on`),
 상태, 산출물과 검증 명령을 가진다.
 
+DAG 최상위에는 지금 새 작업을 받을 수 있는 에이전트 목록(`pool`)을 둔다. 풀과 작업의 묶임·풀림
+규칙은 §3 에 있다.
+
 - **작업 ID 는 DAG 안에서 유일해야 한다.**
 - **의존 대상 작업 ID 가 모두 있어야 한다.**
 - **의존 관계에 순환이 있으면 안 된다.**
@@ -55,7 +58,21 @@ metadata:
 - **동시에 도는 작업은 각자 워크트리와 브랜치를 가진다.** 공유 체크아웃에서 브랜치를 갈아타면
   다른 작업의 발밑이 바뀐다(1세션 = 1워크트리 = 1이슈 = 1브랜치).
 
-## 3. 위임 (Delegation)
+## 3. 에이전트 풀 (Agent Pool)
+
+풀은 지금 새 작업을 받을 수 있는 에이전트의 목록이다. 지휘자는 작업을 맡길 때 풀에서 에이전트를
+꺼내 그 작업에 묶고, 작업이 끝나면 풀에 되돌려놓는다. 묶인 채로 남겨 두면 다음 작업에 못 쓰고,
+모니터에 유령 세션(`stale`)으로 쌓인다.
+
+- **작업을 끝낸 에이전트는 MR/push 반영을 확인한 뒤 풀(`pool`)에 반환한다.** 반영 확인은 완료
+  검증 명령(`checks`)의 하나로 남긴다(예: `gh pr view <n> --json state,mergeCommit`).
+- **아직 끝나지 않은 작업(todo·working·blocked)을 쥔 에이전트는 풀(`pool`)에 있으면 안 된다.**
+- **작업 DAG 에는 풀(`pool`) 목록이 있어야 한다.** 지금 새 작업을 받을 수 있는 에이전트 ID 만 넣는다.
+- **풀(`pool`)의 에이전트 ID 는 중복되면 안 된다.**
+- 실패·타임아웃·할당량 초과로 끝난 작업의 에이전트도 실패를 기록한 뒤 곧바로 풀에 반환한다 —
+  그래야 다음 작업에 재배정할 수 있다(§6).
+
+## 4. 위임 (Delegation)
 
 작업을 에이전트에 넘길 때는 `from_agent` 를 밝혀 보드에 발신자를 남긴다. 그래야 응답(`reply`)이
 내 수신함으로 돌아온다. 에이전트별 도구와 권한 모드는
@@ -66,7 +83,7 @@ metadata:
 - 긴 작업은 `async` 로 던지고 `a2a_task_status`·수신함으로 회수한다.
 - 저장소를 지정하려면 `cwd` 를 그 작업의 워크트리로 준다.
 
-## 4. 검증 증거 (Verification Evidence)
+## 5. 검증 증거 (Verification Evidence)
 
 작업을 완료로 적기 전에 그 저장소의 게이트를 실제로 돌리고 출력을 증거로 남긴다.
 
@@ -86,7 +103,7 @@ python3 .claude/skills/yd-a2a-orchestrator/scripts/check_task_dag.py <dag.json> 
 - **기록 파일을 읽지 못하면 검증기는 exit 2 를 낸다.** 이것도 통과가 아니다.
 - 검증기가 exit 0 일 때만 "DAG 를 다 통과했다" 고 보고한다.
 
-## 5. 실패 재배정 (Failure Reassignment)
+## 6. 실패 재배정 (Failure Reassignment)
 
 에이전트가 오류·타임아웃·할당량 초과로 끝나면 같은 작업을 다른 에이전트에 다시 맡긴다.
 
@@ -96,7 +113,7 @@ python3 .claude/skills/yd-a2a-orchestrator/scripts/check_task_dag.py <dag.json> 
   원담당의 브랜치·워크트리 위에서 계속한다 — 새 브랜치·새 PR 을 따로 만들지 않는다.
 - 보드 메시지에 답이 없으면 한 번 다시 묻고, 그 뒤에는 이슈 기록을 기준으로 이어받는다.
 
-## 6. 완료 조건 (Definition of Done)
+## 7. 완료 조건 (Definition of Done)
 
 1. 지휘권 리스를 보유했고, 작업 DAG 의 모든 작업이 `done` 이다.
 2. `check_task_dag.py` 가 exit 0 이다(모든 검증 명령 exit 0, 산출물 해시 일치).
@@ -107,3 +124,9 @@ python3 .claude/skills/yd-a2a-orchestrator/scripts/check_task_dag.py <dag.json> 
 
 메인·관련 저장소의 역할, 검증 명령, 워크트리 규칙은 [references/repo-map.md](references/repo-map.md) 에 있다.
 작업을 어느 저장소에 맡길지 정할 때 먼저 그 표를 본다.
+
+## Learned warnings
+
+- (2026-11-22) 작업을 끝낸 에이전트를 풀에 반환하지 않고 묶어 둬서, 콘솔(`/a2a`)에 유령
+  세션(`codex-glm-2..6`·`codex-llmgw-*` `stale`)이 쌓였다. 그래서 `pool` 목록과 반환 규칙을
+  §3 에 넣고, `check_task_dag.py` 가 이를 검사하게 했다.

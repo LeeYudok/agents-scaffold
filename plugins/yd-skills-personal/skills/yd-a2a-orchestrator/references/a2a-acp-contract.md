@@ -44,6 +44,16 @@ a2a-acp-bridge coord handoff -agent codex -to codex-glm
 3종(`agy`·`codex`·`claude`)에 동적 에이전트가 더해진다. 같은 ID 면 내장 카드를 덮어쓴다.
 `agents.json` 을 읽지 못하면 내장 3종으로 계속 동작하고 `registry_warnings` 에 오류를 남긴다.
 
+풀은 지금 새 작업을 받을 수 있는 에이전트의 목록이다. 작업을 맡길 때 풀에서 에이전트를 꺼내
+그 작업에 묶고, 작업이 끝나면 풀에 되돌려놓는다.
+
+- **작업을 끝낸 에이전트는 MR/push 반영을 확인한 뒤 풀(`pool`)에 반환한다.** 반영 확인은 완료
+  검증 명령(`checks`)의 하나로 남긴다(예: `gh pr view <n> --json state,mergeCommit`).
+- **아직 끝나지 않은 작업(todo·working·blocked)을 쥔 에이전트는 풀(`pool`)에 있으면 안 된다.**
+- **작업 DAG 에는 풀(`pool`) 목록이 있어야 한다.** 지금 새 작업을 받을 수 있는 에이전트 ID 만 넣는다.
+- **풀(`pool`)의 에이전트 ID 는 중복되면 안 된다.**
+- 실패·타임아웃·할당량 초과로 끝난 작업의 에이전트도 실패를 기록한 뒤 곧바로 풀에 반환한다.
+
 발신자는 `from_agent`(CLI `-from`) → 환경변수 `A2A_AGENT_ID` → MCP `clientInfo.name` 추정 →
 `user` 순으로 정한다. **발신자를 밝혀 위임하면 응답(`reply`)이 그 발신자의 수신함으로 돌아온다.**
 
