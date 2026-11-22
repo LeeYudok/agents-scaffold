@@ -21,19 +21,24 @@ SHA = "a" * 64
 
 
 def task(tid, owner="codex-glm", reviewer="claude", state="done", deps=None,
-         artifact="out/x", sha=SHA, checks=None):
+         artifact="out/x", sha=SHA, checks=None, attempts=1,
+         worktree="/tmp/wt", branch=None):
     return {
         "id": tid,
         "owner": owner,
         "reviewer": reviewer,
         "repo": "dok3search",
-        "branch": f"batch/{owner}-20261122-ab12cd34",
-        "worktree": "/tmp/wt",
+        "branch": branch or f"batch/{owner}-20261122-ab12cd34",
+        "worktree": worktree,
         "depends_on": deps or [],
         "state": state,
+        "attempts": attempts,
         "artifact": artifact,
         "sha256": sha,
-        "checks": checks if checks is not None else [{"command": "cargo test", "exit_code": 0}],
+        "checks": checks if checks is not None else [
+            {"command": "cargo test", "exit_code": 0},
+            {"command": "gh pr view 12 --json state,mergeCommit", "exit_code": 0},
+        ],
     }
 
 
@@ -95,6 +100,11 @@ class TaskDag(unittest.TestCase):
         d["tasks"][0]["checks"] = [{"command": "cargo test", "exit_code": 1}]
         self.assertTrue(any("exit_code 가 0 이 아닌" in e for e in m.check(d)))
 
+    def test_done_without_merge_evidence_is_failure(self):
+        d = good()
+        d["tasks"][0]["checks"] = [{"command": "cargo test", "exit_code": 0}]
+        self.assertTrue(any("MR/push 반영 확인" in e for e in m.check(d)))
+
     def test_done_without_checks_is_failure(self):
         d = good()
         d["tasks"][0]["checks"] = []
@@ -114,6 +124,42 @@ class TaskDag(unittest.TestCase):
         d = good()
         del d["coordinator"]
         self.assertTrue(any("coordinator" in e for e in m.check(d)))
+
+    def test_done_task_with_unfinished_dependency_is_failure(self):
+        d = good()
+        d["tasks"][0]["state"] = "working"
+        d["tasks"][0]["artifact"] = ""
+        d["tasks"][0]["sha256"] = ""
+        d["tasks"][0]["checks"] = []
+        d["pool"] = ["codex-deepseek"]
+        self.assertTrue(any("선행 작업 t1 가 done 이 아니다" in e for e in m.check(d)))
+
+    def test_missing_isolation_field_is_failure(self):
+        d = good()
+        del d["tasks"][0]["worktree"]
+        self.assertTrue(any("worktree(작업 격리 정보)가 없다" in e for e in m.check(d)))
+
+    def test_active_tasks_share_worktree_is_failure(self):
+        d = good()
+        for t in d["tasks"]:
+            t["state"] = "working"
+            t["artifact"] = ""
+            t["sha256"] = ""
+            t["checks"] = []
+        d["pool"] = []
+        d["tasks"][1]["worktree"] = d["tasks"][0]["worktree"]
+        self.assertTrue(any("같은 worktree" in e for e in m.check(d)))
+
+    def test_active_tasks_share_branch_is_failure(self):
+        d = good()
+        for t in d["tasks"]:
+            t["state"] = "working"
+            t["artifact"] = ""
+            t["sha256"] = ""
+            t["checks"] = []
+        d["pool"] = []
+        d["tasks"][1]["branch"] = d["tasks"][0]["branch"]
+        self.assertTrue(any("같은 branch" in e for e in m.check(d)))
 
     def test_missing_pool_is_failure(self):
         d = good()
@@ -142,6 +188,11 @@ class TaskDag(unittest.TestCase):
         d = good()
         d["tasks"][0]["attempts"] = m.MAX_ATTEMPTS + 1
         self.assertTrue(any("최대 3회" in e for e in m.check(d)))
+
+    def test_missing_attempts_is_failure(self):
+        d = good()
+        del d["tasks"][0]["attempts"]
+        self.assertTrue(any("attempts(시도 횟수" in e for e in m.check(d)))
 
     def test_todo_marker_is_failure(self):
         d = good()
@@ -196,6 +247,12 @@ class TaskDag(unittest.TestCase):
         """서로 의존하지 않는 두 작업은 각자 워크트리·브랜치로 동시에 돌 수 있다."""
         d = good()
         d["tasks"][1]["depends_on"] = []
+        for t in d["tasks"]:
+            t["state"] = "working"
+            t["artifact"] = ""
+            t["sha256"] = ""
+            t["checks"] = []
+        d["pool"] = []
         d["tasks"][1]["worktree"] = "/tmp/wt-2"
         d["tasks"][1]["branch"] = "batch/codex-deepseek-20261122-99887766"
         self.assertEqual(m.check(d), [])

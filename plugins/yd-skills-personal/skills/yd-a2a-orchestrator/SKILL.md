@@ -45,7 +45,7 @@ metadata:
 `scripts/check_task_dag.py` 와 [references/a2a-acp-contract.md](references/a2a-acp-contract.md) 에 있다.
 
 각 작업은 담당(`owner`), 리뷰어(`reviewer`), 저장소·브랜치·워크트리, 의존 관계(`depends_on`),
-상태, 산출물과 검증 명령을 가진다.
+상태, 시도 횟수(`attempts`), 산출물과 검증 명령을 가진다.
 
 DAG 최상위에는 지금 새 작업을 받을 수 있는 에이전트 목록(`pool`)을 둔다. 풀과 작업의 묶임·풀림
 규칙은 §3 에 있다.
@@ -55,8 +55,10 @@ DAG 최상위에는 지금 새 작업을 받을 수 있는 에이전트 목록(`
 - **의존 관계에 순환이 있으면 안 된다.**
 - **담당(owner)과 리뷰어(reviewer)는 서로 달라야 한다.** 자기 작업을 자기가 리뷰하면 교차 검증이 아니다.
 - **작업 상태는 todo·working·blocked·done·failed 중 하나다.**
-- **동시에 도는 작업은 각자 워크트리와 브랜치를 가진다.** 공유 체크아웃에서 브랜치를 갈아타면
-  다른 작업의 발밑이 바뀐다(1세션 = 1워크트리 = 1이슈 = 1브랜치).
+- **동시에 도는 작업은 각자 워크트리와 브랜치를 가진다.** 동시에 도는 작업은 `todo`·`working`·
+  `blocked` 상태이고, 같은 저장소 안에서 `worktree`나 `branch`가 겹치면 위반이다. `repo`·
+  `branch`·`worktree`는 빈 값 없이 적는다. 공유 체크아웃에서 브랜치를 갈아타면 다른 작업의
+  발밑이 바뀐다(1세션 = 1워크트리 = 1이슈 = 1브랜치).
 
 ## 3. 에이전트 풀 (Agent Pool)
 
@@ -66,6 +68,8 @@ DAG 최상위에는 지금 새 작업을 받을 수 있는 에이전트 목록(`
 
 - **작업을 끝낸 에이전트는 MR/push 반영을 확인한 뒤 풀(`pool`)에 반환한다.** 반영 확인은 완료
   검증 명령(`checks`)의 하나로 남긴다(예: `gh pr view <n> --json state,mergeCommit`).
+  `check_task_dag.py` 는 완료 작업의 `checks`에 MR/push 반영 확인 명령이 하나도 없으면 위반으로
+  판정한다.
 - **아직 끝나지 않은 작업(todo·working·blocked)을 쥔 에이전트는 풀(`pool`)에 있으면 안 된다.**
 - **작업 DAG 에는 풀(`pool`) 목록이 있어야 한다.** 지금 새 작업을 받을 수 있는 에이전트 ID 만 넣는다.
 - **풀(`pool`)의 에이전트 ID 는 중복되면 안 된다.**
@@ -89,14 +93,15 @@ DAG 최상위에는 지금 새 작업을 받을 수 있는 에이전트 목록(`
 
 - **완료로 적은 작업은 검증 명령이 모두 exit_code 0 이어야 한다.** 빌드 성공만으로 통과가 아니다.
 - **완료로 적은 작업은 산출물 경로와 64자리 소문자 hex sha256 이 있어야 한다.** 해시는 검증기가 다시 대조한다.
-- **앞 작업이 끝나지 않았으면 뒤 작업을 완료로 적을 수 없다.**
+- **앞 작업이 끝나지 않았으면 뒤 작업을 완료로 적을 수 없다.** 완료(`done`) 작업의 선행 작업이
+  `done`이 아니면 위반이다.
 - **미구현·추가 예정 표기가 남은 기록은 완료가 아니다.**
 
 기록이 SKILL.md 의 규칙을 지켰는지는 검증기가 판정한다. 최종 보고 전에 반드시 돌린다.
 해시는 `check_task_dag.py hash <경로>` 로 구한다.
 
 ```sh
-python3 .claude/skills/yd-a2a-orchestrator/scripts/check_task_dag.py <dag.json> --root <워크스페이스> --verify-files
+python3 <스킬경로>/scripts/check_task_dag.py <dag.json> --root <워크스페이스> --verify-files
 ```
 
 - **위반이 없으면 0, 있으면 1, 입력을 읽지 못하면 2 를 낸다.**
@@ -109,6 +114,8 @@ python3 .claude/skills/yd-a2a-orchestrator/scripts/check_task_dag.py <dag.json> 
 
 - **실패 재배정은 같은 작업에서 최대 3회까지다.** 같은 실패가 반복되면 규칙을 무력화하지 말고
   원인과 필요한 결정을 사용자에게 보고하고 멈춘다.
+- **각 작업은 `attempts`(시도 횟수, 최초 1회부터)를 적는다.** `attempts`가 없으면 재배정 횟수를
+  검증할 수 없다. 최초 시도가 1이고, 재배정은 최대 3회이므로 `attempts`는 1~4다.
 - 담당이 멈추면 이슈에 핸드오프(`owner:*` 를 떼고 `handoff` 라벨)를 남기고, 이어받는 에이전트는
   원담당의 브랜치·워크트리 위에서 계속한다 — 새 브랜치·새 PR 을 따로 만들지 않는다.
 - 보드 메시지에 답이 없으면 한 번 다시 묻고, 그 뒤에는 이슈 기록을 기준으로 이어받는다.
@@ -130,3 +137,6 @@ python3 .claude/skills/yd-a2a-orchestrator/scripts/check_task_dag.py <dag.json> 
 - (2026-11-22) 작업을 끝낸 에이전트를 풀에 반환하지 않고 묶어 둬서, 콘솔(`/a2a`)에 유령
   세션(`codex-glm-2..6`·`codex-llmgw-*` `stale`)이 쌓였다. 그래서 `pool` 목록과 반환 규칙을
   §3 에 넣고, `check_task_dag.py` 가 이를 검사하게 했다.
+- (2026-11-22) 교차 리뷰에서 검증기가 SKILL.md 의 완료 선행조건·워크트리 격리·MR/push 반영
+  확인·재배정 상한을 실제로 강제하지 않는 구멍이 나왔다. 규칙을 문서에만 두지 말고
+  `check_task_dag.py` 의 필수 검증과 음성 테스트로 함께 박는다 (#161).

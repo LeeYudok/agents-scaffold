@@ -17,9 +17,12 @@ DAG 형식(최소):
       "tasks": [
         {"id": "t1", "owner": "codex-glm", "reviewer": "claude",
          "repo": "dok3search", "branch": "batch/codex-glm-20261122-ab12cd34",
-         "worktree": "/abs/path", "depends_on": [], "state": "done",
+         "worktree": "/abs/path", "depends_on": [], "state": "done", "attempts": 1,
          "artifact": "backend/rust/target/report.json", "sha256": "<64 hex>",
-         "checks": [{"command": "cargo test ...", "exit_code": 0}]}
+         "checks": [
+           {"command": "cargo test ...", "exit_code": 0},
+           {"command": "gh pr view 12 --json state,mergeCommit", "exit_code": 0}
+         ]}
       ]
     }
 
@@ -43,6 +46,12 @@ TERMINAL_STATES = ("done", "failed")
 MAX_ATTEMPTS = 4
 TODO_WORDS = ("추가 예정", "미구현", "TODO", "FIXME")
 SHA_RE = re.compile(r"^[0-9a-f]{64}$")
+MERGE_EVIDENCE_RES = (
+    re.compile(r"\bgh\s+pr\s+(?:view|checks|merge)\b"),
+    re.compile(r"\bglab\s+mr\s+(?:view|merge)\b"),
+    re.compile(r"\bgit\s+push\b"),
+    re.compile(r"\bgit\s+ls-remote\b"),
+)
 
 
 def hash_path(path: Path) -> str:
@@ -84,6 +93,10 @@ def check_task(i: int, t: dict, ids: set[str], errors: list[str]) -> None:
         errors.append(f"{where}: reviewer(리뷰어)가 없다")
     if isinstance(owner, str) and owner.strip() and owner == reviewer:
         errors.append(f"{where}: 담당과 리뷰어가 같다 — 자기 작업을 자기가 리뷰할 수 없다")
+    for field in ("repo", "branch", "worktree"):
+        value = t.get(field)
+        if not isinstance(value, str) or not value.strip():
+            errors.append(f"{where}: {field}(작업 격리 정보)가 없다")
     deps = t.get("depends_on")
     if not isinstance(deps, list) or not all(isinstance(d, str) for d in deps):
         errors.append(f"{where}: depends_on 은 작업 ID 문자열 목록이어야 한다")
@@ -103,16 +116,24 @@ def check_task(i: int, t: dict, ids: set[str], errors: list[str]) -> None:
         bad = [c for c in checks if isinstance(c, dict) and c.get("exit_code") != 0]
         if bad:
             errors.append(f"{where}: 완료인데 exit_code 가 0 이 아닌 검증 명령이 있다")
+        has_merge_evidence = any(
+            isinstance(c, dict)
+            and any(p.search(str(c.get("command", ""))) for p in MERGE_EVIDENCE_RES)
+            for c in checks
+        )
+        if not has_merge_evidence:
+            errors.append(
+                f"{where}: 완료인데 MR/push 반영 확인 명령이 checks 에 없다"
+            )
         if not isinstance(t.get("artifact"), str) or not t["artifact"].strip():
             errors.append(f"{where}: 완료인데 산출물 artifact 경로가 없다")
         if not isinstance(t.get("sha256"), str) or not SHA_RE.match(t["sha256"]):
             errors.append(f"{where}: 완료인데 sha256 이 64자리 소문자 hex 가 아니다")
     attempts = t.get("attempts")
-    if attempts is not None:
-        if not isinstance(attempts, int) or isinstance(attempts, bool) or attempts < 1:
-            errors.append(f"{where}: attempts 는 1 이상의 정수여야 한다")
-        elif attempts > MAX_ATTEMPTS:
-            errors.append(f"{where}: 재배정이 {attempts - 1}회다 — 같은 작업에서 최대 3회까지다")
+    if not isinstance(attempts, int) or isinstance(attempts, bool) or attempts < 1:
+        errors.append(f"{where}: attempts(시도 횟수, 최초 1회부터)가 없다")
+    elif attempts > MAX_ATTEMPTS:
+        errors.append(f"{where}: 재배정이 {attempts - 1}회다 — 같은 작업에서 최대 3회까지다")
     text = json.dumps(t, ensure_ascii=False)
     if any(w in text for w in TODO_WORDS):
         errors.append(f"{where}: 미구현·추가 예정 표기가 남아 있다")
@@ -120,6 +141,11 @@ def check_task(i: int, t: dict, ids: set[str], errors: list[str]) -> None:
 
 def check_dependencies(tasks: list[dict], errors: list[str]) -> None:
     ids = {t.get("id") for t in tasks if isinstance(t.get("id"), str)}
+    states = {
+        t.get("id"): t.get("state")
+        for t in tasks
+        if isinstance(t, dict) and isinstance(t.get("id"), str)
+    }
     graph: dict[str, list[str]] = {}
     for i, t in enumerate(tasks):
         tid = t.get("id")
@@ -127,6 +153,11 @@ def check_dependencies(tasks: list[dict], errors: list[str]) -> None:
         for d in deps:
             if d not in ids:
                 errors.append(f"tasks[{i}] {tid}: 의존 대상 {d} 가 DAG 에 없다")
+            elif t.get("state") == "done" and states.get(d) != "done":
+                errors.append(
+                    f"tasks[{i}] {tid}: 선행 작업 {d} 가 done 이 아니다 — "
+                    "앞 작업이 끝나기 전에 완료로 적을 수 없다"
+                )
         if isinstance(tid, str):
             graph[tid] = deps
     # 순환 판정 — 색칠 DFS. white=0, gray=1, black=2.
@@ -147,6 +178,35 @@ def check_dependencies(tasks: list[dict], errors: list[str]) -> None:
     for node in graph:
         if color[node] == 0:
             visit(node, [])
+
+
+def check_worktree_isolation(tasks: list[dict], errors: list[str]) -> None:
+    """동시에 도는 작업끼리 같은 repo 의 worktree·branch 를 공유하지 않는지 본다."""
+    worktrees: dict[tuple[str, str], object] = {}
+    branches: dict[tuple[str, str], object] = {}
+    for i, t in enumerate(tasks):
+        if not isinstance(t, dict) or t.get("state") not in ACTIVE_STATES:
+            continue
+        repo, worktree, branch = t.get("repo"), t.get("worktree"), t.get("branch")
+        if not all(isinstance(v, str) and v.strip() for v in (repo, worktree, branch)):
+            continue
+        where = f"tasks[{i}] {t.get('id', '?')}"
+        worktree_key = (repo, worktree)
+        branch_key = (repo, branch)
+        if worktree_key in worktrees:
+            errors.append(
+                f"{where}: 동시에 도는 작업 {worktrees[worktree_key]} 와 "
+                f"같은 worktree({worktree})를 쓴다"
+            )
+        else:
+            worktrees[worktree_key] = t.get("id")
+        if branch_key in branches:
+            errors.append(
+                f"{where}: 동시에 도는 작업 {branches[branch_key]} 와 "
+                f"같은 branch({branch})를 쓴다"
+            )
+        else:
+            branches[branch_key] = t.get("id")
 
 
 def check_pool(data: dict, tasks: list[dict], errors: list[str]) -> None:
@@ -190,6 +250,7 @@ def check(data: dict) -> list[str]:
             seen.add(t["id"])
     check_pool(data, tasks, errors)
     check_dependencies(tasks, errors)
+    check_worktree_isolation(tasks, errors)
     return errors
 
 

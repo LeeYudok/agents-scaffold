@@ -49,10 +49,15 @@ a2a-acp-bridge coord handoff -agent codex -to codex-glm
 
 - **작업을 끝낸 에이전트는 MR/push 반영을 확인한 뒤 풀(`pool`)에 반환한다.** 반영 확인은 완료
   검증 명령(`checks`)의 하나로 남긴다(예: `gh pr view <n> --json state,mergeCommit`).
+  완료 작업의 `checks`에 MR/push 반영 확인 명령이 없으면 `check_task_dag.py` 가 위반으로 판정한다.
 - **아직 끝나지 않은 작업(todo·working·blocked)을 쥔 에이전트는 풀(`pool`)에 있으면 안 된다.**
 - **작업 DAG 에는 풀(`pool`) 목록이 있어야 한다.** 지금 새 작업을 받을 수 있는 에이전트 ID 만 넣는다.
 - **풀(`pool`)의 에이전트 ID 는 중복되면 안 된다.**
 - 실패·타임아웃·할당량 초과로 끝난 작업의 에이전트도 실패를 기록한 뒤 곧바로 풀에 반환한다.
+- **동시에 도는 작업(todo·working·blocked)끼리는 같은 저장소 안에서 워크트리나 브랜치가 겹치면
+  안 된다.** 각 작업 레코드에는 `repo`·`branch`·`worktree`를 빈 값 없이 적는다.
+- **각 작업은 `attempts`(시도 횟수, 최초 1회부터)를 적는다.** 최초 시도가 1이고 재배정은 최대
+  3회이므로 `attempts`는 1~4다.
 
 발신자는 `from_agent`(CLI `-from`) → 환경변수 `A2A_AGENT_ID` → MCP `clientInfo.name` 추정 →
 `user` 순으로 정한다. **발신자를 밝혀 위임하면 응답(`reply`)이 그 발신자의 수신함으로 돌아온다.**

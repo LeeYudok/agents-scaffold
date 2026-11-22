@@ -31,6 +31,12 @@
       "test": "test_check_task_dag.py::test_dependency_cycle_is_failure"
     },
     {
+      "id": "DEP-FINISHED",
+      "kind": "실패",
+      "rule": "앞 작업이 끝나지 않았으면 뒤 작업을 완료로 적을 수 없다.",
+      "test": "test_check_task_dag.py::test_done_task_with_unfinished_dependency_is_failure"
+    },
+    {
       "id": "OWNER-NE-REVIEWER",
       "kind": "실패",
       "rule": "담당(owner)과 리뷰어(reviewer)는 서로 달라야 한다.",
@@ -109,10 +115,34 @@
       "test": "test_check_task_dag.py::test_worktree_isolation_allows_parallel_tasks"
     },
     {
+      "id": "WORKTREE-ACTIVE-CONFLICT",
+      "kind": "실패",
+      "rule": "동시에 도는 작업은 각자 워크트리와 브랜치를 가진다.",
+      "test": "test_check_task_dag.py::test_active_tasks_share_worktree_is_failure"
+    },
+    {
+      "id": "WORKTREE-BRANCH-CONFLICT",
+      "kind": "실패",
+      "rule": "동시에 도는 작업은 각자 워크트리와 브랜치를 가진다.",
+      "test": "test_check_task_dag.py::test_active_tasks_share_branch_is_failure"
+    },
+    {
+      "id": "WORKTREE-FIELDS",
+      "kind": "실패",
+      "rule": "같은 저장소 안에서 `worktree`나 `branch`가 겹치면 위반이다.",
+      "test": "test_check_task_dag.py::test_missing_isolation_field_is_failure"
+    },
+    {
       "id": "POOL-RETURNED",
       "kind": "정상",
       "rule": "작업을 끝낸 에이전트는 MR/push 반영을 확인한 뒤 풀(`pool`)에 반환한다.",
       "test": "test_check_task_dag.py::test_finished_agent_is_returned_to_pool"
+    },
+    {
+      "id": "POOL-MERGE-EVIDENCE",
+      "kind": "실패",
+      "rule": "검증 명령(`checks`)의 하나로 남긴다(예: `gh pr view <n> --json state,mergeCommit`).",
+      "test": "test_check_task_dag.py::test_done_without_merge_evidence_is_failure"
     },
     {
       "id": "POOL-BUSY-EXCLUDED",
@@ -131,6 +161,12 @@
       "kind": "경계",
       "rule": "풀(`pool`)의 에이전트 ID 는 중복되면 안 된다.",
       "test": "test_check_task_dag.py::test_duplicate_pool_entry_is_failure"
+    },
+    {
+      "id": "ATTEMPTS-REQUIRED",
+      "kind": "도구오류",
+      "rule": "각 작업은 `attempts`(시도 횟수, 최초 1회부터)를 적는다.",
+      "test": "test_check_task_dag.py::test_missing_attempts_is_failure"
     }
   ]
 }
