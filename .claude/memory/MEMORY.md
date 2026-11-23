@@ -27,3 +27,4 @@
 - [증시요약 게시 일정](user_naver-blog-market-schedule.md) — 평일 07:00·미장 개장 1시간 전(서머타임 21:30/그 외 22:30 KST), 블로그 diablodok "증시요약" 카테고리, 자동화 방식 미정 (개인)
 - [hwpx plan v2 함정](reference_hwpx-plan-v2-traps.md) — v2 표는 header+배열 rows, 키-값 rows 는 검증 통과 후 키 이름이 찍힌다, caption 무시, bullets style 은 government_report 전용, 샌드박스는 cwd 하나
 - [시크릿 마스킹을 sed 에 맡기지 않기](feedback_secret-redaction-bsd-sed.md) — BSD sed 는 \s 미지원이라 `KEY = "값"` 이 그대로 찍혔다(2026-11-14 네이버 API 시크릿 노출). 시크릿 파일은 키 이름만 뽑는다
+- [Go·Rust 만 쓴다](user_lang-go-rust-only.md) — 새 스크립트·도구는 Go 나 Rust 로. Python 으로 새로 짜거나 레포에 넣자고 제안하지 않는다 (개인)
