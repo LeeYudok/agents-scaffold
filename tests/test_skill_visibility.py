@@ -10,9 +10,10 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-BASE = ROOT / ".claude" / "skills"
+CORE = ROOT / "skills" / "core"
+YD = ROOT / "skills" / "yd-skills" / "skills"
 EN = ROOT / "presets" / "lang" / "en" / "base" / ".claude" / "skills"
-PERSONAL = ROOT / "presets" / "skills" / "personal" / ".claude" / "skills"
+PERSONAL = ROOT / "skills" / "yd-skills-personal" / "skills"
 # 템플릿, 그리고 code-reviewer·security-audit·sdlc-* 에이전트가 있어야 도는 스킬
 SCAFFOLD_ONLY = {"example-skill", "review", "security-precheck"}
 INTERNAL = re.compile(r"^metadata:\n  internal: true$", re.M)
@@ -29,15 +30,18 @@ def is_internal(path: Path) -> bool:
 
 class SkillVisibilityTests(unittest.TestCase):
     def test_scaffold_only_and_personal_skills_are_internal(self):
-        for root in (BASE, EN):
-            for name in SCAFFOLD_ONLY:
-                self.assertTrue(is_internal(root / name / "SKILL.md"), f"{root}/{name}")
+        for name in SCAFFOLD_ONLY:
+            self.assertTrue(is_internal(CORE / name / "SKILL.md"), f"core/{name}")
+            self.assertTrue(is_internal(EN / name / "SKILL.md"), f"en/{name}")
         for skill in sorted(PERSONAL.glob("*/SKILL.md")):
             self.assertTrue(is_internal(skill), skill)
 
     def test_general_skills_stay_visible(self):
         visible = [
-            p.parent.name for p in sorted(BASE.glob("*/SKILL.md")) if not is_internal(p)
+            p.parent.name
+            for root in (CORE, YD)
+            for p in sorted(root.glob("*/SKILL.md"))
+            if not is_internal(p)
         ]
         self.assertEqual(len(visible), 22, visible)  # workflow 7 + yd-* 15
         self.assertEqual(sum(n.startswith("yd-") for n in visible), 15)

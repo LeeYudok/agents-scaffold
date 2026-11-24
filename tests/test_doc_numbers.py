@@ -36,10 +36,11 @@ def copy_inputs(dst: Path) -> None:
     for stack in (ROOT / "presets" / "stacks").iterdir():
         if stack.is_dir():
             (dst / "presets" / "stacks" / stack.name).mkdir(parents=True)
-    for skill in (ROOT / ".claude" / "skills").glob("*/SKILL.md"):
-        target = dst / ".claude" / "skills" / skill.parent.name
-        target.mkdir(parents=True)
-        (target / "SKILL.md").write_text("stub\n", encoding="utf-8")
+    for rel in (Path("skills") / "core", Path("skills") / "yd-skills" / "skills"):
+        for skill in (ROOT / rel).glob("*/SKILL.md"):
+            target = dst / rel / skill.parent.name
+            target.mkdir(parents=True)
+            (target / "SKILL.md").write_text("stub\n", encoding="utf-8")
 
 
 def replace_once(path: Path, old: str, new: str) -> None:

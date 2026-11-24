@@ -40,11 +40,13 @@ class PluginContractTests(unittest.TestCase):
 
     def test_no_symlinks_inside_plugins(self):
         # codex-cli 0.164.0 의 plugin add 는 심링크를 버린다(2026-10-24 실측)
-        links = [p for p in (ROOT / "plugins").rglob("*") if p.is_symlink()]
-        self.assertEqual(links, [])
+        for name in ("yd-skills", "yd-skills-personal"):
+            links = [p for p in (ROOT / "skills" / name).rglob("*") if p.is_symlink()]
+            self.assertEqual(links, [])
 
     def test_plugins_carry_skills_only(self):
-        for plugin in (ROOT / "plugins").iterdir():
+        for name in ("yd-skills", "yd-skills-personal"):
+            plugin = ROOT / "skills" / name
             tops = {p.name for p in plugin.iterdir()}
             self.assertLessEqual(
                 tops,

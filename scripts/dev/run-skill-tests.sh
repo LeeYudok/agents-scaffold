@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # 스킬별 테스트 러너 (#78) — 각 스킬 폴더의 tests/test_*.py 를 스킬마다 따로 unittest 로 돌린다.
-# 원천: .claude/skills/*(기본)·presets/skills/personal/.claude/skills/*(옵트인).
+# 원천: skills/core/* · skills/yd-skills/skills/* · skills/yd-skills-personal/skills/*.
 # doksam-skills 의 scripts/run_tests.sh 구조를 이 레포 경로에 맞춘 것. 새 스킬을 추가해도 이 파일은 그대로 둔다.
 #   scripts/dev/run-skill-tests.sh            전부
 #   scripts/dev/run-skill-tests.sh yd-pg-expert docs-sync   이름으로 고르기
@@ -13,7 +13,7 @@ export PYTHONDONTWRITEBYTECODE=1
 failed=0 ran=0
 
 dirs=()
-for d in "$REPO_ROOT"/.claude/skills/*/tests/ "$REPO_ROOT"/presets/skills/personal/.claude/skills/*/tests/; do
+for d in "$REPO_ROOT"/skills/core/*/tests/ "$REPO_ROOT"/skills/yd-skills/skills/*/tests/ "$REPO_ROOT"/skills/yd-skills-personal/skills/*/tests/; do
   [[ -d "$d" ]] || continue
   name="$(basename "$(dirname "$d")")"
   if [[ $# -gt 0 ]]; then

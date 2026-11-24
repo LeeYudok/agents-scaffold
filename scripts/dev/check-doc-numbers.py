@@ -61,7 +61,9 @@ def load_facts(root: Path) -> dict:
         p.name for p in (root / "presets" / "stacks").iterdir() if p.is_dir()
     )
     skills = sorted(
-        p.parent.name for p in (root / ".claude" / "skills").glob("*/SKILL.md")
+        p.parent.name
+        for r in (root / "skills" / "core", root / "skills" / "yd-skills" / "skills")
+        for p in r.glob("*/SKILL.md")
     )
     yd = [s for s in skills if s.startswith("yd-")]
     matrix = json.loads(

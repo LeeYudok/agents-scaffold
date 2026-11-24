@@ -23,22 +23,30 @@ import tempfile
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
-SKILLS = REPO / ".claude" / "skills"
+SKILL_ROOTS = (REPO / "skills" / "core", REPO / "skills" / "yd-skills" / "skills")
 INTERNAL = re.compile(r"^metadata:\n  internal: true$", re.M)
 PLUGIN_NAME = "yd-trigger-eval"
 
 
 def visible_skills() -> list[str]:
     names = []
-    for path in sorted(SKILLS.glob("*/SKILL.md")):
-        front = path.read_text(encoding="utf-8").split("---\n", 2)[1]
-        if not INTERNAL.search(front):
-            names.append(path.parent.name)
-    return names
+    for root in SKILL_ROOTS:
+        for path in sorted(root.glob("*/SKILL.md")):
+            front = path.read_text(encoding="utf-8").split("---\n", 2)[1]
+            if not INTERNAL.search(front):
+                names.append(path.parent.name)
+    return sorted(names)
+
+
+def find_skill_dir(name: str) -> Path:
+    for root in SKILL_ROOTS:
+        if (root / name / "SKILL.md").is_file():
+            return root / name
+    raise FileNotFoundError(name)
 
 
 def load_triggers(name: str) -> list[dict]:
-    return json.loads((SKILLS / name / "tests" / "triggers.json").read_text(encoding="utf-8"))
+    return json.loads((find_skill_dir(name) / "tests" / "triggers.json").read_text(encoding="utf-8"))
 
 
 def grader_pattern(name: str) -> str:
@@ -54,7 +62,7 @@ def build(out: Path, only: list[str] | None = None) -> dict[str, dict]:
         json.dumps({"name": PLUGIN_NAME, "description": "skill trigger eval (generated)"}), encoding="utf-8")
     names = visible_skills()
     for name in names:
-        shutil.copytree(SKILLS / name, plugin / "skills" / name,
+        shutil.copytree(find_skill_dir(name), plugin / "skills" / name,
                         ignore=shutil.ignore_patterns("tests", "__pycache__", "node_modules"))
     cases = {}
     for name in names:
