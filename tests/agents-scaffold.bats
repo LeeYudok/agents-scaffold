@@ -326,7 +326,6 @@ EOF
   [ ! -d "$copy/bin" ]
   [ ! -d "$copy/presets" ]
   [ ! -d "$copy/docs/superpowers" ]
-  [ ! -e "$copy/dotfiles" ]   # #76: 메인테이너 dotfiles 는 사용자 프로젝트에 남기지 않는다
   [ ! -e "$copy/plugins" ] && [ ! -e "$copy/.claude-plugin" ]   # #82: 스킬 마켓플레이스는 이 레포 것
   [ ! -e "$copy/AGENTS.LEEYUDOK.md" ]   # #92: 메인테이너 개인 레이어는 사용자 프로젝트에 남기지 않는다
   [ -x "$copy/.claude/scripts/personal-layer.sh" ]   # #92: 레이어 스크립트는 산출물에 남는다
@@ -342,14 +341,6 @@ EOF
   [ -d "$REPO_ROOT/bin" ]
   [ -d "$REPO_ROOT/presets" ]
   [ -d "$REPO_ROOT/docs/superpowers" ]
-  [ -f "$REPO_ROOT/dotfiles/install.sh" ]
-}
-
-@test "regular install does not copy dotfiles/ into the target (#76)" {
-  run "$SCRIPT" "$BATS_TEST_TMPDIR" --yes
-  [ "$status" -eq 0 ]
-  [ ! -e "$BATS_TEST_TMPDIR/dotfiles" ]
-  [ -f "$BATS_TEST_TMPDIR/AGENTS.md" ]
 }
 
 # --- 9) 실행권한 ---

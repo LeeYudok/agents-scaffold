@@ -1,5 +1,5 @@
-# doksam-skills 에서 이식 (agents-scaffold #78). 이 레포 루트엔 AGENTS.yaml 이 없어 검증기 대신 dotfiles/AGENTS.yaml 을 검사한다.
-# AGENTS.yaml 검증기와 그 회귀 테스트를 돌린다 (이슈 #170).
+# doksam-skills 에서 이식 (agents-scaffold #78).
+# AGENTS.yaml 검증기 회귀 테스트를 돌린다 (이슈 #170).
 #
 # 검증기는 PyYAML 이 필요하다. stdlib 전용인 test.yml 에 의존성을 끌어들이지
 # 않으려고 잡을 분리했다. 이 잡은 PyYAML 을 설치하므로, 회귀 테스트가 skip 되지
@@ -23,8 +23,6 @@ jobs:
           python-version: '3.12'
       - name: Install PyYAML
         run: python3 -m pip install --quiet pyyaml
-      - name: Validate AGENTS.yaml
-        run: dotfiles/scripts/check-agents-yaml.sh
       - name: Validator regression tests (no skips allowed)
         run: |
           python3 -m unittest discover \
