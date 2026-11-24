@@ -26,9 +26,10 @@ if ! python3 - "$SRC_ROOT" "$DIST" "$PERSONAL" <<'PY'
 import os, shutil, sys
 src, dist, personal = sys.argv[1], sys.argv[2], sys.argv[3] == "1"
 MERGED = ("handoff", "docs-sync", "memory-factcheck", "skill-evolve")
-bases = [os.path.join(src, ".claude")]
+groups = [(os.path.join(src, "skills", "yd-skills", "skills"), os.path.join(src, ".claude", "agents"))]
 if personal:
-    bases.append(os.path.join(src, "presets", "skills", "personal", ".claude"))
+    groups.append((os.path.join(src, "skills", "yd-skills-personal", "skills"),
+                   os.path.join(src, "presets", "skills", "personal", ".claude", "agents")))
 skills_out = os.path.join(dist, "skills")
 if os.path.isdir(skills_out):
     shutil.rmtree(skills_out)
@@ -49,8 +50,7 @@ def front(path):
             fm[k.strip()] = v
     return fm, "\n".join(lines[end + 1:]).strip("\n") + "\n"
 
-for base in bases:
-    sdir = os.path.join(base, "skills")
+for sdir, adir_src in groups:
     for name in sorted(os.listdir(sdir)):
         real = os.path.join(sdir, name)
         if not os.path.isfile(os.path.join(real, "SKILL.md")):
@@ -63,7 +63,7 @@ for base in bases:
             if entry in ("__pycache__", "agents"):
                 continue
             os.symlink(os.path.join(real, entry), os.path.join(out, entry))
-        agent = os.path.join(base, "agents", name + ".md")
+        agent = os.path.join(adir_src, name + ".md")
         if os.path.isfile(agent):
             fm, body = front(agent)
             adir = os.path.join(out, "agents")

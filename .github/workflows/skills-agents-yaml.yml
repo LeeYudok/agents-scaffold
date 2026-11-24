@@ -26,7 +26,7 @@ jobs:
       - name: Validator regression tests (no skips allowed)
         run: |
           python3 -m unittest discover \
-            -s .claude/skills/yd-agents-yaml/tests \
-            -t .claude/skills/yd-agents-yaml/tests -v 2>&1 | tee test.log
+            -s skills/yd-skills/skills/yd-agents-yaml/tests \
+            -t skills/yd-skills/skills/yd-agents-yaml/tests -v 2>&1 | tee test.log
           # 루트 사본 비교(test_root_copy_matches)는 이 레포 구조에 사본이 없어 skip 이 정상이다
           ! grep ' ... skipped' test.log | grep -v test_root_copy_matches

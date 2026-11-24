@@ -19,7 +19,11 @@ from pathlib import Path
 from typing import Optional
 
 REPO = Path(__file__).resolve().parent.parent
-SKILL_ROOTS = (REPO / ".claude" / "skills", REPO / "presets" / "skills" / "personal" / ".claude" / "skills")
+SKILL_ROOTS = (
+    REPO / "skills" / "core",
+    REPO / "skills" / "yd-skills" / "skills",
+    REPO / "skills" / "yd-skills-personal" / "skills",
+)
 KINDS = ("정상", "실패", "경계", "도구오류", "오탐")
 ID_RE = re.compile(r"^[A-Z0-9]+(-[A-Z0-9]+)*$")
 

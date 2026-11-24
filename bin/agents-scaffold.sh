@@ -277,20 +277,27 @@ stack_dir() {
   fi
 }
 
-# 배포 경로 — 설치용 인덱스는 타깃의 MEMORY.md 가 된다
+# 배포 경로 — 설치용 인덱스는 타깃의 MEMORY.md 가 되고, skills/* 는 .claude/skills/* 로 매핑된다
 payload_target_rel() {
   case "$1" in
     .claude/memory/MEMORY.template.md) printf '%s' ".claude/memory/MEMORY.md" ;;
+    skills/core/*) printf '%s' ".claude/skills/${1#skills/core/}" ;;
+    skills/yd-skills/skills/*) printf '%s' ".claude/skills/${1#skills/yd-skills/skills/}" ;;
+    skills/yd-skills-personal/skills/*) printf '%s' ".claude/skills/${1#skills/yd-skills-personal/skills/}" ;;
     *) printf '%s' "$1" ;;
   esac
 }
 
-# 소스 .claude/ 파일 목록(상대경로, NUL 구분). git 소스면 tracked 만(#39), 아니면(tarball) 전부.
+# 소스 .claude/ + skills/{core,yd-skills/skills} 파일 목록(상대경로, NUL 구분). git 소스면 tracked 만(#39), 아니면(tarball) 전부.
 list_claude_files() {
   if git -C "$SRC" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    git -C "$SRC" ls-files -z -- .claude
+    git -C "$SRC" ls-files -z -- .claude skills/core skills/yd-skills/skills
   else
-    (cd "$SRC" && find .claude -type f ! -path '*/__pycache__/*' ! -name '*.pyc' -print0)
+    local d dirs=()
+    for d in .claude skills/core skills/yd-skills/skills; do
+      [ -d "$SRC/$d" ] && dirs+=("$d")
+    done
+    [ "${#dirs[@]}" -gt 0 ] && (cd "$SRC" && find "${dirs[@]}" -type f ! -path '*/__pycache__/*' ! -name '*.pyc' -print0)
   fi
 }
 
@@ -880,8 +887,8 @@ resolve_recorded_options() {
     if [ "$LANG_OPT" = "en" ]; then WITH_YD=0; else WITH_YD=1; fi
   fi
   # #78: 옵트인 묶음은 타깃에 그 스킬이 하나라도 있으면 함께 본다
-  if [ "$WITH_PERSONAL" -eq 0 ] && [ -d "$SRC/$PERSONAL_PRESET/.claude/skills" ]; then
-    for d in "$SRC/$PERSONAL_PRESET"/.claude/skills/*/; do
+  if [ "$WITH_PERSONAL" -eq 0 ] && [ -d "$SRC/skills/yd-skills-personal/skills" ]; then
+    for d in "$SRC/skills/yd-skills-personal/skills"/*/; do
       if target_has_skill "$(basename "$d")"; then WITH_PERSONAL=1; break; fi
     done
   fi
@@ -1275,7 +1282,7 @@ fi
 if [ "$INPLACE" -eq 0 ]; then
   list_base_payload | while IFS= read -r -d '' bf; do
     tr="$(payload_target_rel "$bf")"
-    if [ "$WITH_YD" != "1" ] && is_yd_payload "$bf"; then continue; fi
+    if [ "$WITH_YD" != "1" ] && is_yd_payload "$tr"; then continue; fi
     # 기존 파일은 보존 — 커스텀 base 를 가진 프로젝트 위에 덮어쓰지 않는다(갱신은 --update 소관)
     [ -e "$TARGET/$tr" ] && continue
     mkdir -p "$TARGET/$(dirname "$tr")"
@@ -1287,8 +1294,21 @@ if [ "$INPLACE" -eq 0 ]; then
 else
   # #80: 템플릿 레포 자리에서 설치 — 이 레포 메모리를 지우고 인덱스를 설치용 템플릿으로 바꾼다
   while IFS= read -r -d '' bf; do
-    if is_repo_private "$bf"; then rm -f "$TARGET/$bf"; fi
-    if [ "$WITH_YD" != "1" ] && is_yd_payload "$bf"; then rm -f "$TARGET/$bf"; fi
+    tr="$(payload_target_rel "$bf")"
+    if is_repo_private "$bf"; then rm -f "$TARGET/$bf"; continue; fi
+    case "$bf" in
+      skills/core/*)
+        [ -e "$TARGET/$tr" ] || { mkdir -p "$TARGET/$(dirname "$tr")"; cp "$SRC/$bf" "$TARGET/$tr"; }
+        ;;
+      skills/yd-skills/skills/*)
+        if [ "$WITH_YD" = "1" ] && [ ! -e "$TARGET/$tr" ]; then
+          mkdir -p "$TARGET/$(dirname "$tr")"; cp "$SRC/$bf" "$TARGET/$tr"
+        fi
+        ;;
+      *)
+        if [ "$WITH_YD" != "1" ] && is_yd_payload "$tr"; then rm -f "$TARGET/$tr"; fi
+        ;;
+    esac
   done < <(list_claude_files)
   if [ "$WITH_YD" != "1" ]; then
     find "$TARGET/.claude/skills" -depth -type d -empty -exec rmdir {} \; 2>/dev/null || true
@@ -1369,9 +1389,18 @@ for s in "${STACK_ARR[@]:-}"; do
   merge_preset "$(stack_dir "$s")"
 done
 
-# 2b-2) #78: 옵트인 스킬 묶음. 스택과 같은 merge_preset 경로라 skills_to_ssot 전에 .claude/skills 로
-#       들어가 .agents/skills 원본으로 옮겨진다. 한국어 전용이라 lang/en 오버레이가 없다.
+# 2b-2) #78: 옵트인 스킬 묶음. skills/yd-skills-personal/skills 를 .claude/skills 로 복사하고 agents 는 preset 에서 머지한다.
 if [ "$WITH_PERSONAL" -eq 1 ]; then
+  if [ -d "$SRC/skills/yd-skills-personal/skills" ]; then
+    while IFS= read -r f; do
+      rel=".claude/skills/${f#"$SRC/skills/yd-skills-personal/skills/"}"
+      if [ -L "$TARGET/.claude/skills" ] && [ -e "$TARGET/$rel" ]; then
+        continue
+      fi
+      mkdir -p "$TARGET/$(dirname "$rel")"
+      cp "$f" "$TARGET/$rel"
+    done < <(find "$SRC/skills/yd-skills-personal/skills" -type f ! -path '*/__pycache__/*' ! -name '*.pyc')
+  fi
   merge_preset "$SRC/$PERSONAL_PRESET"
   echo "== personal skills merged ($PERSONAL_PRESET) ==" >&2
 fi
@@ -1490,10 +1519,10 @@ fi
 
 # 5) in-place self-clean (템플릿 흔적 제거)
 if [ "$INPLACE" -eq 1 ]; then
-  echo "== self-clean: removing bin/ presets/ scripts/ plugins/ .claude-plugin/ docs/superpowers/ docs/harness-matrix.json AGENTS.LEEYUDOK.md ==" >&2
-  # plugins/·.claude-plugin/ 은 이 레포의 스킬 마켓플레이스(#82) — 사용자 프로젝트가 마켓플레이스가 되면 안 된다
-  rm -rf "${TARGET:?}/bin" "${TARGET:?}/presets" "${TARGET:?}/scripts" "${TARGET:?}/docs/superpowers" \
-    "${TARGET:?}/plugins" "${TARGET:?}/.claude-plugin"
+  echo "== self-clean: removing bin/ presets/ scripts/ skills/ .claude-plugin/ docs/superpowers/ docs/harness-matrix.json AGENTS.LEEYUDOK.md ==" >&2
+  # skills/·.claude-plugin/ 은 이 레포의 스킬 원천·마켓플레이스(#82) — 사용자 프로젝트가 마켓플레이스가 되면 안 된다
+  rm -rf "${TARGET:?}/bin" "${TARGET:?}/presets" "${TARGET:?}/scripts" "${TARGET:?}/skills" "${TARGET:?}/docs/superpowers" \
+    "${TARGET:?}/.claude-plugin"
   # scripts/ 와 harness-matrix.json 은 이 저장소의 유지보수 자산이지 사용자 산출물이 아니다 (#37)
   rm -f "$TARGET/docs/harness-matrix.json"
   # AGENTS.LEEYUDOK.md 는 메인테이너 개인 레이어(#92) — 사용자 프로젝트에 남기지 않는다.

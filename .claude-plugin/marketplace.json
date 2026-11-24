@@ -7,12 +7,12 @@
   "plugins": [
     {
       "name": "yd-skills",
-      "source": "./plugins/yd-skills",
+      "source": "./skills/yd-skills",
       "description": "agents-scaffold 의 범용 yd-* 스킬(DB·Go·React·TS·빌드·화면설계·글쓰기·의존성 CVE 점검)과 handoff·docs-sync·memory-factcheck·skill-evolve. 한국어 전용."
     },
     {
       "name": "yd-skills-personal",
-      "source": "./plugins/yd-skills-personal",
+      "source": "./skills/yd-skills-personal",
       "description": "agents-scaffold 의 옵트인 스킬 — 메인테이너 환경 전용(hugo-tech-blog·git-sync·git-ship·claude-auth-sync·finguard·doksam-ui·script-editor·sdlc-orchestrator·session-recording·agents-mem·naver-blog). 한국어 전용."
     }
   ]

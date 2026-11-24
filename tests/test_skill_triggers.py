@@ -12,8 +12,9 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SKILLS = ROOT / ".claude" / "skills"
-PERSONAL = ROOT / "presets" / "skills" / "personal" / ".claude" / "skills"
+CORE = ROOT / "skills" / "core"
+YD = ROOT / "skills" / "yd-skills" / "skills"
+PERSONAL = ROOT / "skills" / "yd-skills-personal" / "skills"
 MIN_PER_SIDE = 3
 
 spec = importlib.util.spec_from_file_location("eval_skill_triggers", ROOT / "scripts" / "dev" / "eval-skill-triggers.py")
@@ -22,7 +23,7 @@ spec.loader.exec_module(runner)
 
 
 def all_skill_names() -> set[str]:
-    return {p.parent.name for root in (SKILLS, PERSONAL) for p in root.glob("*/SKILL.md")}
+    return {p.parent.name for root in (CORE, YD, PERSONAL) for p in root.glob("*/SKILL.md")}
 
 
 class TriggerDataTests(unittest.TestCase):
@@ -30,7 +31,7 @@ class TriggerDataTests(unittest.TestCase):
         known = all_skill_names()
         for name in runner.visible_skills():
             with self.subTest(skill=name):
-                path = SKILLS / name / "tests" / "triggers.json"
+                path = runner.find_skill_dir(name) / "tests" / "triggers.json"
                 self.assertTrue(path.is_file(), f"{name}: tests/triggers.json 이 없다")
                 rows = json.loads(path.read_text(encoding="utf-8"))
                 queries = [row["query"] for row in rows]

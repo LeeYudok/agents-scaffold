@@ -326,7 +326,7 @@ EOF
   [ ! -d "$copy/bin" ]
   [ ! -d "$copy/presets" ]
   [ ! -d "$copy/docs/superpowers" ]
-  [ ! -e "$copy/plugins" ] && [ ! -e "$copy/.claude-plugin" ]   # #82: 스킬 마켓플레이스는 이 레포 것
+  [ ! -e "$copy/skills" ] && [ ! -e "$copy/.claude-plugin" ]   # #82: 스킬 마켓플레이스는 이 레포 것
   [ ! -e "$copy/AGENTS.LEEYUDOK.md" ]   # #92: 메인테이너 개인 레이어는 사용자 프로젝트에 남기지 않는다
   [ -x "$copy/.claude/scripts/personal-layer.sh" ]   # #92: 레이어 스크립트는 산출물에 남는다
   # #61: in-place install also moves the template's skills to the .agents/skills source

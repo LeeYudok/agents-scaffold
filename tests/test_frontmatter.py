@@ -19,7 +19,9 @@ sys.dont_write_bytecode = True
 
 REPO_ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 PATTERNS = (
-    ".claude/skills/*/SKILL.md",
+    "skills/core/*/SKILL.md",
+    "skills/yd-skills/skills/*/SKILL.md",
+    "skills/yd-skills-personal/skills/*/SKILL.md",
     ".claude/agents/*.md",
     "presets/**/.claude/skills/*/SKILL.md",
     "presets/**/.claude/agents/*.md",

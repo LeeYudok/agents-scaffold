@@ -85,15 +85,14 @@ jobs:
         with:
           persist-credentials: false
 
-      # plugins/ 는 생성물이라 뺀다.
       # 스택 파셜과 bats 는 shebang 이 없어 -s bash 로 따로 본다.
       - name: shellcheck (warning)
         run: |
           shellcheck --version
-          git ls-files -z -- '*.sh' ':!plugins/**' ':!**/pre-commit.partial.sh' \
+          git ls-files -z -- '*.sh' ':!**/pre-commit.partial.sh' \
             | xargs -0 shellcheck -S warning
           shellcheck -S warning -s bash presets/stacks/*/.claude/hooks/pre-commit.partial.sh tests/*.bats
-          shellcheck -S warning .claude/skills/yd-writer-kr/scripts/check-writing
+          shellcheck -S warning skills/yd-skills/skills/yd-writer-kr/scripts/check-writing
 
       # F(pyflakes)·E9(문법 오류)만 본다 — 스타일이 아니라 실제 결함을 잡는 규칙이다. 버전은 고정한다.
       - name: ruff
@@ -243,4 +242,4 @@ jobs:
       - name: Validate marketplace and plugins
         run: |
           claude plugin validate .
-          for p in plugins/*/; do claude plugin validate "$p"; done
+          for p in skills/yd-skills skills/yd-skills-personal; do claude plugin validate "$p"; done
