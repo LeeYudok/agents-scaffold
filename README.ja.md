@@ -156,7 +156,7 @@ Blocked: a .env-type file is staged. Commit is not allowed.
 | インストール | スキル数 | 内容 |
 |---|---|---|
 | `--lang en` | 10 | ワークフロースキル: `review`、`status`、`search-first`、`security-precheck`、`docs-sync`、`handoff`、`memory-factcheck`、`skill-evolve`、`grill-me`、そしてテンプレートの `example-skill` |
-| `--lang ko`(デフォルト) | 25 | 上記 10 個に `yd-*` 専門スキル 15 個: PostgreSQL、Oracle、SQLite、リレーショナル設計、Go、React、TypeScript、Vite/pnpm ビルド、画面設計、韓国語ライティング、図解中心の決裁文書、依存関係の CVE 点検 |
+| `--lang ko`(デフォルト) | 26 | 上記 10 個に `yd-*` 専門スキル 15 個: PostgreSQL、Oracle、SQLite、リレーショナル設計、Go、React、TypeScript、Vite/pnpm ビルド、画面設計、韓国語ライティング、図解中心の決裁文書、依存関係の CVE 点検 |
 
 `yd-*` スキルは韓国語で書かれているため、英語インストールには入りません。`--with-yd-skills` で英語インストールに追加でき、
 `--no-yd-skills` で韓国語インストールから外せます。スキルはスキャフォールドなしでも単独でインストールできます —

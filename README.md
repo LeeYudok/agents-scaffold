@@ -154,7 +154,7 @@ One minute after install, the agent behaves like a teammate who knows the rules 
 | Install | Skills | What they are |
 |---|---|---|
 | `--lang en` | 10 | Workflow skills: `review`, `status`, `search-first`, `security-precheck`, `docs-sync`, `handoff`, `memory-factcheck`, `skill-evolve`, `grill-me`, and the `example-skill` template |
-| `--lang ko` (default) | 25 | The same 10 plus 15 `yd-*` expert skills: PostgreSQL, Oracle, SQLite, relational design, Go, React, TypeScript, Vite/pnpm builds, screen design, Korean writing, diagram-first briefs, dependency CVE checks |
+| `--lang ko` (default) | 26 | The same 10 plus 15 `yd-*` expert skills: PostgreSQL, Oracle, SQLite, relational design, Go, React, TypeScript, Vite/pnpm builds, screen design, Korean writing, diagram-first briefs, dependency CVE checks |
 
 The `yd-*` skills are written in Korean, so an English install leaves them out. `--with-yd-skills` adds them to an
 English install and `--no-yd-skills` drops them from a Korean one. The skills also install on their own, without the

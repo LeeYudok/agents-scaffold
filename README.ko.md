@@ -156,7 +156,7 @@ Blocked: a .env-type file is staged. Commit is not allowed.
 | 설치 | 스킬 | 내용 |
 |---|---|---|
 | `--lang en` | 10 | 워크플로 스킬: `review`, `status`, `search-first`, `security-precheck`, `docs-sync`, `handoff`, `memory-factcheck`, `skill-evolve`, `grill-me`, 그리고 `example-skill` 템플릿 |
-| `--lang ko` (기본) | 25 | 위 10개에 `yd-*` 전문 스킬 15개: PostgreSQL, Oracle, SQLite, 관계형 설계, Go, React, TypeScript, Vite/pnpm 빌드, 화면설계, 한국어 글쓰기, 그림 중심 결재 문서, 의존성 CVE 점검 |
+| `--lang ko` (기본) | 26 | 위 10개에 `yd-*` 전문 스킬 15개: PostgreSQL, Oracle, SQLite, 관계형 설계, Go, React, TypeScript, Vite/pnpm 빌드, 화면설계, 한국어 글쓰기, 그림 중심 결재 문서, 의존성 CVE 점검 |
 
 `yd-*` 스킬은 한국어로 쓰여 있어서 영어 설치에는 넣지 않는다. `--with-yd-skills` 는 영어 설치에 넣고,
 `--no-yd-skills` 는 한국어 설치에서 뺀다. 스킬은 스캐폴드 없이 따로 설치할 수도 있다. Claude Code / Codex
