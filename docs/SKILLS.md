@@ -7,7 +7,7 @@
 
 | 설치 | 스킬 | 서브에이전트 | 내용 |
 |---|---|---|---|
-| `--lang ko` (기본) | 25 | 20 | 워크플로 스킬(한국어)과 `yd-*` 전문 스킬 15개, 그 에이전트 13개 |
+| `--lang ko` (기본) | 26 | 20 | 워크플로 스킬(한국어)과 `yd-*` 전문 스킬 16개, 그 에이전트 13개 |
 | `--lang en` | 10 | 7 | 워크플로 스킬(영어) |
 | 어느 쪽이든 `--with-personal-skills` | +12 | +4 | 메인테이너 환경 전용 스킬 |
 
@@ -15,9 +15,9 @@
 `memory-factcheck`, `skill-evolve`, `grill-me`, 그리고 `example-skill`. `example-skill` 은 스킬을 새로 만들 때
 복제하는 템플릿이다.
 
-**`yd-*` 전문 스킬 15개**: `yd-pg-expert`, `yd-oracle-expert`, `yd-sqlite-expert`, `yd-db-expert`,
+**`yd-*` 전문 스킬 16개**: `yd-pg-expert`, `yd-oracle-expert`, `yd-sqlite-expert`, `yd-db-expert`,
 `yd-go-expert`, `yd-react-expert`, `yd-typescript`, `yd-frontend-build`, `yd-cve-check`, `yd-mobile-web-planner`,
-`yd-nextjs-implementer`, `yd-blueprint`, `yd-agents-yaml`, `yd-writer-kr`, `yd-visual-brief`. 한국어로 쓰여 있고 영어 오버레이가 없다.
+`yd-nextjs-implementer`, `yd-blueprint`, `yd-agents-yaml`, `yd-writer-kr`, `yd-visual-brief`, `yd-pentest-report-kr`. 한국어로 쓰여 있고 영어 오버레이가 없다.
 그래서 `--lang en` 설치에는 넣지 않는다.
 
 | 옵션 | 효과 |
