@@ -154,7 +154,7 @@ Blocked: a .env-type file is staged. Commit is not allowed.
 | 安装方式 | 技能数 | 内容 |
 |---|---|---|
 | `--lang en` | 10 | 工作流技能：`review`、`status`、`search-first`、`security-precheck`、`docs-sync`、`handoff`、`memory-factcheck`、`skill-evolve`、`grill-me`，以及模板 `example-skill` |
-| `--lang ko`（默认） | 25 | 上述 10 个加上 15 个 `yd-*` 专家技能：PostgreSQL、Oracle、SQLite、关系型设计、Go、React、TypeScript、Vite/pnpm 构建、界面设计、韩文写作、以图为主的审批文档、依赖 CVE 检查 |
+| `--lang ko`（默认） | 26 | 上述 10 个加上 15 个 `yd-*` 专家技能：PostgreSQL、Oracle、SQLite、关系型设计、Go、React、TypeScript、Vite/pnpm 构建、界面设计、韩文写作、以图为主的审批文档、依赖 CVE 检查 |
 
 `yd-*` 技能是用韩文写的，所以英文安装不包含它们。`--with-yd-skills` 可以把它们加进英文安装，
 `--no-yd-skills` 则从韩文安装中去掉。这些技能也可以脱离脚手架单独安装 — 作为 Claude Code / Codex 插件，
