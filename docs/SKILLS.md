@@ -69,6 +69,19 @@ INSTALL_INTERNAL_SKILLS=1 npx skills add LeeYudok/agents-scaffold  # also the sc
 
 이 레포를 clone 해 `scripts/install-skills.sh` 를 실행한다. `~/.claude/skills`·`~/.agents/skills`·
 `~/.gemini/config/skills` 에 심볼릭 링크를 만들고, `--personal`·`--copy`·`--project <dir>` 를 지원한다.
+원본은 레포의 `skills/` 하나이고, 런타임마다 아래 경로로 같은 원본을 읽는다(#181, 2026-11-29 공식 문서 기준).
+
+| 런타임 | 읽는 경로 |
+|---|---|
+| Claude Code | `~/.claude/skills/` |
+| Codex | `~/.agents/skills/` |
+| Antigravity (agy) | `~/.gemini/config/skills/` |
+| Pi | `~/.agents/skills/` |
+| OpenCode | `~/.agents/skills/`·`~/.claude/skills/` (호환 경로, 설정 불필요) |
+| Hermes | `~/.hermes/config.yaml` 의 `skills.external_dirs` — 설치 스크립트가 `~/.agents/skills` 를 등록한다 |
+
+링크 끝의 `SKILL.md` 는 실제 파일이다. Codex 는 심링크된 `SKILL.md` 파일을 건너뛰기 때문에, `.skills-dist/skills/<이름>`
+은 원본 스킬 폴더를 통째로 가리키고 런타임별 에이전트 어댑터는 `.skills-dist/agents/<이름>/` 에 따로 만든다.
 
 Antigravity 전역 설치 경로는 두 도구가 서로 다르다. `skills` 1.7.6 은 `~/.gemini/antigravity-cli/skills` 에 쓰고
 `install-skills.sh` 는 `~/.gemini/config/skills` 를 쓴다

@@ -69,6 +69,21 @@ versions of the workflow skills come with a `--lang en` install.
 
 Clone this repo and run `scripts/install-skills.sh`. It symlinks the skills into `~/.claude/skills`,
 `~/.agents/skills` and `~/.gemini/config/skills`, and supports `--personal`, `--copy` and `--project <dir>`.
+The repo's `skills/` is the single source, and each runtime reads it from these paths (#181, checked against
+official docs on 2026-11-29).
+
+| Runtime | Path it reads |
+|---|---|
+| Claude Code | `~/.claude/skills/` |
+| Codex | `~/.agents/skills/` |
+| Antigravity (agy) | `~/.gemini/config/skills/` |
+| Pi | `~/.agents/skills/` |
+| OpenCode | `~/.agents/skills/` and `~/.claude/skills/` (compatibility paths, no config needed) |
+| Hermes | `skills.external_dirs` in `~/.hermes/config.yaml`; the installer registers `~/.agents/skills` |
+
+The `SKILL.md` at the end of each link is a real file. Codex skips a symlinked `SKILL.md`, so
+`.skills-dist/skills/<name>` points at the whole source skill folder, and the per-runtime agent adapters are
+generated separately under `.skills-dist/agents/<name>/`.
 
 For Antigravity globals the two tools use different paths: `skills` 1.7.6 writes to
 `~/.gemini/antigravity-cli/skills`, while `install-skills.sh` uses `~/.gemini/config/skills`
