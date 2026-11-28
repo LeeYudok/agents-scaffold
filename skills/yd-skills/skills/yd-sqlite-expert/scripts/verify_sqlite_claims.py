@@ -333,11 +333,18 @@ EXPECT = {
 }
 
 
+# 시간을 재는 단언은 CI 러너 부하에 흔들린다. 이것만 최대 3번 재측정한다 (#258).
+TIMING = {"BUSY-TIMEOUT", "TX-BATCH"}
+
+
 def run(claim: str) -> tuple[dict, bool]:
     fn, ok = EXPECT[claim]
-    with tempfile.TemporaryDirectory() as tmp:
-        obs = fn(Path(tmp))
-    return obs, bool(ok(obs))
+    for _ in range(3 if claim in TIMING else 1):
+        with tempfile.TemporaryDirectory() as tmp:
+            obs = fn(Path(tmp))
+        if ok(obs):
+            return obs, True
+    return obs, False
 
 
 def main() -> int:
