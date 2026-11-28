@@ -10,11 +10,12 @@ from pathlib import Path
 
 SKILL_ROOT = Path(__file__).resolve().parent.parent
 SKILLS_DIR = SKILL_ROOT.parent
-# agents-scaffold(#78): 옵트인 스킬은 presets/skills/personal/.claude/skills 에 있다. 에이전트 원본은
-# .claude/agents/<스킬명>.md 하나이고 Codex·agy 에이전트는 설치기가 생성한다.
-REPO_ROOT = SKILL_ROOT.parents[2]
-SKILL_DIRS = (SKILLS_DIR, REPO_ROOT / "presets" / "skills" / "personal" / ".claude" / "skills")
-AGENT = SKILL_ROOT.parent.parent / "agents" / f"{SKILL_ROOT.name}.md"
+# 옵트인 스킬은 skills/yd-skills-personal/skills 에 있다. 에이전트 원본은 .claude/agents/<스킬명>.md
+# 하나이고 Codex·agy 에이전트는 설치기가 생성한다 (#256).
+REPO_ROOT = SKILL_ROOT.parents[3]
+SKILL_DIRS = (SKILLS_DIR, REPO_ROOT / "skills" / "yd-skills-personal" / "skills")
+# 리포 루트 = skills/yd-skills/skills/<스킬> 에서 네 단계 위. 에이전트 원본은 .claude/agents/<스킬>.md (#256)
+AGENT = SKILL_ROOT.parents[3] / ".claude" / "agents" / f"{SKILL_ROOT.name}.md"
 
 
 def flat(text):

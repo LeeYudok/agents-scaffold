@@ -15,7 +15,8 @@ from pathlib import Path
 SKILL_ROOT = Path(__file__).resolve().parent.parent
 # agents-scaffold(#78): 에이전트 원본은 .claude/agents/<스킬명>.md 하나다. Codex·agy 에이전트는 설치기가
 # 이 파일에서 생성한다(bin/agents-scaffold.sh emit_agents) — 런타임별 어댑터 파일을 따로 두지 않는다.
-AGENT = SKILL_ROOT.parent.parent / "agents" / f"{SKILL_ROOT.name}.md"
+# 리포 루트 = skills/yd-skills/skills/<스킬> 에서 네 단계 위. 에이전트 원본은 .claude/agents/<스킬>.md (#256)
+AGENT = SKILL_ROOT.parents[3] / ".claude" / "agents" / f"{SKILL_ROOT.name}.md"
 TEMPLATE = SKILL_ROOT / "resources" / "template.html"
 
 
