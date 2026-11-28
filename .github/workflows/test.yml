@@ -15,7 +15,7 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 10
     env:
-      CHECK_WRITING_RULES: ${{ github.workspace }}\.claude\skills\yd-writer-kr\references\banned-expressions.md
+      CHECK_WRITING_RULES: ${{ github.workspace }}\skills\yd-skills\skills\yd-writer-kr\references\banned-expressions.md
       CHECK_WRITING_BIN: ${{ github.workspace }}\out\check-writing-windows-amd64.exe
     steps:
       - uses: actions/checkout@v6
@@ -70,7 +70,7 @@ jobs:
       - name: Run the Python layer with the binary
         shell: pwsh
         run: |
-          python .claude\skills\yd-writer-kr\scripts\check_writing.py bad.md
+          python skills\yd-skills\skills\yd-writer-kr\scripts\check_writing.py bad.md
           if ($LASTEXITCODE -ne 1) { throw "check_writing.py: exit $LASTEXITCODE" }
           python .github\scripts\writer_windows_check.py
           if ($LASTEXITCODE -ne 0) { throw "writer_windows_check.py: exit $LASTEXITCODE" }
