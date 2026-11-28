@@ -1,4 +1,4 @@
-# doksam-skills 에서 이식 (agents-scaffold #78) — 경로를 .claude/skills/ 기준으로 바꿨다.
+# doksam-skills 에서 이식 (agents-scaffold #78) — 경로는 skills/ 원본 기준 (#185).
 # yd-typescript 의 단언을 실제 typescript·bun 으로 재현한다.
 #
 # npm install 이 필요해서 test.yml(stdlib 전용, 네트워크 없음)에 넣지 않고 별도 잡으로 둔다.
@@ -9,12 +9,12 @@ name: skills-ts-claims
 on:
   pull_request:
     paths:
-      - ".claude/skills/yd-typescript/**"
+      - "skills/yd-skills/skills/yd-typescript/**"
       - ".github/workflows/skills-ts-claims.yml"
   push:
     branches: [main]
     paths:
-      - ".claude/skills/yd-typescript/**"
+      - "skills/yd-skills/skills/yd-typescript/**"
       - ".github/workflows/skills-ts-claims.yml"
 
 jobs:
@@ -36,6 +36,6 @@ jobs:
           node --version
           bun --version
           python3 -m unittest discover \
-            -s .claude/skills/yd-typescript/tests \
-            -t .claude/skills/yd-typescript/tests -v 2>&1 | tee out.txt
+            -s skills/yd-skills/skills/yd-typescript/tests \
+            -t skills/yd-skills/skills/yd-typescript/tests -v 2>&1 | tee out.txt
           ! grep -qi skipped out.txt
