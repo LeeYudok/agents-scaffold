@@ -76,8 +76,10 @@ class ClaimsList(unittest.TestCase):
                          "verify_sqlite_claims.EXPECT 와 tests/claims.json 의 단언이 어긋났다")
 
     def test_script_exits_zero(self):
-        with contextlib.redirect_stdout(io.StringIO()):
-            self.assertEqual(v.main(), 0)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            rc = v.main()
+        self.assertEqual(rc, 0, out.getvalue())   # 실패하면 어떤 단언인지 보이게 출력을 싣는다 (#258)
 
 
 if __name__ == "__main__":

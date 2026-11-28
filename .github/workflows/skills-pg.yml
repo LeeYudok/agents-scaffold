@@ -1,4 +1,4 @@
-# doksam-skills 에서 이식 (agents-scaffold #78) — 경로를 .claude/skills/ 기준으로 바꿨다.
+# doksam-skills 에서 이식 (agents-scaffold #78) — 경로는 skills/ 원본 기준 (#185).
 # yd-pg-expert 문서의 PostgreSQL 단언을 실제 서버에서 재현한다.
 #
 # 단언 재현에는 살아 있는 PostgreSQL 이 필요하다. stdlib 전용인 test.yml 에 서버를
@@ -10,12 +10,12 @@ name: skills-pg
 on:
   pull_request:
     paths:
-      - ".claude/skills/yd-pg-expert/**"
+      - "skills/yd-skills/skills/yd-pg-expert/**"
       - ".github/workflows/skills-pg.yml"
   push:
     branches: [main]
     paths:
-      - ".claude/skills/yd-pg-expert/**"
+      - "skills/yd-skills/skills/yd-pg-expert/**"
       - ".github/workflows/skills-pg.yml"
 
 jobs:
@@ -44,10 +44,10 @@ jobs:
           psql --version
           $YD_PG_PSQL -At -c 'SHOW server_version'
       - name: Reproduce documented claims
-        run: python3 .claude/skills/yd-pg-expert/scripts/verify_pg_claims.py
+        run: python3 skills/yd-skills/skills/yd-pg-expert/scripts/verify_pg_claims.py
       - name: Claim tests (no skips allowed)
         run: |
           python3 -m unittest discover \
-            -s .claude/skills/yd-pg-expert/tests \
-            -t .claude/skills/yd-pg-expert/tests -v 2>&1 | tee test.log
+            -s skills/yd-skills/skills/yd-pg-expert/tests \
+            -t skills/yd-skills/skills/yd-pg-expert/tests -v 2>&1 | tee test.log
           ! grep -q 'skipped' test.log

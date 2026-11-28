@@ -36,7 +36,7 @@ jobs:
           cache: false
       - name: Build check-writing binaries
         run: |
-          .claude/skills/yd-writer-kr/scripts/build-binaries.sh dist
+          skills/yd-skills/skills/yd-writer-kr/scripts/build-binaries.sh dist
           (cd dist && sha256sum check-writing-* >> SHA256SUMS)
 
       - name: Add the source tarball checksum (for AGENTS_SCAFFOLD_SHA256)
