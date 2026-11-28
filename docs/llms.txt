@@ -42,35 +42,35 @@ curl -fsSL https://raw.githubusercontent.com/leeyudok/agents-scaffold/main/bin/a
 
 Installed by both `--lang en` and `--lang ko`. The tenth skill, `example-skill`, is a template to copy.
 
-- [review](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/review): code review of the full change set — code-reviewer then security-audit agents
-- [status](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/status): one-shot project status — git, build, tests, issues, branches
-- [search-first](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/search-first): search existing solutions (repo, mirrors, registries, MCP/skills, GitHub) before writing new code
-- [security-precheck](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/security-precheck): self-check before an external security audit, split findings into issues and fix in parallel
-- [docs-sync](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/docs-sync): find and fix docs that drifted from code, config and paths, multilingual pairs together
-- [handoff](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/handoff): end a session and hand it to the next one through a tracker issue (or HANDOFF.md without a forge)
-- [memory-factcheck](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/memory-factcheck): audit agent memory against code, DB, issues and files; correct stale entries
-- [skill-evolve](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/skill-evolve): turn a real agent mistake into a "Learned warnings" rule in the skill that made it
-- [grill-me](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/grill-me): pressure-test an idea or spec with hard questions before implementation
+- [review](https://github.com/LeeYudok/agents-scaffold/tree/main/skills/core/review): code review of the full change set — code-reviewer then security-audit agents
+- [status](https://github.com/LeeYudok/agents-scaffold/tree/main/skills/core/status): one-shot project status — git, build, tests, issues, branches
+- [search-first](https://github.com/LeeYudok/agents-scaffold/tree/main/skills/core/search-first): search existing solutions (repo, mirrors, registries, MCP/skills, GitHub) before writing new code
+- [security-precheck](https://github.com/LeeYudok/agents-scaffold/tree/main/skills/core/security-precheck): self-check before an external security audit, split findings into issues and fix in parallel
+- [docs-sync](https://github.com/LeeYudok/agents-scaffold/tree/main/skills/yd-skills/skills/docs-sync): find and fix docs that drifted from code, config and paths, multilingual pairs together
+- [handoff](https://github.com/LeeYudok/agents-scaffold/tree/main/skills/yd-skills/skills/handoff): end a session and hand it to the next one through a tracker issue (or HANDOFF.md without a forge)
+- [memory-factcheck](https://github.com/LeeYudok/agents-scaffold/tree/main/skills/yd-skills/skills/memory-factcheck): audit agent memory against code, DB, issues and files; correct stale entries
+- [skill-evolve](https://github.com/LeeYudok/agents-scaffold/tree/main/skills/yd-skills/skills/skill-evolve): turn a real agent mistake into a "Learned warnings" rule in the skill that made it
+- [grill-me](https://github.com/LeeYudok/agents-scaffold/tree/main/skills/core/grill-me): pressure-test an idea or spec with hard questions before implementation
 
 ## Skills (`yd-*` expert set, Korean only)
 
 Installed by `--lang ko` (the default) or with `--with-yd-skills`.
 
-- [yd-pg-expert](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-pg-expert): PostgreSQL specifics — timestamptz, numeric, query plans, locking ALTERs, CREATE INDEX CONCURRENTLY, VACUUM, shared clusters
-- [yd-oracle-expert](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-oracle-expert): Oracle SQL/PL/SQL and PostgreSQL-to-Oracle porting — empty-string NULL, DATE time, VARCHAR2 bytes, ROWNUM, implicit commits
-- [yd-sqlite-expert](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-sqlite-expert): SQLite files — read-only queries, WAL, locking, migrations, safe dynamic table names
-- [yd-db-expert](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-db-expert): engine-neutral relational design — normalization, keys, NULL semantics, constraints, N+1, cursor paging, transactions
-- [yd-go-expert](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-go-expert): Go 1.22+ — error handling, concurrency, tests, net/http servers, go:embed
-- [yd-react-expert](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-react-expert): React 19 — component design, state, useEffect misuse, re-render performance, accessibility
-- [yd-typescript](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-typescript): TypeScript type boundaries, async state, DOM access, strict settings (Bun included)
-- [yd-frontend-build](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-frontend-build): pnpm workspaces and Vite builds — dependencies, lockfiles, bundle size, air-gapped self-hosting
-- [yd-cve-check](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-cve-check): pnpm dependency CVE/GHSA/malware check and fix with scoped overrides; offline with an OSV dump
-- [yd-mobile-web-planner](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-mobile-web-planner): mobile web/app IA and slide-style storyboards (single HTML) plus Business Rules specs
-- [yd-nextjs-implementer](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-nextjs-implementer): implement those storyboards as a Next.js App Router or Vite + React app with traceability
-- [yd-blueprint](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-blueprint): project blueprint as JSONL data rendered by a Bun + Vite + React viewer
-- [yd-agents-yaml](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-agents-yaml): AGENTS.md + machine-readable AGENTS.yaml + validator for any repository
-- [yd-writer-kr](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-writer-kr): clear, evidence-backed Korean technical writing, editing and summarizing
-- [yd-visual-brief](https://github.com/LeeYudok/agents-scaffold/tree/main/.claude/skills/yd-visual-brief): one-page diagram-first briefs (architecture, flow, schedule, decisions) built as SVG from a JSON file
+- [yd-pg-expert](https://github.com/LeeYudok/agents-scaffold/tree/main/skills/yd-skills/skills/yd-pg-expert): PostgreSQL specifics — timestamptz, numeric, query plans, locking ALTERs, CREATE INDEX CONCURRENTLY, VACUUM, shared clusters
+- [yd-oracle-expert](https://github.com/LeeYudok/agents-scaffold/tree/main/skills/yd-skills/skills/yd-oracle-expert): Oracle SQL/PL/SQL and PostgreSQL-to-Oracle porting — empty-string NULL, DATE time, VARCHAR2 bytes, ROWNUM, implicit commits
+- [yd-sqlite-expert](https://github.com/LeeYudok/agents-scaffold/tree/main/skills/yd-skills/skills/yd-sqlite-expert): SQLite files — read-only queries, WAL, locking, migrations, safe dynamic table names
+- [yd-db-expert](https://github.com/LeeYudok/agents-scaffold/tree/main/skills/yd-skills/skills/yd-db-expert): engine-neutral relational design — normalization, keys, NULL semantics, constraints, N+1, cursor paging, transactions
+- [yd-go-expert](https://github.com/LeeYudok/agents-scaffold/tree/main/skills/yd-skills/skills/yd-go-expert): Go 1.22+ — error handling, concurrency, tests, net/http servers, go:embed
+- [yd-react-expert](https://github.com/LeeYudok/agents-scaffold/tree/main/skills/yd-skills/skills/yd-react-expert): React 19 — component design, state, useEffect misuse, re-render performance, accessibility
+- [yd-typescript](https://github.com/LeeYudok/agents-scaffold/tree/main/skills/yd-skills/skills/yd-typescript): TypeScript type boundaries, async state, DOM access, strict settings (Bun included)
+- [yd-frontend-build](https://github.com/LeeYudok/agents-scaffold/tree/main/skills/yd-skills/skills/yd-frontend-build): pnpm workspaces and Vite builds — dependencies, lockfiles, bundle size, air-gapped self-hosting
+- [yd-cve-check](https://github.com/LeeYudok/agents-scaffold/tree/main/skills/yd-skills/skills/yd-cve-check): pnpm dependency CVE/GHSA/malware check and fix with scoped overrides; offline with an OSV dump
+- [yd-mobile-web-planner](https://github.com/LeeYudok/agents-scaffold/tree/main/skills/yd-skills/skills/yd-mobile-web-planner): mobile web/app IA and slide-style storyboards (single HTML) plus Business Rules specs
+- [yd-nextjs-implementer](https://github.com/LeeYudok/agents-scaffold/tree/main/skills/yd-skills/skills/yd-nextjs-implementer): implement those storyboards as a Next.js App Router or Vite + React app with traceability
+- [yd-blueprint](https://github.com/LeeYudok/agents-scaffold/tree/main/skills/yd-skills/skills/yd-blueprint): project blueprint as JSONL data rendered by a Bun + Vite + React viewer
+- [yd-agents-yaml](https://github.com/LeeYudok/agents-scaffold/tree/main/skills/yd-skills/skills/yd-agents-yaml): AGENTS.md + machine-readable AGENTS.yaml + validator for any repository
+- [yd-writer-kr](https://github.com/LeeYudok/agents-scaffold/tree/main/skills/yd-skills/skills/yd-writer-kr): clear, evidence-backed Korean technical writing, editing and summarizing
+- [yd-visual-brief](https://github.com/LeeYudok/agents-scaffold/tree/main/skills/yd-skills/skills/yd-visual-brief): one-page diagram-first briefs (architecture, flow, schedule, decisions) built as SVG from a JSON file
 
 ## Skills (opt-in personal set, `--with-personal-skills`)
 

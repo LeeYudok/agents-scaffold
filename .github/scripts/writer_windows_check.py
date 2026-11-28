@@ -6,7 +6,7 @@ import os
 import sys
 from pathlib import Path
 
-SKILL = Path(__file__).resolve().parents[2] / ".claude" / "skills" / "yd-writer-kr"
+SKILL = Path(__file__).resolve().parents[2] / "skills" / "yd-skills" / "skills" / "yd-writer-kr"
 sys.path.insert(0, str(SKILL / "scripts"))
 import check_writing as cw  # noqa: E402
 
