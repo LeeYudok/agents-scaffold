@@ -40,7 +40,7 @@ export PATH="$STUB_BIN:$PATH"
 # Agent Adapter 동작을 확인할 대표 스킬 (claude.md 를 가진 첫 스킬)
 AGENT_SKILL=""
 for s in "${SKILLS[@]}"; do
-  if [[ -f "$DIST_ROOT/skills/$s/agents/claude.md" ]]; then
+  if [[ -f "$DIST_ROOT/agents/$s/claude.md" ]]; then
     AGENT_SKILL="$s"
     break
   fi
@@ -49,8 +49,8 @@ if [[ -z "$AGENT_SKILL" ]]; then
   echo "오류: agents/claude.md 를 가진 스킬이 없어 Agent 테스트를 할 수 없다" >&2
   exit 1
 fi
-CLAUDE_AGENT_SRC="$DIST_ROOT/skills/$AGENT_SKILL/agents/claude.md"
-CODEX_AGENT_SRC="$DIST_ROOT/skills/$AGENT_SKILL/agents/codex.toml"
+CLAUDE_AGENT_SRC="$DIST_ROOT/agents/$AGENT_SKILL/claude.md"
+CODEX_AGENT_SRC="$DIST_ROOT/agents/$AGENT_SKILL/codex.toml"
 CLAUDE_AGENT_LINK=".claude/agents/$AGENT_SKILL.md"
 CODEX_AGENT_LINK=".codex/agents/${AGENT_SKILL//-/_}.toml"
 
@@ -106,6 +106,24 @@ for t in ".agents/skills" ".claude/skills" ".gemini/config/skills"; do
     check "$t/$s 심링크" "$DIST_ROOT/skills/$s" "$(readlink "$HOME/$t/$s" 2>/dev/null)"
   done
 done
+# Codex 는 심링크된 SKILL.md 파일을 건너뛴다 — 링크 끝의 SKILL.md 는 실제 파일이어야 한다 (#181)
+for s in "${SKILLS[@]}"; do
+  check "$s/SKILL.md 는 실제 파일" "file" \
+    "$([[ -f "$HOME/.agents/skills/$s/SKILL.md" && ! -L "$HOME/.agents/skills/$s/SKILL.md" ]] && echo file || echo link)"
+done
+drop_sandbox
+
+echo "test: Hermes 가 있으면 skills.external_dirs 에 ~/.agents/skills 를 한 번만 넣는다 (#181)"
+new_sandbox
+mkdir -p "$HOME/.hermes"
+printf 'model:\n  provider: custom\nskills:\n  creation_nudge_interval: 15\n  external_dirs: []\n  template_vars: true\n' > "$HOME/.hermes/config.yaml"
+"$INSTALL" >/dev/null 2>&1
+"$INSTALL" >/dev/null 2>&1
+check "external_dirs 항목 1개" "1" "$(grep -c -- "- $HOME/.agents/skills\$" "$HOME/.hermes/config.yaml")"
+check "다른 키 보존" "present" "$(grep -q '^  template_vars: true$' "$HOME/.hermes/config.yaml" && echo present || echo absent)"
+"$INSTALL" --uninstall >/dev/null 2>&1
+check "uninstall 후 항목 제거" "0" "$(grep -c -- "- $HOME/.agents/skills\$" "$HOME/.hermes/config.yaml")"
+check "uninstall 후 빈 목록" "present" "$(grep -q '^  external_dirs: \[\]$' "$HOME/.hermes/config.yaml" && echo present || echo absent)"
 drop_sandbox
 
 echo "test: --skill-only 는 기본 설치와 같다"
@@ -123,7 +141,7 @@ out="$("$INSTALL" --with-agent 2>&1)"
 check "exit code" "0" "$?"
 check "Claude Agent" "$CLAUDE_AGENT_SRC" "$(readlink "$HOME/$CLAUDE_AGENT_LINK" 2>/dev/null)"
 check "Codex Agent" "$CODEX_AGENT_SRC" "$(readlink "$HOME/$CODEX_AGENT_LINK" 2>/dev/null)"
-check "Agent 원본은 스킬 소유" "present" "$([[ "$CLAUDE_AGENT_SRC" == "$DIST_ROOT/skills/"* ]] && echo present || echo absent)"
+check "Agent 어댑터는 .skills-dist/agents 에 생성" "present" "$([[ "$CLAUDE_AGENT_SRC" == "$DIST_ROOT/agents/"* ]] && echo present || echo absent)"
 check "agy 스텁이 plugin install 을 받음" "present" "$(grep -q '^plugin install ' "$AGY_LOG" && echo present || echo absent)"
 check "런타임별 요약에 Antigravity 등록" "present" "$(grep -q '^런타임별 에이전트: .*Antigravity=플러그인' <<<"$out" && echo present || echo absent)"
 drop_sandbox
@@ -177,8 +195,11 @@ check "exit code" "0" "$?"
 target="$HOME/.claude/skills/$SKILL"
 check "심링크 아님" "notlink" "$([[ -L "$target" ]] && echo link || echo notlink)"
 check "SKILL.md 복사됨" "present" "$([[ -f "$target/SKILL.md" ]] && echo present || echo absent)"
+nested="$(cd -P "$SRC" && find . -mindepth 2 -type f ! -path '*__pycache__*' | head -1)"
 check "하위 디렉터리까지 복사됨" "present" \
-  "$([[ -f "$HOME/.claude/skills/$AGENT_SKILL/agents/claude.md" ]] && echo present || echo absent)"
+  "$([[ -n "$nested" && -f "$target/$nested" ]] && echo present || echo absent)"
+check "어댑터는 스킬 폴더에 섞이지 않음" "absent" \
+  "$([[ -e "$HOME/.claude/skills/$AGENT_SKILL/agents/claude.md" ]] && echo present || echo absent)"
 drop_sandbox
 
 echo "test: --project 는 프로젝트 스킬 경로에 설치한다"

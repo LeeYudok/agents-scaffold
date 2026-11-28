@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # 스킬 전역(또는 프로젝트) 설치 — doksam-skills 의 install.sh 를 이 레포로 옮긴 것 (agents-scaffold #78).
-# Claude Code / Codex / Gemini(Antigravity) 가 인식하는 경로에 스킬을 노출한다. 기본은 심링크라
-# 이 레포에서 SKILL.md 를 고치면 세 런타임에 바로 반영된다.
+# Claude Code / Codex / Antigravity(agy) / Pi / Hermes / OpenCode 가 인식하는 경로에 스킬을 노출한다.
+# 기본은 심링크라 이 레포의 skills/ 에서 SKILL.md 를 고치면 모든 런타임에 바로 반영된다(#181).
 #
 # 대상: .claude/skills 의 yd-* 와 doksam 출신 4종(handoff·docs-sync·memory-factcheck·skill-evolve).
 #       --personal 이면 presets/skills/personal 의 옵트인 스킬도. scaffold 베이스 스킬
 #       (review·status 등)은 {{PROJECT_NAME}} 치환이 필요해 프로젝트 설치(bin/agents-scaffold.sh) 전용이다.
 #
-# 설치 원천은 매번 다시 만드는 .skills-dist/skills/<스킬>/ 다(git 무시). 스킬 폴더의 항목은 원본을 가리키는
-# 링크이고, agents/ 의 런타임별 어댑터는 에이전트 원본(.claude/agents/<스킬>.md)에서 생성한다 —
+# 설치 원천은 매번 다시 만드는 .skills-dist/ 다(git 무시). skills/<스킬> 은 원본 스킬 폴더를 가리키는
+# 폴더 링크이고(#181), agents/<스킬>/ 의 런타임별 어댑터는 에이전트 원본(.claude/agents/<스킬>.md)에서 생성한다 —
 # Codex·agy 어댑터를 따로 손으로 두지 않는다(bin/agents-scaffold.sh 의 emit_agents 와 같은 원칙).
 # 스킬 폴더에 새 최상위 항목을 추가했으면 이 스크립트를 다시 돌려 링크를 갱신한다.
 set -uo pipefail
@@ -31,9 +31,11 @@ if personal:
     groups.append((os.path.join(src, "skills", "yd-skills-personal", "skills"),
                    os.path.join(src, "presets", "skills", "personal", ".claude", "agents")))
 skills_out = os.path.join(dist, "skills")
-if os.path.isdir(skills_out):
-    shutil.rmtree(skills_out)
-os.makedirs(skills_out)
+agents_out = os.path.join(dist, "agents")
+for d in (skills_out, agents_out):
+    if os.path.isdir(d):
+        shutil.rmtree(d)
+    os.makedirs(d)
 
 def front(path):
     with open(path, encoding="utf-8") as f:
@@ -57,16 +59,13 @@ for sdir, adir_src in groups:
             continue
         if not (name.startswith("yd-") or name in MERGED):
             continue
-        out = os.path.join(skills_out, name)
-        os.makedirs(out)
-        for entry in sorted(os.listdir(real)):
-            if entry in ("__pycache__", "agents"):
-                continue
-            os.symlink(os.path.join(real, entry), os.path.join(out, entry))
+        # 스킬 폴더 자체를 원본에 거는 폴더 링크다. SKILL.md 는 실제 파일로 보인다 —
+        # Codex 는 심링크된 SKILL.md 파일을 건너뛰기 때문이다(#181).
+        os.symlink(real, os.path.join(skills_out, name))
         agent = os.path.join(adir_src, name + ".md")
         if os.path.isfile(agent):
             fm, body = front(agent)
-            adir = os.path.join(out, "agents")
+            adir = os.path.join(agents_out, name)
             os.makedirs(adir)
             os.symlink(agent, os.path.join(adir, "claude.md"))
             desc = fm.get("description", "")
@@ -89,7 +88,7 @@ SKILL_NAMES=()
 for d in "$REPO_ROOT"/skills/*/; do
   [[ -f "$d/SKILL.md" ]] && SKILL_NAMES+=("$(basename "$d")")
 done
-# Agent Adapter 는 위 생성기가 .skills-dist/skills/<skill>/agents/{claude.md,
+# Agent Adapter 는 위 생성기가 .skills-dist/agents/<skill>/{claude.md,
 # codex.toml, antigravity.md} 로 만든다(원본은 .claude/agents/<skill>.md 하나, #78).
 # 스킬명은 여기서 하드코딩하지 않는다.
 
@@ -114,9 +113,11 @@ usage() {
 
 옵션:
   (없음)              전역 3경로에 심링크를 만든다
-                        ~/.agents/skills/                (Codex, Gemini CLI)
-                        ~/.claude/skills/                (Claude Code)
+                        ~/.agents/skills/                (Codex, Pi, OpenCode, Hermes)
+                        ~/.claude/skills/                (Claude Code, OpenCode)
                         ~/.gemini/config/skills/         (Antigravity, agy)
+                      Hermes 는 ~/.hermes/config.yaml 이 있으면 skills.external_dirs 에
+                      ~/.agents/skills 를 등록한다 (--uninstall 은 그 항목을 뺀다)
   --copy              심링크 대신 복사한다
   --project <dir>     전역 대신 해당 레포의 프로젝트 스킬 경로에 설치한다
                         <dir>/.claude/skills/            (Claude Code)
@@ -341,8 +342,8 @@ else
 fi
 
 # 스킬별 Agent Adapter 를 런타임이 탐색하는 이름으로 매핑한다.
-#   skills/<skill>/agents/claude.md   -> <claude agents>/<skill>.md
-#   skills/<skill>/agents/codex.toml  -> <codex agents>/<skill_underscored>.toml
+#   agents/<skill>/claude.md   -> <claude agents>/<skill>.md
+#   agents/<skill>/codex.toml  -> <codex agents>/<skill_underscored>.toml
 # antigravity.md 는 agy 가 파일시스템 에이전트 디렉터리를 탐색하지 않으므로
 # (2026-08-02 agy 1.1.8 실측: ~/.gemini/config/agents/ 의 md 는 CLI 를 행 상태로
 # 만든다 — 이슈 #78) 플러그인 메커니즘으로 등록한다: agents/ 를 담은 플러그인을
@@ -350,7 +351,7 @@ fi
 antigravity_sources=()
 if [[ $WITH_AGENT -eq 1 ]]; then
   for skill in "${SKILL_NAMES[@]}"; do
-    agents_dir="$REPO_ROOT/skills/$skill/agents"
+    agents_dir="$DIST/agents/$skill"
     if [[ -f "$agents_dir/claude.md" ]]; then
       agent_sources+=("$agents_dir/claude.md")
       agent_targets+=("$claude_agents_base/$skill.md")
@@ -364,7 +365,7 @@ if [[ $WITH_AGENT -eq 1 ]]; then
     fi
   done
   if [[ ${#agent_sources[@]} -eq 0 ]]; then
-    echo "오류: --with-agent 를 줬지만 skills/*/agents/ 에 Adapter 가 없다" >&2
+    echo "오류: --with-agent 를 줬지만 .skills-dist/agents/ 에 Adapter 가 없다" >&2
     exit 1
   fi
 fi
@@ -421,7 +422,7 @@ if [[ "$ACTION" == "list" ]]; then
   printf '%-24s %-6s | %-7s %-7s %-7s | %-7s %-7s\n' \
     "skill" "agent" "claude" "codex" "agy" "a:claude" "a:codex"
   for skill in "${SKILL_NAMES[@]}"; do
-    if [[ -f "$REPO_ROOT/skills/$skill/agents/claude.md" ]]; then
+    if [[ -f "$DIST/agents/$skill/claude.md" ]]; then
       has_agent="yes"
       ca="$(list_state "$claude_agents_base/$skill.md")"
       xa="$(list_state "$codex_agents_base/${skill//-/_}.toml")"
@@ -453,7 +454,8 @@ if [[ "$ACTION" == "verify" ]]; then
      codex_prompt="$(codex debug prompt-input 2>/dev/null)" &&
      [[ -n "$codex_prompt" ]]; then
     for skill in "${SKILL_NAMES[@]}"; do
-      if printf '%s' "$codex_prompt" | grep -qF -- "- $skill: "; then
+      # codex 0.172 부터 묶음 이름을 앞에 붙여 "- yd-skills:<name>: " 로도 나열한다 (#181)
+      if printf '%s' "$codex_prompt" | grep -qE -- "- ([A-Za-z0-9_-]+:)?${skill}: "; then
         verify_line "ok" "codex" "skill $skill" "codex debug prompt-input"
       else
         verify_line "missing" "codex" "skill $skill" \
@@ -484,7 +486,7 @@ if [[ "$ACTION" == "verify" ]]; then
     fi
 
     for skill in "${SKILL_NAMES[@]}"; do
-      agents_dir="$REPO_ROOT/skills/$skill/agents"
+      agents_dir="$DIST/agents/$skill"
       if [[ -f "$agents_dir/claude.md" ]]; then
         verify_path "claude" "agent $skill" "$claude_agents_base/$skill.md"
       fi
@@ -501,6 +503,28 @@ if [[ "$ACTION" == "verify" ]]; then
         fi
       fi
     done
+  fi
+
+  # Pi·OpenCode 는 Codex 와 같은 ~/.agents/skills 를 읽고(OpenCode 는 ~/.claude/skills 도),
+  # Hermes 는 config.yaml 의 skills.external_dirs 로 읽는다. 스킬 목록을 내주는 CLI 가
+  # 없어 경로·설정으로 본다 (#181). 전역 설치에서만 의미가 있다.
+  if [[ -z "$PROJECT" ]]; then
+    for rt in pi opencode; do
+      if command -v "$rt" >/dev/null 2>&1; then
+        verify_path "$rt" "skills dir" "$codex_skills_base"
+      else
+        verify_line "skip" "$rt" "(CLI 없음)" "설치돼 있지 않다"
+      fi
+    done
+    if [[ -f "$HOME/.hermes/config.yaml" ]]; then
+      if grep -qE "^\s+- ['\"]?$HOME/\.agents/skills['\"]?\s*$" "$HOME/.hermes/config.yaml"; then
+        verify_line "ok" "hermes" "external_dirs" "$HOME/.hermes/config.yaml 에 $codex_skills_base"
+      else
+        verify_line "missing" "hermes" "external_dirs" "$HOME/.hermes/config.yaml 의 skills.external_dirs 에 없음"
+      fi
+    else
+      verify_line "skip" "hermes" "(설정 없음)" "$HOME/.hermes/config.yaml 이 없다"
+    fi
   fi
 
   # 이 레포를 가리키던 링크 중 지금은 대상이 없는 것 — 이름이 바뀌었거나 지운
@@ -635,6 +659,61 @@ for skill in "${SKILL_NAMES[@]}"; do
   done
 done
 
+# ---- Hermes: skills.external_dirs 에 공용 경로를 건다 (전역 설치에서만, #181) ----
+# Hermes 는 ~/.hermes/skills/ 를 자기 스킬 저장소로 쓰고, 외부 스킬은 config.yaml 의
+# skills.external_dirs 로 읽는다. 링크를 또 만들지 않고 Codex·Pi·OpenCode 가 함께 읽는
+# ~/.agents/skills 를 등록한다. 파일 전체를 YAML 로 다시 쓰지 않고 그 키만 고친다.
+hermes_sync() {
+  local cfg="$1" entry="$2" mode="$3"
+  python3 - "$cfg" "$entry" "$mode" "$DRY_RUN" <<'HERMES_PY'
+import re, shutil, sys, time
+cfg, entry, mode, dry = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4] == "1"
+lines = open(cfg, encoding="utf-8").read().split("\n")
+try:
+    top = next(i for i, l in enumerate(lines) if l.rstrip() == "skills:")
+except StopIteration:
+    print("skip"); sys.exit(0)
+end = next((i for i in range(top + 1, len(lines)) if lines[i] and not lines[i].startswith(" ")), len(lines))
+key = next((i for i in range(top + 1, end) if re.match(r"^  external_dirs:", lines[i])), None)
+if key is None:
+    print("skip"); sys.exit(0)
+inline = lines[key].split(":", 1)[1].strip()
+if inline not in ("", "[]"):
+    print("skip-inline"); sys.exit(0)          # [a, b] 한 줄 꼴은 손대지 않는다
+items, j = [], key + 1
+while j < end and re.match(r"^\s+- ", lines[j]):
+    items.append(lines[j].split("- ", 1)[1].strip().strip("'\""))
+    j += 1
+indent = re.match(r"^(\s*)- ", lines[key + 1]).group(1) if j > key + 1 else "  "
+if mode == "install":
+    if entry in items:
+        print("present"); sys.exit(0)
+    items.append(entry)
+else:
+    if entry not in items:
+        print("absent"); sys.exit(0)
+    items.remove(entry)
+new = ["  external_dirs:" + ("" if items else " []")] + [f"{indent}- {x}" for x in items]
+if not dry:
+    shutil.copy2(cfg, f"{cfg}.bak.{time.strftime('%Y%m%d%H%M%S')}")
+    lines[key:j] = new
+    open(cfg, "w", encoding="utf-8").write("\n".join(lines))
+print("changed")
+HERMES_PY
+}
+
+if [[ -z "$PROJECT" && -f "$HOME/.hermes/config.yaml" ]]; then
+  hermes_cfg="$HOME/.hermes/config.yaml"
+  hermes_mode="install"; [[ "$ACTION" == "uninstall" ]] && hermes_mode="uninstall"
+  case "$(hermes_sync "$hermes_cfg" "$HOME/.agents/skills" "$hermes_mode")" in
+    changed)     echo "hermes    $hermes_cfg skills.external_dirs ($hermes_mode: $HOME/.agents/skills)"; ok=$((ok + 1)) ;;
+    present)     echo "skip      hermes external_dirs (이미 등록됨)"; skipped=$((skipped + 1)) ;;
+    absent)      echo "skip      hermes external_dirs (등록돼 있지 않음)"; skipped=$((skipped + 1)) ;;
+    skip-inline) echo "skip      hermes external_dirs 가 [a, b] 한 줄 꼴이라 손대지 않는다 — 직접 추가할 것" ;;
+    *)           echo "skip      hermes config 에 skills.external_dirs 키가 없다 — 직접 추가할 것" ;;
+  esac
+fi
+
 if [[ $WITH_AGENT -eq 1 ]]; then
   for ((i = 0; i < ${#agent_targets[@]}; i++)); do
     if [[ ! -f "${agent_sources[$i]}" ]]; then
@@ -674,7 +753,7 @@ if [[ $WITH_AGENT -eq 1 ]]; then
       printf '{"name": "%s", "description": "agents-scaffold Agent Adapter 모음 (scripts/install-skills.sh 가 생성)", "version": "1.0.0"}\n' \
         "$AGY_PLUGIN_NAME" > "$staging/plugin.json"
       for skill in "${SKILL_NAMES[@]}"; do
-        adapter="$REPO_ROOT/skills/$skill/agents/antigravity.md"
+        adapter="$DIST/agents/$skill/antigravity.md"
         [[ -f "$adapter" ]] && cp "$adapter" "$staging/agents/$skill.md"
       done
       if [[ "$ACTION" == "uninstall" ]]; then
