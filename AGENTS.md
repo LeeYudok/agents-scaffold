@@ -39,6 +39,10 @@ Claude Code(v2.1.277+)·Codex·Antigravity(agy) 모두 이 파일을 네이티�
 
 @.claude/memory/MEMORY.md
 
+## 스킬 원본은 LeeYudok/skills (#183)
+
+`skills/`·`.claude/agents/yd-*.md`·`presets/skills/personal/.claude/agents/`·`scripts/install-skills.sh`·`tests/test_install_skills.sh` 는 [LeeYudok/skills](https://github.com/LeeYudok/skills) 의 동기화 사본이다. 여기서 직접 고치지 않는다 — skills 리포에서 고치고 머지하면 `Sync skills` 워크플로(매일·수동)가 동기화 PR 을 연다. 로컬에서 바로 맞추려면 `scripts/sync-skills.sh`, 차이만 보려면 `--check`. 받아온 커밋은 `.skills-upstream` 에 남는다.
+
 ## .claude/ 인프라
 
 개요는 [.claude/README.md](.claude/README.md), 각 하위 디렉터리 README 에 작성 골격과
