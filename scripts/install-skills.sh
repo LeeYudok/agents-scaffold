@@ -518,12 +518,12 @@ if [[ "$ACTION" == "verify" ]]; then
     done
     if [[ -f "$HOME/.hermes/config.yaml" ]]; then
       if grep -qE "^\s+- ['\"]?$HOME/\.agents/skills['\"]?\s*$" "$HOME/.hermes/config.yaml"; then
-        verify_line "ok" "hermes" "external_dirs" "~/.hermes/config.yaml 에 $codex_skills_base"
+        verify_line "ok" "hermes" "external_dirs" "$HOME/.hermes/config.yaml 에 $codex_skills_base"
       else
-        verify_line "missing" "hermes" "external_dirs" "~/.hermes/config.yaml 의 skills.external_dirs 에 없음"
+        verify_line "missing" "hermes" "external_dirs" "$HOME/.hermes/config.yaml 의 skills.external_dirs 에 없음"
       fi
     else
-      verify_line "skip" "hermes" "(설정 없음)" "~/.hermes/config.yaml 이 없다"
+      verify_line "skip" "hermes" "(설정 없음)" "$HOME/.hermes/config.yaml 이 없다"
     fi
   fi
 
