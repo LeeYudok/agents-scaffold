@@ -1,0 +1,45 @@
+name: Sync skills
+
+# 스킬 SSOT 는 LeeYudok/skills 다 (#183). 이 리포의 skills/ 등은 그 사본이므로
+# 매일, 또는 수동으로 받아와 바뀐 게 있으면 PR 을 연다.
+on:
+  schedule:
+    - cron: '17 21 * * *'
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'LeeYudok/skills ref'
+        default: main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: sync
+        run: scripts/sync-skills.sh --ref "${{ inputs.ref || 'main' }}"
+      - name: open PR when changed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet && [ -z "$(git ls-files --others --exclude-standard)" ]; then
+            echo "변경 없음"; exit 0
+          fi
+          sha="$(cat .skills-upstream)"
+          branch="sync/skills-${sha:0:12}"
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null; then
+            echo "이미 열린 동기화 브랜치: $branch"; exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git add skills .claude/agents presets/skills/personal/.claude/agents \
+            scripts/install-skills.sh tests/test_install_skills.sh .skills-upstream
+          git commit -m "chore: LeeYudok/skills@${sha:0:12} 동기화 (#183)"
+          git push -u origin "$branch"
+          gh pr create --title "chore: LeeYudok/skills@${sha:0:12} 동기화" \
+            --body "LeeYudok/skills@${sha} 를 scripts/sync-skills.sh 로 반영했다. 스킬 수정은 LeeYudok/skills 에서 한다. Refs #183"

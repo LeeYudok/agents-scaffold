@@ -67,6 +67,8 @@ versions of the workflow skills come with a `--lang en` install.
 
 ## Offline or for development: `install-skills.sh`
 
+The skill source of truth is [LeeYudok/skills](https://github.com/LeeYudok/skills). This repo's `skills/` is a copy pulled in by `scripts/sync-skills.sh`, so edit skills there (#183).
+
 Clone this repo and run `scripts/install-skills.sh`. It symlinks the skills into `~/.claude/skills`,
 `~/.agents/skills` and `~/.gemini/config/skills`, and supports `--personal`, `--copy` and `--project <dir>`.
 The repo's `skills/` is the single source, and each runtime reads it from these paths (#181, checked against

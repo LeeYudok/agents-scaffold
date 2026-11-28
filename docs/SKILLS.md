@@ -67,6 +67,8 @@ INSTALL_INTERNAL_SKILLS=1 npx skills add LeeYudok/agents-scaffold  # also the sc
 
 ## 폐쇄망·개발용: `install-skills.sh`
 
+스킬 원본은 [LeeYudok/skills](https://github.com/LeeYudok/skills) 다. 이 리포의 `skills/` 는 `scripts/sync-skills.sh` 로 받아온 사본이라, 스킬 수정은 그 리포에서 한다(#183).
+
 이 레포를 clone 해 `scripts/install-skills.sh` 를 실행한다. `~/.claude/skills`·`~/.agents/skills`·
 `~/.gemini/config/skills` 에 심볼릭 링크를 만들고, `--personal`·`--copy`·`--project <dir>` 를 지원한다.
 원본은 레포의 `skills/` 하나이고, 런타임마다 아래 경로로 같은 원본을 읽는다(#181, 2026-11-29 공식 문서 기준).
