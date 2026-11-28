@@ -454,7 +454,8 @@ if [[ "$ACTION" == "verify" ]]; then
      codex_prompt="$(codex debug prompt-input 2>/dev/null)" &&
      [[ -n "$codex_prompt" ]]; then
     for skill in "${SKILL_NAMES[@]}"; do
-      if printf '%s' "$codex_prompt" | grep -qF -- "- $skill: "; then
+      # codex 0.172 부터 묶음 이름을 앞에 붙여 "- yd-skills:<name>: " 로도 나열한다 (#181)
+      if printf '%s' "$codex_prompt" | grep -qE -- "- ([A-Za-z0-9_-]+:)?${skill}: "; then
         verify_line "ok" "codex" "skill $skill" "codex debug prompt-input"
       else
         verify_line "missing" "codex" "skill $skill" \
